@@ -1,8 +1,22 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
+use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::{Duration, Instant};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager};
+
+
+
+// Global activity monitoring state
+static ACTIVITY_MONITOR: Mutex<Option<ActivityMonitor>> = Mutex::new(None);
+
+struct ActivityMonitor {
+    last_activity: Arc<Mutex<Instant>>,
+    is_monitoring: Arc<Mutex<bool>>,
+    app_handle: tauri::AppHandle,
+}
 
 #[derive(Serialize, Deserialize, Clone)]
 struct PomodoroSession {
@@ -48,6 +62,7 @@ struct NotificationSettings {
     desktop_notifications: bool,
     sound_notifications: bool,
     auto_start_breaks: bool,
+    smart_pause: bool,
 }
 
 impl Default for AppSettings {
@@ -68,9 +83,153 @@ impl Default for AppSettings {
                 desktop_notifications: true,
                 sound_notifications: true,
                 auto_start_breaks: true,
+                smart_pause: false,
             },
         }
     }
+}
+
+impl ActivityMonitor {
+    fn new(app_handle: tauri::AppHandle) -> Self {
+        Self {
+            last_activity: Arc::new(Mutex::new(Instant::now())),
+            is_monitoring: Arc::new(Mutex::new(false)),
+            app_handle,
+        }
+    }
+
+    #[cfg(target_os = "macos")]
+    fn start_monitoring(&self) -> Result<(), String> {
+        let mut is_monitoring = self.is_monitoring.lock().unwrap();
+        if *is_monitoring {
+            return Ok(()); // Already monitoring
+        }
+        *is_monitoring = true;
+        
+        let last_activity = Arc::clone(&self.last_activity);
+        let is_monitoring_clone = Arc::clone(&self.is_monitoring);
+        let app_handle = self.app_handle.clone();
+        
+        thread::spawn(move || {
+            let inactivity_threshold = Duration::from_secs(3);
+            
+            loop {
+                // Check if we should stop monitoring
+                {
+                    let monitoring = is_monitoring_clone.lock().unwrap();
+                    if !*monitoring {
+                        break;
+                    }
+                }
+                
+                // Check system activity
+                let has_activity = Self::check_system_activity();
+                
+                if has_activity {
+                    // Update last activity time
+                    {
+                        let mut last = last_activity.lock().unwrap();
+                        *last = Instant::now();
+                    }
+                    
+                    // Emit activity event to frontend
+                    let _ = app_handle.emit("user-activity", ());
+                } else {
+                    // Check if enough time has passed since last activity
+                    let elapsed = {
+                        let last = last_activity.lock().unwrap();
+                        last.elapsed()
+                    };
+                    
+                    if elapsed >= inactivity_threshold {
+                        // Emit inactivity event to frontend
+                        let _ = app_handle.emit("user-inactivity", ());
+                        
+                        // Reset the timer to avoid spam
+                        {
+                            let mut last = last_activity.lock().unwrap();
+                            *last = Instant::now();
+                        }
+                    }
+                }
+                
+                thread::sleep(Duration::from_millis(500)); // Check every 500ms
+            }
+        });
+        
+        Ok(())
+    }
+    
+    #[cfg(target_os = "macos")]
+    fn check_system_activity() -> bool {
+        // For simplicity, we'll implement a basic activity check
+        // This could be enhanced with proper IOKit integration
+        use std::process::Command;
+        
+        // Use ioreg command to check idle time (fallback method)
+        let output = Command::new("ioreg")
+            .args(&["-c", "IOHIDSystem"])
+            .output();
+            
+        if let Ok(output) = output {
+            let output_str = String::from_utf8_lossy(&output.stdout);
+            
+            // Look for HIDIdleTime in the output
+            for line in output_str.lines() {
+                if line.contains("HIDIdleTime") {
+                    if let Some(value_str) = line.split('=').nth(1) {
+                        if let Ok(idle_ns) = value_str.trim().parse::<u64>() {
+                            // Convert nanoseconds to seconds
+                            let idle_seconds = idle_ns / 1_000_000_000;
+                            return idle_seconds < 1; // Active if idle time < 1 second
+                        }
+                    }
+                }
+            }
+        }
+        
+        // If we can't determine, assume there's activity
+        true
+    }
+    
+    fn stop_monitoring(&self) {
+        let mut is_monitoring = self.is_monitoring.lock().unwrap();
+        *is_monitoring = false;
+    }
+}
+
+#[tauri::command]
+async fn start_activity_monitoring(app: tauri::AppHandle) -> Result<(), String> {
+    let mut monitor = ACTIVITY_MONITOR.lock().unwrap();
+    
+    if monitor.is_none() {
+        *monitor = Some(ActivityMonitor::new(app));
+    }
+    
+    if let Some(ref monitor) = *monitor {
+        #[cfg(target_os = "macos")]
+        {
+            monitor.start_monitoring()?;
+        }
+        
+        #[cfg(not(target_os = "macos"))]
+        {
+            return Err("Activity monitoring is only supported on macOS".to_string());
+        }
+    }
+    
+    Ok(())
+}
+
+#[tauri::command]
+async fn stop_activity_monitoring() -> Result<(), String> {
+    let monitor = ACTIVITY_MONITOR.lock().unwrap();
+    
+    if let Some(ref monitor) = *monitor {
+        monitor.stop_monitoring();
+    }
+    
+    Ok(())
 }
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -383,7 +542,9 @@ pub fn run() {
             save_settings,
             load_settings,
             register_global_shortcuts,
-            reset_all_data
+            reset_all_data,
+            start_activity_monitoring,
+            stop_activity_monitoring
         ])
         .setup(|app| {
             // Crea il menu della tray

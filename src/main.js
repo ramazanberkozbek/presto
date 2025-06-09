@@ -275,7 +275,8 @@ class SettingsManager {
       notifications: {
         desktop_notifications: true,
         sound_notifications: true,
-        auto_start_breaks: true
+        auto_start_breaks: true,
+        smart_pause: false
       }
     };
   }
@@ -296,6 +297,7 @@ class SettingsManager {
     document.getElementById('desktop-notifications').checked = this.settings.notifications.desktop_notifications;
     document.getElementById('sound-notifications').checked = this.settings.notifications.sound_notifications;
     document.getElementById('auto-start-breaks').checked = this.settings.notifications.auto_start_breaks;
+    document.getElementById('smart-pause').checked = this.settings.notifications.smart_pause;
   }
 
   setupEventListeners() {
@@ -421,6 +423,7 @@ class SettingsManager {
       this.settings.notifications.desktop_notifications = document.getElementById('desktop-notifications').checked;
       this.settings.notifications.sound_notifications = document.getElementById('sound-notifications').checked;
       this.settings.notifications.auto_start_breaks = document.getElementById('auto-start-breaks').checked;
+      this.settings.notifications.smart_pause = document.getElementById('smart-pause').checked;
 
       // Save to file
       await invoke('save_settings', { settings: this.settings });
@@ -480,6 +483,12 @@ class PomodoroTimer {
     this.currentMode = 'focus'; // 'focus', 'break', 'longBreak'
     this.timeRemaining = 25 * 60; // 25 minutes in seconds
     this.timerInterval = null;
+    
+    // Smart pause states
+    this.smartPauseEnabled = false;
+    this.isAutoPaused = false;
+    this.activityTimeout = null;
+    this.inactivityThreshold = 3000; // 3 seconds in milliseconds
 
     // Session tracking
     this.completedPomodoros = 0;
@@ -603,6 +612,149 @@ class PomodoroTimer {
     });
   }
 
+  // Smart Pause Methods
+  setupSmartPause() {
+    if (!this.smartPauseEnabled) return;
+    
+    // Setup event listeners for global activity monitoring
+    this.setupGlobalActivityListeners();
+    
+    console.log('Smart pause enabled with global monitoring');
+  }
+  
+  async setupGlobalActivityListeners() {
+    try {
+      // Start global activity monitoring
+      await invoke('start_activity_monitoring');
+      
+      // Listen for activity events from backend
+      const { listen } = window.__TAURI__.event;
+      
+      // Listen for user activity
+      await listen('user-activity', () => {
+        this.handleUserActivity();
+      });
+      
+      // Listen for user inactivity
+      await listen('user-inactivity', () => {
+        this.autoPauseTimer();
+      });
+      
+      // Start initial timeout for local fallback
+      this.handleUserActivity();
+      
+      console.log('Global activity listeners setup complete');
+    } catch (error) {
+      console.error('Failed to setup global activity monitoring:', error);
+      // Fallback to local monitoring
+      this.setupLocalActivityListeners();
+    }
+  }
+  
+  setupLocalActivityListeners() {
+    console.log('Falling back to local activity monitoring');
+    // List of events that indicate user activity
+    const activityEvents = ['mousemove', 'mousedown', 'keydown', 'scroll', 'click'];
+    
+    // Setup activity listeners
+    activityEvents.forEach(event => {
+      document.addEventListener(event, () => this.handleUserActivity(), { passive: true });
+    });
+    
+    // Start initial timeout
+    this.handleUserActivity();
+  }
+  
+  handleUserActivity() {
+    if (!this.smartPauseEnabled || !this.isRunning || this.currentMode !== 'focus') return;
+    
+    // If currently auto-paused, resume the timer
+    if (this.isAutoPaused) {
+      this.resumeFromAutoPause();
+    }
+    
+    // Clear existing timeout
+    if (this.activityTimeout) {
+      clearTimeout(this.activityTimeout);
+    }
+    
+    // Set new timeout for auto-pause after 3 seconds of inactivity
+    this.activityTimeout = setTimeout(() => {
+      this.autoPauseTimer();
+    }, 3000); // 3 seconds
+  }
+  
+  autoPauseTimer() {
+    if (!this.isRunning || this.isPaused || this.isAutoPaused || this.currentMode !== 'focus') return;
+    
+    console.log('Auto-pausing timer due to inactivity');
+    this.isAutoPaused = true;
+    this.isPaused = true;
+    
+    // Stop the timer interval
+    clearInterval(this.timerInterval);
+    this.timerInterval = null;
+    
+    // Update UI to show auto-pause state
+    this.updateDisplay();
+    this.updateButtons();
+    this.updateTrayIcon();
+  }
+  
+  resumeFromAutoPause() {
+    if (!this.isAutoPaused) return;
+    
+    console.log('Resuming timer from auto-pause');
+    this.isAutoPaused = false;
+    this.isPaused = false;
+    
+    // Restart the timer interval
+    this.timerInterval = setInterval(() => {
+      this.timeRemaining--;
+      this.updateDisplay();
+      this.updateTrayIcon();
+      
+      if (this.timeRemaining <= 0) {
+        this.completeSession();
+      }
+    }, 1000);
+    
+    // Update UI
+    this.updateDisplay();
+    this.updateButtons();
+    this.updateTrayIcon();
+  }
+  
+  async enableSmartPause(enabled) {
+    this.smartPauseEnabled = enabled;
+    
+    if (enabled) {
+      await this.setupSmartPause();
+      // Start monitoring if timer is already running and in focus mode
+      if (this.isRunning && !this.isPaused && this.currentMode === 'focus') {
+        this.handleUserActivity();
+      }
+    } else {
+      // Stop global monitoring
+      try {
+        await invoke('stop_activity_monitoring');
+      } catch (error) {
+        console.error('Failed to stop activity monitoring:', error);
+      }
+      
+      // Clear local timeout and resume if auto-paused
+      if (this.activityTimeout) {
+        clearTimeout(this.activityTimeout);
+        this.activityTimeout = null;
+      }
+      if (this.isAutoPaused) {
+        this.resumeFromAutoPause();
+      }
+    }
+    
+    console.log('Smart pause', enabled ? 'enabled' : 'disabled');
+  }
+
   startTimer() {
     if (!this.isRunning) {
       this.isRunning = true;
@@ -625,6 +777,11 @@ class PomodoroTimer {
       this.updateButtons();
       this.playNotificationSound();
       this.showNotificationPing('Timer started! 🍅');
+      
+      // Start smart pause monitoring if enabled
+      if (this.smartPauseEnabled && this.currentMode === 'focus') {
+        this.handleUserActivity();
+      }
     }
   }
 
@@ -632,7 +789,15 @@ class PomodoroTimer {
     if (this.isRunning) {
       this.isRunning = false;
       this.isPaused = true;
+      this.isAutoPaused = false; // Manual pause overrides auto-pause
       clearInterval(this.timerInterval);
+      
+      // Clear smart pause timeout
+      if (this.activityTimeout) {
+        clearTimeout(this.activityTimeout);
+        this.activityTimeout = null;
+      }
+      
       this.updateButtons();
       this.showNotificationPing('Timer paused ⏸️');
     }
@@ -641,7 +806,15 @@ class PomodoroTimer {
   resetTimer() {
     this.isRunning = false;
     this.isPaused = false;
+    this.isAutoPaused = false;
     clearInterval(this.timerInterval);
+    
+    // Clear smart pause timeout
+    if (this.activityTimeout) {
+      clearTimeout(this.activityTimeout);
+      this.activityTimeout = null;
+    }
+    
     this.timeRemaining = this.durations[this.currentMode];
     this.updateDisplay();
     this.updateButtons();
@@ -712,7 +885,17 @@ class PomodoroTimer {
       break: 'Short Break 😌',
       longBreak: 'Long Break 🎉'
     };
-    this.timerStatus.textContent = statusTexts[this.currentMode];
+    
+    let statusText = statusTexts[this.currentMode];
+    
+    // Add auto-pause indicator
+    if (this.isAutoPaused) {
+      statusText += ' (Auto-paused - move mouse to resume)';
+    } else if (this.isPaused && !this.isRunning) {
+      statusText += ' (Paused)';
+    }
+    
+    this.timerStatus.textContent = statusText;
 
     // Update session info
     if (this.currentMode === 'focus') {
@@ -728,6 +911,11 @@ class PomodoroTimer {
     // Add running class when timer is active
     if (this.isRunning) {
       container.classList.add('running');
+    }
+    
+    // Add auto-paused class when in auto-pause state
+    if (this.isAutoPaused) {
+      container.classList.add('auto-paused');
     }
 
     // Add warning class when time is running low
@@ -1141,13 +1329,24 @@ class PomodoroTimer {
     this.enableDesktopNotifications = settings.notifications.desktop_notifications;
     this.enableSoundNotifications = settings.notifications.sound_notifications;
     this.autoStartBreaks = settings.notifications.auto_start_breaks;
+    
+    // Update smart pause setting
+    this.enableSmartPause(settings.notifications.smart_pause);
   }
 
   resetToInitialState() {
     // Stop any running timer
     this.isRunning = false;
     this.isPaused = false;
+    this.isAutoPaused = false;
     clearInterval(this.timerInterval);
+    
+    // Clear smart pause timeout and disable
+    if (this.activityTimeout) {
+      clearTimeout(this.activityTimeout);
+      this.activityTimeout = null;
+    }
+    this.smartPauseEnabled = false;
 
     // Reset all counters and state
     this.completedPomodoros = 0;
