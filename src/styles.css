@@ -120,10 +120,10 @@ h1 {
 }
 
 .control-btn {
-  border-radius: 2rem;
+  border-radius: 1.5rem;
   border: none;
   width: 70px;
-  height: 70px;
+  height: 60px;
   font-size: 1rem;
   font-weight: 600;
   font-family: inherit;
@@ -148,7 +148,7 @@ h1 {
   background-color: var(--focus-color);
   color: var(--focus-timer-color);
   width: 90px;
-  height: 90px;
+  height: 70px;
 }
 
 .control-btn.primary:hover {

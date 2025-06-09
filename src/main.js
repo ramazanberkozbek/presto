@@ -659,7 +659,7 @@ class PomodoroTimer {
     try {
       // Start global activity monitoring with configurable timeout
       const timeoutSeconds = Math.floor(this.inactivityThreshold / 1000); // convert from milliseconds to seconds
-      await invoke('start_activity_monitoring', { timeout_seconds: timeoutSeconds });
+      await invoke('start_activity_monitoring', { timeoutSeconds: timeoutSeconds });
 
       // Listen for activity events from backend
       const { listen } = window.__TAURI__.event;
@@ -809,6 +809,7 @@ class PomodoroTimer {
       }, 1000);
 
       this.updateButtons();
+      this.updateDisplay();
       this.playNotificationSound();
       this.showNotificationPing('Timer started! 🍅');
 
@@ -833,6 +834,7 @@ class PomodoroTimer {
       }
 
       this.updateButtons();
+      this.updateDisplay();
       this.showNotificationPing('Timer paused ⏸️');
     }
   }
