@@ -3,6 +3,9 @@
 
 <head>
   <meta charset="UTF-8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:wght@400;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tauri App</title>
@@ -40,65 +43,40 @@
   <main class="container">
     <!-- Timer View -->
     <div class="view-container" id="timer-view">
-      <h1>Tempo - Pomodoro Timer</h1>
+      <!-- Status Label -->
+      <div class="timer-status" id="timer-status">Focus</div>
 
       <!-- Timer Display -->
       <div class="timer-container">
-        <div class="timer-display" id="timer-display">25:00</div>
-        <div class="timer-status" id="timer-status">Ready to Focus</div>
-        <div class="session-info" id="session-info">Session 1 of 10</div>
+        <div class="timer-minutes" id="timer-minutes">25</div>
+        <div class="timer-seconds" id="timer-seconds">00</div>
       </div>
 
       <!-- Control Buttons -->
       <div class="controls">
-        <button id="start-btn" class="control-btn primary">Start</button>
-        <button id="pause-btn" class="control-btn" disabled>Pause</button>
-        <button id="reset-btn" class="control-btn">Reset</button>
-        <button id="skip-btn" class="control-btn">Skip</button>
-      </div>
-
-      <!-- Progress indicators -->
-      <div class="progress-container">
-        <div class="pomodoro-counter">
-          <h3>Today's Progress</h3>
-          <div class="pomodoro-dots" id="pomodoro-dots">
-            <!-- Will be filled by JavaScript -->
-          </div>
-          <div class="stats" id="stats">
-            <span>Completed: <strong id="completed-count">0</strong>/10</span>
-            <span>Focus Time: <strong id="focus-time">0h 0m</strong></span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Task Input -->
-      <div class="task-section">
-        <h3>Current Task</h3>
-        <input id="task-input" placeholder="What are you working on?" />
-        <div class="task-list" id="task-list">
-          <!-- Will be filled by JavaScript -->
-        </div>
-      </div>
-
-      <!-- Statistics Section -->
-      <div class="stats-section">
-        <h3>Weekly Progress</h3>
-        <div class="weekly-stats" id="weekly-stats">
-          <!-- Will be filled by JavaScript -->
-        </div>
-        <button id="show-history-btn" class="control-btn">View History</button>
-      </div>
-
-      <!-- Keyboard Shortcuts Info -->
-      <div class="shortcuts-info">
-        <h4>Keyboard Shortcuts</h4>
-        <div class="shortcuts-grid">
-          <span><kbd>Cmd+Alt+S</kbd> Start/Pause (Global)</span>
-          <span><kbd>Space</kbd> Start/Pause (Local)</span>
-          <span><kbd>Cmd+R</kbd> Reset</span>
-          <span><kbd>Cmd+S</kbd> Skip</span>
-          <span><kbd>Cmd+H</kbd> History</span>
-        </div>
+        <button id="menu-btn" class="control-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="1" />
+            <circle cx="19" cy="12" r="1" />
+            <circle cx="5" cy="12" r="1" />
+          </svg>
+        </button>
+        <button id="play-pause-btn" class="control-btn primary">
+          <svg id="play-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5,3 19,12 5,21" />
+          </svg>
+          <svg id="pause-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            style="display: none;">
+            <rect x="6" y="4" width="4" height="16" />
+            <rect x="14" y="4" width="4" height="16" />
+          </svg>
+        </button>
+        <button id="skip-btn" class="control-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5,4 15,12 5,20" />
+            <polygon points="15,4 25,12 15,20" />
+          </svg>
+        </button>
       </div>
     </div>
 

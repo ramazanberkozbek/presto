@@ -547,20 +547,14 @@ class PomodoroTimer {
     };
 
     // DOM elements
-    this.timerDisplay = document.getElementById('timer-display');
+    this.timerMinutes = document.getElementById('timer-minutes');
+    this.timerSeconds = document.getElementById('timer-seconds');
     this.timerStatus = document.getElementById('timer-status');
-    this.sessionInfo = document.getElementById('session-info');
-    this.startBtn = document.getElementById('start-btn');
-    this.pauseBtn = document.getElementById('pause-btn');
-    this.resetBtn = document.getElementById('reset-btn');
+    this.playPauseBtn = document.getElementById('play-pause-btn');
+    this.playIcon = document.getElementById('play-icon');
+    this.pauseIcon = document.getElementById('pause-icon');
+    this.menuBtn = document.getElementById('menu-btn');
     this.skipBtn = document.getElementById('skip-btn');
-    this.pomodoroDotsContainer = document.getElementById('pomodoro-dots');
-    this.completedCountEl = document.getElementById('completed-count');
-    this.focusTimeEl = document.getElementById('focus-time');
-    this.taskInput = document.getElementById('task-input');
-    this.taskList = document.getElementById('task-list');
-    this.weeklyStatsContainer = document.getElementById('weekly-stats');
-    this.showHistoryBtn = document.getElementById('show-history-btn');
 
     // Task management
     this.tasks = [];
@@ -570,31 +564,25 @@ class PomodoroTimer {
   }
 
   async init() {
-    this.tasks = await this.loadTasks();
     this.updateDisplay();
-    this.updateProgress();
     this.setupEventListeners();
-    this.renderTasks();
     await this.loadSessionData();
-    await this.updateWeeklyStats();
   }
 
   setupEventListeners() {
-    this.startBtn.addEventListener('click', () => this.startTimer());
-    this.pauseBtn.addEventListener('click', () => this.pauseTimer());
-    this.resetBtn.addEventListener('click', () => this.resetTimer());
-    this.skipBtn.addEventListener('click', () => this.skipSession());
-    this.showHistoryBtn.addEventListener('click', () => this.showHistoryModal());
-
-    this.taskInput.addEventListener('keypress', async (e) => {
-      if (e.key === 'Enter') {
-        await this.addTask();
+    this.playPauseBtn.addEventListener('click', () => {
+      if (this.isRunning && !this.isPaused && !this.isAutoPaused) {
+        this.pauseTimer();
+      } else {
+        this.startTimer();
       }
     });
 
-    // Auto-save current task
-    this.taskInput.addEventListener('input', (e) => {
-      this.currentTask = e.target.value;
+    this.skipBtn.addEventListener('click', () => this.skipSession());
+
+    this.menuBtn.addEventListener('click', () => {
+      // TODO: Show menu/settings modal
+      console.log('Menu clicked');
     });
 
     // Keyboard shortcuts
@@ -604,7 +592,7 @@ class PomodoroTimer {
         switch (e.code) {
           case 'Space':
             e.preventDefault();
-            if (this.isRunning) {
+            if (this.isRunning && !this.isPaused && !this.isAutoPaused) {
               this.pauseTimer();
             } else {
               this.startTimer();
@@ -614,7 +602,7 @@ class PomodoroTimer {
             // CMD+ALT+S per start/pausa (nuova shortcut principale)
             if ((e.ctrlKey || e.metaKey) && e.altKey) {
               e.preventDefault();
-              if (this.isRunning) {
+              if (this.isRunning && !this.isPaused && !this.isAutoPaused) {
                 this.pauseTimer();
               } else {
                 this.startTimer();
@@ -921,50 +909,59 @@ class PomodoroTimer {
   updateDisplay() {
     const minutes = Math.floor(this.timeRemaining / 60);
     const seconds = this.timeRemaining % 60;
-    this.timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+    // Update the split display
+    this.timerMinutes.textContent = minutes.toString().padStart(2, '0');
+    this.timerSeconds.textContent = seconds.toString().padStart(2, '0');
 
     // Update status
     const statusTexts = {
-      focus: 'Focus Time! 🍅',
-      break: 'Short Break 😌',
-      longBreak: 'Long Break 🎉'
+      focus: 'Focus',
+      break: 'Break',
+      longBreak: 'Long Break'
     };
 
     let statusText = statusTexts[this.currentMode];
 
     // Add auto-pause indicator
     if (this.isAutoPaused) {
-      statusText += ' (Auto-paused - move mouse to resume)';
+      statusText += ' (Auto-paused)';
     } else if (this.isPaused && !this.isRunning) {
       statusText += ' (Paused)';
     }
 
     this.timerStatus.textContent = statusText;
 
-    // Update session info
-    if (this.currentMode === 'focus') {
-      this.sessionInfo.textContent = `Session ${this.currentSession} of ${this.totalSessions}`;
+    // Update play/pause button
+    if (this.isRunning && !this.isPaused && !this.isAutoPaused) {
+      this.playIcon.style.display = 'none';
+      this.pauseIcon.style.display = 'block';
     } else {
-      this.sessionInfo.textContent = `Take a ${this.currentMode === 'longBreak' ? 'long' : 'short'} break`;
+      this.playIcon.style.display = 'block';
+      this.pauseIcon.style.display = 'none';
     }
 
-    // Update container class for styling
-    const container = document.querySelector('.timer-container');
-    container.className = `timer-container ${this.currentMode}`;
+    // Update main container class for background styling
+    const mainContainer = document.querySelector('.container');
+    mainContainer.className = `container ${this.currentMode}`;
+
+    // Update timer container class for styling
+    const timerContainer = document.querySelector('.timer-container');
+    timerContainer.className = `timer-container ${this.currentMode}`;
 
     // Add running class when timer is active
     if (this.isRunning) {
-      container.classList.add('running');
+      timerContainer.classList.add('running');
     }
 
     // Add auto-paused class when in auto-pause state
     if (this.isAutoPaused) {
-      container.classList.add('auto-paused');
+      timerContainer.classList.add('auto-paused');
     }
 
     // Add warning class when time is running low
     if (this.timeRemaining <= 120 && this.timeRemaining > 0 && this.isRunning) {
-      container.classList.add('warning');
+      timerContainer.classList.add('warning');
     }
 
     // Update page title
@@ -976,6 +973,8 @@ class PomodoroTimer {
   }
 
   updateButtons() {
+    // Metodo disabilitato per la versione semplificata - i controlli sono ora gestiti in updateDisplay()
+    /*
     if (this.isRunning) {
       this.startBtn.disabled = true;
       this.pauseBtn.disabled = false;
@@ -989,9 +988,13 @@ class PomodoroTimer {
       this.pauseBtn.disabled = true;
       this.startBtn.textContent = 'Start';
     }
+    */
   }
 
   updateProgress() {
+    // Metodo disabilitato per la versione semplificata
+    // TODO: Implementare se necessario per altre viste
+    /*
     // Create dots for each session
     this.pomodoroDotsContainer.innerHTML = '';
     for (let i = 0; i < this.totalSessions; i++) {
@@ -1012,6 +1015,7 @@ class PomodoroTimer {
     const hours = Math.floor(this.totalFocusTime / 3600);
     const minutes = Math.floor((this.totalFocusTime % 3600) / 60);
     this.focusTimeEl.textContent = `${hours}h ${minutes}m`;
+    */
   }
 
   // Task Management
