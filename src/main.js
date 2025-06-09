@@ -550,6 +550,8 @@ class PomodoroTimer {
     this.timerMinutes = document.getElementById('timer-minutes');
     this.timerSeconds = document.getElementById('timer-seconds');
     this.timerStatus = document.getElementById('timer-status');
+    this.statusIcon = document.getElementById('status-icon');
+    this.statusText = document.getElementById('status-text');
     this.playPauseBtn = document.getElementById('play-pause-btn');
     this.playIcon = document.getElementById('play-icon');
     this.pauseIcon = document.getElementById('pause-icon');
@@ -937,6 +939,14 @@ class PomodoroTimer {
 
     this.timerStatus.textContent = statusText;
 
+    // Update status icon based on current mode
+    this.updateStatusIcon();
+
+    // Update status text
+    if (this.statusText) {
+      this.statusText.textContent = statusText;
+    }
+
     // Update play/pause button
     if (this.isRunning && !this.isPaused && !this.isAutoPaused) {
       this.playIcon.style.display = 'none';
@@ -975,6 +985,24 @@ class PomodoroTimer {
 
     // Update tray icon
     this.updateTrayIcon();
+  }
+
+  // Update status icon based on current mode
+  updateStatusIcon() {
+    if (!this.statusIcon) return;
+
+    // Define SVG paths for different modes
+    const iconPaths = {
+      focus: 'M9.5 2A2.5 2.5 0 0 0 7 4.5v1A2.5 2.5 0 0 0 4.5 8H4a2 2 0 0 0-2 2v1a2 2 0 0 0 2 2h.5A2.5 2.5 0 0 0 7 15.5v1A2.5 2.5 0 0 0 9.5 19h5a2.5 2.5 0 0 0 2.5-2.5v-1A2.5 2.5 0 0 0 19.5 13H20a2 2 0 0 0 2-2v-1a2 2 0 0 0-2-2h-.5A2.5 2.5 0 0 0 17 5.5v-1A2.5 2.5 0 0 0 14.5 2h-5Z',
+      break: 'm2.5 12 1.526-4.578A.9.9 0 0 1 4.881 7h2.238a.9.9 0 0 1 .855.422L9.5 12m-7 0h18m-18 0v2.25A2.25 2.25 0 0 0 4.75 16.5h2.5m-7-4.5H2m19.5 0v2.25A2.25 2.25 0 0 1 19.25 16.5h-2.5m4-4.5H22m-1-1.5H3.125C2.504 11 2 10.496 2 9.875v-.75C2 8.504 2.504 8 3.125 8h17.75C21.496 8 22 8.504 22 9.125v.75C22 10.496 21.496 11 20.875 11Z',
+      longBreak: 'm2.5 12 1.526-4.578A.9.9 0 0 1 4.881 7h2.238a.9.9 0 0 1 .855.422L9.5 12m-7 0h18m-18 0v2.25A2.25 2.25 0 0 0 4.75 16.5h2.5m-7-4.5H2m19.5 0v2.25A2.25 2.25 0 0 1 19.25 16.5h-2.5m4-4.5H22m-1-1.5H3.125C2.504 11 2 10.496 2 9.875v-.75C2 8.504 2.504 8 3.125 8h17.75C21.496 8 22 8.504 22 9.125v.75C22 10.496 21.496 11 20.875 11Z'
+    };
+
+    // Update the path
+    const pathElement = this.statusIcon.querySelector('path');
+    if (pathElement && iconPaths[this.currentMode]) {
+      pathElement.setAttribute('d', iconPaths[this.currentMode]);
+    }
   }
 
   updateButtons() {

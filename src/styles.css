@@ -85,16 +85,25 @@ h1 {
 }
 
 .timer-status {
-  font-size: 2rem;
-  margin-bottom: 2rem;
+  font-size: 14px;
+  margin-bottom: 0.5rem;
   color: var(--focus-color);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 2px;
+  font-family: 'Roboto Flex', sans-serif;
+  font-weight: 800;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+#status-icon {
+  width: 20px;
+  height: 20px;
 }
 
 .timer-minutes {
-  font-size: 8rem;
+  font-size: 10rem;
   font-weight: 800;
   color: var(--focus-color);
   font-family: 'Roboto Flex', sans-serif;
@@ -103,7 +112,7 @@ h1 {
 }
 
 .timer-seconds {
-  font-size: 8rem;
+  font-size: 10rem;
   font-weight: 800;
   color: var(--text-light);
   font-family: 'Roboto Flex', sans-serif;
@@ -1346,7 +1355,16 @@ body {
 
 /* Timer States */
 .container.focus .timer-status {
-  color: var(--focus-color);
+  color: var(--focus-timer-color);
+  background-color: var(--focus-secondary-btn);
+  padding: 0.2rem 2rem;
+  border-radius: 2rem;
+  border: var(--focus-timer-color) 2px solid;
+  display: inline-flex;
+}
+
+.container.focus #status-icon {
+  color: var(--focus-timer-color);
 }
 
 .container.focus .timer-minutes,
@@ -1367,7 +1385,16 @@ body {
 }
 
 .container.break .timer-status {
-  color: var(--break-color);
+  color: var(--break-timer-color);
+  background-color: var(--break-secondary-btn);
+  padding: 0.4rem 2rem;
+  border-radius: 2rem;
+  border: var(--break-timer-color) 2px solid;
+  display: inline-flex;
+}
+
+.container.break #status-icon {
+  color: var(--break-timer-color);
 }
 
 .container.break .timer-minutes,
@@ -1388,7 +1415,16 @@ body {
 }
 
 .container.longBreak .timer-status {
-  color: var(--long-break-color);
+  color: var(--long-break-timer-color);
+  background-color: var(--long-break-secondary-btn);
+  padding: 0.4rem 2rem;
+  border-radius: 2rem;
+  border: var(--long-break-timer-color) 2px solid;
+  display: inline-flex;
+}
+
+.container.longBreak #status-icon {
+  color: var(--long-break-timer-color);
 }
 
 .container.longBreak .timer-minutes,
