@@ -425,19 +425,41 @@ kbd {
 
 /* Animations and Transitions */
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideIn {
-  from { transform: translateX(-100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 .timer-container.focus .timer-display {
@@ -559,7 +581,8 @@ kbd {
 body {
   margin: 0;
   padding: 0;
-  padding-left: 80px; /* Space for sidebar */
+  padding-left: 80px;
+  /* Space for sidebar */
   background: #f8f9fa;
 }
 
@@ -578,6 +601,7 @@ body {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -928,7 +952,8 @@ body {
   margin-top: 2rem;
 }
 
-.btn-primary, .btn-secondary {
+.btn-primary,
+.btn-secondary {
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 8px;
@@ -1006,9 +1031,12 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.7;
   }
@@ -1053,21 +1081,21 @@ body {
   .container {
     padding: 1rem;
   }
-  
+
   .timer-display {
     font-size: 3rem !important;
   }
-  
+
   .controls {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .control-btn {
     width: 100%;
     max-width: 200px;
   }
-  
+
   .stats {
     flex-direction: column;
     gap: 0.5rem;
@@ -1130,15 +1158,15 @@ body {
   .sidebar {
     background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
   }
-  
+
   .sidebar-icon {
     background: rgba(255, 255, 255, 0.05);
   }
-  
+
   .sidebar-icon:hover {
     background: rgba(255, 255, 255, 0.15);
   }
-  
+
   .sidebar-icon.active {
     background: rgba(255, 255, 255, 0.2);
   }

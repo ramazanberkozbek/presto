@@ -19,11 +19,11 @@ console.log("  pomodoro-settings:", localStorage.getItem('pomodoro-settings'));
 
 // Test 3: Check current timer state
 if (window.pomodoroTimer) {
-  console.log("\n3. Current timer state:");
-  console.log("  completedPomodoros:", window.pomodoroTimer.completedPomodoros);
-  console.log("  currentSession:", window.pomodoroTimer.currentSession);
-  console.log("  tasks length:", window.pomodoroTimer.tasks ? window.pomodoroTimer.tasks.length : 'undefined');
-  console.log("  timeRemaining:", window.pomodoroTimer.timeRemaining);
+    console.log("\n3. Current timer state:");
+    console.log("  completedPomodoros:", window.pomodoroTimer.completedPomodoros);
+    console.log("  currentSession:", window.pomodoroTimer.currentSession);
+    console.log("  tasks length:", window.pomodoroTimer.tasks ? window.pomodoroTimer.tasks.length : 'undefined');
+    console.log("  timeRemaining:", window.pomodoroTimer.timeRemaining);
 }
 
 // Test 4: Check button exists

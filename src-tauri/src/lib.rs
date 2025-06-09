@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
-use tauri::{Manager, Emitter};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
+use tauri::{Emitter, Manager};
 
 #[derive(Serialize, Deserialize, Clone)]
 struct PomodoroSession {
@@ -81,126 +81,148 @@ fn greet(name: &str) -> String {
 
 #[tauri::command]
 async fn save_session_data(session: PomodoroSession, app: tauri::AppHandle) -> Result<(), String> {
-    let app_data_dir = app.path().app_data_dir()
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
         .map_err(|e| format!("Failed to get app data directory: {}", e))?;
-    
+
     // Create the directory if it doesn't exist
     fs::create_dir_all(&app_data_dir).map_err(|e| format!("Failed to create directory: {}", e))?;
-    
+
     let file_path = app_data_dir.join("session.json");
-    let json = serde_json::to_string_pretty(&session).map_err(|e| format!("Failed to serialize session: {}", e))?;
-    
+    let json = serde_json::to_string_pretty(&session)
+        .map_err(|e| format!("Failed to serialize session: {}", e))?;
+
     fs::write(file_path, json).map_err(|e| format!("Failed to write session file: {}", e))?;
-    
+
     Ok(())
 }
 
 #[tauri::command]
 async fn load_session_data(app: tauri::AppHandle) -> Result<Option<PomodoroSession>, String> {
-    let app_data_dir = app.path().app_data_dir()
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
         .map_err(|e| format!("Failed to get app data directory: {}", e))?;
     let file_path = app_data_dir.join("session.json");
-    
+
     if !file_path.exists() {
         return Ok(None);
     }
-    
-    let content = fs::read_to_string(file_path).map_err(|e| format!("Failed to read session file: {}", e))?;
-    let session: PomodoroSession = serde_json::from_str(&content).map_err(|e| format!("Failed to parse session: {}", e))?;
-    
+
+    let content =
+        fs::read_to_string(file_path).map_err(|e| format!("Failed to read session file: {}", e))?;
+    let session: PomodoroSession =
+        serde_json::from_str(&content).map_err(|e| format!("Failed to parse session: {}", e))?;
+
     Ok(Some(session))
 }
 
 #[tauri::command]
 async fn save_tasks(tasks: Vec<Task>, app: tauri::AppHandle) -> Result<(), String> {
-    let app_data_dir = app.path().app_data_dir()
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
         .map_err(|e| format!("Failed to get app data directory: {}", e))?;
-    
+
     // Create the directory if it doesn't exist
     fs::create_dir_all(&app_data_dir).map_err(|e| format!("Failed to create directory: {}", e))?;
-    
+
     let file_path = app_data_dir.join("tasks.json");
-    let json = serde_json::to_string_pretty(&tasks).map_err(|e| format!("Failed to serialize tasks: {}", e))?;
-    
+    let json = serde_json::to_string_pretty(&tasks)
+        .map_err(|e| format!("Failed to serialize tasks: {}", e))?;
+
     fs::write(file_path, json).map_err(|e| format!("Failed to write tasks file: {}", e))?;
-    
+
     Ok(())
 }
 
 #[tauri::command]
 async fn load_tasks(app: tauri::AppHandle) -> Result<Vec<Task>, String> {
-    let app_data_dir = app.path().app_data_dir()
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
         .map_err(|e| format!("Failed to get app data directory: {}", e))?;
     let file_path = app_data_dir.join("tasks.json");
-    
+
     if !file_path.exists() {
         return Ok(Vec::new());
     }
-    
-    let content = fs::read_to_string(file_path).map_err(|e| format!("Failed to read tasks file: {}", e))?;
-    let tasks: Vec<Task> = serde_json::from_str(&content).map_err(|e| format!("Failed to parse tasks: {}", e))?;
-    
+
+    let content =
+        fs::read_to_string(file_path).map_err(|e| format!("Failed to read tasks file: {}", e))?;
+    let tasks: Vec<Task> =
+        serde_json::from_str(&content).map_err(|e| format!("Failed to parse tasks: {}", e))?;
+
     Ok(tasks)
 }
 
 #[tauri::command]
 async fn get_stats_history(app: tauri::AppHandle) -> Result<Vec<PomodoroSession>, String> {
-    let app_data_dir = app.path().app_data_dir()
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
         .map_err(|e| format!("Failed to get app data directory: {}", e))?;
     let history_path = app_data_dir.join("history.json");
-    
+
     if !history_path.exists() {
         return Ok(Vec::new());
     }
-    
-    let content = fs::read_to_string(history_path).map_err(|e| format!("Failed to read history file: {}", e))?;
-    let history: Vec<PomodoroSession> = serde_json::from_str(&content).map_err(|e| format!("Failed to parse history: {}", e))?;
-    
+
+    let content = fs::read_to_string(history_path)
+        .map_err(|e| format!("Failed to read history file: {}", e))?;
+    let history: Vec<PomodoroSession> =
+        serde_json::from_str(&content).map_err(|e| format!("Failed to parse history: {}", e))?;
+
     Ok(history)
 }
 
 #[tauri::command]
 async fn save_daily_stats(session: PomodoroSession, app: tauri::AppHandle) -> Result<(), String> {
-    let app_data_dir = app.path().app_data_dir()
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
         .map_err(|e| format!("Failed to get app data directory: {}", e))?;
-    
+
     // Create the directory if it doesn't exist
     fs::create_dir_all(&app_data_dir).map_err(|e| format!("Failed to create directory: {}", e))?;
-    
+
     let history_path = app_data_dir.join("history.json");
-    
+
     let mut history: Vec<PomodoroSession> = if history_path.exists() {
-        let content = fs::read_to_string(&history_path).map_err(|e| format!("Failed to read history: {}", e))?;
+        let content = fs::read_to_string(&history_path)
+            .map_err(|e| format!("Failed to read history: {}", e))?;
         serde_json::from_str(&content).unwrap_or_else(|_| Vec::new())
     } else {
         Vec::new()
     };
-    
+
     // Remove existing entry for the same date and add the new one
     history.retain(|s| s.date != session.date);
     history.push(session);
-    
+
     // Keep only last 30 days
     history.sort_by(|a, b| a.date.cmp(&b.date));
     if history.len() > 30 {
         let start_index = history.len() - 30;
         history.drain(0..start_index);
     }
-    
-    let json = serde_json::to_string_pretty(&history).map_err(|e| format!("Failed to serialize history: {}", e))?;
+
+    let json = serde_json::to_string_pretty(&history)
+        .map_err(|e| format!("Failed to serialize history: {}", e))?;
     fs::write(history_path, json).map_err(|e| format!("Failed to write history file: {}", e))?;
-    
+
     Ok(())
 }
 
 #[tauri::command]
 async fn update_tray_icon(
-    app: tauri::AppHandle, 
-    timer_text: String, 
+    app: tauri::AppHandle,
+    timer_text: String,
     is_running: bool,
     session_mode: String,
     current_session: u32,
-    total_sessions: u32
+    total_sessions: u32,
 ) -> Result<(), String> {
     // Aggiorna il titolo dell'icona della tray con il timer
     if let Some(tray) = app.tray_by_id("main") {
@@ -208,24 +230,36 @@ async fn update_tray_icon(
             "focus" => "🍅",
             "break" => "😌",
             "longBreak" => "🎉",
-            _ => "⏱️"
+            _ => "⏱️",
         };
-        
+
         let status = if is_running { "Running" } else { "Paused" };
-        
+
         // Su macOS, mostra il timer nel titolo dell'icona della menu bar
         let title = format!("{} {}", mode_icon, timer_text);
-        tray.set_title(Some(title)).map_err(|e| format!("Failed to set title: {}", e))?;
-        
+        tray.set_title(Some(title))
+            .map_err(|e| format!("Failed to set title: {}", e))?;
+
         // Tooltip con informazioni dettagliate
         let tooltip = if session_mode == "focus" {
-            format!("Tempo - Session {}/{} ({})", current_session, total_sessions, status)
+            format!(
+                "Tempo - Session {}/{} ({})",
+                current_session, total_sessions, status
+            )
         } else {
-            format!("Tempo - {} ({})", 
-                if session_mode == "longBreak" { "Long Break" } else { "Short Break" }, status)
+            format!(
+                "Tempo - {} ({})",
+                if session_mode == "longBreak" {
+                    "Long Break"
+                } else {
+                    "Short Break"
+                },
+                status
+            )
         };
-        
-        tray.set_tooltip(Some(tooltip)).map_err(|e| format!("Failed to set tooltip: {}", e))?;
+
+        tray.set_tooltip(Some(tooltip))
+            .map_err(|e| format!("Failed to set tooltip: {}", e))?;
     }
     Ok(())
 }
@@ -233,77 +267,94 @@ async fn update_tray_icon(
 #[tauri::command]
 async fn show_window(app: tauri::AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("main") {
-        window.show().map_err(|e| format!("Failed to show window: {}", e))?;
-        window.set_focus().map_err(|e| format!("Failed to focus window: {}", e))?;
+        window
+            .show()
+            .map_err(|e| format!("Failed to show window: {}", e))?;
+        window
+            .set_focus()
+            .map_err(|e| format!("Failed to focus window: {}", e))?;
     }
     Ok(())
 }
 
 #[tauri::command]
 async fn save_settings(settings: AppSettings, app: tauri::AppHandle) -> Result<(), String> {
-    let app_data_dir = app.path().app_data_dir()
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
         .map_err(|e| format!("Failed to get app data directory: {}", e))?;
-    
+
     fs::create_dir_all(&app_data_dir).map_err(|e| format!("Failed to create directory: {}", e))?;
-    
+
     let file_path = app_data_dir.join("settings.json");
-    let json = serde_json::to_string_pretty(&settings).map_err(|e| format!("Failed to serialize settings: {}", e))?;
-    
+    let json = serde_json::to_string_pretty(&settings)
+        .map_err(|e| format!("Failed to serialize settings: {}", e))?;
+
     fs::write(file_path, json).map_err(|e| format!("Failed to write settings file: {}", e))?;
-    
+
     Ok(())
 }
 
 #[tauri::command]
 async fn load_settings(app: tauri::AppHandle) -> Result<AppSettings, String> {
-    let app_data_dir = app.path().app_data_dir()
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
         .map_err(|e| format!("Failed to get app data directory: {}", e))?;
     let file_path = app_data_dir.join("settings.json");
-    
+
     if !file_path.exists() {
         return Ok(AppSettings::default());
     }
-    
-    let contents = fs::read_to_string(file_path).map_err(|e| format!("Failed to read settings file: {}", e))?;
-    let settings: AppSettings = serde_json::from_str(&contents).map_err(|e| format!("Failed to parse settings: {}", e))?;
-    
+
+    let contents = fs::read_to_string(file_path)
+        .map_err(|e| format!("Failed to read settings file: {}", e))?;
+    let settings: AppSettings =
+        serde_json::from_str(&contents).map_err(|e| format!("Failed to parse settings: {}", e))?;
+
     Ok(settings)
 }
 
 #[tauri::command]
-async fn register_global_shortcuts(app: tauri::AppHandle, shortcuts: ShortcutSettings) -> Result<(), String> {
-    // Note: For now, we'll store the shortcuts but not actually register them 
+async fn register_global_shortcuts(
+    app: tauri::AppHandle,
+    shortcuts: ShortcutSettings,
+) -> Result<(), String> {
+    // Note: For now, we'll store the shortcuts but not actually register them
     // as global shortcuts in Tauri 2 require a different approach
     // The shortcuts will work as local shortcuts when the app has focus
-    
+
     // Emit an event to the frontend to update local shortcuts
     app.emit("shortcuts-updated", &shortcuts)
         .map_err(|e| format!("Failed to emit shortcuts update: {}", e))?;
-    
+
     Ok(())
 }
 
 #[tauri::command]
 async fn reset_all_data(app: tauri::AppHandle) -> Result<(), String> {
-    let app_data_dir = app.path().app_data_dir()
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
         .map_err(|e| format!("Failed to get app data directory: {}", e))?;
-    
+
     // Lista di tutti i file da eliminare
     let files_to_delete = vec![
         "session.json",
-        "tasks.json", 
+        "tasks.json",
         "history.json",
-        "settings.json"
+        "settings.json",
     ];
-    
+
     // Elimina tutti i file di dati
     for file_name in files_to_delete {
         let file_path = app_data_dir.join(file_name);
         if file_path.exists() {
-            fs::remove_file(file_path).map_err(|e| format!("Failed to delete {}: {}", file_name, e))?;
+            fs::remove_file(file_path)
+                .map_err(|e| format!("Failed to delete {}: {}", file_name, e))?;
         }
     }
-    
+
     // Opzionalmente, elimina l'intera directory se è vuota
     // (lasciamo questa parte commentata per sicurezza)
     /*
@@ -311,7 +362,7 @@ async fn reset_all_data(app: tauri::AppHandle) -> Result<(), String> {
         let _ = fs::remove_dir(&app_data_dir);
     }
     */
-    
+
     Ok(())
 }
 
@@ -343,7 +394,7 @@ pub fn run() {
             // Crea l'icona della tray
             let app_handle = app.handle().clone();
             let app_handle_for_click = app_handle.clone();
-            
+
             let _tray = TrayIconBuilder::with_id("main")
                 .icon(app.default_window_icon().unwrap().clone())
                 .menu(&menu)
