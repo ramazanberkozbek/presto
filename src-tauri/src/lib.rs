@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use tauri::Manager;
+use tauri::menu::{Menu, MenuItem};
+use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 
 #[derive(Serialize, Deserialize, Clone)]
 struct PomodoroSession {
@@ -139,6 +141,29 @@ async fn save_daily_stats(session: PomodoroSession, app: tauri::AppHandle) -> Re
     Ok(())
 }
 
+#[tauri::command]
+async fn update_tray_icon(app: tauri::AppHandle, timer_text: String, is_running: bool) -> Result<(), String> {
+    // Aggiorna il titolo dell'icona della tray con il timer
+    if let Some(tray) = app.tray_by_id("main") {
+        let tooltip = if is_running {
+            format!("Tempo - {} (Running)", timer_text)
+        } else {
+            format!("Tempo - {} (Paused)", timer_text)
+        };
+        tray.set_tooltip(Some(tooltip)).map_err(|e| format!("Failed to set tooltip: {}", e))?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+async fn show_window(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        window.show().map_err(|e| format!("Failed to show window: {}", e))?;
+        window.set_focus().map_err(|e| format!("Failed to focus window: {}", e))?;
+    }
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -150,8 +175,58 @@ pub fn run() {
             save_tasks,
             load_tasks,
             get_stats_history,
-            save_daily_stats
+            save_daily_stats,
+            update_tray_icon,
+            show_window
         ])
+        .setup(|app| {
+            // Crea il menu della tray
+            let show_item = MenuItem::with_id(app, "show", "Mostra Tempo", true, None::<&str>)?;
+            let quit_item = MenuItem::with_id(app, "quit", "Esci", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
+
+            // Crea l'icona della tray
+            let app_handle = app.handle().clone();
+            let app_handle_for_click = app_handle.clone();
+            
+            let _tray = TrayIconBuilder::with_id("main")
+                .icon(app.default_window_icon().unwrap().clone())
+                .menu(&menu)
+                .show_menu_on_left_click(false)
+                .on_menu_event(move |_tray, event| match event.id.as_ref() {
+                    "show" => {
+                        if let Some(window) = app_handle.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                    "quit" => {
+                        app_handle.exit(0);
+                    }
+                    _ => {}
+                })
+                .on_tray_icon_event(move |_tray, event| {
+                    if let TrayIconEvent::Click { .. } = event {
+                        if let Some(window) = app_handle_for_click.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                })
+                .build(app)?;
+
+            // Gestisci il close event per nascondere invece di chiudere
+            if let Some(window) = app.get_webview_window("main") {
+                window.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                        // Nascondi la finestra invece di chiuderla
+                        api.prevent_close();
+                    }
+                });
+            }
+
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

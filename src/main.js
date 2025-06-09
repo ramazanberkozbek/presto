@@ -484,6 +484,9 @@ class PomodoroTimer {
     // Update page title
     const statusIcon = this.currentMode === 'focus' ? '🍅' : (this.currentMode === 'break' ? '😌' : '🎉');
     document.title = `${statusIcon} ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} - Tempo`;
+    
+    // Update tray icon
+    this.updateTrayIcon();
   }
   
   updateButtons() {
@@ -845,6 +848,22 @@ class PomodoroTimer {
     const container = document.querySelector('.timer-container');
     if (!container.classList.contains('warning')) {
       container.classList.add('warning');
+    }
+  }
+  
+  // Update tray icon with timer information
+  async updateTrayIcon() {
+    try {
+      const minutes = Math.floor(this.timeRemaining / 60);
+      const seconds = this.timeRemaining % 60;
+      const timerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      
+      await invoke('update_tray_icon', {
+        timerText: timerText,
+        isRunning: this.isRunning
+      });
+    } catch (error) {
+      console.warn('Failed to update tray icon:', error);
     }
   }
 }
