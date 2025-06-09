@@ -860,7 +860,10 @@ class PomodoroTimer {
       
       await invoke('update_tray_icon', {
         timerText: timerText,
-        isRunning: this.isRunning
+        isRunning: this.isRunning,
+        sessionMode: this.currentMode,
+        currentSession: this.currentSession,
+        totalSessions: this.totalSessions
       });
     } catch (error) {
       console.warn('Failed to update tray icon:', error);

@@ -142,14 +142,37 @@ async fn save_daily_stats(session: PomodoroSession, app: tauri::AppHandle) -> Re
 }
 
 #[tauri::command]
-async fn update_tray_icon(app: tauri::AppHandle, timer_text: String, is_running: bool) -> Result<(), String> {
+async fn update_tray_icon(
+    app: tauri::AppHandle, 
+    timer_text: String, 
+    is_running: bool,
+    session_mode: String,
+    current_session: u32,
+    total_sessions: u32
+) -> Result<(), String> {
     // Aggiorna il titolo dell'icona della tray con il timer
     if let Some(tray) = app.tray_by_id("main") {
-        let tooltip = if is_running {
-            format!("Tempo - {} (Running)", timer_text)
-        } else {
-            format!("Tempo - {} (Paused)", timer_text)
+        let mode_icon = match session_mode.as_str() {
+            "focus" => "🍅",
+            "break" => "😌",
+            "longBreak" => "🎉",
+            _ => "⏱️"
         };
+        
+        let status = if is_running { "Running" } else { "Paused" };
+        
+        // Su macOS, mostra il timer nel titolo dell'icona della menu bar
+        let title = format!("{} {}", mode_icon, timer_text);
+        tray.set_title(Some(title)).map_err(|e| format!("Failed to set title: {}", e))?;
+        
+        // Tooltip con informazioni dettagliate
+        let tooltip = if session_mode == "focus" {
+            format!("Tempo - Session {}/{} ({})", current_session, total_sessions, status)
+        } else {
+            format!("Tempo - {} ({})", 
+                if session_mode == "longBreak" { "Long Break" } else { "Short Break" }, status)
+        };
+        
         tray.set_tooltip(Some(tooltip)).map_err(|e| format!("Failed to set tooltip: {}", e))?;
     }
     Ok(())
