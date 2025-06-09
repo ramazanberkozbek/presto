@@ -550,16 +550,26 @@ class PomodoroTimer {
               this.startTimer();
             }
             break;
+          case 'KeyS':
+            // CMD+ALT+S per start/pausa (nuova shortcut principale)
+            if ((e.ctrlKey || e.metaKey) && e.altKey) {
+              e.preventDefault();
+              if (this.isRunning) {
+                this.pauseTimer();
+              } else {
+                this.startTimer();
+              }
+            }
+            // CMD+S per skip session (shortcut esistente)
+            else if (e.ctrlKey || e.metaKey) {
+              e.preventDefault();
+              this.skipSession();
+            }
+            break;
           case 'KeyR':
             if (e.ctrlKey || e.metaKey) {
               e.preventDefault();
               this.resetTimer();
-            }
-            break;
-          case 'KeyS':
-            if (e.ctrlKey || e.metaKey) {
-              e.preventDefault();
-              this.skipSession();
             }
             break;
           case 'KeyH':
