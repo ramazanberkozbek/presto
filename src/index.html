@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tauri App</title>
+    <script type="module" src="/main.js" defer></script>
+  </head>
+
+  <body>
+    <main class="container">
+      <h1>Tempo - Pomodoro Timer</h1>
+
+      <!-- Timer Display -->
+      <div class="timer-container">
+        <div class="timer-display" id="timer-display">25:00</div>
+        <div class="timer-status" id="timer-status">Ready to Focus</div>
+        <div class="session-info" id="session-info">Session 1 of 10</div>
+      </div>
+
+      <!-- Control Buttons -->
+      <div class="controls">
+        <button id="start-btn" class="control-btn primary">Start</button>
+        <button id="pause-btn" class="control-btn" disabled>Pause</button>
+        <button id="reset-btn" class="control-btn">Reset</button>
+        <button id="skip-btn" class="control-btn">Skip</button>
+      </div>
+
+      <!-- Progress indicators -->
+      <div class="progress-container">
+        <div class="pomodoro-counter">
+          <h3>Today's Progress</h3>
+          <div class="pomodoro-dots" id="pomodoro-dots">
+            <!-- Will be filled by JavaScript -->
+          </div>
+          <div class="stats" id="stats">
+            <span>Completed: <strong id="completed-count">0</strong>/10</span>
+            <span>Focus Time: <strong id="focus-time">0h 0m</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Task Input -->
+      <div class="task-section">
+        <h3>Current Task</h3>
+        <input id="task-input" placeholder="What are you working on?" />
+        <div class="task-list" id="task-list">
+          <!-- Will be filled by JavaScript -->
+        </div>
+      </div>
+
+      <!-- Statistics Section -->
+      <div class="stats-section">
+        <h3>Weekly Progress</h3>
+        <div class="weekly-stats" id="weekly-stats">
+          <!-- Will be filled by JavaScript -->
+        </div>
+        <button id="show-history-btn" class="control-btn">View History</button>
+      </div>
+
+      <!-- Keyboard Shortcuts Info -->
+      <div class="shortcuts-info">
+        <h4>Keyboard Shortcuts</h4>
+        <div class="shortcuts-grid">
+          <span><kbd>Space</kbd> Start/Pause</span>
+          <span><kbd>Cmd+R</kbd> Reset</span>
+          <span><kbd>Cmd+S</kbd> Skip</span>
+          <span><kbd>Cmd+H</kbd> History</span>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
