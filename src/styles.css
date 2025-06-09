@@ -31,7 +31,7 @@
   align-items: center;
   justify-content: flex-start;
   min-height: 100vh;
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
 }
 
@@ -501,6 +501,333 @@ kbd {
   box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.2);
 }
 
+/* Sidebar Styles */
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 80px;
+  height: 100vh;
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 0;
+  z-index: 1000;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-icons {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sidebar-icon {
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.sidebar-icon:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.sidebar-icon.active {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Main Content Layout Adjustment */
+body {
+  margin: 0;
+  padding: 0;
+  padding-left: 80px; /* Space for sidebar */
+  background: #f8f9fa;
+}
+
+/* View Container Styles */
+.view-container {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+.view-container.hidden {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Calendar Styles */
+.calendar-container {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.calendar-header h2 {
+  margin: 0;
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+.nav-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent-color);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  font-size: 1.2rem;
+}
+
+.nav-btn:hover {
+  background: #8e44ad;
+  transform: scale(1.1);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-top: 1rem;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  background: #f8f9fa;
+  border: 2px solid transparent;
+}
+
+.calendar-day:hover {
+  background: #e9ecef;
+  transform: scale(1.05);
+}
+
+.calendar-day.today {
+  background: var(--accent-color);
+  color: white;
+  font-weight: 600;
+}
+
+.calendar-day.has-sessions {
+  border-color: var(--focus-color);
+  background: rgba(231, 76, 60, 0.1);
+}
+
+.calendar-day.selected {
+  background: var(--accent-color);
+  color: white;
+  font-weight: 600;
+  border-color: #8e44ad;
+}
+
+.calendar-day.selected .calendar-dot {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.calendar-day-number {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.calendar-day-dots {
+  display: flex;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.calendar-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--focus-color);
+}
+
+.day-name {
+  background: none;
+  font-weight: 600;
+  color: var(--text-light);
+  cursor: default;
+  font-size: 0.8rem;
+}
+
+.day-name:hover {
+  background: none;
+  transform: none;
+}
+
+/* Daily Details Styles */
+.daily-details {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.day-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border-left: 4px solid var(--accent-color);
+}
+
+.stat-label {
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.stat-value {
+  font-weight: 700;
+  color: var(--accent-color);
+  font-size: 1.1rem;
+}
+
+/* Weekly Summary Styles */
+.weekly-summary {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.week-chart {
+  display: flex;
+  align-items: end;
+  gap: 1rem;
+  height: 200px;
+  margin-top: 1rem;
+}
+
+.week-bar {
+  flex: 1;
+  background: linear-gradient(180deg, var(--focus-color), #c0392b);
+  border-radius: 8px 8px 0 0;
+  min-height: 20px;
+  position: relative;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.week-bar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+}
+
+.week-bar-label {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.8rem;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.week-bar-value {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.8rem;
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+/* Responsive Design for Sidebar */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100vw;
+    height: 60px;
+    bottom: 0;
+    top: auto;
+    flex-direction: row;
+    justify-content: center;
+    padding: 0.5rem 0;
+  }
+
+  .sidebar-icons {
+    flex-direction: row;
+    gap: 2rem;
+  }
+
+  body {
+    padding-left: 0;
+    padding-bottom: 60px;
+  }
+
+  .container {
+    padding: 1rem;
+  }
+
+  .calendar-grid {
+    gap: 4px;
+  }
+
+  .day-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 600px) {
   .container {
@@ -577,5 +904,22 @@ kbd {
   .history-content {
     background-color: #1a1a1a;
     color: #f6f6f6;
+  }
+
+  /* Dark mode improvements for sidebar */
+  .sidebar {
+    background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+  }
+  
+  .sidebar-icon {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  
+  .sidebar-icon:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+  
+  .sidebar-icon.active {
+    background: rgba(255, 255, 255, 0.2);
   }
 }

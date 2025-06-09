@@ -1,6 +1,233 @@
 // Pomodoro Timer Application
 const { invoke } = window.__TAURI__.core;
 
+// Navigation Manager for Sidebar
+class NavigationManager {
+  constructor() {
+    this.currentView = 'timer';
+    this.init();
+  }
+
+  init() {
+    // Navigation buttons
+    const navButtons = document.querySelectorAll('.sidebar-icon');
+    navButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const view = e.currentTarget.dataset.view;
+        this.switchView(view);
+      });
+    });
+
+    // Initialize calendar
+    this.initCalendar();
+  }
+
+  switchView(view) {
+    // Update active button
+    document.querySelectorAll('.sidebar-icon').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    document.querySelector(`[data-view="${view}"]`).classList.add('active');
+
+    // Hide all views
+    document.querySelectorAll('.view-container').forEach(container => {
+      container.classList.add('hidden');
+    });
+
+    // Show selected view
+    document.getElementById(`${view}-view`).classList.remove('hidden');
+    this.currentView = view;
+
+    // Initialize view-specific content
+    if (view === 'calendar') {
+      this.updateCalendar();
+      this.updateDailyDetails();
+      this.updateWeeklyChart();
+    }
+  }
+
+  initCalendar() {
+    const calendarGrid = document.getElementById('calendar-grid');
+    const currentMonthEl = document.getElementById('current-month');
+    const prevBtn = document.getElementById('prev-month');
+    const nextBtn = document.getElementById('next-month');
+
+    this.currentDate = new Date();
+    this.displayMonth = new Date(this.currentDate);
+
+    prevBtn.addEventListener('click', () => {
+      this.displayMonth.setMonth(this.displayMonth.getMonth() - 1);
+      this.updateCalendar();
+    });
+
+    nextBtn.addEventListener('click', () => {
+      this.displayMonth.setMonth(this.displayMonth.getMonth() + 1);
+      this.updateCalendar();
+    });
+
+    this.updateCalendar();
+  }
+
+  updateCalendar() {
+    const calendarGrid = document.getElementById('calendar-grid');
+    const currentMonthEl = document.getElementById('current-month');
+    
+    // Update month display
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    currentMonthEl.textContent = `${monthNames[this.displayMonth.getMonth()]} ${this.displayMonth.getFullYear()}`;
+
+    // Clear previous calendar
+    calendarGrid.innerHTML = '';
+
+    // Add day headers
+    const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    dayHeaders.forEach(day => {
+      const dayEl = document.createElement('div');
+      dayEl.className = 'calendar-day day-name';
+      dayEl.textContent = day;
+      calendarGrid.appendChild(dayEl);
+    });
+
+    // Get first day of month and number of days
+    const firstDay = new Date(this.displayMonth.getFullYear(), this.displayMonth.getMonth(), 1);
+    const lastDay = new Date(this.displayMonth.getFullYear(), this.displayMonth.getMonth() + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDay = firstDay.getDay();
+
+    // Add empty cells for days before month starts
+    for (let i = 0; i < startingDay; i++) {
+      const emptyDay = document.createElement('div');
+      emptyDay.className = 'calendar-day';
+      calendarGrid.appendChild(emptyDay);
+    }
+
+    // Add days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayEl = document.createElement('div');
+      dayEl.className = 'calendar-day';
+      
+      const dayNumber = document.createElement('div');
+      dayNumber.className = 'calendar-day-number';
+      dayNumber.textContent = day;
+      dayEl.appendChild(dayNumber);
+
+      // Check if it's today
+      const dayDate = new Date(this.displayMonth.getFullYear(), this.displayMonth.getMonth(), day);
+      if (this.isSameDay(dayDate, this.currentDate)) {
+        dayEl.classList.add('today');
+      }
+
+      // Add session dots (placeholder for now)
+      const dots = document.createElement('div');
+      dots.className = 'calendar-day-dots';
+      // Simulate some completed sessions
+      const randomSessions = Math.floor(Math.random() * 6);
+      if (randomSessions > 0) {
+        dayEl.classList.add('has-sessions');
+        for (let i = 0; i < Math.min(randomSessions, 5); i++) {
+          const dot = document.createElement('div');
+          dot.className = 'calendar-dot';
+          dots.appendChild(dot);
+        }
+      }
+      dayEl.appendChild(dots);
+
+      // Add click event
+      dayEl.addEventListener('click', () => {
+        this.selectDay(dayDate);
+      });
+
+      calendarGrid.appendChild(dayEl);
+    }
+  }
+
+  isSameDay(date1, date2) {
+    return date1.getDate() === date2.getDate() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getFullYear() === date2.getFullYear();
+  }
+
+  selectDay(date) {
+    // Remove previous selection
+    document.querySelectorAll('.calendar-day').forEach(day => {
+      day.classList.remove('selected');
+    });
+    
+    // Add selection to clicked day
+    event.currentTarget.classList.add('selected');
+    
+    this.selectedDate = date;
+    this.updateDailyDetails(date);
+  }
+
+  updateDailyDetails(date = this.currentDate) {
+    const dayPomodoros = document.getElementById('day-pomodoros');
+    const dayFocusTime = document.getElementById('day-focus-time');
+    const dayBreakTime = document.getElementById('day-break-time');
+
+    // Placeholder data - in real app, this would come from stored data
+    const isToday = this.isSameDay(date, this.currentDate);
+    
+    if (isToday && window.pomodoroTimer) {
+      dayPomodoros.textContent = window.pomodoroTimer.completedPomodoros;
+      dayFocusTime.textContent = this.formatTime(window.pomodoroTimer.totalFocusTime);
+      dayBreakTime.textContent = this.formatTime(window.pomodoroTimer.totalFocusTime * 0.25); // Estimate break time
+    } else {
+      // Simulate historical data
+      const randomPomodoros = Math.floor(Math.random() * 11);
+      dayPomodoros.textContent = randomPomodoros;
+      dayFocusTime.textContent = this.formatTime(randomPomodoros * 25 * 60);
+      dayBreakTime.textContent = this.formatTime(randomPomodoros * 6 * 60);
+    }
+  }
+
+  updateWeeklyChart() {
+    const weekChart = document.getElementById('week-chart');
+    weekChart.innerHTML = '';
+
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const maxHeight = 160;
+
+    days.forEach((day, index) => {
+      const barContainer = document.createElement('div');
+      barContainer.style.position = 'relative';
+      barContainer.style.flex = '1';
+      barContainer.style.display = 'flex';
+      barContainer.style.alignItems = 'end';
+
+      const bar = document.createElement('div');
+      bar.className = 'week-bar';
+      
+      // Simulate data - in real app, this would come from stored statistics
+      const pomodoros = Math.floor(Math.random() * 11);
+      const height = (pomodoros / 10) * maxHeight;
+      bar.style.height = `${Math.max(height, 20)}px`;
+
+      const label = document.createElement('div');
+      label.className = 'week-bar-label';
+      label.textContent = day;
+
+      const value = document.createElement('div');
+      value.className = 'week-bar-value';
+      value.textContent = pomodoros;
+
+      bar.appendChild(value);
+      barContainer.appendChild(bar);
+      barContainer.appendChild(label);
+      weekChart.appendChild(barContainer);
+    });
+  }
+
+  formatTime(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  }
+}
+
 class PomodoroTimer {
   constructor() {
     // Timer states
@@ -624,6 +851,7 @@ class PomodoroTimer {
 
 // Initialize the timer when the page loads
 let timer;
+let navigation;
 
 window.addEventListener("DOMContentLoaded", () => {
   // Request notification permission
@@ -633,4 +861,9 @@ window.addEventListener("DOMContentLoaded", () => {
   
   // Initialize the timer
   timer = new PomodoroTimer();
+  window.pomodoroTimer = timer; // Make it globally accessible
+  
+  // Initialize navigation manager
+  navigation = new NavigationManager();
+  window.navigationManager = navigation; // Make it globally accessible
 });

@@ -9,8 +9,31 @@
   </head>
 
   <body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-icons">
+        <button class="sidebar-icon active" id="timer-nav" data-view="timer" title="Timer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12,6 12,12 16,14"/>
+          </svg>
+        </button>
+        <button class="sidebar-icon" id="calendar-nav" data-view="calendar" title="Calendar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
     <main class="container">
-      <h1>Tempo - Pomodoro Timer</h1>
+      <!-- Timer View -->
+      <div class="view-container" id="timer-view">
+        <h1>Tempo - Pomodoro Timer</h1>
 
       <!-- Timer Display -->
       <div class="timer-container">
@@ -67,6 +90,51 @@
           <span><kbd>Cmd+R</kbd> Reset</span>
           <span><kbd>Cmd+S</kbd> Skip</span>
           <span><kbd>Cmd+H</kbd> History</span>
+        </div>
+      </div>
+      </div>
+
+      <!-- Calendar View -->
+      <div class="view-container hidden" id="calendar-view">
+        <h1>Calendar & Statistics</h1>
+        
+        <!-- Monthly Calendar -->
+        <div class="calendar-container">
+          <div class="calendar-header">
+            <button id="prev-month" class="nav-btn">&lt;</button>
+            <h2 id="current-month">June 2025</h2>
+            <button id="next-month" class="nav-btn">&gt;</button>
+          </div>
+          <div class="calendar-grid" id="calendar-grid">
+            <!-- Will be filled by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Daily Details -->
+        <div class="daily-details" id="daily-details">
+          <h3>Today's Details</h3>
+          <div class="day-stats">
+            <div class="stat-item">
+              <span class="stat-label">Pomodoros Completed</span>
+              <span class="stat-value" id="day-pomodoros">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Focus Time</span>
+              <span class="stat-value" id="day-focus-time">0h 0m</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Break Time</span>
+              <span class="stat-value" id="day-break-time">0h 0m</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekly Summary -->
+        <div class="weekly-summary">
+          <h3>This Week</h3>
+          <div class="week-chart" id="week-chart">
+            <!-- Will be filled by JavaScript -->
+          </div>
         </div>
       </div>
     </main>
