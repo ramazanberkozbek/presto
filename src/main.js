@@ -555,6 +555,7 @@ class PomodoroTimer {
     this.pauseIcon = document.getElementById('pause-icon');
     this.menuBtn = document.getElementById('menu-btn');
     this.skipBtn = document.getElementById('skip-btn');
+    this.progressDots = document.getElementById('progress-dots');
 
     // Task management
     this.tasks = [];
@@ -565,6 +566,7 @@ class PomodoroTimer {
 
   async init() {
     this.updateDisplay();
+    this.updateProgressDots();
     this.setupEventListeners();
     await this.loadSessionData();
   }
@@ -864,6 +866,7 @@ class PomodoroTimer {
 
     if (this.currentMode === 'focus') {
       this.completedPomodoros++;
+      this.updateProgressDots();
       this.totalFocusTime += this.durations.focus;
 
       // Mark current task as completed if exists
@@ -1016,6 +1019,20 @@ class PomodoroTimer {
     const minutes = Math.floor((this.totalFocusTime % 3600) / 60);
     this.focusTimeEl.textContent = `${hours}h ${minutes}m`;
     */
+  }
+
+  // Progress dots update
+  updateProgressDots() {
+    const dots = this.progressDots.querySelectorAll('.dot');
+
+    // Update each dot based on completed pomodoros
+    dots.forEach((dot, index) => {
+      if (index < this.completedPomodoros) {
+        dot.classList.add('completed');
+      } else {
+        dot.classList.remove('completed');
+      }
+    });
   }
 
   // Task Management
@@ -1254,6 +1271,7 @@ class PomodoroTimer {
         this.completedPomodoros = data.completed_pomodoros || 0;
         this.totalFocusTime = data.total_focus_time || 0;
         this.currentSession = data.current_session || 1;
+        this.updateProgressDots();
         this.updateProgress();
       }
     } catch (error) {
@@ -1265,6 +1283,7 @@ class PomodoroTimer {
           this.completedPomodoros = data.completedPomodoros || 0;
           this.totalFocusTime = data.totalFocusTime || 0;
           this.currentSession = data.currentSession || 1;
+          this.updateProgressDots();
           this.updateProgress();
         }
       }
@@ -1411,6 +1430,7 @@ class PomodoroTimer {
 
     // Reset all counters and state
     this.completedPomodoros = 0;
+    this.updateProgressDots();
     this.currentSession = 1;
     this.totalFocusTime = 0;
     this.currentMode = 'focus';

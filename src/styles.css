@@ -24,13 +24,22 @@
 
   /* Background Colors */
   --focus-bg: #FFF2F2;
-  --break-bg: #F2FFF5;
-  --long-break-bg: #F2F9FF;
+  --break-bg: #F0FAF0;
+  --long-break-bg: #E8F4FF;
 
   /* Timer Text Colors */
   --focus-timer-color: #471515;
   --break-timer-color: #14401D;
   --long-break-timer-color: #153047;
+
+  /* Button Colors */
+  --focus-primary-btn: #FF7c7c;
+  --break-primary-btn: #8CE8A1;
+  --long-break-primary-btn: #8BCAFF;
+
+  --focus-secondary-btn: #FFD9D9;
+  --break-secondary-btn: #DAFAE0;
+  --long-break-secondary-btn: #D9EEFF;
 }
 
 .container {
@@ -56,7 +65,7 @@
   background-color: var(--break-bg);
 }
 
-.container.long-break {
+.container.longBreak {
   background-color: var(--long-break-bg);
 }
 
@@ -124,7 +133,7 @@ h1 {
   align-items: center;
   justify-content: center;
   background-color: rgba(255, 255, 255, 0.8);
-  color: var(--text-light);
+  color: #333;
 }
 
 .control-btn:hover {
@@ -137,13 +146,12 @@ h1 {
 
 .control-btn.primary {
   background-color: var(--focus-color);
-  color: white;
+  color: var(--focus-timer-color);
   width: 90px;
   height: 90px;
 }
 
 .control-btn.primary:hover {
-  background-color: var(--focus-color);
   opacity: 0.9;
 }
 
@@ -179,6 +187,22 @@ h1 {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none !important;
+}
+
+/* Specific text colors for secondary buttons based on background */
+.container.focus .control-btn:not(.primary) {
+  color: #333;
+  /* Dark text on light blue background */
+}
+
+.container.break .control-btn:not(.primary) {
+  color: #333;
+  /* Dark text on light green background */
+}
+
+.container.longBreak .control-btn:not(.primary) {
+  color: #333;
+  /* Dark text on light green background */
 }
 
 /* Progress Section */
@@ -1330,8 +1354,16 @@ body {
   color: var(--focus-timer-color);
 }
 
+.container.focus .dot.completed {
+  background-color: var(--focus-timer-color);
+}
+
 .container.focus .control-btn.primary {
-  background-color: var(--focus-color);
+  background-color: var(--focus-primary-btn);
+}
+
+.container.focus .control-btn:not(.primary) {
+  background-color: var(--focus-secondary-btn);
 }
 
 .container.break .timer-status {
@@ -1343,19 +1375,57 @@ body {
   color: var(--break-timer-color);
 }
 
-.container.break .control-btn.primary {
-  background-color: var(--break-color);
+.container.break .dot.completed {
+  background-color: var(--break-timer-color);
 }
 
-.container.long-break .timer-status {
+.container.break .control-btn.primary {
+  background-color: var(--break-primary-btn);
+}
+
+.container.break .control-btn:not(.primary) {
+  background-color: var(--break-secondary-btn);
+}
+
+.container.longBreak .timer-status {
   color: var(--long-break-color);
 }
 
-.container.long-break .timer-minutes,
-.container.long-break .timer-seconds {
+.container.longBreak .timer-minutes,
+.container.longBreak .timer-seconds {
   color: var(--long-break-timer-color);
 }
 
-.container.long-break .control-btn.primary {
-  background-color: var(--long-break-color);
+.container.longBreak .dot.completed {
+  background-color: var(--long-break-timer-color);
 }
+
+.container.longBreak .control-btn.primary {
+  background-color: var(--long-break-primary-btn);
+}
+
+.container.longBreak .control-btn:not(.primary) {
+  background-color: var(--long-break-secondary-btn);
+}
+
+/* Progress Dots */
+.progress-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 2rem;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.dot.completed {
+  background-color: var(--focus-timer-color);
+}
+
+/* Timer Status */
