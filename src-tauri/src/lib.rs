@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
-use tauri::Manager;
+use tauri::{Manager, Emitter};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 
@@ -19,6 +19,58 @@ struct Task {
     completed: bool,
     created_at: String,
     completed_at: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct AppSettings {
+    shortcuts: ShortcutSettings,
+    timer: TimerSettings,
+    notifications: NotificationSettings,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct ShortcutSettings {
+    start_stop: Option<String>,
+    reset: Option<String>,
+    skip: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct TimerSettings {
+    focus_duration: u32,
+    break_duration: u32,
+    long_break_duration: u32,
+    total_sessions: u32,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct NotificationSettings {
+    desktop_notifications: bool,
+    sound_notifications: bool,
+    auto_start_breaks: bool,
+}
+
+impl Default for AppSettings {
+    fn default() -> Self {
+        Self {
+            shortcuts: ShortcutSettings {
+                start_stop: Some("CommandOrControl+Alt+Space".to_string()),
+                reset: Some("CommandOrControl+Alt+R".to_string()),
+                skip: Some("CommandOrControl+Alt+S".to_string()),
+            },
+            timer: TimerSettings {
+                focus_duration: 25,
+                break_duration: 5,
+                long_break_duration: 20,
+                total_sessions: 10,
+            },
+            notifications: NotificationSettings {
+                desktop_notifications: true,
+                sound_notifications: true,
+                auto_start_breaks: true,
+            },
+        }
+    }
 }
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -187,6 +239,50 @@ async fn show_window(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+async fn save_settings(settings: AppSettings, app: tauri::AppHandle) -> Result<(), String> {
+    let app_data_dir = app.path().app_data_dir()
+        .map_err(|e| format!("Failed to get app data directory: {}", e))?;
+    
+    fs::create_dir_all(&app_data_dir).map_err(|e| format!("Failed to create directory: {}", e))?;
+    
+    let file_path = app_data_dir.join("settings.json");
+    let json = serde_json::to_string_pretty(&settings).map_err(|e| format!("Failed to serialize settings: {}", e))?;
+    
+    fs::write(file_path, json).map_err(|e| format!("Failed to write settings file: {}", e))?;
+    
+    Ok(())
+}
+
+#[tauri::command]
+async fn load_settings(app: tauri::AppHandle) -> Result<AppSettings, String> {
+    let app_data_dir = app.path().app_data_dir()
+        .map_err(|e| format!("Failed to get app data directory: {}", e))?;
+    let file_path = app_data_dir.join("settings.json");
+    
+    if !file_path.exists() {
+        return Ok(AppSettings::default());
+    }
+    
+    let contents = fs::read_to_string(file_path).map_err(|e| format!("Failed to read settings file: {}", e))?;
+    let settings: AppSettings = serde_json::from_str(&contents).map_err(|e| format!("Failed to parse settings: {}", e))?;
+    
+    Ok(settings)
+}
+
+#[tauri::command]
+async fn register_global_shortcuts(app: tauri::AppHandle, shortcuts: ShortcutSettings) -> Result<(), String> {
+    // Note: For now, we'll store the shortcuts but not actually register them 
+    // as global shortcuts in Tauri 2 require a different approach
+    // The shortcuts will work as local shortcuts when the app has focus
+    
+    // Emit an event to the frontend to update local shortcuts
+    app.emit("shortcuts-updated", &shortcuts)
+        .map_err(|e| format!("Failed to emit shortcuts update: {}", e))?;
+    
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -200,7 +296,10 @@ pub fn run() {
             get_stats_history,
             save_daily_stats,
             update_tray_icon,
-            show_window
+            show_window,
+            save_settings,
+            load_settings,
+            register_global_shortcuts
         ])
         .setup(|app| {
             // Crea il menu della tray

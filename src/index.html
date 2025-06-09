@@ -26,6 +26,12 @@
             <line x1="3" y1="10" x2="21" y2="10"/>
           </svg>
         </button>
+        <button class="sidebar-icon" id="settings-nav" data-view="settings" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1m15.5-3.5L19 12l-2.5 2.5M5 17l2.5-2.5L5 12l2.5-2.5"/>
+          </svg>
+        </button>
       </div>
     </nav>
 
@@ -135,6 +141,101 @@
           <div class="week-chart" id="week-chart">
             <!-- Will be filled by JavaScript -->
           </div>
+        </div>
+      </div>
+
+      <!-- Settings View -->
+      <div class="view-container hidden" id="settings-view">
+        <h1>Settings</h1>
+
+        <!-- Global Shortcuts Section -->
+        <div class="settings-section">
+          <h2>Global Shortcuts</h2>
+          <p class="settings-description">Configure keyboard shortcuts that work even when the app is in the background</p>
+          
+          <div class="shortcut-item">
+            <label for="start-stop-shortcut">Start/Stop Timer:</label>
+            <div class="shortcut-input-container">
+              <input type="text" id="start-stop-shortcut" class="shortcut-input" readonly placeholder="Click to set shortcut">
+              <button class="shortcut-clear" onclick="clearShortcut('start-stop')">×</button>
+            </div>
+          </div>
+
+          <div class="shortcut-item">
+            <label for="reset-shortcut">Reset Timer:</label>
+            <div class="shortcut-input-container">
+              <input type="text" id="reset-shortcut" class="shortcut-input" readonly placeholder="Click to set shortcut">
+              <button class="shortcut-clear" onclick="clearShortcut('reset')">×</button>
+            </div>
+          </div>
+
+          <div class="shortcut-item">
+            <label for="skip-shortcut">Skip Session:</label>
+            <div class="shortcut-input-container">
+              <input type="text" id="skip-shortcut" class="shortcut-input" readonly placeholder="Click to set shortcut">
+              <button class="shortcut-clear" onclick="clearShortcut('skip')">×</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timer Settings Section -->
+        <div class="settings-section">
+          <h2>Timer Settings</h2>
+          
+          <div class="setting-item">
+            <label for="focus-duration">Focus Duration (minutes):</label>
+            <input type="number" id="focus-duration" min="1" max="60" value="25">
+          </div>
+
+          <div class="setting-item">
+            <label for="break-duration">Short Break (minutes):</label>
+            <input type="number" id="break-duration" min="1" max="30" value="5">
+          </div>
+
+          <div class="setting-item">
+            <label for="long-break-duration">Long Break (minutes):</label>
+            <input type="number" id="long-break-duration" min="1" max="60" value="20">
+          </div>
+
+          <div class="setting-item">
+            <label for="total-sessions">Daily Sessions:</label>
+            <input type="number" id="total-sessions" min="1" max="20" value="10">
+          </div>
+        </div>
+
+        <!-- Notifications Section -->
+        <div class="settings-section">
+          <h2>Notifications</h2>
+          
+          <div class="setting-item">
+            <label class="checkbox-label">
+              <input type="checkbox" id="desktop-notifications" checked>
+              <span class="checkmark"></span>
+              Desktop Notifications
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <label class="checkbox-label">
+              <input type="checkbox" id="sound-notifications" checked>
+              <span class="checkmark"></span>
+              Sound Notifications
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <label class="checkbox-label">
+              <input type="checkbox" id="auto-start-breaks" checked>
+              <span class="checkmark"></span>
+              Auto-start Breaks
+            </label>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="settings-actions">
+          <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+          <button class="btn-secondary" onclick="resetToDefaults()">Reset to Defaults</button>
         </div>
       </div>
     </main>

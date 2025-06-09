@@ -43,6 +43,11 @@ class NavigationManager {
       this.updateCalendar();
       this.updateDailyDetails();
       this.updateWeeklyChart();
+    } else if (view === 'settings') {
+      // Settings view will be handled by SettingsManager
+      if (window.settingsManager) {
+        window.settingsManager.populateSettingsUI();
+      }
     }
   }
 
@@ -225,6 +230,237 @@ class NavigationManager {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     return `${hours}h ${minutes}m`;
+  }
+}
+
+// Settings Manager for Global Shortcuts and Preferences
+class SettingsManager {
+  constructor() {
+    this.settings = null;
+    this.isRecordingShortcut = false;
+    this.currentRecordingField = null;
+    this.recordedKeys = [];
+  }
+
+  async init() {
+    await this.loadSettings();
+    this.setupEventListeners();
+    await this.registerGlobalShortcuts();
+    this.setupGlobalShortcutHandlers();
+  }
+
+  async loadSettings() {
+    try {
+      this.settings = await invoke('load_settings');
+      this.populateSettingsUI();
+    } catch (error) {
+      console.error('Failed to load settings:', error);
+      this.settings = this.getDefaultSettings();
+    }
+  }
+
+  getDefaultSettings() {
+    return {
+      shortcuts: {
+        start_stop: "CommandOrControl+Alt+Space",
+        reset: "CommandOrControl+Alt+R",
+        skip: "CommandOrControl+Alt+S"
+      },
+      timer: {
+        focus_duration: 25,
+        break_duration: 5,
+        long_break_duration: 20,
+        total_sessions: 10
+      },
+      notifications: {
+        desktop_notifications: true,
+        sound_notifications: true,
+        auto_start_breaks: true
+      }
+    };
+  }
+
+  populateSettingsUI() {
+    // Populate shortcuts
+    document.getElementById('start-stop-shortcut').value = this.settings.shortcuts.start_stop || '';
+    document.getElementById('reset-shortcut').value = this.settings.shortcuts.reset || '';
+    document.getElementById('skip-shortcut').value = this.settings.shortcuts.skip || '';
+
+    // Populate timer settings
+    document.getElementById('focus-duration').value = this.settings.timer.focus_duration;
+    document.getElementById('break-duration').value = this.settings.timer.break_duration;
+    document.getElementById('long-break-duration').value = this.settings.timer.long_break_duration;
+    document.getElementById('total-sessions').value = this.settings.timer.total_sessions;
+
+    // Populate notification settings
+    document.getElementById('desktop-notifications').checked = this.settings.notifications.desktop_notifications;
+    document.getElementById('sound-notifications').checked = this.settings.notifications.sound_notifications;
+    document.getElementById('auto-start-breaks').checked = this.settings.notifications.auto_start_breaks;
+  }
+
+  setupEventListeners() {
+    // Shortcut input listeners
+    const shortcutInputs = document.querySelectorAll('.shortcut-input');
+    shortcutInputs.forEach(input => {
+      input.addEventListener('click', (e) => this.startRecordingShortcut(e.target));
+      input.addEventListener('keydown', (e) => this.handleShortcutKeydown(e));
+      input.addEventListener('blur', () => this.stopRecordingShortcut());
+    });
+
+    // Global shortcut listeners
+    window.addEventListener('keydown', (e) => {
+      if (this.isRecordingShortcut) {
+        this.handleShortcutKeydown(e);
+      }
+    });
+  }
+
+  setupGlobalShortcutHandlers() {
+    // Listen for global shortcut events from Rust
+    window.__TAURI__.event.listen('global-shortcut', (event) => {
+      const action = event.payload;
+      
+      switch (action) {
+        case 'start-stop':
+          if (window.pomodoroTimer) {
+            if (window.pomodoroTimer.isRunning) {
+              window.pomodoroTimer.pauseTimer();
+            } else {
+              window.pomodoroTimer.startTimer();
+            }
+          }
+          break;
+        case 'reset':
+          if (window.pomodoroTimer) {
+            window.pomodoroTimer.resetTimer();
+          }
+          break;
+        case 'skip':
+          if (window.pomodoroTimer) {
+            window.pomodoroTimer.skipSession();
+          }
+          break;
+      }
+    });
+  }
+
+  startRecordingShortcut(input) {
+    if (this.isRecordingShortcut) return;
+    
+    this.isRecordingShortcut = true;
+    this.currentRecordingField = input;
+    this.recordedKeys = [];
+    
+    input.classList.add('recording');
+    input.value = 'Press keys...';
+    input.focus();
+  }
+
+  stopRecordingShortcut() {
+    if (!this.isRecordingShortcut) return;
+    
+    this.isRecordingShortcut = false;
+    
+    if (this.currentRecordingField) {
+      this.currentRecordingField.classList.remove('recording');
+      
+      if (this.recordedKeys.length > 0) {
+        const shortcut = this.formatShortcut(this.recordedKeys);
+        this.currentRecordingField.value = shortcut;
+      } else {
+        this.currentRecordingField.value = '';
+      }
+    }
+    
+    this.currentRecordingField = null;
+    this.recordedKeys = [];
+  }
+
+  handleShortcutKeydown(e) {
+    if (!this.isRecordingShortcut) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const key = e.key;
+    const modifiers = [];
+    
+    if (e.metaKey || e.ctrlKey) modifiers.push('CommandOrControl');
+    if (e.altKey) modifiers.push('Alt');
+    if (e.shiftKey) modifiers.push('Shift');
+    
+    // Don't record modifier keys alone
+    if (['Meta', 'Control', 'Alt', 'Shift'].includes(key)) return;
+    
+    this.recordedKeys = [...modifiers, key];
+    
+    if (this.currentRecordingField) {
+      this.currentRecordingField.value = this.formatShortcut(this.recordedKeys);
+    }
+    
+    // Auto-finish recording after a short delay
+    setTimeout(() => this.stopRecordingShortcut(), 500);
+  }
+
+  formatShortcut(keys) {
+    return keys.join('+');
+  }
+
+  async saveSettings() {
+    try {
+      // Get values from UI
+      this.settings.shortcuts.start_stop = document.getElementById('start-stop-shortcut').value || null;
+      this.settings.shortcuts.reset = document.getElementById('reset-shortcut').value || null;
+      this.settings.shortcuts.skip = document.getElementById('skip-shortcut').value || null;
+
+      this.settings.timer.focus_duration = parseInt(document.getElementById('focus-duration').value);
+      this.settings.timer.break_duration = parseInt(document.getElementById('break-duration').value);
+      this.settings.timer.long_break_duration = parseInt(document.getElementById('long-break-duration').value);
+      this.settings.timer.total_sessions = parseInt(document.getElementById('total-sessions').value);
+
+      this.settings.notifications.desktop_notifications = document.getElementById('desktop-notifications').checked;
+      this.settings.notifications.sound_notifications = document.getElementById('sound-notifications').checked;
+      this.settings.notifications.auto_start_breaks = document.getElementById('auto-start-breaks').checked;
+
+      // Save to file
+      await invoke('save_settings', { settings: this.settings });
+      
+      // Re-register global shortcuts
+      await this.registerGlobalShortcuts();
+      
+      // Update timer with new settings
+      if (window.pomodoroTimer) {
+        window.pomodoroTimer.applySettings(this.settings);
+      }
+      
+      alert('Settings saved successfully!');
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      alert('Failed to save settings');
+    }
+  }
+
+  async registerGlobalShortcuts() {
+    try {
+      await invoke('register_global_shortcuts', { shortcuts: this.settings.shortcuts });
+    } catch (error) {
+      console.error('Failed to register global shortcuts:', error);
+    }
+  }
+
+  resetToDefaults() {
+    if (confirm('Are you sure you want to reset all settings to defaults?')) {
+      this.settings = this.getDefaultSettings();
+      this.populateSettingsUI();
+    }
+  }
+
+  clearShortcut(shortcutType) {
+    const inputId = shortcutType + '-shortcut';
+    const input = document.getElementById(inputId);
+    if (input) {
+      input.value = '';
+    }
   }
 }
 
@@ -869,21 +1105,70 @@ class PomodoroTimer {
       console.warn('Failed to update tray icon:', error);
     }
   }
+
+  applySettings(settings) {
+    // Update timer durations
+    this.durations.focus = settings.timer.focus_duration * 60;
+    this.durations.break = settings.timer.break_duration * 60;
+    this.durations.longBreak = settings.timer.long_break_duration * 60;
+    this.totalSessions = settings.timer.total_sessions;
+
+    // If timer is not running, update current time remaining
+    if (!this.isRunning) {
+      this.timeRemaining = this.durations[this.currentMode];
+      this.updateDisplay();
+    }
+
+    // Update notification preferences
+    this.enableDesktopNotifications = settings.notifications.desktop_notifications;
+    this.enableSoundNotifications = settings.notifications.sound_notifications;
+    this.autoStartBreaks = settings.notifications.auto_start_breaks;
+  }
 }
 
 // Initialize the timer when the page loads
 let timer;
 let navigation;
+let settingsManager;
 
-window.addEventListener("DOMContentLoaded", () => {
+// Global functions for settings
+window.saveSettings = async function() {
+  if (window.settingsManager) {
+    await window.settingsManager.saveSettings();
+  }
+};
+
+window.resetToDefaults = function() {
+  if (window.settingsManager) {
+    window.settingsManager.resetToDefaults();
+  }
+};
+
+window.clearShortcut = function(shortcutType) {
+  if (window.settingsManager) {
+    window.settingsManager.clearShortcut(shortcutType);
+  }
+};
+
+window.addEventListener("DOMContentLoaded", async () => {
   // Request notification permission
   if ('Notification' in window) {
     Notification.requestPermission();
   }
   
+  // Initialize settings manager first
+  settingsManager = new SettingsManager();
+  window.settingsManager = settingsManager;
+  await settingsManager.init();
+  
   // Initialize the timer
   timer = new PomodoroTimer();
   window.pomodoroTimer = timer; // Make it globally accessible
+  
+  // Apply settings to timer
+  if (settingsManager.settings) {
+    timer.applySettings(settingsManager.settings);
+  }
   
   // Initialize navigation manager
   navigation = new NavigationManager();
