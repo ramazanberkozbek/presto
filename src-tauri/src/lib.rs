@@ -16,6 +16,7 @@ struct ActivityMonitor {
     last_activity: Arc<Mutex<Instant>>,
     is_monitoring: Arc<Mutex<bool>>,
     app_handle: tauri::AppHandle,
+    inactivity_threshold: Arc<Mutex<Duration>>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -63,6 +64,7 @@ struct NotificationSettings {
     sound_notifications: bool,
     auto_start_breaks: bool,
     smart_pause: bool,
+    smart_pause_timeout: u32, // timeout in seconds
 }
 
 impl Default for AppSettings {
@@ -84,17 +86,19 @@ impl Default for AppSettings {
                 sound_notifications: true,
                 auto_start_breaks: true,
                 smart_pause: false,
+                smart_pause_timeout: 30, // default 30 seconds
             },
         }
     }
 }
 
 impl ActivityMonitor {
-    fn new(app_handle: tauri::AppHandle) -> Self {
+    fn new(app_handle: tauri::AppHandle, timeout_seconds: u64) -> Self {
         Self {
             last_activity: Arc::new(Mutex::new(Instant::now())),
             is_monitoring: Arc::new(Mutex::new(false)),
             app_handle,
+            inactivity_threshold: Arc::new(Mutex::new(Duration::from_secs(timeout_seconds))),
         }
     }
 
@@ -108,11 +112,10 @@ impl ActivityMonitor {
         
         let last_activity = Arc::clone(&self.last_activity);
         let is_monitoring_clone = Arc::clone(&self.is_monitoring);
+        let inactivity_threshold = Arc::clone(&self.inactivity_threshold);
         let app_handle = self.app_handle.clone();
         
         thread::spawn(move || {
-            let inactivity_threshold = Duration::from_secs(3);
-            
             loop {
                 // Check if we should stop monitoring
                 {
@@ -121,6 +124,12 @@ impl ActivityMonitor {
                         break;
                     }
                 }
+                
+                // Get current threshold
+                let threshold = {
+                    let threshold_guard = inactivity_threshold.lock().unwrap();
+                    *threshold_guard
+                };
                 
                 // Check system activity
                 let has_activity = Self::check_system_activity();
@@ -141,7 +150,7 @@ impl ActivityMonitor {
                         last.elapsed()
                     };
                     
-                    if elapsed >= inactivity_threshold {
+                    if elapsed >= threshold {
                         // Emit inactivity event to frontend
                         let _ = app_handle.emit("user-inactivity", ());
                         
@@ -162,11 +171,15 @@ impl ActivityMonitor {
     
     #[cfg(target_os = "macos")]
     fn check_system_activity() -> bool {
-        // For simplicity, we'll implement a basic activity check
-        // This could be enhanced with proper IOKit integration
+        // Check if system has been idle for less than 1 second
+        Self::get_system_idle_time() < 1.0
+    }
+
+    #[cfg(target_os = "macos")]
+    fn get_system_idle_time() -> f64 {
         use std::process::Command;
         
-        // Use ioreg command to check idle time (fallback method)
+        // Use ioreg to get HID idle time - most reliable method on macOS
         let output = Command::new("ioreg")
             .args(&["-c", "IOHIDSystem"])
             .output();
@@ -177,33 +190,42 @@ impl ActivityMonitor {
             // Look for HIDIdleTime in the output
             for line in output_str.lines() {
                 if line.contains("HIDIdleTime") {
-                    if let Some(value_str) = line.split('=').nth(1) {
-                        if let Ok(idle_ns) = value_str.trim().parse::<u64>() {
+                    // Line format: "HIDIdleTime" = 1234567890
+                    if let Some(equals_pos) = line.find('=') {
+                        let value_part = &line[equals_pos + 1..];
+                        // Clean up the value (remove whitespace and potential trailing chars)
+                        let cleaned = value_part.trim().trim_end_matches(|c: char| !c.is_ascii_digit());
+                        
+                        if let Ok(idle_ns) = cleaned.parse::<u64>() {
                             // Convert nanoseconds to seconds
-                            let idle_seconds = idle_ns / 1_000_000_000;
-                            return idle_seconds < 1; // Active if idle time < 1 second
+                            return idle_ns as f64 / 1_000_000_000.0;
                         }
                     }
                 }
             }
         }
         
-        // If we can't determine, assume there's activity
-        true
+        // If ioreg fails, assume no idle time (active)
+        0.0
     }
     
     fn stop_monitoring(&self) {
         let mut is_monitoring = self.is_monitoring.lock().unwrap();
         *is_monitoring = false;
     }
+
+    fn update_threshold(&self, timeout_seconds: u64) {
+        let mut threshold = self.inactivity_threshold.lock().unwrap();
+        *threshold = Duration::from_secs(timeout_seconds);
+    }
 }
 
 #[tauri::command]
-async fn start_activity_monitoring(app: tauri::AppHandle) -> Result<(), String> {
+async fn start_activity_monitoring(app: tauri::AppHandle, timeout_seconds: u64) -> Result<(), String> {
     let mut monitor = ACTIVITY_MONITOR.lock().unwrap();
     
     if monitor.is_none() {
-        *monitor = Some(ActivityMonitor::new(app));
+        *monitor = Some(ActivityMonitor::new(app, timeout_seconds));
     }
     
     if let Some(ref monitor) = *monitor {
@@ -230,6 +252,18 @@ async fn stop_activity_monitoring() -> Result<(), String> {
     }
     
     Ok(())
+}
+
+#[tauri::command]
+async fn update_activity_timeout(timeout_seconds: u64) -> Result<(), String> {
+    let monitor = ACTIVITY_MONITOR.lock().unwrap();
+    
+    if let Some(ref monitor) = *monitor {
+        monitor.update_threshold(timeout_seconds);
+        Ok(())
+    } else {
+        Err("Activity monitor not initialized".to_string())
+    }
 }
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -544,7 +578,8 @@ pub fn run() {
             register_global_shortcuts,
             reset_all_data,
             start_activity_monitoring,
-            stop_activity_monitoring
+            stop_activity_monitoring,
+            update_activity_timeout
         ])
         .setup(|app| {
             // Crea il menu della tray

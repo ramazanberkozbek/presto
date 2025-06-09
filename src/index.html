@@ -241,7 +241,16 @@
             <span class="checkmark"></span>
             Smart Pause (Auto-pause when inactive)
           </label>
-          <p class="setting-description">Automatically pause the timer during focus sessions when no mouse or keyboard activity is detected for 3 seconds, and resume when activity resumes. Only works during focus periods, not breaks.</p>
+          <p class="setting-description">Automatically pause the timer during focus sessions when no mouse or keyboard activity is detected, and resume when activity resumes. Only works during focus periods, not breaks.</p>
+        </div>
+
+        <div class="setting-item" id="smart-pause-timeout-setting">
+          <label for="smart-pause-timeout">Inactivity Timeout: <span id="timeout-value">30</span> seconds</label>
+          <input type="range" id="smart-pause-timeout" min="5" max="120" value="30" step="5">
+          <div class="slider-labels">
+            <span>5s</span>
+            <span>2min</span>
+          </div>
         </div>
       </div>
 

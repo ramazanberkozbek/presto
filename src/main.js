@@ -276,7 +276,8 @@ class SettingsManager {
         desktop_notifications: true,
         sound_notifications: true,
         auto_start_breaks: true,
-        smart_pause: false
+        smart_pause: false,
+        smart_pause_timeout: 30 // default 30 seconds
       }
     };
   }
@@ -298,6 +299,17 @@ class SettingsManager {
     document.getElementById('sound-notifications').checked = this.settings.notifications.sound_notifications;
     document.getElementById('auto-start-breaks').checked = this.settings.notifications.auto_start_breaks;
     document.getElementById('smart-pause').checked = this.settings.notifications.smart_pause;
+    
+    // Populate smart pause timeout
+    const timeoutValue = this.settings.notifications.smart_pause_timeout || 30;
+    document.getElementById('smart-pause-timeout').value = timeoutValue;
+    document.getElementById('timeout-value').textContent = timeoutValue;
+    
+    // Show/hide timeout setting based on smart pause checkbox
+    this.toggleTimeoutSetting(this.settings.notifications.smart_pause);
+    
+    // Setup slider event listener
+    this.setupSliderEventListener();
   }
 
   setupEventListeners() {
@@ -315,6 +327,25 @@ class SettingsManager {
         this.handleShortcutKeydown(e);
       }
     });
+
+    // Smart pause checkbox event listener
+    const smartPauseCheckbox = document.getElementById('smart-pause');
+    if (smartPauseCheckbox) {
+      smartPauseCheckbox.addEventListener('change', (e) => {
+        this.toggleTimeoutSetting(e.target.checked);
+      });
+    }
+  }
+
+  toggleTimeoutSetting(enabled) {
+    const timeoutSetting = document.getElementById('smart-pause-timeout-setting');
+    if (timeoutSetting) {
+      if (enabled) {
+        timeoutSetting.classList.add('visible');
+      } else {
+        timeoutSetting.classList.remove('visible');
+      }
+    }
   }
 
   setupGlobalShortcutHandlers() {
@@ -424,6 +455,7 @@ class SettingsManager {
       this.settings.notifications.sound_notifications = document.getElementById('sound-notifications').checked;
       this.settings.notifications.auto_start_breaks = document.getElementById('auto-start-breaks').checked;
       this.settings.notifications.smart_pause = document.getElementById('smart-pause').checked;
+      this.settings.notifications.smart_pause_timeout = parseInt(document.getElementById('smart-pause-timeout').value);
 
       // Save to file
       await invoke('save_settings', { settings: this.settings });
@@ -433,7 +465,7 @@ class SettingsManager {
 
       // Update timer with new settings
       if (window.pomodoroTimer) {
-        window.pomodoroTimer.applySettings(this.settings);
+        await window.pomodoroTimer.applySettings(this.settings);
       }
 
       alert('Settings saved successfully!');
@@ -473,6 +505,17 @@ class SettingsManager {
       input.value = '';
     }
   }
+
+  setupSliderEventListener() {
+    const slider = document.getElementById('smart-pause-timeout');
+    const valueDisplay = document.getElementById('timeout-value');
+    
+    if (slider && valueDisplay) {
+      slider.addEventListener('input', (e) => {
+        valueDisplay.textContent = e.target.value;
+      });
+    }
+  }
 }
 
 class PomodoroTimer {
@@ -488,7 +531,7 @@ class PomodoroTimer {
     this.smartPauseEnabled = false;
     this.isAutoPaused = false;
     this.activityTimeout = null;
-    this.inactivityThreshold = 3000; // 3 seconds in milliseconds
+    this.inactivityThreshold = 30000; // 30 seconds in milliseconds (configurable)
 
     // Session tracking
     this.completedPomodoros = 0;
@@ -624,8 +667,9 @@ class PomodoroTimer {
   
   async setupGlobalActivityListeners() {
     try {
-      // Start global activity monitoring
-      await invoke('start_activity_monitoring');
+      // Start global activity monitoring with configurable timeout
+      const timeoutSeconds = Math.floor(this.inactivityThreshold / 1000); // convert from milliseconds to seconds
+      await invoke('start_activity_monitoring', { timeout_seconds: timeoutSeconds });
       
       // Listen for activity events from backend
       const { listen } = window.__TAURI__.event;
@@ -678,10 +722,10 @@ class PomodoroTimer {
       clearTimeout(this.activityTimeout);
     }
     
-    // Set new timeout for auto-pause after 3 seconds of inactivity
+    // Set new timeout for auto-pause after configured inactivity period
     this.activityTimeout = setTimeout(() => {
       this.autoPauseTimer();
-    }, 3000); // 3 seconds
+    }, this.inactivityThreshold); // Use configurable timeout
   }
   
   autoPauseTimer() {
@@ -1312,7 +1356,7 @@ class PomodoroTimer {
     }
   }
 
-  applySettings(settings) {
+  async applySettings(settings) {
     // Update timer durations
     this.durations.focus = settings.timer.focus_duration * 60;
     this.durations.break = settings.timer.break_duration * 60;
@@ -1330,7 +1374,19 @@ class PomodoroTimer {
     this.enableSoundNotifications = settings.notifications.sound_notifications;
     this.autoStartBreaks = settings.notifications.auto_start_breaks;
     
-    // Update smart pause setting
+    // Update smart pause setting and timeout
+    this.inactivityThreshold = (settings.notifications.smart_pause_timeout || 30) * 1000; // convert to milliseconds
+    
+    // Update backend timeout if smart pause is enabled and monitoring is active
+    if (this.smartPauseEnabled) {
+      try {
+        const timeoutSeconds = Math.floor(this.inactivityThreshold / 1000);
+        await invoke('update_activity_timeout', { timeout_seconds: timeoutSeconds });
+      } catch (error) {
+        console.log('Activity monitoring not active or failed to update timeout:', error);
+      }
+    }
+    
     this.enableSmartPause(settings.notifications.smart_pause);
   }
 
@@ -1347,6 +1403,7 @@ class PomodoroTimer {
       this.activityTimeout = null;
     }
     this.smartPauseEnabled = false;
+    this.inactivityThreshold = 30000; // Reset to default 30 seconds
 
     // Reset all counters and state
     this.completedPomodoros = 0;
@@ -1524,7 +1581,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Apply settings to timer
   if (settingsManager.settings) {
-    timer.applySettings(settingsManager.settings);
+    await timer.applySettings(settingsManager.settings);
   }
 
   // Initialize navigation manager
