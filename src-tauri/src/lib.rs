@@ -283,6 +283,38 @@ async fn register_global_shortcuts(app: tauri::AppHandle, shortcuts: ShortcutSet
     Ok(())
 }
 
+#[tauri::command]
+async fn reset_all_data(app: tauri::AppHandle) -> Result<(), String> {
+    let app_data_dir = app.path().app_data_dir()
+        .map_err(|e| format!("Failed to get app data directory: {}", e))?;
+    
+    // Lista di tutti i file da eliminare
+    let files_to_delete = vec![
+        "session.json",
+        "tasks.json", 
+        "history.json",
+        "settings.json"
+    ];
+    
+    // Elimina tutti i file di dati
+    for file_name in files_to_delete {
+        let file_path = app_data_dir.join(file_name);
+        if file_path.exists() {
+            fs::remove_file(file_path).map_err(|e| format!("Failed to delete {}: {}", file_name, e))?;
+        }
+    }
+    
+    // Opzionalmente, elimina l'intera directory se è vuota
+    // (lasciamo questa parte commentata per sicurezza)
+    /*
+    if app_data_dir.exists() {
+        let _ = fs::remove_dir(&app_data_dir);
+    }
+    */
+    
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -299,7 +331,8 @@ pub fn run() {
             show_window,
             save_settings,
             load_settings,
-            register_global_shortcuts
+            register_global_shortcuts,
+            reset_all_data
         ])
         .setup(|app| {
             // Crea il menu della tray

@@ -452,7 +452,15 @@ class SettingsManager {
     if (confirm('Are you sure you want to reset all settings to defaults?')) {
       this.settings = this.getDefaultSettings();
       this.populateSettingsUI();
+      this.saveSettings();
     }
+  }
+
+  // Complete reset for total data reset
+  resetToDefaultsForce() {
+    this.settings = this.getDefaultSettings();
+    this.populateSettingsUI();
+    // Don't save here since we're doing a complete reset
   }
 
   clearShortcut(shortcutType) {
@@ -1134,6 +1142,49 @@ class PomodoroTimer {
     this.enableSoundNotifications = settings.notifications.sound_notifications;
     this.autoStartBreaks = settings.notifications.auto_start_breaks;
   }
+
+  resetToInitialState() {
+    // Stop any running timer
+    this.isRunning = false;
+    this.isPaused = false;
+    clearInterval(this.timerInterval);
+
+    // Reset all counters and state
+    this.completedPomodoros = 0;
+    this.currentSession = 1;
+    this.totalFocusTime = 0;
+    this.currentMode = 'focus';
+    
+    // Reset durations to defaults
+    this.durations = {
+      focus: 25 * 60,
+      break: 5 * 60,
+      longBreak: 20 * 60
+    };
+    this.totalSessions = 10;
+    
+    // Reset timer display
+    this.timeRemaining = this.durations[this.currentMode];
+    
+    // Clear task input
+    this.currentTask = '';
+    if (this.taskInput) {
+      this.taskInput.value = '';
+    }
+    
+    // Reset tasks array
+    this.tasks = [];
+    
+    // Update all displays
+    this.updateDisplay();
+    this.updateProgress();
+    this.updateButtons();
+    this.renderTasks();
+    this.updateWeeklyStats();
+    this.updateTrayIcon();
+    
+    console.log('Timer reset to initial state');
+  }
 }
 
 // Initialize the timer when the page loads
@@ -1160,6 +1211,103 @@ window.clearShortcut = function(shortcutType) {
   }
 };
 
+window.confirmTotalReset = function() {
+  console.log("confirmTotalReset called"); // Debug log
+  
+  const confirmed = confirm(
+    "⚠️ WARNING: This will permanently delete ALL your data!\n\n" +
+    "This includes:\n" +
+    "• All Pomodoro sessions and statistics\n" +
+    "• All tasks and history\n" +
+    "• All custom settings\n\n" +
+    "This action CANNOT be undone!\n\n" +
+    "Are you absolutely sure you want to continue?"
+  );
+  
+  if (confirmed) {
+    console.log("First confirmation received"); // Debug log
+    const doubleConfirm = confirm(
+      "🚨 FINAL WARNING 🚨\n\n" +
+      "You are about to delete ALL your Pomodoro data permanently.\n\n" +
+      "Type your confirmation by clicking OK to proceed, or Cancel to abort."
+    );
+    
+    if (doubleConfirm) {
+      console.log("Second confirmation received, calling performTotalReset"); // Debug log
+      performTotalReset();
+    }
+  }
+};
+
+window.performTotalReset = async function() {
+  console.log("performTotalReset started"); // Debug log
+  
+  try {
+    // Show loading state
+    const resetButton = document.querySelector('.btn-danger');
+    const originalText = resetButton.textContent;
+    resetButton.textContent = '🔄 Resetting...';
+    resetButton.disabled = true;
+    
+    console.log("Calling reset_all_data..."); // Debug log
+    
+    // Call the backend to delete all data
+    await invoke('reset_all_data');
+    
+    console.log("reset_all_data completed successfully"); // Debug log
+    
+    // Clear all localStorage data
+    console.log("Clearing localStorage..."); // Debug log
+    localStorage.removeItem('pomodoro-session');
+    localStorage.removeItem('pomodoro-tasks');
+    localStorage.removeItem('pomodoro-settings');
+    localStorage.removeItem('pomodoro-history');
+    localStorage.removeItem('pomodoro-stats');
+    console.log("localStorage cleared"); // Debug log
+    
+    // Reset the timer in memory
+    if (window.pomodoroTimer) {
+      window.pomodoroTimer.resetToInitialState();
+      console.log("Timer reset to initial state"); // Debug log
+    }
+    
+    // Reset settings to defaults
+    if (window.settingsManager) {
+      window.settingsManager.resetToDefaultsForce();
+      console.log("Settings reset to defaults"); // Debug log
+    }
+    
+    // Reset navigation to timer view
+    if (window.navigationManager) {
+      window.navigationManager.switchView('timer');
+      console.log("Switched to timer view"); // Debug log
+    }
+    
+    // Refresh the UI to show reset state
+    console.log("Refreshing UI..."); // Debug log
+    location.reload();
+    
+    // Show success message (will be shown after reload)
+    // alert('✅ All data has been successfully reset!\n\nThe application has been restored to its initial state.');
+    
+    // Restore button state
+    resetButton.textContent = originalText;
+    resetButton.disabled = false;
+    
+  } catch (error) {
+    console.error('Failed to reset data:', error);
+    console.error('Error stack:', error.stack);
+    alert('❌ Failed to reset data. Please try again or contact support.\nError: ' + error.message);
+    
+    // Restore button state
+    const resetButton = document.querySelector('.btn-danger');
+    if (resetButton) {
+      resetButton.textContent = '🗑️ Reset All Data';
+      resetButton.disabled = false;
+    }
+  }
+};
+
 window.addEventListener("DOMContentLoaded", async () => {
   // Request notification permission
   if ('Notification' in window) {
@@ -1183,4 +1331,37 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Initialize navigation manager
   navigation = new NavigationManager();
   window.navigationManager = navigation; // Make it globally accessible
+  
+  // Setup reset button event listener
+  const resetButton = document.getElementById('reset-all-data-btn');
+  if (resetButton) {
+    resetButton.addEventListener('click', () => {
+      console.log("Reset button clicked via event listener"); // Debug log
+      confirmTotalReset();
+    });
+    console.log("Reset button event listener added"); // Debug log
+  } else {
+    console.error("Reset button not found in DOM"); // Debug log
+  }
+  
+  // Setup other settings buttons event listeners
+  const saveSettingsBtn = document.querySelector('.btn-primary');
+  if (saveSettingsBtn && saveSettingsBtn.textContent.includes('Save Settings')) {
+    saveSettingsBtn.addEventListener('click', () => {
+      console.log("Save settings button clicked via event listener");
+      saveSettings();
+    });
+    // Remove onclick attribute
+    saveSettingsBtn.removeAttribute('onclick');
+  }
+  
+  const resetToDefaultsBtn = document.querySelector('.btn-secondary');
+  if (resetToDefaultsBtn && resetToDefaultsBtn.textContent.includes('Reset to Defaults')) {
+    resetToDefaultsBtn.addEventListener('click', () => {
+      console.log("Reset to defaults button clicked via event listener");
+      resetToDefaults();
+    });
+    // Remove onclick attribute
+    resetToDefaultsBtn.removeAttribute('onclick');
+  }
 });
