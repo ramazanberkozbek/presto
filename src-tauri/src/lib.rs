@@ -7,8 +7,6 @@ use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager};
 
-
-
 // Global activity monitoring state
 static ACTIVITY_MONITOR: Mutex<Option<ActivityMonitor>> = Mutex::new(None);
 
@@ -109,12 +107,12 @@ impl ActivityMonitor {
             return Ok(()); // Already monitoring
         }
         *is_monitoring = true;
-        
+
         let last_activity = Arc::clone(&self.last_activity);
         let is_monitoring_clone = Arc::clone(&self.is_monitoring);
         let inactivity_threshold = Arc::clone(&self.inactivity_threshold);
         let app_handle = self.app_handle.clone();
-        
+
         thread::spawn(move || {
             loop {
                 // Check if we should stop monitoring
@@ -124,23 +122,23 @@ impl ActivityMonitor {
                         break;
                     }
                 }
-                
+
                 // Get current threshold
                 let threshold = {
                     let threshold_guard = inactivity_threshold.lock().unwrap();
                     *threshold_guard
                 };
-                
+
                 // Check system activity
                 let has_activity = Self::check_system_activity();
-                
+
                 if has_activity {
                     // Update last activity time
                     {
                         let mut last = last_activity.lock().unwrap();
                         *last = Instant::now();
                     }
-                    
+
                     // Emit activity event to frontend
                     let _ = app_handle.emit("user-activity", ());
                 } else {
@@ -149,11 +147,11 @@ impl ActivityMonitor {
                         let last = last_activity.lock().unwrap();
                         last.elapsed()
                     };
-                    
+
                     if elapsed >= threshold {
                         // Emit inactivity event to frontend
                         let _ = app_handle.emit("user-inactivity", ());
-                        
+
                         // Reset the timer to avoid spam
                         {
                             let mut last = last_activity.lock().unwrap();
@@ -161,14 +159,14 @@ impl ActivityMonitor {
                         }
                     }
                 }
-                
+
                 thread::sleep(Duration::from_millis(500)); // Check every 500ms
             }
         });
-        
+
         Ok(())
     }
-    
+
     #[cfg(target_os = "macos")]
     fn check_system_activity() -> bool {
         // Check if system has been idle for less than 1 second
@@ -178,15 +176,13 @@ impl ActivityMonitor {
     #[cfg(target_os = "macos")]
     fn get_system_idle_time() -> f64 {
         use std::process::Command;
-        
+
         // Use ioreg to get HID idle time - most reliable method on macOS
-        let output = Command::new("ioreg")
-            .args(&["-c", "IOHIDSystem"])
-            .output();
-            
+        let output = Command::new("ioreg").args(&["-c", "IOHIDSystem"]).output();
+
         if let Ok(output) = output {
             let output_str = String::from_utf8_lossy(&output.stdout);
-            
+
             // Look for HIDIdleTime in the output
             for line in output_str.lines() {
                 if line.contains("HIDIdleTime") {
@@ -194,8 +190,10 @@ impl ActivityMonitor {
                     if let Some(equals_pos) = line.find('=') {
                         let value_part = &line[equals_pos + 1..];
                         // Clean up the value (remove whitespace and potential trailing chars)
-                        let cleaned = value_part.trim().trim_end_matches(|c: char| !c.is_ascii_digit());
-                        
+                        let cleaned = value_part
+                            .trim()
+                            .trim_end_matches(|c: char| !c.is_ascii_digit());
+
                         if let Ok(idle_ns) = cleaned.parse::<u64>() {
                             // Convert nanoseconds to seconds
                             return idle_ns as f64 / 1_000_000_000.0;
@@ -204,11 +202,11 @@ impl ActivityMonitor {
                 }
             }
         }
-        
+
         // If ioreg fails, assume no idle time (active)
         0.0
     }
-    
+
     fn stop_monitoring(&self) {
         let mut is_monitoring = self.is_monitoring.lock().unwrap();
         *is_monitoring = false;
@@ -221,43 +219,46 @@ impl ActivityMonitor {
 }
 
 #[tauri::command]
-async fn start_activity_monitoring(app: tauri::AppHandle, timeout_seconds: u64) -> Result<(), String> {
+async fn start_activity_monitoring(
+    app: tauri::AppHandle,
+    timeout_seconds: u64,
+) -> Result<(), String> {
     let mut monitor = ACTIVITY_MONITOR.lock().unwrap();
-    
+
     if monitor.is_none() {
         *monitor = Some(ActivityMonitor::new(app, timeout_seconds));
     }
-    
+
     if let Some(ref monitor) = *monitor {
         #[cfg(target_os = "macos")]
         {
             monitor.start_monitoring()?;
         }
-        
+
         #[cfg(not(target_os = "macos"))]
         {
             return Err("Activity monitoring is only supported on macOS".to_string());
         }
     }
-    
+
     Ok(())
 }
 
 #[tauri::command]
 async fn stop_activity_monitoring() -> Result<(), String> {
     let monitor = ACTIVITY_MONITOR.lock().unwrap();
-    
+
     if let Some(ref monitor) = *monitor {
         monitor.stop_monitoring();
     }
-    
+
     Ok(())
 }
 
 #[tauri::command]
 async fn update_activity_timeout(timeout_seconds: u64) -> Result<(), String> {
     let monitor = ACTIVITY_MONITOR.lock().unwrap();
-    
+
     if let Some(ref monitor) = *monitor {
         monitor.update_threshold(timeout_seconds);
         Ok(())

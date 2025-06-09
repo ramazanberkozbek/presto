@@ -299,15 +299,15 @@ class SettingsManager {
     document.getElementById('sound-notifications').checked = this.settings.notifications.sound_notifications;
     document.getElementById('auto-start-breaks').checked = this.settings.notifications.auto_start_breaks;
     document.getElementById('smart-pause').checked = this.settings.notifications.smart_pause;
-    
+
     // Populate smart pause timeout
     const timeoutValue = this.settings.notifications.smart_pause_timeout || 30;
     document.getElementById('smart-pause-timeout').value = timeoutValue;
     document.getElementById('timeout-value').textContent = timeoutValue;
-    
+
     // Show/hide timeout setting based on smart pause checkbox
     this.toggleTimeoutSetting(this.settings.notifications.smart_pause);
-    
+
     // Setup slider event listener
     this.setupSliderEventListener();
   }
@@ -509,7 +509,7 @@ class SettingsManager {
   setupSliderEventListener() {
     const slider = document.getElementById('smart-pause-timeout');
     const valueDisplay = document.getElementById('timeout-value');
-    
+
     if (slider && valueDisplay) {
       slider.addEventListener('input', (e) => {
         valueDisplay.textContent = e.target.value;
@@ -526,7 +526,7 @@ class PomodoroTimer {
     this.currentMode = 'focus'; // 'focus', 'break', 'longBreak'
     this.timeRemaining = 25 * 60; // 25 minutes in seconds
     this.timerInterval = null;
-    
+
     // Smart pause states
     this.smartPauseEnabled = false;
     this.isAutoPaused = false;
@@ -658,35 +658,35 @@ class PomodoroTimer {
   // Smart Pause Methods
   setupSmartPause() {
     if (!this.smartPauseEnabled) return;
-    
+
     // Setup event listeners for global activity monitoring
     this.setupGlobalActivityListeners();
-    
+
     console.log('Smart pause enabled with global monitoring');
   }
-  
+
   async setupGlobalActivityListeners() {
     try {
       // Start global activity monitoring with configurable timeout
       const timeoutSeconds = Math.floor(this.inactivityThreshold / 1000); // convert from milliseconds to seconds
       await invoke('start_activity_monitoring', { timeout_seconds: timeoutSeconds });
-      
+
       // Listen for activity events from backend
       const { listen } = window.__TAURI__.event;
-      
+
       // Listen for user activity
       await listen('user-activity', () => {
         this.handleUserActivity();
       });
-      
+
       // Listen for user inactivity
       await listen('user-inactivity', () => {
         this.autoPauseTimer();
       });
-      
+
       // Start initial timeout for local fallback
       this.handleUserActivity();
-      
+
       console.log('Global activity listeners setup complete');
     } catch (error) {
       console.error('Failed to setup global activity monitoring:', error);
@@ -694,84 +694,84 @@ class PomodoroTimer {
       this.setupLocalActivityListeners();
     }
   }
-  
+
   setupLocalActivityListeners() {
     console.log('Falling back to local activity monitoring');
     // List of events that indicate user activity
     const activityEvents = ['mousemove', 'mousedown', 'keydown', 'scroll', 'click'];
-    
+
     // Setup activity listeners
     activityEvents.forEach(event => {
       document.addEventListener(event, () => this.handleUserActivity(), { passive: true });
     });
-    
+
     // Start initial timeout
     this.handleUserActivity();
   }
-  
+
   handleUserActivity() {
     if (!this.smartPauseEnabled || !this.isRunning || this.currentMode !== 'focus') return;
-    
+
     // If currently auto-paused, resume the timer
     if (this.isAutoPaused) {
       this.resumeFromAutoPause();
     }
-    
+
     // Clear existing timeout
     if (this.activityTimeout) {
       clearTimeout(this.activityTimeout);
     }
-    
+
     // Set new timeout for auto-pause after configured inactivity period
     this.activityTimeout = setTimeout(() => {
       this.autoPauseTimer();
     }, this.inactivityThreshold); // Use configurable timeout
   }
-  
+
   autoPauseTimer() {
     if (!this.isRunning || this.isPaused || this.isAutoPaused || this.currentMode !== 'focus') return;
-    
+
     console.log('Auto-pausing timer due to inactivity');
     this.isAutoPaused = true;
     this.isPaused = true;
-    
+
     // Stop the timer interval
     clearInterval(this.timerInterval);
     this.timerInterval = null;
-    
+
     // Update UI to show auto-pause state
     this.updateDisplay();
     this.updateButtons();
     this.updateTrayIcon();
   }
-  
+
   resumeFromAutoPause() {
     if (!this.isAutoPaused) return;
-    
+
     console.log('Resuming timer from auto-pause');
     this.isAutoPaused = false;
     this.isPaused = false;
-    
+
     // Restart the timer interval
     this.timerInterval = setInterval(() => {
       this.timeRemaining--;
       this.updateDisplay();
       this.updateTrayIcon();
-      
+
       if (this.timeRemaining <= 0) {
         this.completeSession();
       }
     }, 1000);
-    
+
     // Update UI
     this.updateDisplay();
     this.updateButtons();
     this.updateTrayIcon();
   }
-  
+
   async enableSmartPause(enabled) {
     this.smartPauseEnabled = enabled;
-    
+
     if (enabled) {
       await this.setupSmartPause();
       // Start monitoring if timer is already running and in focus mode
@@ -785,7 +785,7 @@ class PomodoroTimer {
       } catch (error) {
         console.error('Failed to stop activity monitoring:', error);
       }
-      
+
       // Clear local timeout and resume if auto-paused
       if (this.activityTimeout) {
         clearTimeout(this.activityTimeout);
@@ -795,7 +795,7 @@ class PomodoroTimer {
         this.resumeFromAutoPause();
       }
     }
-    
+
     console.log('Smart pause', enabled ? 'enabled' : 'disabled');
   }
 
@@ -821,7 +821,7 @@ class PomodoroTimer {
       this.updateButtons();
       this.playNotificationSound();
       this.showNotificationPing('Timer started! 🍅');
-      
+
       // Start smart pause monitoring if enabled
       if (this.smartPauseEnabled && this.currentMode === 'focus') {
         this.handleUserActivity();
@@ -835,13 +835,13 @@ class PomodoroTimer {
       this.isPaused = true;
       this.isAutoPaused = false; // Manual pause overrides auto-pause
       clearInterval(this.timerInterval);
-      
+
       // Clear smart pause timeout
       if (this.activityTimeout) {
         clearTimeout(this.activityTimeout);
         this.activityTimeout = null;
       }
-      
+
       this.updateButtons();
       this.showNotificationPing('Timer paused ⏸️');
     }
@@ -852,13 +852,13 @@ class PomodoroTimer {
     this.isPaused = false;
     this.isAutoPaused = false;
     clearInterval(this.timerInterval);
-    
+
     // Clear smart pause timeout
     if (this.activityTimeout) {
       clearTimeout(this.activityTimeout);
       this.activityTimeout = null;
     }
-    
+
     this.timeRemaining = this.durations[this.currentMode];
     this.updateDisplay();
     this.updateButtons();
@@ -929,16 +929,16 @@ class PomodoroTimer {
       break: 'Short Break 😌',
       longBreak: 'Long Break 🎉'
     };
-    
+
     let statusText = statusTexts[this.currentMode];
-    
+
     // Add auto-pause indicator
     if (this.isAutoPaused) {
       statusText += ' (Auto-paused - move mouse to resume)';
     } else if (this.isPaused && !this.isRunning) {
       statusText += ' (Paused)';
     }
-    
+
     this.timerStatus.textContent = statusText;
 
     // Update session info
@@ -956,7 +956,7 @@ class PomodoroTimer {
     if (this.isRunning) {
       container.classList.add('running');
     }
-    
+
     // Add auto-paused class when in auto-pause state
     if (this.isAutoPaused) {
       container.classList.add('auto-paused');
@@ -1373,10 +1373,10 @@ class PomodoroTimer {
     this.enableDesktopNotifications = settings.notifications.desktop_notifications;
     this.enableSoundNotifications = settings.notifications.sound_notifications;
     this.autoStartBreaks = settings.notifications.auto_start_breaks;
-    
+
     // Update smart pause setting and timeout
     this.inactivityThreshold = (settings.notifications.smart_pause_timeout || 30) * 1000; // convert to milliseconds
-    
+
     // Update backend timeout if smart pause is enabled and monitoring is active
     if (this.smartPauseEnabled) {
       try {
@@ -1386,7 +1386,7 @@ class PomodoroTimer {
         console.log('Activity monitoring not active or failed to update timeout:', error);
       }
     }
-    
+
     this.enableSmartPause(settings.notifications.smart_pause);
   }
 
@@ -1396,7 +1396,7 @@ class PomodoroTimer {
     this.isPaused = false;
     this.isAutoPaused = false;
     clearInterval(this.timerInterval);
-    
+
     // Clear smart pause timeout and disable
     if (this.activityTimeout) {
       clearTimeout(this.activityTimeout);
