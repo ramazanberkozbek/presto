@@ -349,9 +349,23 @@ class SettingsManager {
   }
 
   setupGlobalShortcutHandlers() {
+    // Debounce mechanism to prevent repeated triggering
+    let lastShortcutTime = {};
+    const debounceDelay = 500; // 500ms debounce
+
     // Listen for global shortcut events from Rust
     window.__TAURI__.event.listen('global-shortcut', (event) => {
       const action = event.payload;
+      const now = Date.now();
+
+      // Check if this action was triggered too recently
+      if (lastShortcutTime[action] && (now - lastShortcutTime[action]) < debounceDelay) {
+        console.log(`Debounced global shortcut: ${action}`);
+        return;
+      }
+
+      lastShortcutTime[action] = now;
+      console.log(`Global shortcut triggered: ${action}`);
 
       switch (action) {
         case 'start-stop':

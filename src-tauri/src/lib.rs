@@ -1,14 +1,19 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, LazyLock};
 use std::thread;
 use std::time::{Duration, Instant};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager};
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 
 // Global activity monitoring state
 static ACTIVITY_MONITOR: Mutex<Option<ActivityMonitor>> = Mutex::new(None);
+
+// Global shortcut debounce state
+static SHORTCUT_DEBOUNCE: LazyLock<Mutex<HashMap<String, Instant>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 struct ActivityMonitor {
     last_activity: Arc<Mutex<Instant>>,
@@ -88,6 +93,22 @@ impl Default for AppSettings {
             },
         }
     }
+}
+
+// Helper function to check if a shortcut should be debounced
+fn should_debounce_shortcut(action: &str) -> bool {
+    let debounce_duration = Duration::from_millis(500); // 500ms debounce
+    let mut debounce_map = SHORTCUT_DEBOUNCE.lock().unwrap();
+    
+    let now = Instant::now();
+    if let Some(last_time) = debounce_map.get(action) {
+        if now.duration_since(*last_time) < debounce_duration {
+            return true; // Should debounce
+        }
+    }
+    
+    debounce_map.insert(action.to_string(), now);
+    false // Should not debounce
 }
 
 impl ActivityMonitor {
@@ -514,14 +535,60 @@ async fn register_global_shortcuts(
     app: tauri::AppHandle,
     shortcuts: ShortcutSettings,
 ) -> Result<(), String> {
-    // Note: For now, we'll store the shortcuts but not actually register them
-    // as global shortcuts in Tauri 2 require a different approach
-    // The shortcuts will work as local shortcuts when the app has focus
+    // Unregister all existing shortcuts first
+    app.global_shortcut().unregister_all()
+        .map_err(|e| format!("Failed to unregister shortcuts: {}", e))?;
 
-    // Emit an event to the frontend to update local shortcuts
+    // Register start/stop shortcut
+    if let Some(ref shortcut_str) = shortcuts.start_stop {
+        let shortcut: Shortcut = shortcut_str.parse()
+            .map_err(|e| format!("Invalid start/stop shortcut '{}': {}", shortcut_str, e))?;
+        
+        let app_handle = app.clone();
+        app.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, _event| {
+            if !should_debounce_shortcut("start-stop") {
+                let _ = app_handle.emit("global-shortcut", "start-stop");
+            }
+        }).map_err(|e| format!("Failed to register start/stop shortcut: {}", e))?;
+    }
+
+    // Register reset shortcut
+    if let Some(ref shortcut_str) = shortcuts.reset {
+        let shortcut: Shortcut = shortcut_str.parse()
+            .map_err(|e| format!("Invalid reset shortcut '{}': {}", shortcut_str, e))?;
+        
+        let app_handle = app.clone();
+        app.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, _event| {
+            if !should_debounce_shortcut("reset") {
+                let _ = app_handle.emit("global-shortcut", "reset");
+            }
+        }).map_err(|e| format!("Failed to register reset shortcut: {}", e))?;
+    }
+
+    // Register skip shortcut
+    if let Some(ref shortcut_str) = shortcuts.skip {
+        let shortcut: Shortcut = shortcut_str.parse()
+            .map_err(|e| format!("Invalid skip shortcut '{}': {}", shortcut_str, e))?;
+        
+        let app_handle = app.clone();
+        app.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, _event| {
+            if !should_debounce_shortcut("skip") {
+                let _ = app_handle.emit("global-shortcut", "skip");
+            }
+        }).map_err(|e| format!("Failed to register skip shortcut: {}", e))?;
+    }
+
+    // Emit an event to the frontend to update local shortcuts as well
     app.emit("shortcuts-updated", &shortcuts)
         .map_err(|e| format!("Failed to emit shortcuts update: {}", e))?;
 
+    Ok(())
+}
+
+#[tauri::command]
+async fn unregister_global_shortcuts(app: tauri::AppHandle) -> Result<(), String> {
+    app.global_shortcut().unregister_all()
+        .map_err(|e| format!("Failed to unregister shortcuts: {}", e))?;
     Ok(())
 }
 
@@ -564,6 +631,7 @@ async fn reset_all_data(app: tauri::AppHandle) -> Result<(), String> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             greet,
             save_session_data,
@@ -577,6 +645,7 @@ pub fn run() {
             save_settings,
             load_settings,
             register_global_shortcuts,
+            unregister_global_shortcuts,
             reset_all_data,
             start_activity_monitoring,
             stop_activity_monitoring,
@@ -627,6 +696,26 @@ pub fn run() {
                     }
                 });
             }
+
+            // Load and register global shortcuts
+            let app_handle_for_shortcuts = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                match load_settings(app_handle_for_shortcuts.clone()).await {
+                    Ok(settings) => {
+                        if let Err(e) = register_global_shortcuts(app_handle_for_shortcuts, settings.shortcuts).await {
+                            eprintln!("Failed to register global shortcuts on startup: {}", e);
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("Failed to load settings on startup: {}", e);
+                        // Try to register default shortcuts
+                        let default_settings = AppSettings::default();
+                        if let Err(e) = register_global_shortcuts(app_handle_for_shortcuts, default_settings.shortcuts).await {
+                            eprintln!("Failed to register default global shortcuts: {}", e);
+                        }
+                    }
+                }
+            });
 
             Ok(())
         })
