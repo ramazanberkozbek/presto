@@ -1543,6 +1543,9 @@ class PomodoroTimer {
     const statusIcon = this.currentMode === 'focus' ? '🍅' : (this.currentMode === 'break' ? '😌' : '🎉');
     document.title = `${statusIcon} ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} - Tempo`;
 
+    // Update progress dots
+    this.updateProgressDots();
+
     // Update tray icon
     this.updateTrayIcon();
   }
@@ -1615,13 +1618,19 @@ class PomodoroTimer {
   updateProgressDots() {
     const dots = this.progressDots.querySelectorAll('.dot');
 
-    // Update each dot based on completed pomodoros
+    // Update each dot based on completed pomodoros and current session
     dots.forEach((dot, index) => {
+      // Remove all classes first
+      dot.classList.remove('completed', 'current');
+
       if (index < this.completedPomodoros) {
+        // Sessioni completate - pallino pieno
         dot.classList.add('completed');
-      } else {
-        dot.classList.remove('completed');
+      } else if (index === this.completedPomodoros && this.currentMode === 'focus') {
+        // Sessione attualmente in corso (solo durante focus) - pallino evidenziato
+        dot.classList.add('current');
       }
+      // Tutte le altre rimangono vuote (solo il background di default)
     });
   }
 
