@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
-use std::sync::{Arc, Mutex, LazyLock};
+use std::sync::{Arc, LazyLock, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 use tauri::menu::{Menu, MenuItem};
@@ -13,7 +13,8 @@ use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 static ACTIVITY_MONITOR: Mutex<Option<ActivityMonitor>> = Mutex::new(None);
 
 // Global shortcut debounce state
-static SHORTCUT_DEBOUNCE: LazyLock<Mutex<HashMap<String, Instant>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+static SHORTCUT_DEBOUNCE: LazyLock<Mutex<HashMap<String, Instant>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 struct ActivityMonitor {
     last_activity: Arc<Mutex<Instant>>,
@@ -99,14 +100,14 @@ impl Default for AppSettings {
 fn should_debounce_shortcut(action: &str) -> bool {
     let debounce_duration = Duration::from_millis(500); // 500ms debounce
     let mut debounce_map = SHORTCUT_DEBOUNCE.lock().unwrap();
-    
+
     let now = Instant::now();
     if let Some(last_time) = debounce_map.get(action) {
         if now.duration_since(*last_time) < debounce_duration {
             return true; // Should debounce
         }
     }
-    
+
     debounce_map.insert(action.to_string(), now);
     false // Should not debounce
 }
@@ -536,46 +537,56 @@ async fn register_global_shortcuts(
     shortcuts: ShortcutSettings,
 ) -> Result<(), String> {
     // Unregister all existing shortcuts first
-    app.global_shortcut().unregister_all()
+    app.global_shortcut()
+        .unregister_all()
         .map_err(|e| format!("Failed to unregister shortcuts: {}", e))?;
 
     // Register start/stop shortcut
     if let Some(ref shortcut_str) = shortcuts.start_stop {
-        let shortcut: Shortcut = shortcut_str.parse()
+        let shortcut: Shortcut = shortcut_str
+            .parse()
             .map_err(|e| format!("Invalid start/stop shortcut '{}': {}", shortcut_str, e))?;
-        
+
         let app_handle = app.clone();
-        app.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, _event| {
-            if !should_debounce_shortcut("start-stop") {
-                let _ = app_handle.emit("global-shortcut", "start-stop");
-            }
-        }).map_err(|e| format!("Failed to register start/stop shortcut: {}", e))?;
+        app.global_shortcut()
+            .on_shortcut(shortcut, move |_app, _shortcut, _event| {
+                if !should_debounce_shortcut("start-stop") {
+                    let _ = app_handle.emit("global-shortcut", "start-stop");
+                }
+            })
+            .map_err(|e| format!("Failed to register start/stop shortcut: {}", e))?;
     }
 
     // Register reset shortcut
     if let Some(ref shortcut_str) = shortcuts.reset {
-        let shortcut: Shortcut = shortcut_str.parse()
+        let shortcut: Shortcut = shortcut_str
+            .parse()
             .map_err(|e| format!("Invalid reset shortcut '{}': {}", shortcut_str, e))?;
-        
+
         let app_handle = app.clone();
-        app.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, _event| {
-            if !should_debounce_shortcut("reset") {
-                let _ = app_handle.emit("global-shortcut", "reset");
-            }
-        }).map_err(|e| format!("Failed to register reset shortcut: {}", e))?;
+        app.global_shortcut()
+            .on_shortcut(shortcut, move |_app, _shortcut, _event| {
+                if !should_debounce_shortcut("reset") {
+                    let _ = app_handle.emit("global-shortcut", "reset");
+                }
+            })
+            .map_err(|e| format!("Failed to register reset shortcut: {}", e))?;
     }
 
     // Register skip shortcut
     if let Some(ref shortcut_str) = shortcuts.skip {
-        let shortcut: Shortcut = shortcut_str.parse()
+        let shortcut: Shortcut = shortcut_str
+            .parse()
             .map_err(|e| format!("Invalid skip shortcut '{}': {}", shortcut_str, e))?;
-        
+
         let app_handle = app.clone();
-        app.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, _event| {
-            if !should_debounce_shortcut("skip") {
-                let _ = app_handle.emit("global-shortcut", "skip");
-            }
-        }).map_err(|e| format!("Failed to register skip shortcut: {}", e))?;
+        app.global_shortcut()
+            .on_shortcut(shortcut, move |_app, _shortcut, _event| {
+                if !should_debounce_shortcut("skip") {
+                    let _ = app_handle.emit("global-shortcut", "skip");
+                }
+            })
+            .map_err(|e| format!("Failed to register skip shortcut: {}", e))?;
     }
 
     // Emit an event to the frontend to update local shortcuts as well
@@ -587,7 +598,8 @@ async fn register_global_shortcuts(
 
 #[tauri::command]
 async fn unregister_global_shortcuts(app: tauri::AppHandle) -> Result<(), String> {
-    app.global_shortcut().unregister_all()
+    app.global_shortcut()
+        .unregister_all()
         .map_err(|e| format!("Failed to unregister shortcuts: {}", e))?;
     Ok(())
 }
@@ -702,7 +714,10 @@ pub fn run() {
             tauri::async_runtime::spawn(async move {
                 match load_settings(app_handle_for_shortcuts.clone()).await {
                     Ok(settings) => {
-                        if let Err(e) = register_global_shortcuts(app_handle_for_shortcuts, settings.shortcuts).await {
+                        if let Err(e) =
+                            register_global_shortcuts(app_handle_for_shortcuts, settings.shortcuts)
+                                .await
+                        {
                             eprintln!("Failed to register global shortcuts on startup: {}", e);
                         }
                     }
@@ -710,7 +725,12 @@ pub fn run() {
                         eprintln!("Failed to load settings on startup: {}", e);
                         // Try to register default shortcuts
                         let default_settings = AppSettings::default();
-                        if let Err(e) = register_global_shortcuts(app_handle_for_shortcuts, default_settings.shortcuts).await {
+                        if let Err(e) = register_global_shortcuts(
+                            app_handle_for_shortcuts,
+                            default_settings.shortcuts,
+                        )
+                        .await
+                        {
                             eprintln!("Failed to register default global shortcuts: {}", e);
                         }
                     }
