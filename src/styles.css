@@ -752,7 +752,7 @@ body {
 .view-container {
   display: block;
   animation: fadeIn 0.3s ease;
-  max-width: 280px;
+  max-width: 480px;
 }
 
 .view-container.hidden {
