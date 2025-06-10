@@ -243,7 +243,7 @@ class NavigationManager {
         // Calculate date for this day of the week
         const date = new Date(weekStart);
         date.setDate(weekStart.getDate() + index);
-        
+
         // Find real session data for this date
         const dayData = history.find(h => h.date === date.toDateString());
         const sessionsMinutes = dayData ? dayData.total_focus_time / 60 : 0; // Convert seconds to minutes
@@ -323,10 +323,10 @@ class NavigationManager {
 
         const sessionType = 'Focus';
         const duration = '25m';
-        const startTime = sessionStartTime.toLocaleTimeString('en-US', { 
-          hour: '2-digit', 
+        const startTime = sessionStartTime.toLocaleTimeString('en-US', {
+          hour: '2-digit',
           minute: '2-digit',
-          hour12: false 
+          hour12: false
         });
 
         sessionItem.innerHTML = `
@@ -407,7 +407,7 @@ class NavigationManager {
         // Add session dots based on real data
         const dots = document.createElement('div');
         dots.className = 'calendar-day-dots';
-        
+
         const dayData = history.find(h => h.date === dayDate.toDateString());
         if (dayData && dayData.completed_pomodoros > 0) {
           dayEl.classList.add('has-sessions');
@@ -418,7 +418,7 @@ class NavigationManager {
             dots.appendChild(dot);
           }
         }
-        
+
         dayEl.appendChild(dots);
 
         // Add click event
@@ -1025,7 +1025,7 @@ class PomodoroTimer {
     // Initialize task input if it exists
     this.taskInput = document.getElementById('task-input');
     this.taskList = document.getElementById('task-list');
-    
+
     if (this.taskInput) {
       this.taskInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
@@ -1428,7 +1428,9 @@ class PomodoroTimer {
       // Mark current task as completed if exists
       if (this.currentTask.trim()) {
         await this.markTaskCompleted(this.currentTask.trim());
-        this.taskInput.value = '';
+        if (this.taskInput) {
+          this.taskInput.value = '';
+        }
         this.currentTask = '';
       }
 
@@ -1625,6 +1627,8 @@ class PomodoroTimer {
 
   // Task Management
   async addTask() {
+    if (!this.taskInput) return; // Skip if task input element doesn't exist
+
     const taskText = this.taskInput.value.trim();
     if (taskText) {
       const task = {
@@ -1658,6 +1662,8 @@ class PomodoroTimer {
   }
 
   renderTasks() {
+    if (!this.taskList) return; // Skip if task list element doesn't exist
+
     this.taskList.innerHTML = '';
 
     // Show recent tasks (last 5)
