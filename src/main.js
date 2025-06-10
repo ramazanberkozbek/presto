@@ -8,21 +8,21 @@ class NavigationManager {
     this.init();
   }
 
-  init() {
+  async init() {
     // Navigation buttons
     const navButtons = document.querySelectorAll('.sidebar-icon, .sidebar-icon-large');
     navButtons.forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', async (e) => {
         const view = e.currentTarget.dataset.view;
-        this.switchView(view);
+        await this.switchView(view);
       });
     });
 
     // Initialize calendar
-    this.initCalendar();
+    await this.initCalendar();
   }
 
-  switchView(view) {
+  async switchView(view) {
     // Update active button
     document.querySelectorAll('.sidebar-icon, .sidebar-icon-large').forEach(btn => {
       btn.classList.remove('active');
@@ -40,12 +40,12 @@ class NavigationManager {
 
     // Initialize view-specific content
     if (view === 'calendar') {
-      this.updateCalendar();
+      await this.updateCalendar();
       this.updateWeekDisplay();
-      this.updateFocusSummary();
-      this.updateWeeklySessionsChart();
+      await this.updateFocusSummary();
+      await this.updateWeeklySessionsChart();
       this.updateDailyChart();
-      this.updateSelectedDayDetails();
+      await this.updateSelectedDayDetails();
     } else if (view === 'settings') {
       // Settings view will be handled by SettingsManager
       if (window.settingsManager) {
@@ -54,7 +54,7 @@ class NavigationManager {
     }
   }
 
-  initCalendar() {
+  async initCalendar() {
     const calendarGrid = document.getElementById('calendar-grid');
     const currentMonthEl = document.getElementById('current-month');
     const prevBtn = document.getElementById('prev-month');
@@ -70,39 +70,39 @@ class NavigationManager {
     this.selectedWeek = this.getWeekStart(this.currentDate);
 
     // Month navigation
-    prevBtn.addEventListener('click', () => {
+    prevBtn.addEventListener('click', async () => {
       this.displayMonth.setMonth(this.displayMonth.getMonth() - 1);
-      this.updateCalendar();
+      await this.updateCalendar();
     });
 
-    nextBtn.addEventListener('click', () => {
+    nextBtn.addEventListener('click', async () => {
       this.displayMonth.setMonth(this.displayMonth.getMonth() + 1);
-      this.updateCalendar();
+      await this.updateCalendar();
     });
 
     // Week navigation
-    prevWeekBtn.addEventListener('click', () => {
+    prevWeekBtn.addEventListener('click', async () => {
       this.selectedWeek.setDate(this.selectedWeek.getDate() - 7);
       this.updateWeekDisplay();
-      this.updateFocusSummary();
-      this.updateWeeklySessionsChart();
+      await this.updateFocusSummary();
+      await this.updateWeeklySessionsChart();
       this.updateDailyChart();
     });
 
-    nextWeekBtn.addEventListener('click', () => {
+    nextWeekBtn.addEventListener('click', async () => {
       this.selectedWeek.setDate(this.selectedWeek.getDate() + 7);
       this.updateWeekDisplay();
-      this.updateFocusSummary();
-      this.updateWeeklySessionsChart();
+      await this.updateFocusSummary();
+      await this.updateWeeklySessionsChart();
       this.updateDailyChart();
     });
 
-    this.updateCalendar();
+    await this.updateCalendar();
     this.updateWeekDisplay();
-    this.updateFocusSummary();
-    this.updateWeeklySessionsChart();
+    await this.updateFocusSummary();
+    await this.updateWeeklySessionsChart();
     this.updateDailyChart();
-    this.updateSelectedDayDetails();
+    await this.updateSelectedDayDetails();
   }
 
   getWeekStart(date) {
@@ -127,27 +127,52 @@ class NavigationManager {
     weekRangeEl.textContent = `${startStr} - ${endStr} ${year}`;
   }
 
-  updateFocusSummary() {
+  async updateFocusSummary() {
     const totalFocusTodayEl = document.getElementById('total-focus-today');
     const avgFocusDayEl = document.getElementById('avg-focus-day');
 
-    // Calculate today's total focus (placeholder data)
+    // Calculate today's total focus (real data only)
     const isToday = this.isSameDay(new Date(), this.currentDate);
     let todayFocus = 0;
 
     if (isToday && window.pomodoroTimer) {
       todayFocus = window.pomodoroTimer.totalFocusTime;
     } else {
-      // Simulate data for selected day
-      todayFocus = Math.floor(Math.random() * 8 + 1) * 25 * 60; // 1-8 pomodoros
+      // Load real data for selected date
+      try {
+        const history = await invoke('get_stats_history');
+        const selectedDateStr = this.currentDate.toDateString();
+        const dayData = history.find(h => h.date === selectedDateStr);
+        todayFocus = dayData ? dayData.total_focus_time : 0;
+      } catch (error) {
+        console.error('Failed to load focus data:', error);
+        todayFocus = 0;
+      }
     }
 
-    // Calculate weekly average (placeholder data)
-    const weekDays = 7;
-    const weeklyTotal = Array.from({ length: weekDays }, () =>
-      Math.floor(Math.random() * 6 + 2) * 25 * 60
-    );
-    const avgFocus = weeklyTotal.reduce((sum, day) => sum + day, 0) / weekDays;
+    // Calculate weekly average (real data only)
+    let avgFocus = 0;
+    try {
+      const history = await invoke('get_stats_history');
+      const weekStart = this.getWeekStart(this.currentDate);
+      let weekTotal = 0;
+      let daysWithData = 0;
+
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(weekStart);
+        date.setDate(weekStart.getDate() + i);
+        const dayData = history.find(h => h.date === date.toDateString());
+        if (dayData && dayData.total_focus_time > 0) {
+          weekTotal += dayData.total_focus_time;
+          daysWithData++;
+        }
+      }
+
+      avgFocus = daysWithData > 0 ? weekTotal / daysWithData : 0;
+    } catch (error) {
+      console.error('Failed to load weekly data:', error);
+      avgFocus = 0;
+    }
 
     totalFocusTodayEl.textContent = this.formatTime(todayFocus);
     avgFocusDayEl.textContent = this.formatTime(avgFocus);
@@ -164,9 +189,9 @@ class NavigationManager {
       const hourBar = document.createElement('div');
       hourBar.className = 'hour-bar';
 
-      // Simulate focus and break data for each hour
-      const focusMinutes = Math.random() > 0.7 ? Math.floor(Math.random() * 50 + 10) : 0;
-      const breakMinutes = focusMinutes > 0 ? Math.floor(focusMinutes * 0.2) : 0;
+      // Real data only - no demo data for now
+      const focusMinutes = 0;
+      const breakMinutes = 0;
 
       const totalMinutes = focusMinutes + breakMinutes;
       const height = Math.max((totalMinutes / 60) * maxHeight, 4);
@@ -200,42 +225,63 @@ class NavigationManager {
     });
   }
 
-  updateWeeklySessionsChart() {
+  async updateWeeklySessionsChart() {
     const weeklyChart = document.getElementById('weekly-chart');
     weeklyChart.innerHTML = '';
 
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const maxHeight = 70;
 
-    days.forEach((day, index) => {
-      const dayBar = document.createElement('div');
-      dayBar.className = 'week-day-bar';
+    try {
+      const history = await invoke('get_stats_history');
+      const weekStart = this.getWeekStart(this.currentDate);
 
-      // Simulate session data for each day (in minutes)
-      const sessionsMinutes = Math.random() > 0.3 ? Math.floor(Math.random() * 180 + 25) : 0;
-      const height = Math.max((sessionsMinutes / 200) * maxHeight, 8);
+      days.forEach((day, index) => {
+        const dayBar = document.createElement('div');
+        dayBar.className = 'week-day-bar';
 
-      dayBar.style.height = `${height}px`;
+        // Calculate date for this day of the week
+        const date = new Date(weekStart);
+        date.setDate(weekStart.getDate() + index);
+        
+        // Find real session data for this date
+        const dayData = history.find(h => h.date === date.toDateString());
+        const sessionsMinutes = dayData ? dayData.total_focus_time / 60 : 0; // Convert seconds to minutes
+        const height = Math.max((sessionsMinutes / 200) * maxHeight, 8);
 
-      // Add value label on hover
-      if (sessionsMinutes > 0) {
-        const valueLabel = document.createElement('div');
-        valueLabel.className = 'week-day-bar-value';
-        valueLabel.textContent = `${Math.floor(sessionsMinutes / 25)}s`; // Convert to sessions
-        dayBar.appendChild(valueLabel);
-      }
+        dayBar.style.height = `${height}px`;
 
-      // Add hover tooltip
-      const hours = Math.floor(sessionsMinutes / 60);
-      const minutes = sessionsMinutes % 60;
-      const timeText = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-      dayBar.title = `${day}: ${timeText} (${Math.floor(sessionsMinutes / 25)} sessions)`;
+        // Add value label on hover
+        if (sessionsMinutes > 0) {
+          const valueLabel = document.createElement('div');
+          valueLabel.className = 'week-day-bar-value';
+          valueLabel.textContent = `${Math.floor(sessionsMinutes / 25)}s`; // Convert to sessions
+          dayBar.appendChild(valueLabel);
+        }
 
-      weeklyChart.appendChild(dayBar);
-    });
+        // Add hover tooltip
+        const hours = Math.floor(sessionsMinutes / 60);
+        const minutes = Math.floor(sessionsMinutes % 60);
+        const timeText = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+        const sessions = dayData ? dayData.completed_pomodoros : 0;
+        dayBar.title = `${day}: ${timeText} (${sessions} sessions)`;
+
+        weeklyChart.appendChild(dayBar);
+      });
+    } catch (error) {
+      console.error('Failed to load weekly chart data:', error);
+      // Show empty chart on error
+      days.forEach((day, index) => {
+        const dayBar = document.createElement('div');
+        dayBar.className = 'week-day-bar';
+        dayBar.style.height = '8px';
+        dayBar.title = `${day}: No data available`;
+        weeklyChart.appendChild(dayBar);
+      });
+    }
   }
 
-  updateSelectedDayDetails(date = this.currentDate) {
+  async updateSelectedDayDetails(date = this.currentDate) {
     const selectedDayTitle = document.getElementById('selected-day-title');
     const sessionsList = document.getElementById('sessions-list');
 
@@ -253,39 +299,56 @@ class NavigationManager {
     // Clear previous sessions
     sessionsList.innerHTML = '';
 
-    // Generate placeholder session data
-    const numSessions = Math.floor(Math.random() * 8 + 2);
+    try {
+      const history = await invoke('get_stats_history');
+      const selectedDateStr = date.toDateString();
+      const dayData = history.find(h => h.date === selectedDateStr);
 
-    if (numSessions === 0) {
-      const noSessions = document.createElement('div');
-      noSessions.className = 'session-item';
-      noSessions.innerHTML = '<span>No sessions completed</span>';
-      sessionsList.appendChild(noSessions);
-      return;
-    }
+      if (!dayData || dayData.completed_pomodoros === 0) {
+        const noSessions = document.createElement('div');
+        noSessions.className = 'session-item';
+        noSessions.innerHTML = '<span>No sessions completed</span>';
+        sessionsList.appendChild(noSessions);
+        return;
+      }
 
-    for (let i = 0; i < numSessions; i++) {
-      const sessionItem = document.createElement('div');
-      sessionItem.className = 'session-item';
+      // Create session items based on completed pomodoros
+      for (let i = 0; i < dayData.completed_pomodoros; i++) {
+        const sessionItem = document.createElement('div');
+        sessionItem.className = 'session-item';
 
-      const isBreak = i % 4 === 3; // Every 4th session is a break
-      const sessionType = isBreak ? 'Break' : 'Focus';
-      const duration = isBreak ? '15m' : '25m';
-      const startTime = `${9 + Math.floor(i * 0.75)}:${(i * 45) % 60}`.padStart(5, '0');
+        // Estimate session times (this is an approximation)
+        const sessionStartTime = new Date(date);
+        sessionStartTime.setHours(9 + Math.floor(i * 0.5), (i * 30) % 60); // Spread throughout day
 
-      sessionItem.innerHTML = `
-        <span class="session-type ${isBreak ? 'break' : ''}">${sessionType}</span>
-        <div>
-          <span>${duration}</span>
-          <span class="session-time">${startTime}</span>
-        </div>
-      `;
+        const sessionType = 'Focus';
+        const duration = '25m';
+        const startTime = sessionStartTime.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        });
 
-      sessionsList.appendChild(sessionItem);
+        sessionItem.innerHTML = `
+          <span class="session-type">${sessionType}</span>
+          <div>
+            <span>${duration}</span>
+            <span class="session-time">${startTime}</span>
+          </div>
+        `;
+
+        sessionsList.appendChild(sessionItem);
+      }
+    } catch (error) {
+      console.error('Failed to load session details:', error);
+      const errorItem = document.createElement('div');
+      errorItem.className = 'session-item';
+      errorItem.innerHTML = '<span>Error loading session data</span>';
+      sessionsList.appendChild(errorItem);
     }
   }
 
-  updateCalendar() {
+  async updateCalendar() {
     const calendarGrid = document.getElementById('calendar-grid');
     const currentMonthEl = document.getElementById('current-month');
 
@@ -314,50 +377,90 @@ class NavigationManager {
     const daysInMonth = lastDay.getDate();
     const startingDay = firstDay.getDay();
 
-    // Add empty cells for days before month starts
-    for (let i = 0; i < startingDay; i++) {
-      const emptyDay = document.createElement('div');
-      emptyDay.className = 'calendar-day';
-      calendarGrid.appendChild(emptyDay);
-    }
+    try {
+      // Load session history for the month
+      const history = await invoke('get_stats_history');
 
-    // Add days of the month
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dayEl = document.createElement('div');
-      dayEl.className = 'calendar-day';
-
-      const dayNumber = document.createElement('div');
-      dayNumber.className = 'calendar-day-number';
-      dayNumber.textContent = day;
-      dayEl.appendChild(dayNumber);
-
-      // Check if it's today
-      const dayDate = new Date(this.displayMonth.getFullYear(), this.displayMonth.getMonth(), day);
-      if (this.isSameDay(dayDate, this.currentDate)) {
-        dayEl.classList.add('today');
+      // Add empty cells for days before month starts
+      for (let i = 0; i < startingDay; i++) {
+        const emptyDay = document.createElement('div');
+        emptyDay.className = 'calendar-day';
+        calendarGrid.appendChild(emptyDay);
       }
 
-      // Add session dots (placeholder for now)
-      const dots = document.createElement('div');
-      dots.className = 'calendar-day-dots';
-      // Simulate some completed sessions
-      const randomSessions = Math.floor(Math.random() * 6);
-      if (randomSessions > 0) {
-        dayEl.classList.add('has-sessions');
-        for (let i = 0; i < Math.min(randomSessions, 5); i++) {
-          const dot = document.createElement('div');
-          dot.className = 'calendar-dot';
-          dots.appendChild(dot);
+      // Add days of the month
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dayEl = document.createElement('div');
+        dayEl.className = 'calendar-day';
+
+        const dayNumber = document.createElement('div');
+        dayNumber.className = 'calendar-day-number';
+        dayNumber.textContent = day;
+        dayEl.appendChild(dayNumber);
+
+        // Check if it's today
+        const dayDate = new Date(this.displayMonth.getFullYear(), this.displayMonth.getMonth(), day);
+        if (this.isSameDay(dayDate, this.currentDate)) {
+          dayEl.classList.add('today');
         }
+
+        // Add session dots based on real data
+        const dots = document.createElement('div');
+        dots.className = 'calendar-day-dots';
+        
+        const dayData = history.find(h => h.date === dayDate.toDateString());
+        if (dayData && dayData.completed_pomodoros > 0) {
+          dayEl.classList.add('has-sessions');
+          const numDots = Math.min(dayData.completed_pomodoros, 5); // Max 5 dots
+          for (let i = 0; i < numDots; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'calendar-dot';
+            dots.appendChild(dot);
+          }
+        }
+        
+        dayEl.appendChild(dots);
+
+        // Add click event
+        dayEl.addEventListener('click', async () => {
+          await this.selectDay(dayDate);
+        });
+
+        calendarGrid.appendChild(dayEl);
       }
-      dayEl.appendChild(dots);
+    } catch (error) {
+      console.error('Failed to load calendar data:', error);
+      // Fallback: create calendar without session data
+      for (let i = 0; i < startingDay; i++) {
+        const emptyDay = document.createElement('div');
+        emptyDay.className = 'calendar-day';
+        calendarGrid.appendChild(emptyDay);
+      }
 
-      // Add click event
-      dayEl.addEventListener('click', () => {
-        this.selectDay(dayDate);
-      });
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dayEl = document.createElement('div');
+        dayEl.className = 'calendar-day';
 
-      calendarGrid.appendChild(dayEl);
+        const dayNumber = document.createElement('div');
+        dayNumber.className = 'calendar-day-number';
+        dayNumber.textContent = day;
+        dayEl.appendChild(dayNumber);
+
+        const dayDate = new Date(this.displayMonth.getFullYear(), this.displayMonth.getMonth(), day);
+        if (this.isSameDay(dayDate, this.currentDate)) {
+          dayEl.classList.add('today');
+        }
+
+        const dots = document.createElement('div');
+        dots.className = 'calendar-day-dots';
+        dayEl.appendChild(dots);
+
+        dayEl.addEventListener('click', async () => {
+          await this.selectDay(dayDate);
+        });
+
+        calendarGrid.appendChild(dayEl);
+      }
     }
   }
 
@@ -367,7 +470,7 @@ class NavigationManager {
       date1.getFullYear() === date2.getFullYear();
   }
 
-  selectDay(date) {
+  async selectDay(date) {
     // Remove previous selection
     document.querySelectorAll('.calendar-day').forEach(day => {
       day.classList.remove('selected');
@@ -377,9 +480,9 @@ class NavigationManager {
     event.currentTarget.classList.add('selected');
 
     this.selectedDate = date;
-    this.updateSelectedDayDetails(date);
-    this.updateFocusSummary();
-    this.updateWeeklySessionsChart();
+    await this.updateSelectedDayDetails(date);
+    await this.updateFocusSummary();
+    await this.updateWeeklySessionsChart();
     this.updateDailyChart();
   }
 
@@ -738,7 +841,7 @@ class SettingsManager {
     // Timer settings
     const timerFields = [
       'focus-duration',
-      'break-duration', 
+      'break-duration',
       'long-break-duration',
       'total-sessions',
       'weekly-goal-minutes'
@@ -917,6 +1020,22 @@ class PomodoroTimer {
     this.updateProgressDots();
     this.setupEventListeners();
     await this.loadSessionData();
+    await this.loadTasks();
+
+    // Initialize task input if it exists
+    this.taskInput = document.getElementById('task-input');
+    this.taskList = document.getElementById('task-list');
+    
+    if (this.taskInput) {
+      this.taskInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          this.addTask();
+        }
+      });
+    }
+
+    // Render loaded tasks
+    this.renderTasks();
 
     // Initialize sidebar state to match timer
     const sidebar = document.querySelector('.sidebar');
@@ -1569,10 +1688,13 @@ class PomodoroTimer {
   }
 
   renderWeeklyStats(history) {
+    const weeklyStatsContainer = document.getElementById('weekly-stats');
+    if (!weeklyStatsContainer) return;
+
     const today = new Date();
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-    this.weeklyStatsContainer.innerHTML = '';
+    weeklyStatsContainer.innerHTML = '';
 
     // Generate last 7 days
     for (let i = 6; i >= 0; i--) {
@@ -1592,7 +1714,7 @@ class PomodoroTimer {
       const focusTime = dayData ? dayData.total_focus_time : 0;
 
       if (completed > 0) {
-        dayElement.classList.add('completed');
+        dayElement.classList.add('has-data');
       }
 
       const hours = Math.floor(focusTime / 3600);
@@ -1604,7 +1726,7 @@ class PomodoroTimer {
         <div class="day-time">${hours}h ${minutes}m</div>
       `;
 
-      this.weeklyStatsContainer.appendChild(dayElement);
+      weeklyStatsContainer.appendChild(dayElement);
     }
   }
 
@@ -1705,12 +1827,12 @@ class PomodoroTimer {
 
   async loadTasks() {
     try {
-      const tasks = await invoke('load_tasks');
-      return tasks || [];
+      this.tasks = await invoke('load_tasks');
+      console.log('Loaded tasks from Tauri:', this.tasks.length);
     } catch (error) {
       console.error('Failed to load tasks from Tauri, using localStorage:', error);
       const saved = localStorage.getItem('pomodoro-tasks');
-      return saved ? JSON.parse(saved) : [];
+      this.tasks = saved ? JSON.parse(saved) : [];
     }
   }
 
@@ -2113,6 +2235,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Initialize navigation manager
   navigation = new NavigationManager();
   window.navigationManager = navigation; // Make it globally accessible
+  await navigation.init();
 
   // Setup reset button event listener
   const resetButton = document.getElementById('reset-all-data-btn');
