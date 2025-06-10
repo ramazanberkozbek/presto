@@ -41,8 +41,11 @@ class NavigationManager {
     // Initialize view-specific content
     if (view === 'calendar') {
       this.updateCalendar();
-      this.updateDailyDetails();
-      this.updateWeeklyChart();
+      this.updateWeekDisplay();
+      this.updateFocusSummary();
+      this.updateWeeklySessionsChart();
+      this.updateDailyChart();
+      this.updateSelectedDayDetails();
     } else if (view === 'settings') {
       // Settings view will be handled by SettingsManager
       if (window.settingsManager) {
@@ -57,9 +60,16 @@ class NavigationManager {
     const prevBtn = document.getElementById('prev-month');
     const nextBtn = document.getElementById('next-month');
 
+    // Week selector elements
+    const weekRangeEl = document.getElementById('week-range');
+    const prevWeekBtn = document.getElementById('prev-week');
+    const nextWeekBtn = document.getElementById('next-week');
+
     this.currentDate = new Date();
     this.displayMonth = new Date(this.currentDate);
+    this.selectedWeek = this.getWeekStart(this.currentDate);
 
+    // Month navigation
     prevBtn.addEventListener('click', () => {
       this.displayMonth.setMonth(this.displayMonth.getMonth() - 1);
       this.updateCalendar();
@@ -70,7 +80,209 @@ class NavigationManager {
       this.updateCalendar();
     });
 
+    // Week navigation
+    prevWeekBtn.addEventListener('click', () => {
+      this.selectedWeek.setDate(this.selectedWeek.getDate() - 7);
+      this.updateWeekDisplay();
+      this.updateFocusSummary();
+      this.updateWeeklySessionsChart();
+      this.updateDailyChart();
+    });
+
+    nextWeekBtn.addEventListener('click', () => {
+      this.selectedWeek.setDate(this.selectedWeek.getDate() + 7);
+      this.updateWeekDisplay();
+      this.updateFocusSummary();
+      this.updateWeeklySessionsChart();
+      this.updateDailyChart();
+    });
+
     this.updateCalendar();
+    this.updateWeekDisplay();
+    this.updateFocusSummary();
+    this.updateWeeklySessionsChart();
+    this.updateDailyChart();
+    this.updateSelectedDayDetails();
+  }
+
+  getWeekStart(date) {
+    const start = new Date(date);
+    const day = start.getDay();
+    const diff = start.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+    start.setDate(diff);
+    return start;
+  }
+
+  updateWeekDisplay() {
+    const weekRangeEl = document.getElementById('week-range');
+    const weekStart = new Date(this.selectedWeek);
+    const weekEnd = new Date(this.selectedWeek);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+
+    const formatOptions = { day: 'numeric', month: 'short' };
+    const startStr = weekStart.toLocaleDateString('en-US', formatOptions);
+    const endStr = weekEnd.toLocaleDateString('en-US', formatOptions);
+    const year = weekEnd.getFullYear();
+
+    weekRangeEl.textContent = `${startStr} - ${endStr} ${year}`;
+  }
+
+  updateFocusSummary() {
+    const totalFocusTodayEl = document.getElementById('total-focus-today');
+    const avgFocusDayEl = document.getElementById('avg-focus-day');
+
+    // Calculate today's total focus (placeholder data)
+    const isToday = this.isSameDay(new Date(), this.currentDate);
+    let todayFocus = 0;
+
+    if (isToday && window.pomodoroTimer) {
+      todayFocus = window.pomodoroTimer.totalFocusTime;
+    } else {
+      // Simulate data for selected day
+      todayFocus = Math.floor(Math.random() * 8 + 1) * 25 * 60; // 1-8 pomodoros
+    }
+
+    // Calculate weekly average (placeholder data)
+    const weekDays = 7;
+    const weeklyTotal = Array.from({ length: weekDays }, () =>
+      Math.floor(Math.random() * 6 + 2) * 25 * 60
+    );
+    const avgFocus = weeklyTotal.reduce((sum, day) => sum + day, 0) / weekDays;
+
+    totalFocusTodayEl.textContent = this.formatTime(todayFocus);
+    avgFocusDayEl.textContent = this.formatTime(avgFocus);
+  }
+
+  updateDailyChart() {
+    const dailyChart = document.getElementById('daily-chart');
+    dailyChart.innerHTML = '';
+
+    const hours = Array.from({ length: 24 }, (_, i) => i);
+    const maxHeight = 160;
+
+    hours.forEach(hour => {
+      const hourBar = document.createElement('div');
+      hourBar.className = 'hour-bar';
+
+      // Simulate focus and break data for each hour
+      const focusMinutes = Math.random() > 0.7 ? Math.floor(Math.random() * 50 + 10) : 0;
+      const breakMinutes = focusMinutes > 0 ? Math.floor(focusMinutes * 0.2) : 0;
+
+      const totalMinutes = focusMinutes + breakMinutes;
+      const height = Math.max((totalMinutes / 60) * maxHeight, 4);
+
+      hourBar.style.height = `${height}px`;
+
+      if (focusMinutes > 0) {
+        // Create focus and break segments
+        const focusSegment = document.createElement('div');
+        focusSegment.className = 'hour-bar-focus';
+        focusSegment.style.height = `${(focusMinutes / totalMinutes) * 100}%`;
+
+        const breakSegment = document.createElement('div');
+        breakSegment.className = 'hour-bar-break';
+        breakSegment.style.height = `${(breakMinutes / totalMinutes) * 100}%`;
+
+        hourBar.appendChild(focusSegment);
+        hourBar.appendChild(breakSegment);
+      }
+
+      const hourLabel = document.createElement('div');
+      hourLabel.className = 'hour-label';
+      hourLabel.textContent = hour.toString().padStart(2, '0');
+
+      hourBar.appendChild(hourLabel);
+
+      // Add hover tooltip
+      hourBar.title = `${hour}:00 - Focus: ${focusMinutes}m, Break: ${breakMinutes}m`;
+
+      dailyChart.appendChild(hourBar);
+    });
+  }
+
+  updateWeeklySessionsChart() {
+    const weeklyChart = document.getElementById('weekly-chart');
+    weeklyChart.innerHTML = '';
+
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const maxHeight = 70;
+
+    days.forEach((day, index) => {
+      const dayBar = document.createElement('div');
+      dayBar.className = 'week-day-bar';
+
+      // Simulate session data for each day (in minutes)
+      const sessionsMinutes = Math.random() > 0.3 ? Math.floor(Math.random() * 180 + 25) : 0;
+      const height = Math.max((sessionsMinutes / 200) * maxHeight, 8);
+
+      dayBar.style.height = `${height}px`;
+
+      // Add value label on hover
+      if (sessionsMinutes > 0) {
+        const valueLabel = document.createElement('div');
+        valueLabel.className = 'week-day-bar-value';
+        valueLabel.textContent = `${Math.floor(sessionsMinutes / 25)}s`; // Convert to sessions
+        dayBar.appendChild(valueLabel);
+      }
+
+      // Add hover tooltip
+      const hours = Math.floor(sessionsMinutes / 60);
+      const minutes = sessionsMinutes % 60;
+      const timeText = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+      dayBar.title = `${day}: ${timeText} (${Math.floor(sessionsMinutes / 25)} sessions)`;
+
+      weeklyChart.appendChild(dayBar);
+    });
+  }
+
+  updateSelectedDayDetails(date = this.currentDate) {
+    const selectedDayTitle = document.getElementById('selected-day-title');
+    const sessionsList = document.getElementById('sessions-list');
+
+    // Format date for display
+    const dateStr = date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    const isToday = this.isSameDay(date, new Date());
+    selectedDayTitle.textContent = isToday ? "Today's Sessions" : `${dateStr} Sessions`;
+
+    // Clear previous sessions
+    sessionsList.innerHTML = '';
+
+    // Generate placeholder session data
+    const numSessions = Math.floor(Math.random() * 8 + 2);
+
+    if (numSessions === 0) {
+      const noSessions = document.createElement('div');
+      noSessions.className = 'session-item';
+      noSessions.innerHTML = '<span>No sessions completed</span>';
+      sessionsList.appendChild(noSessions);
+      return;
+    }
+
+    for (let i = 0; i < numSessions; i++) {
+      const sessionItem = document.createElement('div');
+      sessionItem.className = 'session-item';
+
+      const isBreak = i % 4 === 3; // Every 4th session is a break
+      const sessionType = isBreak ? 'Break' : 'Focus';
+      const duration = isBreak ? '15m' : '25m';
+      const startTime = `${9 + Math.floor(i * 0.75)}:${(i * 45) % 60}`.padStart(5, '0');
+
+      sessionItem.innerHTML = `
+        <span class="session-type ${isBreak ? 'break' : ''}">${sessionType}</span>
+        <div>
+          <span>${duration}</span>
+          <span class="session-time">${startTime}</span>
+        </div>
+      `;
+
+      sessionsList.appendChild(sessionItem);
+    }
   }
 
   updateCalendar() {
@@ -165,65 +377,25 @@ class NavigationManager {
     event.currentTarget.classList.add('selected');
 
     this.selectedDate = date;
-    this.updateDailyDetails(date);
+    this.updateSelectedDayDetails(date);
+    this.updateFocusSummary();
+    this.updateWeeklySessionsChart();
+    this.updateDailyChart();
   }
 
   updateDailyDetails(date = this.currentDate) {
-    const dayPomodoros = document.getElementById('day-pomodoros');
-    const dayFocusTime = document.getElementById('day-focus-time');
-    const dayBreakTime = document.getElementById('day-break-time');
-
-    // Placeholder data - in real app, this would come from stored data
-    const isToday = this.isSameDay(date, this.currentDate);
-
-    if (isToday && window.pomodoroTimer) {
-      dayPomodoros.textContent = window.pomodoroTimer.completedPomodoros;
-      dayFocusTime.textContent = this.formatTime(window.pomodoroTimer.totalFocusTime);
-      dayBreakTime.textContent = this.formatTime(window.pomodoroTimer.totalFocusTime * 0.25); // Estimate break time
-    } else {
-      // Simulate historical data
-      const randomPomodoros = Math.floor(Math.random() * 11);
-      dayPomodoros.textContent = randomPomodoros;
-      dayFocusTime.textContent = this.formatTime(randomPomodoros * 25 * 60);
-      dayBreakTime.textContent = this.formatTime(randomPomodoros * 6 * 60);
-    }
+    // This method is now replaced by updateSelectedDayDetails, updateFocusSummary, and updateDailyChart
+    // Keeping it for compatibility, but it just calls the new methods
+    this.updateSelectedDayDetails(date);
+    this.updateFocusSummary();
+    this.updateWeeklySessionsChart();
+    this.updateDailyChart();
   }
 
   updateWeeklyChart() {
-    const weekChart = document.getElementById('week-chart');
-    weekChart.innerHTML = '';
-
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const maxHeight = 160;
-
-    days.forEach((day, index) => {
-      const barContainer = document.createElement('div');
-      barContainer.style.position = 'relative';
-      barContainer.style.flex = '1';
-      barContainer.style.display = 'flex';
-      barContainer.style.alignItems = 'end';
-
-      const bar = document.createElement('div');
-      bar.className = 'week-bar';
-
-      // Simulate data - in real app, this would come from stored statistics
-      const pomodoros = Math.floor(Math.random() * 11);
-      const height = (pomodoros / 10) * maxHeight;
-      bar.style.height = `${Math.max(height, 20)}px`;
-
-      const label = document.createElement('div');
-      label.className = 'week-bar-label';
-      label.textContent = day;
-
-      const value = document.createElement('div');
-      value.className = 'week-bar-value';
-      value.textContent = pomodoros;
-
-      bar.appendChild(value);
-      barContainer.appendChild(bar);
-      barContainer.appendChild(label);
-      weekChart.appendChild(barContainer);
-    });
+    // This method is now replaced by updateDailyChart
+    // Keeping it for compatibility
+    this.updateDailyChart();
   }
 
   formatTime(seconds) {
@@ -1520,7 +1692,7 @@ class PomodoroTimer {
 
   dismissNotification(notification) {
     if (!notification || !notification.parentNode) return;
-    
+
     notification.classList.add('dismissing');
     setTimeout(() => {
       if (notification.parentNode) {

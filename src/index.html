@@ -110,42 +110,90 @@
     <div class="view-container hidden" id="calendar-view">
       <h1>Calendar & Statistics</h1>
 
-      <!-- Monthly Calendar -->
-      <div class="calendar-container">
-        <div class="calendar-header">
-          <button id="prev-month" class="nav-btn">&lt;</button>
-          <h2 id="current-month">June 2025</h2>
-          <button id="next-month" class="nav-btn">&gt;</button>
+      <!-- Week Selector -->
+      <div class="week-selector">
+        <button id="prev-week" class="nav-btn">&lt;</button>
+        <div class="week-display">
+          <span id="week-range">10 Jun - 16 Jun 2025</span>
         </div>
-        <div class="calendar-grid" id="calendar-grid">
-          <!-- Will be filled by JavaScript -->
-        </div>
+        <button id="next-week" class="nav-btn">&gt;</button>
       </div>
 
-      <!-- Daily Details -->
-      <div class="daily-details" id="daily-details">
-        <h3>Today's Details</h3>
-        <div class="day-stats">
-          <div class="stat-item">
-            <span class="stat-label">Pomodoros Completed</span>
-            <span class="stat-value" id="day-pomodoros">0</span>
+      <!-- Two Column Layout -->
+      <div class="calendar-main-layout">
+        <!-- Left Column: Statistics and Daily Chart -->
+        <div class="calendar-left-column">
+          <!-- Focus Time Summary Card -->
+          <div class="focus-summary-card">
+            <h3>Focus Summary</h3>
+            <div class="focus-stats">
+              <div class="focus-stat-item">
+                <span class="focus-stat-label">Total Focus Today</span>
+                <span class="focus-stat-value" id="total-focus-today">2h 30m</span>
+              </div>
+              <div class="focus-stat-item">
+                <span class="focus-stat-label">Average Focus/Day</span>
+                <span class="focus-stat-value" id="avg-focus-day">2h 15m</span>
+              </div>
+            </div>
           </div>
-          <div class="stat-item">
-            <span class="stat-label">Focus Time</span>
-            <span class="stat-value" id="day-focus-time">0h 0m</span>
+
+          <!-- Weekly Sessions Chart -->
+          <div class="weekly-chart-card">
+            <h3>This Week's Sessions</h3>
+            <div class="weekly-chart" id="weekly-chart">
+              <!-- Will be filled by JavaScript with daily session bars -->
+            </div>
+            <div class="week-days-labels">
+              <span>Mon</span>
+              <span>Tue</span>
+              <span>Wed</span>
+              <span>Thu</span>
+              <span>Fri</span>
+              <span>Sat</span>
+              <span>Sun</span>
+            </div>
           </div>
-          <div class="stat-item">
-            <span class="stat-label">Break Time</span>
-            <span class="stat-value" id="day-break-time">0h 0m</span>
+
+          <!-- Daily Development Chart -->
+          <div class="daily-chart-card">
+            <h3>Today's Development</h3>
+            <div class="daily-chart" id="daily-chart">
+              <!-- Will be filled by JavaScript with hourly focus time bars -->
+            </div>
+            <div class="chart-legend">
+              <span class="legend-item">
+                <span class="legend-color focus"></span>
+                Focus sessions
+              </span>
+              <span class="legend-item">
+                <span class="legend-color break"></span>
+                Break time
+              </span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Weekly Summary -->
-      <div class="weekly-summary">
-        <h3>This Week</h3>
-        <div class="week-chart" id="week-chart">
-          <!-- Will be filled by JavaScript -->
+        <!-- Right Column: Calendar -->
+        <div class="calendar-right-column">
+          <div class="mini-calendar-container">
+            <div class="calendar-header">
+              <button id="prev-month" class="nav-btn">&lt;</button>
+              <h3 id="current-month">June 2025</h3>
+              <button id="next-month" class="nav-btn">&gt;</button>
+            </div>
+            <div class="calendar-grid" id="calendar-grid">
+              <!-- Will be filled by JavaScript -->
+            </div>
+
+            <!-- Session Details for Selected Day -->
+            <div class="selected-day-details" id="selected-day-details">
+              <h4 id="selected-day-title">Today's Sessions</h4>
+              <div class="sessions-list" id="sessions-list">
+                <!-- Will show completed sessions for selected day -->
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
