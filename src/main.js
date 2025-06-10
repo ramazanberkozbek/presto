@@ -10,7 +10,7 @@ class NavigationManager {
 
   init() {
     // Navigation buttons
-    const navButtons = document.querySelectorAll('.sidebar-icon');
+    const navButtons = document.querySelectorAll('.sidebar-icon, .sidebar-icon-large');
     navButtons.forEach(btn => {
       btn.addEventListener('click', (e) => {
         const view = e.currentTarget.dataset.view;
@@ -24,7 +24,7 @@ class NavigationManager {
 
   switchView(view) {
     // Update active button
-    document.querySelectorAll('.sidebar-icon').forEach(btn => {
+    document.querySelectorAll('.sidebar-icon, .sidebar-icon-large').forEach(btn => {
       btn.classList.remove('active');
     });
     document.querySelector(`[data-view="${view}"]`).classList.add('active');
