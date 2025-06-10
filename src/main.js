@@ -14,7 +14,7 @@ class NavigationManager {
       console.log('NavigationManager already initialized, skipping...');
       return;
     }
-    
+
     this.initialized = true;
     console.log('Initializing NavigationManager...');
 
@@ -23,7 +23,7 @@ class NavigationManager {
     navButtons.forEach(btn => {
       // Remove any existing listeners first
       btn.removeEventListener('click', this.handleNavClick);
-      
+
       // Add new listener
       btn.addEventListener('click', this.handleNavClick.bind(this));
     });
@@ -258,7 +258,7 @@ class NavigationManager {
         // Find real session data for this date
         const dayData = history.find(h => h.date === date.toDateString());
         const sessionsMinutes = dayData ? dayData.total_focus_time / 60 : 0; // Convert seconds to minutes
-        
+
         weekData.push({
           day,
           date,
@@ -282,7 +282,7 @@ class NavigationManager {
         dayBar.className = 'week-day-bar';
 
         // Scale height proportionally to the week's maximum value
-        const height = sessionsMinutes > 0 
+        const height = sessionsMinutes > 0
           ? Math.max((sessionsMinutes / scalingMax) * maxHeight, 8)
           : 8;
 
@@ -387,7 +387,7 @@ class NavigationManager {
   async updateCalendar() {
     const calendarGrid = document.getElementById('calendar-grid');
     const currentMonthEl = document.getElementById('current-month');
-    
+
     // Update month display
     const monthNames = [
       'January', 'February', 'March', 'April', 'May', 'June',
@@ -531,6 +531,7 @@ class SettingsManager {
   async init() {
     await this.loadSettings();
     this.setupEventListeners();
+    this.setupSettingsNavigation();
     await this.registerGlobalShortcuts();
     this.setupGlobalShortcutHandlers();
   }
@@ -966,6 +967,39 @@ class SettingsManager {
     setTimeout(() => {
       feedback.style.opacity = '0';
     }, 2000);
+  }
+
+  setupSettingsNavigation() {
+    const navItems = document.querySelectorAll('.settings-nav-item');
+    const sectionContents = document.querySelectorAll('.settings-section-content');
+
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const section = item.dataset.section;
+        this.switchToSection(section);
+      });
+    });
+  }
+
+  switchToSection(sectionName) {
+    // Remove active class from all nav items
+    document.querySelectorAll('.settings-nav-item').forEach(item => {
+      item.classList.remove('active');
+    });
+
+    // Add active class to clicked nav item
+    document.querySelector(`[data-section="${sectionName}"]`).classList.add('active');
+
+    // Hide all section contents
+    document.querySelectorAll('.settings-section-content').forEach(content => {
+      content.classList.remove('active');
+    });
+
+    // Show selected section content
+    const targetSection = document.getElementById(`${sectionName}-section`);
+    if (targetSection) {
+      targetSection.classList.add('active');
+    }
   }
 }
 
