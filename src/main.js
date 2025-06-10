@@ -380,7 +380,7 @@ class SettingsManager {
     window.__TAURI__.event.listen('shortcuts-updated', (event) => {
       console.log('Shortcuts updated:', event.payload);
       this.settings.shortcuts = event.payload;
-      
+
       // Update the timer's keyboard shortcuts
       if (window.pomodoroTimer) {
         window.pomodoroTimer.updateKeyboardShortcuts(this.settings.shortcuts);
@@ -577,7 +577,7 @@ class PomodoroTimer {
     // Keyboard shortcuts (will be updated from settings)
     this.customShortcuts = {
       start_stop: "CommandOrControl+Alt+Space",
-      reset: "CommandOrControl+Alt+R", 
+      reset: "CommandOrControl+Alt+R",
       skip: "CommandOrControl+Alt+S"
     };
 
@@ -589,6 +589,12 @@ class PomodoroTimer {
     this.updateProgressDots();
     this.setupEventListeners();
     await this.loadSessionData();
+    
+    // Initialize sidebar state to match timer
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+      sidebar.className = `sidebar ${this.currentMode}`;
+    }
   }
 
   setupEventListeners() {
@@ -670,7 +676,7 @@ class PomodoroTimer {
   // Helper method to parse shortcut string into components
   parseShortcut(shortcutString) {
     if (!shortcutString) return null;
-    
+
     const parts = shortcutString.split('+');
     const result = {
       meta: false,
@@ -712,7 +718,7 @@ class PomodoroTimer {
     if (!shortcut) return false;
 
     const eventKey = event.key.toLowerCase();
-    
+
     // Handle special key matches
     let keyMatches = false;
     if (shortcut.key === ' ') {
@@ -725,7 +731,7 @@ class PomodoroTimer {
       keyMatches = shortcut.key === eventKey;
     }
 
-    const modifiersMatch = 
+    const modifiersMatch =
       (!shortcut.meta || event.metaKey || event.ctrlKey) &&
       (!shortcut.ctrl || event.ctrlKey || event.metaKey) &&
       (!shortcut.alt || event.altKey) &&
@@ -1046,6 +1052,12 @@ class PomodoroTimer {
     // Update main container class for background styling
     const mainContainer = document.querySelector('.container');
     mainContainer.className = `container ${this.currentMode}`;
+
+    // Update sidebar class to match current timer state
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+      sidebar.className = `sidebar ${this.currentMode}`;
+    }
 
     // Update timer container class for styling
     const timerContainer = document.querySelector('.timer-container');
