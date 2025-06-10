@@ -356,7 +356,7 @@ class SettingsManager {
       switch (action) {
         case 'start-stop':
           if (window.pomodoroTimer) {
-            if (window.pomodoroTimer.isRunning) {
+            if (window.pomodoroTimer.isRunning && !window.pomodoroTimer.isPaused && !window.pomodoroTimer.isAutoPaused) {
               window.pomodoroTimer.pauseTimer();
             } else {
               window.pomodoroTimer.startTimer();
@@ -373,6 +373,17 @@ class SettingsManager {
             window.pomodoroTimer.skipSession();
           }
           break;
+      }
+    });
+
+    // Listen for shortcuts update events
+    window.__TAURI__.event.listen('shortcuts-updated', (event) => {
+      console.log('Shortcuts updated:', event.payload);
+      this.settings.shortcuts = event.payload;
+      
+      // Update the timer's keyboard shortcuts
+      if (window.pomodoroTimer) {
+        window.pomodoroTimer.updateKeyboardShortcuts(this.settings.shortcuts);
       }
     });
   }
@@ -563,6 +574,13 @@ class PomodoroTimer {
     this.tasks = [];
     this.currentTask = '';
 
+    // Keyboard shortcuts (will be updated from settings)
+    this.customShortcuts = {
+      start_stop: "CommandOrControl+Alt+Space",
+      reset: "CommandOrControl+Alt+R", 
+      skip: "CommandOrControl+Alt+S"
+    };
+
     this.init();
   }
 
@@ -593,46 +611,42 @@ class PomodoroTimer {
     document.addEventListener('keydown', (e) => {
       // Only trigger if not typing in an input
       if (e.target.tagName !== 'INPUT') {
-        switch (e.code) {
-          case 'Space':
-            e.preventDefault();
-            if (this.isRunning && !this.isPaused && !this.isAutoPaused) {
-              this.pauseTimer();
-            } else {
-              this.startTimer();
-            }
-            break;
-          case 'KeyS':
-            // CMD+ALT+S per start/pausa (nuova shortcut principale)
-            if ((e.ctrlKey || e.metaKey) && e.altKey) {
+        // Check custom shortcuts first
+        if (this.matchesShortcut(e, this.customShortcuts.start_stop)) {
+          e.preventDefault();
+          if (this.isRunning && !this.isPaused && !this.isAutoPaused) {
+            this.pauseTimer();
+          } else {
+            this.startTimer();
+          }
+        } else if (this.matchesShortcut(e, this.customShortcuts.reset)) {
+          e.preventDefault();
+          this.resetTimer();
+        } else if (this.matchesShortcut(e, this.customShortcuts.skip)) {
+          e.preventDefault();
+          this.skipSession();
+        }
+        // Keep existing hardcoded shortcuts as fallback
+        else {
+          switch (e.code) {
+            case 'Space':
               e.preventDefault();
               if (this.isRunning && !this.isPaused && !this.isAutoPaused) {
                 this.pauseTimer();
               } else {
                 this.startTimer();
               }
-            }
-            // CMD+S per skip session (shortcut esistente)
-            else if (e.ctrlKey || e.metaKey) {
-              e.preventDefault();
-              this.skipSession();
-            }
-            break;
-          case 'KeyR':
-            if (e.ctrlKey || e.metaKey) {
-              e.preventDefault();
-              this.resetTimer();
-            }
-            break;
-          case 'KeyH':
-            if (e.ctrlKey || e.metaKey) {
-              e.preventDefault();
-              this.showHistoryModal();
-            }
-            break;
-          case 'Escape':
-            this.closeHistoryModal();
-            break;
+              break;
+            case 'KeyH':
+              if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                this.showHistoryModal();
+              }
+              break;
+            case 'Escape':
+              this.closeHistoryModal();
+              break;
+          }
         }
       }
     });
@@ -645,6 +659,79 @@ class PomodoroTimer {
         return e.returnValue;
       }
     });
+  }
+
+  // Update keyboard shortcuts from settings
+  updateKeyboardShortcuts(shortcuts) {
+    this.customShortcuts = { ...shortcuts };
+    console.log('Updated keyboard shortcuts:', this.customShortcuts);
+  }
+
+  // Helper method to parse shortcut string into components
+  parseShortcut(shortcutString) {
+    if (!shortcutString) return null;
+    
+    const parts = shortcutString.split('+');
+    const result = {
+      meta: false,
+      ctrl: false,
+      alt: false,
+      shift: false,
+      key: ''
+    };
+
+    parts.forEach(part => {
+      const partLower = part.toLowerCase();
+      switch (partLower) {
+        case 'commandorcontrol':
+        case 'cmd':
+        case 'command':
+          result.meta = true;
+          result.ctrl = true; // For cross-platform compatibility
+          break;
+        case 'alt':
+          result.alt = true;
+          break;
+        case 'shift':
+          result.shift = true;
+          break;
+        case 'space':
+          result.key = ' ';
+          break;
+        default:
+          result.key = partLower;
+      }
+    });
+
+    return result;
+  }
+
+  // Check if a keyboard event matches a shortcut
+  matchesShortcut(event, shortcutString) {
+    const shortcut = this.parseShortcut(shortcutString);
+    if (!shortcut) return false;
+
+    const eventKey = event.key.toLowerCase();
+    
+    // Handle special key matches
+    let keyMatches = false;
+    if (shortcut.key === ' ') {
+      keyMatches = event.code === 'Space' || eventKey === ' ';
+    } else if (shortcut.key === 's') {
+      keyMatches = eventKey === 's' || event.code === 'KeyS';
+    } else if (shortcut.key === 'r') {
+      keyMatches = eventKey === 'r' || event.code === 'KeyR';
+    } else {
+      keyMatches = shortcut.key === eventKey;
+    }
+
+    const modifiersMatch = 
+      (!shortcut.meta || event.metaKey || event.ctrlKey) &&
+      (!shortcut.ctrl || event.ctrlKey || event.metaKey) &&
+      (!shortcut.alt || event.altKey) &&
+      (!shortcut.shift || event.shiftKey);
+
+    return keyMatches && modifiersMatch;
   }
 
   // Smart Pause Methods
@@ -1429,6 +1516,11 @@ class PomodoroTimer {
 
     // Update smart pause setting and timeout
     this.inactivityThreshold = (settings.notifications.smart_pause_timeout || 30) * 1000; // convert to milliseconds
+
+    // Update keyboard shortcuts
+    if (settings.shortcuts) {
+      this.updateKeyboardShortcuts(settings.shortcuts);
+    }
 
     // Update backend timeout if smart pause is enabled and monitoring is active
     if (this.smartPauseEnabled) {
