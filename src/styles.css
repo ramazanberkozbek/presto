@@ -49,7 +49,6 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  max-width: 1000px;
   margin: 0 auto;
   background-color: var(--focus-bg);
   transition: background-color 0.3s ease;
@@ -1531,18 +1530,37 @@ body {
     padding: 1rem;
   }
 
-  .timer-display {
-    font-size: 3rem !important;
+  .timer-minutes,
+  .timer-seconds {
+    font-size: 8rem !important;
   }
 
   .controls {
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: center;
     align-items: center;
+    gap: 0.15rem;
   }
 
   .control-btn {
-    width: 100%;
-    max-width: 200px;
+    width: 60px;
+    height: 55px;
+    flex: none;
+  }
+
+  .control-btn.primary {
+    width: 75px;
+    height: 60px;
+  }
+
+  .control-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .control-btn.primary svg {
+    width: 26px;
+    height: 26px;
   }
 
   .stats {
