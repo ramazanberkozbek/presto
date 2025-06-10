@@ -412,6 +412,8 @@ class SettingsManager {
     this.isRecordingShortcut = false;
     this.currentRecordingField = null;
     this.recordedKeys = [];
+    this.autoSaveTimeout = null;
+    this.autoSaveDelay = 1000; // 1 second delay for auto-save
   }
 
   async init() {
@@ -442,7 +444,8 @@ class SettingsManager {
         focus_duration: 25,
         break_duration: 5,
         long_break_duration: 20,
-        total_sessions: 10
+        total_sessions: 10,
+        weekly_goal_minutes: 125
       },
       notifications: {
         desktop_notifications: true,
@@ -465,6 +468,12 @@ class SettingsManager {
     document.getElementById('break-duration').value = this.settings.timer.break_duration;
     document.getElementById('long-break-duration').value = this.settings.timer.long_break_duration;
     document.getElementById('total-sessions').value = this.settings.timer.total_sessions;
+
+    // Populate weekly goal
+    const weeklyGoalField = document.getElementById('weekly-goal-minutes');
+    if (weeklyGoalField) {
+      weeklyGoalField.value = this.settings.timer.weekly_goal_minutes || 125;
+    }
 
     // Populate notification settings
     document.getElementById('desktop-notifications').checked = this.settings.notifications.desktop_notifications;
@@ -505,8 +514,12 @@ class SettingsManager {
     if (smartPauseCheckbox) {
       smartPauseCheckbox.addEventListener('change', (e) => {
         this.toggleTimeoutSetting(e.target.checked);
+        this.scheduleAutoSave();
       });
     }
+
+    // Setup auto-save listeners for all settings fields
+    this.setupAutoSaveListeners();
   }
 
   toggleTimeoutSetting(enabled) {
@@ -629,7 +642,11 @@ class SettingsManager {
     }
 
     // Auto-finish recording after a short delay
-    setTimeout(() => this.stopRecordingShortcut(), 500);
+    setTimeout(() => {
+      this.stopRecordingShortcut();
+      // Schedule auto-save after shortcut is set
+      this.scheduleAutoSave();
+    }, 500);
   }
 
   formatShortcut(keys) {
@@ -700,6 +717,8 @@ class SettingsManager {
     const input = document.getElementById(inputId);
     if (input) {
       input.value = '';
+      // Schedule auto-save after clearing shortcut
+      this.scheduleAutoSave();
     }
   }
 
@@ -710,8 +729,131 @@ class SettingsManager {
     if (slider && valueDisplay) {
       slider.addEventListener('input', (e) => {
         valueDisplay.textContent = e.target.value;
+        this.scheduleAutoSave();
       });
     }
+  }
+
+  setupAutoSaveListeners() {
+    // Timer settings
+    const timerFields = [
+      'focus-duration',
+      'break-duration', 
+      'long-break-duration',
+      'total-sessions',
+      'weekly-goal-minutes'
+    ];
+
+    timerFields.forEach(fieldId => {
+      const field = document.getElementById(fieldId);
+      if (field) {
+        field.addEventListener('change', () => this.scheduleAutoSave());
+        field.addEventListener('input', () => this.scheduleAutoSave());
+      }
+    });
+
+    // Notification checkboxes
+    const checkboxFields = [
+      'desktop-notifications',
+      'sound-notifications',
+      'auto-start-breaks'
+    ];
+
+    checkboxFields.forEach(fieldId => {
+      const field = document.getElementById(fieldId);
+      if (field) {
+        field.addEventListener('change', () => this.scheduleAutoSave());
+      }
+    });
+
+    // Smart pause timeout slider is already handled in setupSliderEventListener
+  }
+
+  scheduleAutoSave() {
+    // Clear existing timeout
+    if (this.autoSaveTimeout) {
+      clearTimeout(this.autoSaveTimeout);
+    }
+
+    // Schedule new auto-save
+    this.autoSaveTimeout = setTimeout(() => {
+      this.autoSaveSettings();
+    }, this.autoSaveDelay);
+  }
+
+  async autoSaveSettings() {
+    try {
+      // Get values from UI (same logic as saveSettings but without the alert)
+      this.settings.shortcuts.start_stop = document.getElementById('start-stop-shortcut').value || null;
+      this.settings.shortcuts.reset = document.getElementById('reset-shortcut').value || null;
+      this.settings.shortcuts.skip = document.getElementById('skip-shortcut').value || null;
+
+      this.settings.timer.focus_duration = parseInt(document.getElementById('focus-duration').value);
+      this.settings.timer.break_duration = parseInt(document.getElementById('break-duration').value);
+      this.settings.timer.long_break_duration = parseInt(document.getElementById('long-break-duration').value);
+      this.settings.timer.total_sessions = parseInt(document.getElementById('total-sessions').value);
+
+      // Weekly goal setting
+      const weeklyGoalField = document.getElementById('weekly-goal-minutes');
+      if (weeklyGoalField) {
+        this.settings.timer.weekly_goal_minutes = parseInt(weeklyGoalField.value) || 125;
+      }
+
+      this.settings.notifications.desktop_notifications = document.getElementById('desktop-notifications').checked;
+      this.settings.notifications.sound_notifications = document.getElementById('sound-notifications').checked;
+      this.settings.notifications.auto_start_breaks = document.getElementById('auto-start-breaks').checked;
+      this.settings.notifications.smart_pause = document.getElementById('smart-pause').checked;
+      this.settings.notifications.smart_pause_timeout = parseInt(document.getElementById('smart-pause-timeout').value);
+
+      // Save to file
+      await invoke('save_settings', { settings: this.settings });
+
+      // Re-register global shortcuts
+      await this.registerGlobalShortcuts();
+
+      // Update timer with new settings
+      if (window.pomodoroTimer) {
+        await window.pomodoroTimer.applySettings(this.settings);
+      }
+
+      // Show a subtle feedback that settings were saved
+      this.showAutoSaveFeedback();
+
+    } catch (error) {
+      console.error('Failed to auto-save settings:', error);
+      // Don't show an alert for auto-save failures, just log the error
+    }
+  }
+
+  showAutoSaveFeedback() {
+    // Find or create a feedback element
+    let feedback = document.getElementById('auto-save-feedback');
+    if (!feedback) {
+      feedback = document.createElement('div');
+      feedback.id = 'auto-save-feedback';
+      feedback.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #4CAF50;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        z-index: 10000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      `;
+      document.body.appendChild(feedback);
+    }
+
+    feedback.textContent = '✓ Settings saved';
+    feedback.style.opacity = '1';
+
+    // Fade out after 2 seconds
+    setTimeout(() => {
+      feedback.style.opacity = '0';
+    }, 2000);
   }
 }
 
@@ -1985,16 +2127,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   // Setup other settings buttons event listeners
-  const saveSettingsBtn = document.querySelector('.btn-primary');
-  if (saveSettingsBtn && saveSettingsBtn.textContent.includes('Save Settings')) {
-    saveSettingsBtn.addEventListener('click', () => {
-      console.log("Save settings button clicked via event listener");
-      saveSettings();
-    });
-    // Remove onclick attribute
-    saveSettingsBtn.removeAttribute('onclick');
-  }
-
   const resetToDefaultsBtn = document.querySelector('.btn-secondary');
   if (resetToDefaultsBtn && resetToDefaultsBtn.textContent.includes('Reset to Defaults')) {
     resetToDefaultsBtn.addEventListener('click', () => {
