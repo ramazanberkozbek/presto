@@ -5,21 +5,36 @@ const { invoke } = window.__TAURI__.core;
 class NavigationManager {
   constructor() {
     this.currentView = 'timer';
-    this.init();
+    this.initialized = false;
   }
 
   async init() {
+    // Prevent duplicate initialization
+    if (this.initialized) {
+      console.log('NavigationManager already initialized, skipping...');
+      return;
+    }
+    
+    this.initialized = true;
+    console.log('Initializing NavigationManager...');
+
     // Navigation buttons
     const navButtons = document.querySelectorAll('.sidebar-icon, .sidebar-icon-large');
     navButtons.forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const view = e.currentTarget.dataset.view;
-        await this.switchView(view);
-      });
+      // Remove any existing listeners first
+      btn.removeEventListener('click', this.handleNavClick);
+      
+      // Add new listener
+      btn.addEventListener('click', this.handleNavClick.bind(this));
     });
 
     // Initialize calendar
     await this.initCalendar();
+  }
+
+  async handleNavClick(e) {
+    const view = e.currentTarget.dataset.view;
+    await this.switchView(view);
   }
 
   async switchView(view) {
@@ -97,12 +112,7 @@ class NavigationManager {
       this.updateDailyChart();
     });
 
-    await this.updateCalendar();
-    this.updateWeekDisplay();
-    await this.updateFocusSummary();
-    await this.updateWeeklySessionsChart();
-    this.updateDailyChart();
-    await this.updateSelectedDayDetails();
+    // Initial updates will be handled by switchView when calendar is shown
   }
 
   getWeekStart(date) {
@@ -236,10 +246,11 @@ class NavigationManager {
       const history = await invoke('get_stats_history');
       const weekStart = this.getWeekStart(this.currentDate);
 
-      days.forEach((day, index) => {
-        const dayBar = document.createElement('div');
-        dayBar.className = 'week-day-bar';
+      // First pass: collect all session data for the week to determine max value
+      const weekData = [];
+      let maxSessionsMinutes = 0;
 
+      days.forEach((day, index) => {
         // Calculate date for this day of the week
         const date = new Date(weekStart);
         date.setDate(weekStart.getDate() + index);
@@ -247,7 +258,33 @@ class NavigationManager {
         // Find real session data for this date
         const dayData = history.find(h => h.date === date.toDateString());
         const sessionsMinutes = dayData ? dayData.total_focus_time / 60 : 0; // Convert seconds to minutes
-        const height = Math.max((sessionsMinutes / 200) * maxHeight, 8);
+        
+        weekData.push({
+          day,
+          date,
+          dayData,
+          sessionsMinutes,
+          sessions: dayData ? dayData.completed_pomodoros : 0
+        });
+
+        // Track maximum for proportional scaling
+        if (sessionsMinutes > maxSessionsMinutes) {
+          maxSessionsMinutes = sessionsMinutes;
+        }
+      });
+
+      // Use a minimum baseline for maxSessionsMinutes to avoid tiny bars
+      const scalingMax = Math.max(maxSessionsMinutes, 60); // At least 1 hour for scaling
+
+      // Second pass: create the bars with proportional scaling
+      weekData.forEach(({ day, sessionsMinutes, sessions, dayData }) => {
+        const dayBar = document.createElement('div');
+        dayBar.className = 'week-day-bar';
+
+        // Scale height proportionally to the week's maximum value
+        const height = sessionsMinutes > 0 
+          ? Math.max((sessionsMinutes / scalingMax) * maxHeight, 8)
+          : 8;
 
         dayBar.style.height = `${height}px`;
 
@@ -255,7 +292,7 @@ class NavigationManager {
         if (sessionsMinutes > 0) {
           const valueLabel = document.createElement('div');
           valueLabel.className = 'week-day-bar-value';
-          valueLabel.textContent = `${Math.floor(sessionsMinutes / 25)}s`; // Convert to sessions
+          valueLabel.textContent = `${sessions}`;
           dayBar.appendChild(valueLabel);
         }
 
@@ -263,7 +300,6 @@ class NavigationManager {
         const hours = Math.floor(sessionsMinutes / 60);
         const minutes = Math.floor(sessionsMinutes % 60);
         const timeText = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-        const sessions = dayData ? dayData.completed_pomodoros : 0;
         dayBar.title = `${day}: ${timeText} (${sessions} sessions)`;
 
         weeklyChart.appendChild(dayBar);
@@ -351,7 +387,7 @@ class NavigationManager {
   async updateCalendar() {
     const calendarGrid = document.getElementById('calendar-grid');
     const currentMonthEl = document.getElementById('current-month');
-
+    
     // Update month display
     const monthNames = [
       'January', 'February', 'March', 'April', 'May', 'June',
@@ -377,37 +413,43 @@ class NavigationManager {
     const daysInMonth = lastDay.getDate();
     const startingDay = firstDay.getDay();
 
+    // Load session history for the month
+    let history = [];
     try {
-      // Load session history for the month
-      const history = await invoke('get_stats_history');
+      history = await invoke('get_stats_history');
+    } catch (error) {
+      console.error('Failed to load calendar data:', error);
+      // Continue with empty history
+    }
 
-      // Add empty cells for days before month starts
-      for (let i = 0; i < startingDay; i++) {
-        const emptyDay = document.createElement('div');
-        emptyDay.className = 'calendar-day';
-        calendarGrid.appendChild(emptyDay);
+    // Add empty cells for days before month starts
+    for (let i = 0; i < startingDay; i++) {
+      const emptyDay = document.createElement('div');
+      emptyDay.className = 'calendar-day';
+      calendarGrid.appendChild(emptyDay);
+    }
+
+    // Add days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayEl = document.createElement('div');
+      dayEl.className = 'calendar-day';
+
+      const dayNumber = document.createElement('div');
+      dayNumber.className = 'calendar-day-number';
+      dayNumber.textContent = day;
+      dayEl.appendChild(dayNumber);
+
+      // Check if it's today
+      const dayDate = new Date(this.displayMonth.getFullYear(), this.displayMonth.getMonth(), day);
+      if (this.isSameDay(dayDate, this.currentDate)) {
+        dayEl.classList.add('today');
       }
 
-      // Add days of the month
-      for (let day = 1; day <= daysInMonth; day++) {
-        const dayEl = document.createElement('div');
-        dayEl.className = 'calendar-day';
+      // Add session dots based on real data (if available)
+      const dots = document.createElement('div');
+      dots.className = 'calendar-day-dots';
 
-        const dayNumber = document.createElement('div');
-        dayNumber.className = 'calendar-day-number';
-        dayNumber.textContent = day;
-        dayEl.appendChild(dayNumber);
-
-        // Check if it's today
-        const dayDate = new Date(this.displayMonth.getFullYear(), this.displayMonth.getMonth(), day);
-        if (this.isSameDay(dayDate, this.currentDate)) {
-          dayEl.classList.add('today');
-        }
-
-        // Add session dots based on real data
-        const dots = document.createElement('div');
-        dots.className = 'calendar-day-dots';
-
+      if (history.length > 0) {
         const dayData = history.find(h => h.date === dayDate.toDateString());
         if (dayData && dayData.completed_pomodoros > 0) {
           dayEl.classList.add('has-sessions');
@@ -418,49 +460,16 @@ class NavigationManager {
             dots.appendChild(dot);
           }
         }
-
-        dayEl.appendChild(dots);
-
-        // Add click event
-        dayEl.addEventListener('click', async () => {
-          await this.selectDay(dayDate);
-        });
-
-        calendarGrid.appendChild(dayEl);
-      }
-    } catch (error) {
-      console.error('Failed to load calendar data:', error);
-      // Fallback: create calendar without session data
-      for (let i = 0; i < startingDay; i++) {
-        const emptyDay = document.createElement('div');
-        emptyDay.className = 'calendar-day';
-        calendarGrid.appendChild(emptyDay);
       }
 
-      for (let day = 1; day <= daysInMonth; day++) {
-        const dayEl = document.createElement('div');
-        dayEl.className = 'calendar-day';
+      dayEl.appendChild(dots);
 
-        const dayNumber = document.createElement('div');
-        dayNumber.className = 'calendar-day-number';
-        dayNumber.textContent = day;
-        dayEl.appendChild(dayNumber);
+      // Add click event
+      dayEl.addEventListener('click', async () => {
+        await this.selectDay(dayDate);
+      });
 
-        const dayDate = new Date(this.displayMonth.getFullYear(), this.displayMonth.getMonth(), day);
-        if (this.isSameDay(dayDate, this.currentDate)) {
-          dayEl.classList.add('today');
-        }
-
-        const dots = document.createElement('div');
-        dots.className = 'calendar-day-dots';
-        dayEl.appendChild(dots);
-
-        dayEl.addEventListener('click', async () => {
-          await this.selectDay(dayDate);
-        });
-
-        calendarGrid.appendChild(dayEl);
-      }
+      calendarGrid.appendChild(dayEl);
     }
   }
 
