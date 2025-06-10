@@ -838,6 +838,9 @@ class PomodoroTimer {
     clearInterval(this.timerInterval);
     this.timerInterval = null;
 
+    // Show auto-pause notification
+    this.showNotificationPing('Timer auto-paused due to inactivity 💤', 'warning');
+
     // Update UI to show auto-pause state
     this.updateDisplay();
     this.updateButtons();
@@ -850,6 +853,9 @@ class PomodoroTimer {
     console.log('Resuming timer from auto-pause');
     this.isAutoPaused = false;
     this.isPaused = false;
+
+    // Show resume notification
+    this.showNotificationPing('Timer resumed - you\'re back! 🎯', 'info');
 
     // Restart the timer interval
     this.timerInterval = setInterval(() => {
@@ -908,8 +914,14 @@ class PomodoroTimer {
         this.updateDisplay();
 
         // Warning when less than 2 minutes remaining
-        if (this.timeRemaining <= 120 && this.timeRemaining > 0) {
+        if (this.timeRemaining === 120 && this.currentMode === 'focus') {
           this.addWarningClass();
+          this.showNotificationPing('2 minutes remaining! 🔥', 'warning');
+        }
+
+        // Final warning at 30 seconds
+        if (this.timeRemaining === 30) {
+          this.showNotificationPing('30 seconds left! ⏰', 'warning');
         }
 
         if (this.timeRemaining <= 0) {
@@ -920,7 +932,7 @@ class PomodoroTimer {
       this.updateButtons();
       this.updateDisplay();
       this.playNotificationSound();
-      this.showNotificationPing('Timer started! 🍅');
+      this.showNotificationPing('Timer started! 🍅', 'info');
 
       // Start smart pause monitoring if enabled
       if (this.smartPauseEnabled && this.currentMode === 'focus') {
@@ -1017,7 +1029,7 @@ class PomodoroTimer {
       longBreak: 'Long break over! Time to get back to work 🚀'
     };
 
-    this.showNotificationPing(messages[this.currentMode] || messages.focus);
+    this.showNotificationPing(messages[this.currentMode] || messages.focus, 'success');
   }
 
   updateDisplay() {
@@ -1433,7 +1445,7 @@ class PomodoroTimer {
     }
   }
 
-  // Notifications
+  // Simple notification system
   showNotification() {
     if ('Notification' in window && Notification.permission === 'granted') {
       const messages = {
@@ -1444,7 +1456,9 @@ class PomodoroTimer {
 
       new Notification('Tempo - Pomodoro Timer', {
         body: messages[this.currentMode],
-        icon: '/assets/tauri.svg'
+        icon: '/assets/tauri.svg',
+        silent: false,
+        requireInteraction: false
       });
     }
   }
@@ -1468,31 +1482,57 @@ class PomodoroTimer {
     oscillator.stop(audioContext.currentTime + 0.5);
   }
 
-  // Visual notification helper
-  showNotificationPing(message) {
-    // Remove existing notification
-    const existing = document.querySelector('.notification-ping');
-    if (existing) {
-      existing.remove();
+  // Simple visual notification system
+  showNotificationPing(message, type = null) {
+    // Ensure notification container exists
+    let container = document.querySelector('.notification-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.className = 'notification-container';
+      document.body.appendChild(container);
     }
 
+    // Remove existing notifications
+    const existingNotifications = container.querySelectorAll('.notification-ping');
+    existingNotifications.forEach(notification => {
+      this.dismissNotification(notification);
+    });
+
+    // Create new notification
     const notification = document.createElement('div');
-    notification.className = 'notification-ping';
+    notification.className = `notification-ping ${type || this.currentMode}`;
     notification.textContent = message;
 
-    document.body.appendChild(notification);
+    container.appendChild(notification);
 
-    // Auto-remove after 3 seconds
+    // Auto-dismiss after 3 seconds
     setTimeout(() => {
       if (notification && notification.parentNode) {
-        notification.style.opacity = '0';
-        setTimeout(() => {
-          if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
-          }
-        }, 300);
+        this.dismissNotification(notification);
       }
     }, 3000);
+
+    // Click to dismiss
+    notification.addEventListener('click', () => {
+      this.dismissNotification(notification);
+    });
+  }
+
+  dismissNotification(notification) {
+    if (!notification || !notification.parentNode) return;
+    
+    notification.classList.add('dismissing');
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 300);
+  }
+
+  formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
 
   // Add warning styling

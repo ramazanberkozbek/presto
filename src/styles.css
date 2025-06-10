@@ -598,18 +598,88 @@ kbd {
   }
 }
 
-/* Sound visualization */
-.notification-ping {
+/* Simple Notification System */
+.notification-container {
   position: fixed;
   top: 20px;
   right: 20px;
-  background: var(--accent-color);
-  color: white;
-  padding: 1rem 1.5rem;
-  border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  animation: slideIn 0.3s ease-out;
   z-index: 1000;
+  pointer-events: none;
+}
+
+.notification-ping {
+  background: white;
+  color: var(--focus-timer-color);
+  padding: 1rem 1.5rem;
+  margin-bottom: 0.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border: 2px solid var(--focus-primary-btn);
+  animation: slideIn 0.3s ease-out;
+  max-width: 300px;
+  pointer-events: auto;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* Timer state notifications */
+.notification-ping.focus {
+  background: var(--focus-bg);
+  border-color: var(--focus-primary-btn);
+  color: var(--focus-timer-color);
+}
+
+.notification-ping.break {
+  background: var(--break-bg);
+  border-color: var(--break-primary-btn);
+  color: var(--break-timer-color);
+}
+
+.notification-ping.longBreak {
+  background: var(--long-break-bg);
+  border-color: var(--long-break-primary-btn);
+  color: var(--long-break-timer-color);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.notification-ping.dismissing {
+  animation: slideOut 0.3s ease-in forwards;
+}
+
+/* Mobile responsive for notifications */
+@media (max-width: 768px) {
+  .notification-container {
+    top: 80px;
+    right: 10px;
+    left: 10px;
+  }
+
+  .notification-ping {
+    max-width: none;
+    margin: 0 0 0.5rem 0;
+  }
 }
 
 /* Improved focus states */
@@ -1520,6 +1590,31 @@ body {
     color: #f6f6f6;
   }
 
+  /* Dark mode notifications */
+  .notification-ping {
+    background: #1a1a1a;
+    color: #f6f6f6;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  .notification-ping.focus {
+    background: rgba(71, 21, 21, 0.9);
+    border-color: var(--focus-primary-btn);
+    color: rgba(255, 217, 217, 0.9);
+  }
+
+  .notification-ping.break {
+    background: rgba(20, 64, 29, 0.9);
+    border-color: var(--break-primary-btn);
+    color: rgba(218, 250, 224, 0.9);
+  }
+
+  .notification-ping.longBreak {
+    background: rgba(21, 48, 71, 0.9);
+    border-color: var(--long-break-primary-btn);
+    color: rgba(217, 238, 255, 0.9);
+  }
+
   /* Dark mode improvements for sidebar */
   .sidebar {
     background: rgba(44, 62, 80, 0.9);
@@ -1527,6 +1622,70 @@ body {
     -webkit-backdrop-filter: blur(20px);
     border-right: 2px solid rgba(255, 255, 255, 0.15);
     box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .sidebar.focus {
+    background: rgba(71, 21, 21, 0.9);
+    border-right: 2px solid rgba(255, 124, 124, 0.3);
+    box-shadow: 2px 0 20px rgba(231, 76, 60, 0.2);
+  }
+
+  .sidebar.break {
+    background: rgba(20, 64, 29, 0.9);
+    border-right: 2px solid rgba(140, 232, 161, 0.3);
+    box-shadow: 2px 0 20px rgba(46, 204, 113, 0.2);
+  }
+
+  .sidebar.longBreak {
+    background: rgba(21, 48, 71, 0.9);
+    border-right: 2px solid rgba(139, 202, 255, 0.3);
+    box-shadow: 2px 0 20px rgba(52, 152, 219, 0.2);
+  }
+
+  .sidebar-icon {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .sidebar.focus .sidebar-icon {
+    color: rgba(255, 217, 217, 0.9);
+  }
+
+  .sidebar.break .sidebar-icon {
+    color: rgba(218, 250, 224, 0.9);
+  }
+
+  .sidebar.longBreak .sidebar-icon {
+    color: rgba(217, 238, 255, 0.9);
+  }
+
+  .sidebar.focus .sidebar-icon:hover {
+    background: rgba(255, 124, 124, 0.2);
+    color: rgba(255, 217, 217, 1);
+  }
+
+  .sidebar.break .sidebar-icon:hover {
+    background: rgba(140, 232, 161, 0.2);
+    color: rgba(218, 250, 224, 1);
+  }
+
+  .sidebar.longBreak .sidebar-icon:hover {
+    background: rgba(139, 202, 255, 0.2);
+    color: rgba(217, 238, 255, 1);
+  }
+
+  .sidebar.focus .sidebar-icon.active {
+    background: rgba(255, 124, 124, 0.3);
+    color: rgba(255, 217, 217, 1);
+  }
+
+  .sidebar.break .sidebar-icon.active {
+    background: rgba(140, 232, 161, 0.3);
+    color: rgba(218, 250, 224, 1);
+  }
+
+  .sidebar.longBreak .sidebar-icon.active {
+    background: rgba(139, 202, 255, 0.3);
+    color: rgba(217, 238, 255, 1);
   }
 
   .sidebar.focus {
@@ -1628,7 +1787,7 @@ body {
 .container.break .timer-status {
   color: var(--break-timer-color);
   background-color: var(--break-secondary-btn);
-  padding: 0.4rem 2rem;
+  padding: 0.2rem 2rem;
   border-radius: 2rem;
   border: var(--break-timer-color) 2px solid;
   display: inline-flex;
@@ -1658,7 +1817,7 @@ body {
 .container.longBreak .timer-status {
   color: var(--long-break-timer-color);
   background-color: var(--long-break-secondary-btn);
-  padding: 0.4rem 2rem;
+  padding: 0.2rem 2rem;
   border-radius: 2rem;
   border: var(--long-break-timer-color) 2px solid;
   display: inline-flex;
