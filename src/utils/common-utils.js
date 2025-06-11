@@ -1,6 +1,6 @@
 // Notification Utility Functions
 export class NotificationUtils {
-    static showNotificationPing(message, type = null) {
+    static showNotificationPing(message, type = null, timerState = null) {
         // Ensure notification container exists
         let container = document.querySelector('.notification-container');
         if (!container) {
@@ -17,11 +17,26 @@ export class NotificationUtils {
 
         // Create new notification
         const notification = document.createElement('div');
-        notification.className = `notification-ping ${type || 'info'}`;
+        
+        // Determina la classe CSS da usare
+        let notificationClass = 'notification-ping';
+        
+        // Se è fornito lo stato del timer, usa quello, altrimenti usa il tipo
+        if (timerState) {
+            notificationClass += ` ${timerState}`;
+        } else if (type) {
+            notificationClass += ` ${type}`;
+        } else {
+            notificationClass += ' info';
+        }
+        
+        notification.className = notificationClass;
         
         // Miglioramento per mobile: aggiungi attributi di accessibilità
         notification.setAttribute('role', 'alert');
         notification.setAttribute('aria-live', 'polite');
+        
+        // Contenuto semplice e pulito
         notification.textContent = message;
 
         container.appendChild(notification);
@@ -255,6 +270,41 @@ export class NotificationUtils {
         } catch (error) {
             console.error('Failed to request notification permission:', error);
             return 'denied';
+        }
+    }
+
+    static createNotificationContent(message, type) {
+        // Definisci icone per ogni tipo di notifica
+        const icons = {
+            success: '✅',
+            warning: '⚠️',
+            error: '❌',
+            info: 'ℹ️',
+            focus: '🍅',
+            break: '☕',
+            longBreak: '🌙'
+        };
+        
+        const icon = icons[type] || icons.info;
+        
+        // Per dispositivi mobile, usa un layout migliorato
+        const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+            return `
+                <div class="notification-content-mobile">
+                    <span class="notification-icon">${icon}</span>
+                    <span class="notification-message">${message}</span>
+                    <span class="notification-dismiss-hint">↑</span>
+                </div>
+            `;
+        } else {
+            return `
+                <div class="notification-content-desktop">
+                    <span class="notification-icon">${icon}</span>
+                    <span class="notification-message">${message}</span>
+                </div>
+            `;
         }
     }
 }

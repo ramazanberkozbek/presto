@@ -294,7 +294,7 @@ export class PomodoroTimer {
         this.timerInterval = null;
 
         // Show auto-pause notification
-        NotificationUtils.showNotificationPing('Timer auto-paused due to inactivity 💤', 'warning');
+        NotificationUtils.showNotificationPing('Timer auto-paused due to inactivity 💤', 'warning', this.currentMode);
 
         // Update UI to show auto-pause state
         this.updateDisplay();
@@ -310,7 +310,7 @@ export class PomodoroTimer {
         this.isPaused = false;
 
         // Show resume notification
-        NotificationUtils.showNotificationPing('Timer resumed - you\'re back! 🎯', 'info');
+        NotificationUtils.showNotificationPing('Timer resumed - you\'re back! 🎯', 'info', this.currentMode);
 
         // Restart the timer interval
         this.timerInterval = setInterval(() => {
@@ -389,12 +389,12 @@ export class PomodoroTimer {
                 // Warning when less than 2 minutes remaining
                 if (this.timeRemaining === 120 && this.currentMode === 'focus') {
                     this.addWarningClass();
-                    NotificationUtils.showNotificationPing('2 minutes remaining! 🔥', 'warning');
+                    NotificationUtils.showNotificationPing('2 minutes remaining! 🔥', 'warning', this.currentMode);
                 }
 
                 // Final warning at 30 seconds
                 if (this.timeRemaining === 30) {
-                    NotificationUtils.showNotificationPing('30 seconds left! ⏰', 'warning');
+                    NotificationUtils.showNotificationPing('30 seconds left! ⏰', 'warning', this.currentMode);
                 }
 
                 if (this.timeRemaining <= 0) {
@@ -405,7 +405,7 @@ export class PomodoroTimer {
             this.updateButtons();
             this.updateDisplay();
             NotificationUtils.playNotificationSound();
-            NotificationUtils.showNotificationPing('Timer started! 🍅', 'info');
+            NotificationUtils.showNotificationPing('Timer started! 🍅', 'info', this.currentMode);
 
             // Start smart pause monitoring if enabled
             if (this.smartPauseEnabled && this.currentMode === 'focus') {
@@ -506,7 +506,7 @@ export class PomodoroTimer {
             longBreak: 'Long break skipped. Time to get back to work! 🚀'
         };
 
-        NotificationUtils.showNotificationPing(messages[this.currentMode] || 'Session skipped 📤', 'info');
+        NotificationUtils.showNotificationPing(messages[this.currentMode] || 'Session skipped 📤', 'info', this.currentMode);
 
         // Auto-start new session if enabled
         if (this.autoStartBreaks) {
@@ -579,7 +579,7 @@ export class PomodoroTimer {
             longBreak: 'Long break over! Time to get back to work 🚀'
         };
 
-        NotificationUtils.showNotificationPing(messages[this.currentMode] || messages.focus, 'success');
+        NotificationUtils.showNotificationPing(messages[this.currentMode] || messages.focus, 'success', this.currentMode);
 
         // Session completion doesn't auto-start - timer continues counting
         // User must manually skip to go to next session or use reset to stop
@@ -805,7 +805,7 @@ export class PomodoroTimer {
         this.updateTrayIcon();
 
         // Show undo notification
-        NotificationUtils.showNotificationPing('Last session undone! Back to focus mode 🔄', 'info');
+        NotificationUtils.showNotificationPing('Last session undone! Back to focus mode 🔄', 'info', this.currentMode);
     }
 
     // Progress dots generation

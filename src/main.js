@@ -365,7 +365,7 @@ async function initializeApplication() {
     console.log('✅ Application initialized successfully!');
 
     // Show welcome notification
-    NotificationUtils.showNotificationPing('Welcome to Tempo! 🍅', 'success');
+    NotificationUtils.showNotificationPing('Welcome to Tempo! 🍅', null, 'focus');
 
   } catch (error) {
     console.error('❌ Failed to initialize application:', error);
