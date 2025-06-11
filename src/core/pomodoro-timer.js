@@ -643,7 +643,7 @@ export class PomodoroTimer {
         // Apply the appropriate Remix Icon class based on current mode
         const newClass = iconClasses[this.currentMode] || 'ri-brain-line';
         this.statusIcon.className = newClass;
-        
+
         // Clear any fallback text content since we're using icons
         this.statusIcon.textContent = '';
     }
