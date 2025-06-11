@@ -139,33 +139,30 @@ export class NavigationManager {
     }
 
     async updateFocusSummary() {
-        const totalFocusTodayEl = document.getElementById('total-focus-today');
+        const totalFocusWeekEl = document.getElementById('total-focus-week');
+        const totalFocusChangeEl = document.getElementById('total-focus-change');
         const avgFocusDayEl = document.getElementById('avg-focus-day');
+        const avgFocusChangeEl = document.getElementById('avg-focus-change');
+        const weeklySessionsEl = document.getElementById('weekly-sessions');
+        const weeklySessionsChangeEl = document.getElementById('weekly-sessions-change');
+        const weeklyFocusTimeEl = document.getElementById('weekly-focus-time');
+        const weeklyFocusChangeEl = document.getElementById('weekly-focus-change');
 
-        // Calculate today's total focus (real data only)
-        const isToday = this.isSameDay(new Date(), this.currentDate);
-        let todayFocus = 0;
-
-        if (isToday && window.pomodoroTimer) {
-            todayFocus = window.pomodoroTimer.totalFocusTime;
-        } else {
-            // Load real data for selected date
-            try {
-                const history = await invoke('get_stats_history');
-                const selectedDateStr = this.currentDate.toDateString();
-                const dayData = history.find(h => h.date === selectedDateStr);
-                todayFocus = dayData ? dayData.total_focus_time : 0;
-            } catch (error) {
-                console.error('Failed to load focus data:', error);
-                todayFocus = 0;
-            }
-        }
-
-        // Calculate weekly average (real data only)
+        // Calculate weekly data and comparisons
         let avgFocus = 0;
+        let weeklyFocusTime = 0;
+        let weeklySessions = 0;
+        let previousWeekAvgFocus = 0;
+        let previousWeekFocusTime = 0;
+        let previousWeeklySessions = 0;
+
         try {
             const history = await invoke('get_stats_history');
             const weekStart = this.getWeekStart(this.currentDate);
+            const previousWeekStart = new Date(weekStart);
+            previousWeekStart.setDate(weekStart.getDate() - 7);
+
+            // Current week data
             let weekTotal = 0;
             let daysWithData = 0;
 
@@ -173,20 +170,87 @@ export class NavigationManager {
                 const date = new Date(weekStart);
                 date.setDate(weekStart.getDate() + i);
                 const dayData = history.find(h => h.date === date.toDateString());
-                if (dayData && dayData.total_focus_time > 0) {
+                if (dayData) {
                     weekTotal += dayData.total_focus_time;
-                    daysWithData++;
+                    weeklyFocusTime += dayData.total_focus_time;
+                    weeklySessions += dayData.completed_pomodoros;
+                    if (dayData.total_focus_time > 0) {
+                        daysWithData++;
+                    }
                 }
             }
 
             avgFocus = daysWithData > 0 ? weekTotal / daysWithData : 0;
+
+            // Previous week data
+            let previousWeekTotal = 0;
+            let previousDaysWithData = 0;
+
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(previousWeekStart);
+                date.setDate(previousWeekStart.getDate() + i);
+                const dayData = history.find(h => h.date === date.toDateString());
+                if (dayData) {
+                    previousWeekTotal += dayData.total_focus_time;
+                    previousWeekFocusTime += dayData.total_focus_time;
+                    previousWeeklySessions += dayData.completed_pomodoros;
+                    if (dayData.total_focus_time > 0) {
+                        previousDaysWithData++;
+                    }
+                }
+            }
+
+            previousWeekAvgFocus = previousDaysWithData > 0 ? previousWeekTotal / previousDaysWithData : 0;
+
         } catch (error) {
             console.error('Failed to load weekly data:', error);
-            avgFocus = 0;
         }
 
-        totalFocusTodayEl.textContent = TimeUtils.formatTime(todayFocus);
+        // Calculate percentage changes
+        const weeklyFocusChange = this.calculatePercentageChange(weeklyFocusTime, previousWeekFocusTime);
+        const avgFocusChange = this.calculatePercentageChange(avgFocus, previousWeekAvgFocus);
+        const weeklySessionsChange = this.calculatePercentageChange(weeklySessions, previousWeeklySessions);
+
+        // Update UI
+        totalFocusWeekEl.textContent = TimeUtils.formatTime(weeklyFocusTime);
+        this.updateChangeElement(totalFocusChangeEl, weeklyFocusChange);
+
         avgFocusDayEl.textContent = TimeUtils.formatTime(avgFocus);
+        this.updateChangeElement(avgFocusChangeEl, avgFocusChange);
+
+        weeklySessionsEl.textContent = weeklySessions.toString();
+        this.updateChangeElement(weeklySessionsChangeEl, weeklySessionsChange);
+
+        weeklyFocusTimeEl.textContent = TimeUtils.formatTime(weeklyFocusTime);
+        this.updateChangeElement(weeklyFocusChangeEl, weeklyFocusChange);
+    }
+
+    calculatePercentageChange(current, previous) {
+        if (previous === 0) {
+            return current > 0 ? 100 : 0;
+        }
+        return Math.round(((current - previous) / previous) * 100);
+    }
+
+    updateChangeElement(element, change) {
+        element.classList.remove('positive', 'negative', 'neutral');
+        
+        const icon = element.querySelector('i');
+        const span = element.querySelector('span');
+        
+        if (change > 0) {
+            span.textContent = `+${change}%`;
+            icon.className = 'ri-arrow-up-line';
+            element.classList.add('positive');
+        } else if (change < 0) {
+            span.textContent = `${change}%`;
+            icon.className = 'ri-arrow-down-line';
+            element.classList.add('negative');
+        } else {
+            span.textContent = '0%';
+            icon.className = 'ri-subtract-line';
+            element.classList.add('neutral');
+        }
     }
 
     updateDailyChart() {
