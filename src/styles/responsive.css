@@ -77,7 +77,8 @@
   /* Main Content Layout Adjustment for mobile */
   body {
     padding-left: 0;
-    padding-bottom: 70px; /* Space for bottom sidebar */
+    padding-bottom: 70px;
+    /* Space for bottom sidebar */
   }
 
   /* Team responsive design */
@@ -299,6 +300,7 @@
 
 /* Landscape orientation adjustments for mobile */
 @media (max-height: 600px) and (orientation: landscape) {
+
   .timer-minutes,
   .timer-seconds {
     font-size: 6rem;
@@ -319,7 +321,8 @@
 }
 
 /* High DPI screens */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
   .sidebar {
     backdrop-filter: blur(40px);
     -webkit-backdrop-filter: blur(40px);
@@ -332,6 +335,7 @@
 
 /* Print styles */
 @media print {
+
   .sidebar,
   .controls,
   .notification-container {
