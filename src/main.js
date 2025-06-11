@@ -283,10 +283,54 @@ window.performTotalReset = async function () {
   }
 };
 
+// Request notification permission using Tauri v2 API
+async function requestNotificationPermission() {
+  try {
+    if (window.__TAURI__ && window.__TAURI__.notification) {
+      console.log('🔔 Requesting notification permission using Tauri v2...');
+      const { isPermissionGranted, requestPermission } = window.__TAURI__.notification;
+      
+      // Check if permission is already granted
+      let permissionGranted = await isPermissionGranted();
+      
+      // If not granted, request permission
+      if (!permissionGranted) {
+        console.log('Requesting notification permission...');
+        const permission = await requestPermission();
+        permissionGranted = permission === 'granted';
+        
+        if (permissionGranted) {
+          console.log('✅ Notification permission granted');
+        } else {
+          console.log('❌ Notification permission denied');
+        }
+      } else {
+        console.log('✅ Notification permission already granted');
+      }
+    } else {
+      // Fallback to Web Notification API
+      console.log('🔔 Requesting notification permission using Web API...');
+      if ('Notification' in window) {
+        const permission = await Notification.requestPermission();
+        console.log(`Notification permission: ${permission}`);
+      }
+    }
+  } catch (error) {
+    console.error('Failed to request notification permission:', error);
+    // Fallback to Web API
+    if ('Notification' in window) {
+      Notification.requestPermission();
+    }
+  }
+}
+
 // Initialize the application
 async function initializeApplication() {
   try {
     console.log('🚀 Initializing Tempo application...');
+
+    // Request notification permission using Tauri v2 API
+    await requestNotificationPermission();
 
     // Initialize settings manager first (other modules depend on it)
     console.log('📋 Initializing Settings Manager...');

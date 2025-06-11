@@ -361,24 +361,32 @@ export class SettingsManager {
         if (desktopNotificationsCheckbox) {
             desktopNotificationsCheckbox.addEventListener('change', async (e) => {
                 if (e.target.checked) {
-                    // Request notification permission when enabling
-                    const permission = await NotificationUtils.requestNotificationPermission();
-                    if (permission !== 'granted') {
-                        // If permission denied, uncheck the box
-                        e.target.checked = false;
-                        const message = permission === 'unsupported'
-                            ? 'Desktop notifications are not supported in this browser.'
-                            : 'Notification permission denied. Please enable notifications in your browser settings.';
-                        NotificationUtils.showNotificationPing(message, 'error');
-                        return;
+                    try {
+                        // Request notification permission when enabling
+                        const permission = await NotificationUtils.requestNotificationPermission();
+                        if (permission !== 'granted') {
+                            // Show warning but don't prevent saving the setting
+                            const message = permission === 'unsupported'
+                                ? 'Desktop notifications are not supported in this browser.'
+                                : 'Notification permission denied. Settings saved, but notifications won\'t work until permission is granted.';
+                            NotificationUtils.showNotificationPing(message, 'warning');
+                            // Don't uncheck the box - let the user's choice be saved
+                        }
+                    } catch (error) {
+                        console.warn('Failed to request notification permission, but allowing setting to be saved:', error);
+                        // Don't prevent the setting from being saved even if permission request fails
+                        // This allows the setting to work when Tauri notifications are properly configured
+                        NotificationUtils.showNotificationPing('Settings saved. Notifications will work when properly configured.', 'info');
                     }
                 }
+                // Always save the setting regardless of permission status
                 this.scheduleAutoSave();
             });
         }
 
         // Other notification checkboxes
         const checkboxFields = [
+            'desktop-notifications',
             'sound-notifications',
             'auto-start-breaks'
         ];
@@ -386,7 +394,10 @@ export class SettingsManager {
         checkboxFields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
             if (field) {
-                field.addEventListener('change', () => this.scheduleAutoSave());
+                // Skip desktop-notifications as it has special handling above
+                if (fieldId !== 'desktop-notifications') {
+                    field.addEventListener('change', () => this.scheduleAutoSave());
+                }
             }
         });
 

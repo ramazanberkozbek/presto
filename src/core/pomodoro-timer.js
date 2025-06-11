@@ -1090,15 +1090,55 @@ export class PomodoroTimer {
     }
 
     // Simple notification system
-    showNotification() {
-        if ('Notification' in window && Notification.permission === 'granted') {
-            const messages = {
-                focus: 'Break time! Take a rest 😌',
-                break: 'Break over! Time to focus 🍅',
-                longBreak: 'Long break over! Ready for more focus? 🚀'
-            };
+    async showNotification() {
+        try {
+            // Check if we're in a Tauri context and use Tauri notifications
+            if (window.__TAURI__ && window.__TAURI__.notification) {
+                const { isPermissionGranted, requestPermission, sendNotification } = window.__TAURI__.notification;
+                
+                // Check if permission is granted
+                let permissionGranted = await isPermissionGranted();
+                
+                // If not granted, request permission
+                if (!permissionGranted) {
+                    const permission = await requestPermission();
+                    permissionGranted = permission === 'granted';
+                }
+                
+                // Send notification if permission is granted
+                if (permissionGranted) {
+                    const messages = {
+                        focus: 'Break time! Take a rest 😌',
+                        break: 'Break over! Time to focus 🍅',
+                        longBreak: 'Long break over! Ready for more focus? 🚀'
+                    };
 
-            NotificationUtils.showDesktopNotification('Tempo - Pomodoro Timer', messages[this.currentMode]);
+                    await sendNotification({
+                        title: 'Tempo - Pomodoro Timer',
+                        body: messages[this.currentMode],
+                        icon: '/assets/tauri.svg'
+                    });
+                }
+            } else {
+                // Fallback to Web Notification API
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    const messages = {
+                        focus: 'Break time! Take a rest 😌',
+                        break: 'Break over! Time to focus 🍅',
+                        longBreak: 'Long break over! Ready for more focus? 🚀'
+                    };
+
+                    NotificationUtils.showDesktopNotification('Tempo - Pomodoro Timer', messages[this.currentMode]);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to show notification:', error);
+            // Fallback to in-app notification
+            this.showNotificationPing(
+                this.currentMode === 'focus' ? 'Break time! Take a rest 😌' :
+                this.currentMode === 'break' ? 'Break over! Time to focus 🍅' :
+                'Long break over! Ready for more focus? 🚀'
+            );
         }
     }
 

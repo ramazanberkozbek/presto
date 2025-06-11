@@ -69,34 +69,92 @@ export class NotificationUtils {
         }
     }
 
-    static showDesktopNotification(title, message, icon = '/assets/tauri.svg') {
-        if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification(title, {
-                body: message,
-                icon: icon,
-                silent: false,
-                requireInteraction: false
-            });
+    static async showDesktopNotification(title, message, icon = '/assets/tauri.svg') {
+        try {
+            // Check if we're in a Tauri context
+            if (window.__TAURI__ && window.__TAURI__.notification) {
+                const { isPermissionGranted, requestPermission, sendNotification } = window.__TAURI__.notification;
+                
+                // Check if permission is granted
+                let permissionGranted = await isPermissionGranted();
+                
+                // If not granted, request permission
+                if (!permissionGranted) {
+                    const permission = await requestPermission();
+                    permissionGranted = permission === 'granted';
+                }
+                
+                // Send notification if permission is granted
+                if (permissionGranted) {
+                    await sendNotification({
+                        title: title,
+                        body: message,
+                        icon: icon
+                    });
+                } else {
+                    console.warn('Notification permission denied');
+                }
+            } else {
+                // Fallback to Web Notification API if not in Tauri context
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification(title, {
+                        body: message,
+                        icon: icon,
+                        silent: false,
+                        requireInteraction: false
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Failed to show desktop notification:', error);
+            // Fallback to Web Notification API
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: message,
+                    icon: icon,
+                    silent: false,
+                    requireInteraction: false
+                });
+            }
         }
     }
 
     // Helper method to check notification permission status
-    static getNotificationPermission() {
-        if (!('Notification' in window)) {
-            return 'unsupported';
+    static async getNotificationPermission() {
+        try {
+            if (window.__TAURI__ && window.__TAURI__.notification) {
+                const { isPermissionGranted } = window.__TAURI__.notification;
+                const granted = await isPermissionGranted();
+                return granted ? 'granted' : 'denied';
+            } else {
+                // Fallback to Web API
+                if (!('Notification' in window)) {
+                    return 'unsupported';
+                }
+                return Notification.permission;
+            }
+        } catch (error) {
+            console.error('Failed to check notification permission:', error);
+            return 'denied';
         }
-        return Notification.permission;
     }
 
     // Helper method to request notification permission (must be called from user gesture)
     static async requestNotificationPermission() {
-        if (!('Notification' in window)) {
-            return 'unsupported';
-        }
-
         try {
-            const permission = await Notification.requestPermission();
-            return permission;
+            if (window.__TAURI__ && window.__TAURI__.notification) {
+                const { requestPermission } = window.__TAURI__.notification;
+                const permission = await requestPermission();
+                return permission;
+            } else {
+                // Fallback to Web API
+                if (!('Notification' in window)) {
+                    return 'unsupported';
+                }
+
+                const permission = await Notification.requestPermission();
+                return permission;
+            }
         } catch (error) {
             console.error('Failed to request notification permission:', error);
             return 'denied';
