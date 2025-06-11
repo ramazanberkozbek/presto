@@ -2398,3 +2398,20 @@ body {
     font-size: 0.55rem;
   }
 }
+
+/* Responsive Calendar Layout */
+@media (max-width: 1024px) {
+  .calendar-main-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    max-width: 600px;
+  }
+  
+  .calendar-left-column {
+    order: 1;
+  }
+  
+  .calendar-right-column {
+    order: 2;
+  }
+}
