@@ -113,7 +113,7 @@ export class PomodoroTimer {
             }
         });
 
-        this.skipBtn.addEventListener('click', () => this.completeSession());
+        this.skipBtn.addEventListener('click', () => this.skipSession());
 
         this.stopBtn.addEventListener('click', () => {
             if (this.currentMode === 'focus') {
@@ -486,6 +486,15 @@ export class PomodoroTimer {
         };
 
         NotificationUtils.showNotificationPing(messages[this.currentMode] || 'Session skipped 📤', 'info');
+
+        // Auto-start new session if enabled
+        if (this.autoStartBreaks) {
+            console.log('Auto-starting new session after skip in 1.5 seconds...');
+            // Add a small delay to let the user see the skip message
+            setTimeout(() => {
+                this.startTimer();
+            }, 1500); // 1.5 second delay
+        }
     }
 
     async completeSession() {
@@ -551,14 +560,8 @@ export class PomodoroTimer {
 
         NotificationUtils.showNotificationPing(messages[this.currentMode] || messages.focus, 'success');
 
-        // Auto-start next session if enabled (but not on first load)
-        if (this.autoStartBreaks && wasSessionActive) {
-            console.log('Auto-starting next session in 1.5 seconds...');
-            // Add a small delay to let the user see the completion message
-            setTimeout(() => {
-                this.startTimer();
-            }, 1500); // 1.5 second delay
-        }
+        // Session completion doesn't auto-start - timer continues counting
+        // User must manually skip to go to next session or use reset to stop
     }
 
     updateDisplay() {
