@@ -1700,6 +1700,11 @@ class PomodoroTimer {
     this.totalSessions = 10;
     this.totalFocusTime = 0; // in seconds
 
+    // Session time tracking
+    this.sessionStartTime = null; // When the current session was started
+    this.currentSessionElapsedTime = 0; // Actual elapsed time for current session (in seconds)
+    this.lastCompletedSessionTime = 0; // Time of the last completed session for undo functionality
+
     // Timer durations (in seconds)
     this.durations = {
       focus: 25 * 60,        // 25 minutes
@@ -2024,6 +2029,12 @@ class PomodoroTimer {
     // Restart the timer interval
     this.timerInterval = setInterval(() => {
       this.timeRemaining--;
+
+      // Continue tracking elapsed time for focus sessions
+      if (this.currentMode === 'focus') {
+        this.currentSessionElapsedTime++;
+      }
+
       this.updateDisplay();
       this.updateTrayIcon();
 
@@ -2073,8 +2084,20 @@ class PomodoroTimer {
       this.isRunning = true;
       this.isPaused = false;
 
+      // Track session start time if not already set
+      if (!this.sessionStartTime) {
+        this.sessionStartTime = Date.now();
+        this.currentSessionElapsedTime = 0;
+      }
+
       this.timerInterval = setInterval(() => {
         this.timeRemaining--;
+
+        // Track elapsed time for focus sessions
+        if (this.currentMode === 'focus') {
+          this.currentSessionElapsedTime++;
+        }
+
         this.updateDisplay();
 
         // Warning when less than 2 minutes remaining
@@ -2136,6 +2159,10 @@ class PomodoroTimer {
       this.activityTimeout = null;
     }
 
+    // Reset session tracking
+    this.sessionStartTime = null;
+    this.currentSessionElapsedTime = 0;
+
     this.timeRemaining = this.durations[this.currentMode];
     this.updateDisplay();
     this.updateButtons();
@@ -2194,7 +2221,13 @@ class PomodoroTimer {
     if (this.currentMode === 'focus') {
       this.completedPomodoros++;
       this.updateProgressDots();
-      this.totalFocusTime += this.durations.focus;
+
+      // Calculate actual elapsed time for focus sessions
+      const actualElapsedTime = this.currentSessionElapsedTime || (this.durations.focus - this.timeRemaining);
+      this.totalFocusTime += actualElapsedTime;
+
+      // Store the actual elapsed time for undo functionality
+      this.lastCompletedSessionTime = actualElapsedTime;
 
       // Mark current task as completed if exists
       if (this.currentTask.trim()) {
@@ -2218,6 +2251,10 @@ class PomodoroTimer {
         this.currentSession = this.completedPomodoros + 1;
       }
     }
+
+    // Reset session tracking for next session
+    this.sessionStartTime = null;
+    this.currentSessionElapsedTime = 0;
 
     this.timeRemaining = this.durations[this.currentMode];
     this.updateDisplay();
@@ -2391,8 +2428,9 @@ class PomodoroTimer {
     // Decrease completed pomodoros count
     this.completedPomodoros--;
 
-    // Subtract the focus time from total
-    this.totalFocusTime = Math.max(0, this.totalFocusTime - this.durations.focus);
+    // Subtract the actual focus time from total (use stored time or fallback to duration)
+    const timeToSubtract = this.lastCompletedSessionTime || this.durations.focus;
+    this.totalFocusTime = Math.max(0, this.totalFocusTime - timeToSubtract);
 
     // Return to focus mode
     this.currentMode = 'focus';
@@ -2404,6 +2442,11 @@ class PomodoroTimer {
     this.isPaused = false;
     this.isAutoPaused = false;
     clearInterval(this.timerInterval);
+
+    // Reset session tracking
+    this.sessionStartTime = null;
+    this.currentSessionElapsedTime = 0;
+    this.lastCompletedSessionTime = 0;
 
     // Update all displays
     this.updateDisplay();
@@ -2870,6 +2913,11 @@ class PomodoroTimer {
     this.currentSession = 1;
     this.totalFocusTime = 0;
     this.currentMode = 'focus';
+
+    // Reset session tracking
+    this.sessionStartTime = null;
+    this.currentSessionElapsedTime = 0;
+    this.lastCompletedSessionTime = 0;
 
     // Reset durations to defaults
     this.durations = {
