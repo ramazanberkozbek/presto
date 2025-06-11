@@ -105,6 +105,43 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+/* Today's Sessions - Minimal Display */
+.timeline-session.today-session {
+  height: 30px;
+  top: 15px;
+}
+
+.timeline-session.today-session .timeline-session-content-minimal {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.timeline-session.today-session .timeline-session-type,
+.timeline-session.today-session .timeline-session-time {
+  display: none;
+}
+
+.timeline-session.today-session .session-handle {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.timeline-session.today-session:hover .session-handle {
+  opacity: 1;
+}
+
+/* Enhanced tooltip styling for today's sessions */
+.timeline-session.today-session {
+  position: relative;
+}
+
+.timeline-session.today-session:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
 .timeline-session.time-constraint {
   border: 2px solid #ffa500;
 }

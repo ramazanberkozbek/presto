@@ -639,6 +639,9 @@ export class NavigationManager {
         sessionElement.dataset.sessionId = session.id;
         sessionElement.dataset.isHistorical = session.isHistorical || false;
 
+        // Check if this session is from today
+        const isToday = this.isSameDay(date, new Date());
+        
         // Parse start and end times
         const [startHour, startMinute] = session.start_time.split(':').map(Number);
         const [endHour, endMinute] = session.end_time.split(':').map(Number);
@@ -657,16 +660,32 @@ export class NavigationManager {
         sessionElement.style.left = `${leftPercent}%`;
         sessionElement.style.width = `${widthPercent}%`;
 
-        // Session content
+        // Session content - different display for today's sessions
         const sessionType = this.getSessionTypeDisplay(session.session_type);
-        sessionElement.innerHTML = `
-      <div class="session-handle left"></div>
-      <div class="timeline-session-content">
-        <span class="timeline-session-type">${sessionType}</span>
-        <span class="timeline-session-time">${session.start_time} - ${session.end_time}</span>
-      </div>
-      <div class="session-handle right"></div>
-    `;
+        
+        if (isToday && !session.isHistorical) {
+            // For today's sessions: minimal display, information only in tooltip
+            sessionElement.classList.add('today-session');
+            sessionElement.innerHTML = `
+        <div class="session-handle left"></div>
+        <div class="timeline-session-content-minimal"></div>
+        <div class="session-handle right"></div>
+      `;
+            
+            // Set tooltip with full information
+            const notes = session.notes ? ` - ${session.notes}` : '';
+            sessionElement.title = `${sessionType}: ${session.start_time} - ${session.end_time} (${session.duration}m)${notes}`;
+        } else {
+            // For other days or historical sessions: show full content
+            sessionElement.innerHTML = `
+        <div class="session-handle left"></div>
+        <div class="timeline-session-content">
+          <span class="timeline-session-type">${sessionType}</span>
+          <span class="timeline-session-time">${session.start_time} - ${session.end_time}</span>
+        </div>
+        <div class="session-handle right"></div>
+      `;
+        }
 
         // Add event listeners for non-historical sessions
         if (!session.isHistorical) {
@@ -873,6 +892,13 @@ export class NavigationManager {
         const timeDisplay = sessionElement.querySelector('.timeline-session-time');
         if (timeDisplay) {
             timeDisplay.textContent = `${newStartTime} - ${newEndTime}`;
+        }
+
+        // Update tooltip for today's sessions
+        if (sessionElement.classList.contains('today-session')) {
+            const sessionType = this.getSessionTypeDisplay(session.session_type);
+            const notes = session.notes ? ` - ${session.notes}` : '';
+            sessionElement.title = `${sessionType}: ${newStartTime} - ${newEndTime} (${newDuration}m)${notes}`;
         }
 
         // Save changes if using SessionManager
