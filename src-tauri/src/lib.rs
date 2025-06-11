@@ -278,11 +278,11 @@ async fn stop_activity_monitoring() -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn update_activity_timeout(timeoutSeconds: u64) -> Result<(), String> {
+async fn update_activity_timeout(timeout_seconds: u64) -> Result<(), String> {
     let monitor = ACTIVITY_MONITOR.lock().unwrap();
 
     if let Some(ref monitor) = *monitor {
-        monitor.update_threshold(timeoutSeconds);
+        monitor.update_threshold(timeout_seconds);
         Ok(())
     } else {
         Err("Activity monitor not initialized".to_string())
@@ -444,13 +444,11 @@ async fn update_tray_icon(
     // Aggiorna il titolo dell'icona della tray con il timer
     if let Some(tray) = app.tray_by_id("main") {
         // Use the provided mode_icon or fallback to default icons
-        let icon = mode_icon.unwrap_or_else(|| {
-            match session_mode.as_str() {
-                "focus" => "🧠".to_string(),
-                "break" => "☕".to_string(),
-                "longBreak" => "🌙".to_string(),
-                _ => "⏱️".to_string(),
-            }
+        let icon = mode_icon.unwrap_or_else(|| match session_mode.as_str() {
+            "focus" => "🧠".to_string(),
+            "break" => "☕".to_string(),
+            "longBreak" => "🌙".to_string(),
+            _ => "⏱️".to_string(),
         });
 
         let status = if is_running { "Running" } else { "Paused" };
