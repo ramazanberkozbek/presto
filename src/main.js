@@ -531,7 +531,6 @@ class SettingsManager {
   async init() {
     await this.loadSettings();
     this.setupEventListeners();
-    this.setupSettingsNavigation();
     await this.registerGlobalShortcuts();
     this.setupGlobalShortcutHandlers();
   }
@@ -967,39 +966,6 @@ class SettingsManager {
     setTimeout(() => {
       feedback.style.opacity = '0';
     }, 2000);
-  }
-
-  setupSettingsNavigation() {
-    const navItems = document.querySelectorAll('.settings-nav-item');
-    const sectionContents = document.querySelectorAll('.settings-section-content');
-
-    navItems.forEach(item => {
-      item.addEventListener('click', () => {
-        const section = item.dataset.section;
-        this.switchToSection(section);
-      });
-    });
-  }
-
-  switchToSection(sectionName) {
-    // Remove active class from all nav items
-    document.querySelectorAll('.settings-nav-item').forEach(item => {
-      item.classList.remove('active');
-    });
-
-    // Add active class to clicked nav item
-    document.querySelector(`[data-section="${sectionName}"]`).classList.add('active');
-
-    // Hide all section contents
-    document.querySelectorAll('.settings-section-content').forEach(content => {
-      content.classList.remove('active');
-    });
-
-    // Show selected section content
-    const targetSection = document.getElementById(`${sectionName}-section`);
-    if (targetSection) {
-      targetSection.classList.add('active');
-    }
   }
 }
 
@@ -1455,7 +1421,47 @@ class PomodoroTimer {
   }
 
   skipSession() {
-    this.completeSession();
+    this.isRunning = false;
+    this.isPaused = false;
+    this.isAutoPaused = false;
+    clearInterval(this.timerInterval);
+
+    // Clear smart pause timeout
+    if (this.activityTimeout) {
+      clearTimeout(this.activityTimeout);
+      this.activityTimeout = null;
+    }
+
+    // Skip to next mode without counting as completed
+    if (this.currentMode === 'focus') {
+      // Skip focus session - go to break without incrementing completed pomodoros
+      if ((this.completedPomodoros + 1) % 4 === 0) {
+        this.currentMode = 'longBreak';
+      } else {
+        this.currentMode = 'break';
+      }
+    } else {
+      // Skip break - go back to focus
+      this.currentMode = 'focus';
+      // Only increment session if we haven't reached total sessions
+      if (this.completedPomodoros < this.totalSessions) {
+        this.currentSession = this.completedPomodoros + 1;
+      }
+    }
+
+    this.timeRemaining = this.durations[this.currentMode];
+    this.updateDisplay();
+    this.updateProgress();
+    this.updateButtons();
+
+    // Show skip notification
+    const messages = {
+      focus: 'Focus session skipped. Time for a break! 😌',
+      break: 'Break skipped. Ready to focus? 🍅',
+      longBreak: 'Long break skipped. Time to get back to work! 🚀'
+    };
+
+    this.showNotificationPing(messages[this.currentMode] || 'Session skipped 📤', 'info');
   }
 
   async completeSession() {

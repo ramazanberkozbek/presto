@@ -1485,34 +1485,35 @@ body {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: var(--focus-secondary-btn);
   transition: all 0.3s ease;
-  border: 2px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 .dot.completed {
   background-color: var(--focus-timer-color);
+  border: 1px solid var(--focus-timer-color);
 }
 
 .dot.current {
-  background-color: rgba(255, 255, 255, 0.6);
-  border: 2px solid var(--focus-timer-color);
+  background-color: rgba(231, 76, 60, 0.4);
   transform: scale(1.2);
   box-shadow: 0 0 8px rgba(231, 76, 60, 0.3);
 }
 
 /* Variazioni del pallino corrente per i diversi modi */
 .container.focus .dot.current {
-  border-color: var(--focus-timer-color);
-  box-shadow: 0 0 8px rgba(231, 76, 60, 0.3);
+  background-color: var(--focus-primary-btn);
 }
 
 .container.break .dot.current {
+  background-color: rgba(46, 204, 113, 0.4);
   border-color: var(--break-timer-color);
   box-shadow: 0 0 8px rgba(46, 204, 113, 0.3);
 }
 
 .container.longBreak .dot.current {
+  background-color: rgba(52, 152, 219, 0.4);
   border-color: var(--long-break-timer-color);
   box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
 }
@@ -1823,280 +1824,193 @@ body {
   font-size: 0.8rem;
 }
 
-/* Settings Layout Styles */
-.settings-layout {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 2rem;
-  height: calc(100vh - 120px);
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem;
-}
-
-.settings-sidebar {
-  background: white;
-  border-radius: 15px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  height: fit-content;
-  position: sticky;
-  top: 1rem;
-}
-
-.settings-sidebar h1 {
-  margin: 0 0 1.5rem 0;
-  color: var(--accent-color);
-  font-size: 1.5rem;
-  font-weight: 700;
-  text-align: center;
-}
-
-.settings-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.settings-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.875rem 1rem;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  color: var(--text-light);
-  font-weight: 500;
-  font-size: 0.95rem;
-}
-
-.settings-nav-item:hover {
-  background: rgba(155, 89, 182, 0.1);
-  color: var(--accent-color);
-  transform: translateX(4px);
-}
-
-.settings-nav-item.active {
-  background: var(--accent-color);
-  color: white;
-  box-shadow: 0 4px 12px rgba(155, 89, 182, 0.3);
-}
-
-.settings-nav-item.active:hover {
-  transform: translateX(0);
-  background: #8e44ad;
-}
-
-.settings-icon {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-}
-
-.settings-content {
-  background: white;
-  border-radius: 15px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-  position: relative;
-}
-
-.settings-section-content {
-  padding: 2rem;
-  display: none;
-  animation: fadeInRight 0.3s ease;
-  min-height: 500px;
-}
-
-.settings-section-content.active {
-  display: block;
-}
-
-@keyframes fadeInRight {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-/* Settings Section Updates */
-.settings-section {
-  margin-bottom: 2rem;
-}
-
-.settings-section:last-child {
-  margin-bottom: 0;
-}
-
-/* Danger Zone Styles */
-.danger-zone {
-  border: 2px solid #e74c3c;
-  border-radius: 12px;
-  background: rgba(231, 76, 60, 0.05);
-  position: relative;
-}
-
-.danger-zone::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(45deg, #e74c3c, #c0392b, #e74c3c, #c0392b);
-  background-size: 400% 400%;
-  border-radius: 12px;
-  z-index: -1;
-  animation: dangerGlow 3s ease-in-out infinite;
-}
-
-@keyframes dangerGlow {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-.danger-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  align-items: flex-start;
-}
-
-.btn-danger {
-  background: #e74c3c;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 0.95rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.btn-danger:hover {
-  background: #c0392b;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
-}
-
-.danger-description {
-  color: #e74c3c;
-  font-size: 0.85rem;
-  line-height: 1.4;
-  margin: 0;
-  font-weight: 500;
-}
-
-/* Secondary Button Styles */
-.btn-secondary {
-  background: #f8f9fa;
-  color: var(--accent-color);
-  border: 2px solid var(--accent-color);
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 0.95rem;
-}
-
-.btn-secondary:hover {
-  background: var(--accent-color);
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(155, 89, 182, 0.3);
-}
-
-/* Settings Actions */
-.settings-actions {
-  position: sticky;
-  bottom: 0;
-  background: white;
-  padding: 1.5rem 2rem;
-  border-top: 1px solid #f0f0f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: auto;
-}
-
-/* Responsive Design for Settings */
+/* Responsive Design for Calendar Layout */
 @media (max-width: 1024px) {
-  .settings-layout {
+  .calendar-main-layout {
     grid-template-columns: 1fr;
     gap: 1rem;
-    height: auto;
   }
-  
-  .settings-sidebar {
-    position: static;
-    height: auto;
+
+  .calendar-left-column {
+    order: 2;
   }
-  
-  .settings-nav {
-    flex-direction: row;
-    overflow-x: auto;
-    gap: 0.25rem;
-    padding-bottom: 0.5rem;
+
+  .calendar-right-column {
+    order: 1;
   }
-  
-  .settings-nav-item {
-    white-space: nowrap;
-    flex-shrink: 0;
-    padding: 0.75rem 1rem;
+
+  .focus-summary-card,
+  .weekly-chart-card,
+  .daily-chart-card,
+  .mini-calendar-container {
+    padding: 1.25rem;
   }
-  
-  .settings-nav-item span {
-    display: none;
+
+  .weekly-chart {
+    height: 70px;
+    padding: 0.5rem;
+    gap: 6px;
   }
-  
-  .settings-icon {
-    width: 24px;
-    height: 24px;
+
+  .daily-chart {
+    height: 70px;
+    padding: 0.5rem;
+    gap: 2px;
   }
 }
 
 @media (max-width: 768px) {
-  .settings-layout {
-    padding: 0.5rem;
-    gap: 0.75rem;
+  #calendar-view h1 {
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
   }
-  
-  .settings-sidebar {
+
+  .week-selector {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .week-display {
+    min-width: auto;
+    font-size: 0.9rem;
+  }
+
+  .focus-stats {
+    gap: 0.5rem;
+  }
+
+  .focus-stat-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.25rem;
+    padding: 0.5rem;
+  }
+
+  .focus-stat-label {
+    font-size: 0.8rem;
+  }
+
+  .focus-stat-value {
+    font-size: 1.1rem;
+  }
+
+  .daily-chart {
+    height: 60px;
+    gap: 2px;
+    padding: 0.4rem;
+  }
+
+  .chart-legend {
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .focus-summary-card,
+  .weekly-chart-card,
+  .daily-chart-card,
+  .mini-calendar-container {
     padding: 1rem;
   }
-  
-  .settings-sidebar h1 {
-    font-size: 1.25rem;
+
+  .weekly-chart {
+    height: 60px;
+    gap: 4px;
+  }
+
+  .mini-calendar-container .calendar-grid {
+    gap: 3px;
+  }
+
+  .mini-calendar-container .calendar-day {
+    min-height: 30px;
+    font-size: 0.75rem;
+  }
+}
+
+/* Tablet Portrait specific optimizations */
+@media (min-width: 768px) and (max-width: 1024px) {
+  #calendar-view {
+    max-width: 800px;
+    padding: 1rem;
+  }
+
+  .calendar-main-layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    max-width: 100%;
+  }
+
+  .week-selector {
+    padding: 0.5rem 1rem;
     margin-bottom: 1rem;
   }
-  
-  .settings-section-content {
-    padding: 1.5rem;
-    min-height: auto;
+
+  .focus-summary-card,
+  .daily-chart-card,
+  .mini-calendar-container {
+    padding: 1.25rem;
   }
-  
-  .settings-actions {
-    padding: 1rem 1.5rem;
-    flex-direction: column;
+
+  .focus-summary-card h3,
+  .daily-chart-card h3,
+  .mini-calendar-container .calendar-header h3 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .daily-chart {
+    height: 130px;
+    padding: 0.6rem;
+    gap: 5px;
+  }
+
+  .chart-legend {
     gap: 1rem;
-    align-items: stretch;
+    font-size: 0.85rem;
   }
-  
-  .auto-save-info {
-    text-align: center;
+
+  .mini-calendar-container .calendar-grid {
+    gap: 5px;
   }
+
+  .mini-calendar-container .calendar-day {
+    min-height: 32px;
+    font-size: 0.8rem;
+  }
+
+  .selected-day-details {
+    margin-top: 1rem;
+    padding-top: 1rem;
+  }
+
+  .sessions-list {
+    max-height: 150px;
+  }
+
+  .session-item {
+    padding: 0.6rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Calendar Grid Adjustments for Mini Version */
+.mini-calendar-container .calendar-grid {
+  gap: 4px;
+}
+
+.mini-calendar-container .calendar-day {
+  font-size: 0.8rem;
+  min-height: 35px;
+}
+
+.mini-calendar-container .calendar-day-dots {
+  margin-top: 1px;
+}
+
+.mini-calendar-container .calendar-dot {
+  width: 3px;
+  height: 3px;
 }
