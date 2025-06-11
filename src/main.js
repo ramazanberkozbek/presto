@@ -1006,7 +1006,9 @@ class PomodoroTimer {
     this.playPauseBtn = document.getElementById('play-pause-btn');
     this.playIcon = document.getElementById('play-icon');
     this.pauseIcon = document.getElementById('pause-icon');
-    this.menuBtn = document.getElementById('menu-btn');
+    this.stopBtn = document.getElementById('stop-btn');
+    this.stopIcon = document.getElementById('stop-icon');
+    this.undoIcon = document.getElementById('undo-icon');
     this.skipBtn = document.getElementById('skip-btn');
     this.progressDots = document.getElementById('progress-dots');
 
@@ -1027,6 +1029,7 @@ class PomodoroTimer {
   async init() {
     this.updateDisplay();
     this.updateProgressDots();
+    this.updateStopUndoButton(); // Initialize stop/undo button state
     this.setupEventListeners();
     await this.loadSessionData();
     await this.loadTasks();
@@ -1064,9 +1067,14 @@ class PomodoroTimer {
 
     this.skipBtn.addEventListener('click', () => this.skipSession());
 
-    this.menuBtn.addEventListener('click', () => {
-      // TODO: Show menu/settings modal
-      console.log('Menu clicked');
+    this.stopBtn.addEventListener('click', () => {
+      if (this.currentMode === 'focus') {
+        // Stop the current session and mark it as completed
+        this.completeSession();
+      } else {
+        // In break/longBreak mode: undo last session
+        this.undoLastSession();
+      }
     });
 
     // Keyboard shortcuts
@@ -1592,6 +1600,9 @@ class PomodoroTimer {
     const statusIcon = this.currentMode === 'focus' ? '🍅' : (this.currentMode === 'break' ? '😌' : '🎉');
     document.title = `${statusIcon} ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} - Tempo`;
 
+    // Update stop/undo button icon based on current mode
+    this.updateStopUndoButton();
+
     // Update progress dots
     this.updateProgressDots();
 
@@ -1634,6 +1645,61 @@ class PomodoroTimer {
       this.startBtn.textContent = 'Start';
     }
     */
+  }
+
+  // Update stop/undo button icon based on current mode
+  updateStopUndoButton() {
+    if (this.currentMode === 'focus') {
+      // Show stop icon during focus sessions
+      this.stopIcon.style.display = 'block';
+      this.undoIcon.style.display = 'none';
+    } else {
+      // Show undo icon during break/longBreak sessions (only if there's a session to undo)
+      if (this.completedPomodoros > 0) {
+        this.stopIcon.style.display = 'none';
+        this.undoIcon.style.display = 'block';
+      } else {
+        // No sessions to undo, hide the button or show stop icon
+        this.stopIcon.style.display = 'block';
+        this.undoIcon.style.display = 'none';
+      }
+    }
+  }
+
+  // Undo the last completed session
+  async undoLastSession() {
+    if (this.completedPomodoros === 0) {
+      this.showNotificationPing('No sessions to undo! 🤷‍♂️', 'warning');
+      return;
+    }
+
+    // Decrease completed pomodoros count
+    this.completedPomodoros--;
+
+    // Subtract the focus time from total
+    this.totalFocusTime = Math.max(0, this.totalFocusTime - this.durations.focus);
+
+    // Return to focus mode
+    this.currentMode = 'focus';
+    this.currentSession = this.completedPomodoros + 1;
+
+    // Reset timer to focus duration
+    this.timeRemaining = this.durations.focus;
+    this.isRunning = false;
+    this.isPaused = false;
+    this.isAutoPaused = false;
+    clearInterval(this.timerInterval);
+
+    // Update all displays
+    this.updateDisplay();
+    this.updateProgressDots();
+    this.updateButtons();
+    await this.saveSessionData();
+    await this.updateWeeklyStats();
+    this.updateTrayIcon();
+
+    // Show undo notification
+    this.showNotificationPing('Last session undone! Back to focus mode 🔄', 'info');
   }
 
   updateProgress() {
