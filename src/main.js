@@ -133,11 +133,6 @@ async function initializeApplication() {
   try {
     console.log('🚀 Initializing Tempo application...');
 
-    // Request notification permission
-    if ('Notification' in window) {
-      Notification.requestPermission();
-    }
-
     // Initialize settings manager first (other modules depend on it)
     console.log('📋 Initializing Settings Manager...');
     settingsManager = new SettingsManager();

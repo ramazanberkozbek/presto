@@ -3068,11 +3068,6 @@ window.performTotalReset = async function () {
 };
 
 window.addEventListener("DOMContentLoaded", async () => {
-  // Request notification permission
-  if ('Notification' in window) {
-    Notification.requestPermission();
-  }
-
   // Initialize settings manager first
   settingsManager = new SettingsManager();
   window.settingsManager = settingsManager;

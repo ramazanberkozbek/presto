@@ -72,7 +72,11 @@ export class SettingsManager {
         }
 
         // Populate notification settings
-        document.getElementById('desktop-notifications').checked = this.settings.notifications.desktop_notifications;
+        // Check current notification permission and adjust desktop notifications setting
+        const hasNotificationPermission = NotificationUtils.getNotificationPermission() === 'granted';
+        const desktopNotificationsEnabled = this.settings.notifications.desktop_notifications && hasNotificationPermission;
+        
+        document.getElementById('desktop-notifications').checked = desktopNotificationsEnabled;
         document.getElementById('sound-notifications').checked = this.settings.notifications.sound_notifications;
         document.getElementById('auto-start-breaks').checked = this.settings.notifications.auto_start_breaks;
         document.getElementById('smart-pause').checked = this.settings.notifications.smart_pause;
@@ -352,9 +356,29 @@ export class SettingsManager {
             }
         });
 
-        // Notification checkboxes
+        // Handle desktop notifications checkbox separately (requires permission request)
+        const desktopNotificationsCheckbox = document.getElementById('desktop-notifications');
+        if (desktopNotificationsCheckbox) {
+            desktopNotificationsCheckbox.addEventListener('change', async (e) => {
+                if (e.target.checked) {
+                    // Request notification permission when enabling
+                    const permission = await NotificationUtils.requestNotificationPermission();
+                    if (permission !== 'granted') {
+                        // If permission denied, uncheck the box
+                        e.target.checked = false;
+                        const message = permission === 'unsupported' 
+                            ? 'Desktop notifications are not supported in this browser.'
+                            : 'Notification permission denied. Please enable notifications in your browser settings.';
+                        NotificationUtils.showNotificationPing(message, 'error');
+                        return;
+                    }
+                }
+                this.scheduleAutoSave();
+            });
+        }
+
+        // Other notification checkboxes
         const checkboxFields = [
-            'desktop-notifications',
             'sound-notifications',
             'auto-start-breaks'
         ];

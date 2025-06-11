@@ -79,6 +79,29 @@ export class NotificationUtils {
             });
         }
     }
+
+    // Helper method to check notification permission status
+    static getNotificationPermission() {
+        if (!('Notification' in window)) {
+            return 'unsupported';
+        }
+        return Notification.permission;
+    }
+
+    // Helper method to request notification permission (must be called from user gesture)
+    static async requestNotificationPermission() {
+        if (!('Notification' in window)) {
+            return 'unsupported';
+        }
+        
+        try {
+            const permission = await Notification.requestPermission();
+            return permission;
+        } catch (error) {
+            console.error('Failed to request notification permission:', error);
+            return 'denied';
+        }
+    }
 }
 
 // Time Formatting Utilities
