@@ -1,0 +1,249 @@
+/* Timeline and Session Management Styles */
+
+.sessions-timeline {
+  margin-top: 1rem;
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 1rem;
+  min-height: 120px;
+  position: relative;
+}
+
+.timeline-hours {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  position: relative;
+  height: 20px;
+}
+
+.timeline-hour {
+  font-size: 0.7rem;
+  color: var(--text-light);
+  position: relative;
+  flex: 1;
+  text-align: center;
+}
+
+.timeline-hour::after {
+  content: '';
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 10px;
+  background: #ddd;
+}
+
+.timeline-hour:first-child::after {
+  left: 0;
+  transform: none;
+}
+
+.timeline-hour:last-child::after {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+
+.timeline-track {
+  position: relative;
+  height: 60px;
+  background: white;
+  border-radius: 8px;
+  border: 2px dashed #e0e0e0;
+  overflow: visible;
+}
+
+.timeline-session {
+  position: absolute;
+  height: 50px;
+  border-radius: 8px;
+  cursor: move;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  top: 5px;
+  min-width: 40px;
+  user-select: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.timeline-session:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.timeline-session.focus {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+.timeline-session.break {
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+}
+
+.timeline-session.longBreak {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+}
+
+.timeline-session.custom {
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+}
+
+.timeline-session.historical {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.timeline-session.historical:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.timeline-session.time-constraint {
+  border: 2px solid #ffa500;
+}
+
+.timeline-track:empty::before {
+  content: 'Click "+" to add a session or drag existing sessions here';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--text-light);
+  font-size: 0.8rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* Session Handle Visual Indicators */
+.session-handle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 1px;
+}
+
+.session-handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 1px;
+  margin-left: 3px;
+}
+
+.session-handle.left::after {
+  margin-left: -3px;
+}
+
+/* Dragging States */
+.timeline-session.dragging {
+  z-index: 10;
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.timeline-session.resizing {
+  z-index: 10;
+}
+
+.timeline-track.drop-zone {
+  border-color: var(--accent-color);
+  background: rgba(155, 89, 182, 0.05);
+}
+
+/* Session Context Menu (for right-click actions) */
+.session-context-menu {
+  position: fixed;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 0.5rem 0;
+  z-index: 1000;
+  display: none;
+  min-width: 120px;
+}
+
+.context-menu-item {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background 0.2s ease;
+}
+
+.context-menu-item:hover {
+  background: #f8f9fa;
+}
+
+.context-menu-item.danger {
+  color: #dc3545;
+}
+
+.context-menu-item.danger:hover {
+  background: #ffe6e6;
+}
+
+/* Average session time line in weekly chart */
+.week-average-line {
+  position: absolute;
+  height: 2px;
+  background: #3498db;
+  z-index: 10;
+  opacity: 0.8;
+  border-radius: 1px;
+  box-shadow: 0 1px 3px rgba(52, 152, 219, 0.3);
+}
+
+.week-average-line::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: -2px;
+  width: 6px;
+  height: 6px;
+  background: #3498db;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px white, 0 1px 3px rgba(52, 152, 219, 0.4);
+}
+
+.week-average-line::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: -2px;
+  width: 6px;
+  height: 6px;
+  background: #3498db;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px white, 0 1px 3px rgba(52, 152, 219, 0.4);
+}
+
+.week-average-label {
+  position: absolute;
+  right: 5px;
+  top: -18px;
+  font-size: 10px;
+  color: #3498db;
+  font-weight: 600;
+  background: white;
+  padding: 1px 4px;
+  border-radius: 3px;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(52, 152, 219, 0.2);
+}

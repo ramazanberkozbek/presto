@@ -1,0 +1,109 @@
+/* Controls and Buttons Styles */
+
+.controls {
+  display: flex;
+  gap: 0.2rem;
+  margin-bottom: 2rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.control-btn {
+  border-radius: 1.5rem;
+  border: none;
+  width: 70px;
+  height: 60px;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  color: #333;
+}
+
+.control-btn:hover {
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.control-btn:active {
+  transform: scale(0.95);
+}
+
+.control-btn.primary {
+  background-color: var(--focus-color);
+  color: var(--focus-timer-color);
+  width: 90px;
+  height: 70px;
+}
+
+.control-btn.primary:hover {
+  opacity: 0.9;
+}
+
+.control-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.control-btn.primary svg {
+  width: 30px;
+  height: 30px;
+}
+
+.control-btn.primary:hover:not(:disabled) {
+  background-color: #c0392b;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+}
+
+/* Button color variations for different states */
+.container.break .control-btn.primary:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+}
+
+.container.longBreak .control-btn.primary:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+}
+
+/* Specific text colors for secondary buttons based on background */
+.container.longBreak .control-btn:not(.primary) {
+  /* Dark text on light blue background */
+  color: var(--long-break-timer-color);
+}
+
+.container.break .control-btn:not(.primary) {
+  /* Dark text on light green background */
+  color: var(--break-timer-color);
+}
+
+.container.focus .control-btn:not(.primary) {
+  /* Dark text on light green background */
+}
+
+.container.focus .control-btn.primary {
+  background-color: var(--focus-primary-btn);
+}
+
+.container.focus .control-btn:not(.primary) {
+  background-color: var(--focus-secondary-btn);
+}
+
+.container.break .control-btn.primary {
+  background-color: var(--break-primary-btn);
+}
+
+.container.break .control-btn:not(.primary) {
+  background-color: var(--break-secondary-btn);
+}
+
+.container.longBreak .control-btn.primary {
+  background-color: var(--long-break-primary-btn);
+}
+
+.container.longBreak .control-btn:not(.primary) {
+  background-color: var(--long-break-secondary-btn);
+}

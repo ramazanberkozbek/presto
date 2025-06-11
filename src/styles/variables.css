@@ -1,0 +1,103 @@
+/* CSS Variables and Base Styles */
+
+:root {
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+
+  color: #0f0f0f;
+  background-color: #f6f6f6;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+
+  /* Timer Colors */
+  --focus-color: #e74c3c;
+  --break-color: #2ecc71;
+  --long-break-color: #3498db;
+  --accent-color: #9b59b6;
+  --text-light: #7f8c8d;
+
+  /* Background Colors */
+  --focus-bg: #FFF2F2;
+  --break-bg: #F0FAF0;
+  --long-break-bg: #E8F4FF;
+
+  /* Timer Text Colors */
+  --focus-timer-color: #471515;
+  --break-timer-color: #14401D;
+  --long-break-timer-color: #153047;
+
+  /* Button Colors */
+  --focus-primary-btn: #FF7c7c;
+  --break-primary-btn: #8CE8A1;
+  --long-break-primary-btn: #8BCAFF;
+
+  --focus-secondary-btn: #FFD9D9;
+  --break-secondary-btn: #DAFAE0;
+  --long-break-secondary-btn: #D9EEFF;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  padding-left: 80px; /* Space for sidebar */
+}
+
+.container {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  margin: 0 auto;
+  background-color: var(--focus-bg);
+  transition: background-color 0.3s ease;
+}
+
+/* Background states */
+.container.focus {
+  background-color: var(--focus-bg);
+}
+
+.container.break {
+  background-color: var(--break-bg);
+}
+
+.container.longBreak {
+  background-color: var(--long-break-bg);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: var(--accent-color);
+  font-weight: 700;
+  font-size: 1.8rem;
+}
+
+/* Improved focus states */
+.control-btn:focus {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+#task-input:focus {
+  box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.2);
+}
+
+kbd {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.2rem 0.4rem;
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: #333;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}

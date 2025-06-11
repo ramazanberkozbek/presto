@@ -1,0 +1,164 @@
+/* Progress Section Styles */
+
+.progress-container {
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.pomodoro-counter {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.pomodoro-counter h3 {
+  margin-bottom: 1rem;
+  color: var(--accent-color);
+}
+
+.pomodoro-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.pomodoro-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #ecf0f1;
+  border: 2px solid #bdc3c7;
+  transition: all 0.3s ease;
+}
+
+.pomodoro-dot.completed {
+  background-color: var(--focus-color);
+  border-color: var(--focus-color);
+}
+
+.pomodoro-dot.current {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  transform: scale(1.2);
+}
+
+.stats {
+  display: flex;
+  justify-content: space-around;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.stats span {
+  color: var(--text-light);
+}
+
+.stats strong {
+  color: var(--accent-color);
+}
+
+/* Progress Dots */
+.progress-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 2rem;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--focus-secondary-btn);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Dot variations for different modes */
+.container.break .dot {
+  background-color: var(--break-secondary-btn);
+}
+
+.container.longBreak .dot {
+  background-color: var(--long-break-secondary-btn);
+}
+
+.dot.completed {
+  background-color: var(--focus-timer-color);
+  border: 1px solid var(--focus-timer-color);
+}
+
+.container.focus .dot.completed {
+  background-color: var(--focus-timer-color);
+}
+
+.container.break .dot.completed {
+  background-color: var(--break-timer-color);
+}
+
+.container.longBreak .dot.completed {
+  background-color: var(--long-break-timer-color);
+}
+
+.dot.current {
+  background-color: rgba(231, 76, 60, 0.4);
+  transform: scale(1.2);
+  box-shadow: 0 0 8px rgba(231, 76, 60, 0.3);
+}
+
+/* Current dot variations for different modes */
+.container.focus .dot.current {
+  background-color: var(--focus-primary-btn);
+}
+
+.container.break .dot.current {
+  background-color: rgba(46, 204, 113, 0.4);
+  border-color: var(--break-timer-color);
+  box-shadow: 0 0 8px rgba(46, 204, 113, 0.3);
+}
+
+.container.longBreak .dot.current {
+  background-color: rgba(52, 152, 219, 0.4);
+  border-color: var(--long-break-timer-color);
+  box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+}
+
+/* Overflow Indicator */
+.overflow-indicator {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--focus-timer-color);
+  background-color: var(--focus-secondary-btn);
+  border-radius: 12px;
+  padding: 2px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  min-width: 24px;
+  height: 16px;
+  margin-top: -4px;
+}
+
+/* Overflow indicator variations for different modes */
+.container.focus .overflow-indicator {
+  color: var(--focus-timer-color);
+  background-color: var(--focus-secondary-btn);
+  border-color: var(--focus-timer-color);
+}
+
+.container.break .overflow-indicator {
+  color: var(--break-timer-color);
+  background-color: var(--break-secondary-btn);
+  border-color: var(--break-timer-color);
+}
+
+.container.longBreak .overflow-indicator {
+  color: var(--long-break-timer-color);
+  background-color: var(--long-break-secondary-btn);
+  border-color: var(--long-break-timer-color);
+}

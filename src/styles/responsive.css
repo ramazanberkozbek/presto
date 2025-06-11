@@ -1,0 +1,343 @@
+/* Responsive Design and Mobile Styles */
+
+/* Mobile Sidebar Styles */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: 100vw;
+    height: 70px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-top: 2px solid rgba(71, 21, 21, 0.2);
+    box-shadow: 0 -2px 20px rgba(231, 76, 60, 0.1);
+    margin: 0;
+  }
+
+  /* Mobile theme states */
+  .sidebar.focus {
+    border-top: 2px solid rgba(71, 21, 21, 0.3);
+    box-shadow: 0 -2px 20px rgba(231, 76, 60, 0.15);
+  }
+
+  .sidebar.break {
+    border-top: 2px solid rgba(20, 64, 29, 0.3);
+    box-shadow: 0 -2px 20px rgba(46, 204, 113, 0.15);
+  }
+
+  .sidebar.longBreak {
+    border-top: 2px solid rgba(21, 48, 71, 0.3);
+    box-shadow: 0 -2px 20px rgba(52, 152, 219, 0.15);
+  }
+
+  .sidebar-icons {
+    flex-direction: row;
+    gap: 1rem;
+    margin-bottom: 0;
+    margin-right: 1rem;
+  }
+
+  .sidebar-bottom {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  .sidebar-icon,
+  .sidebar-icon-large {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+
+  .sidebar-icon svg,
+  .sidebar-icon-large svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Use scale instead of vertical transform on mobile */
+  .sidebar.focus .sidebar-icon:hover,
+  .sidebar.break .sidebar-icon:hover,
+  .sidebar.longBreak .sidebar-icon:hover {
+    transform: scale(1.05);
+  }
+
+  .sidebar.focus .sidebar-icon-large:hover,
+  .sidebar.break .sidebar-icon-large:hover,
+  .sidebar.longBreak .sidebar-icon-large:hover {
+    transform: scale(1.05);
+  }
+
+  /* Main Content Layout Adjustment for mobile */
+  body {
+    padding-left: 0;
+    padding-bottom: 70px; /* Space for bottom sidebar */
+  }
+
+  /* Team responsive design */
+  .team-stats-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+  }
+
+  .team-stat-card {
+    padding: 1rem;
+    gap: 0.8rem;
+  }
+
+  .team-stat-card .stat-icon {
+    font-size: 1.5rem;
+    width: 50px;
+    height: 50px;
+  }
+
+  .team-stat-card .stat-number {
+    font-size: 1.5rem;
+  }
+
+  .team-members-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .team-member-card {
+    padding: 1.2rem;
+  }
+
+  /* Calendar responsive */
+  .calendar-main-layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .calendar-container {
+    padding: 1.5rem;
+  }
+
+  .day-stats {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .weekly-chart {
+    height: 120px;
+  }
+
+  .daily-chart {
+    height: 60px;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .sidebar {
+    height: 65px;
+    padding: 0.5rem 0.75rem;
+    width: 100vw;
+    left: 0;
+    right: 0;
+    border: none;
+    border-top: 2px solid rgba(71, 21, 21, 0.2);
+    margin: 0;
+  }
+
+  .sidebar-icons {
+    gap: 0.75rem;
+    margin-right: 0.75rem;
+  }
+
+  .sidebar-icon,
+  .sidebar-icon-large {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+  }
+
+  .sidebar-icon svg,
+  .sidebar-icon-large svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  body {
+    padding-bottom: 65px;
+  }
+
+  /* Team responsive for very small screens */
+  .team-stats-container {
+    grid-template-columns: 1fr;
+  }
+
+  #team-view {
+    padding: 1rem;
+  }
+
+  /* Timer adjustments for mobile */
+  .timer-minutes,
+  .timer-seconds {
+    font-size: 8rem;
+  }
+
+  .timer-container {
+    padding: 2rem 1rem;
+  }
+
+  /* Controls adjustments */
+  .controls {
+    gap: 0.5rem;
+  }
+
+  .control-btn {
+    width: 60px;
+    height: 50px;
+  }
+
+  .control-btn.primary {
+    width: 80px;
+    height: 60px;
+  }
+
+  /* Calendar mobile adjustments */
+  .calendar-container {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .calendar-grid {
+    gap: 4px;
+  }
+
+  .calendar-day {
+    font-size: 0.8rem;
+  }
+
+  .calendar-day-number {
+    font-size: 0.8rem;
+  }
+
+  /* Settings mobile adjustments */
+  .settings-section {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .shortcut-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .shortcut-input-container {
+    max-width: none;
+  }
+
+  .setting-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  /* Task section mobile */
+  .task-section {
+    padding: 1rem;
+  }
+
+  /* Progress section mobile */
+  .progress-container {
+    margin-bottom: 1rem;
+  }
+
+  .pomodoro-counter {
+    padding: 1rem;
+  }
+
+  /* Statistics mobile */
+  .stats-section {
+    padding: 1rem;
+  }
+
+  .weekly-stats {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.25rem;
+  }
+
+  .day-stat {
+    padding: 0.25rem;
+  }
+
+  .day-label {
+    font-size: 0.7rem;
+  }
+
+  .day-count {
+    font-size: 1rem;
+  }
+
+  .day-time {
+    font-size: 0.6rem;
+  }
+}
+
+/* Landscape orientation adjustments for mobile */
+@media (max-height: 600px) and (orientation: landscape) {
+  .timer-minutes,
+  .timer-seconds {
+    font-size: 6rem;
+  }
+
+  .timer-container {
+    padding: 1rem;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+  }
+
+  .progress-container {
+    margin-bottom: 1rem;
+  }
+}
+
+/* High DPI screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .sidebar {
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+  }
+
+  .notification-ping {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Print styles */
+@media print {
+  .sidebar,
+  .controls,
+  .notification-container {
+    display: none !important;
+  }
+
+  body {
+    padding-left: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .container {
+    background: white !important;
+  }
+
+  .calendar-container,
+  .daily-details,
+  .weekly-summary {
+    break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+}

@@ -1,0 +1,196 @@
+/* Sidebar Navigation Styles */
+
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 80px;
+  height: 100vh;
+  box-sizing: border-box;
+  background: rgba(255, 242, 242, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 0;
+  z-index: 1000;
+  border-right: 2px solid rgba(71, 21, 21, 0.2);
+  box-shadow: 2px 0 20px rgba(231, 76, 60, 0.1);
+  transition: all 0.3s ease;
+}
+
+/* Sidebar theme states */
+.sidebar.focus {
+  background: rgba(255, 242, 242, 0.9);
+  border-right: 2px solid rgba(71, 21, 21, 0.3);
+  box-shadow: 2px 0 20px rgba(231, 76, 60, 0.15);
+}
+
+.sidebar.break {
+  background: rgba(240, 250, 240, 0.9);
+  border-right: 2px solid rgba(20, 64, 29, 0.3);
+  box-shadow: 2px 0 20px rgba(46, 204, 113, 0.15);
+}
+
+.sidebar.longBreak {
+  background: rgba(232, 244, 255, 0.9);
+  border-right: 2px solid rgba(21, 48, 71, 0.3);
+  box-shadow: 2px 0 20px rgba(52, 152, 219, 0.15);
+}
+
+.sidebar-icons {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.sidebar-bottom {
+  margin-top: auto;
+  margin-bottom: 1rem;
+}
+
+.sidebar-icon {
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--focus-timer-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.sidebar-icon-large {
+  width: 52px;
+  height: 52px;
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--focus-timer-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.sidebar-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.sidebar-icon-large svg {
+  width: 26px;
+  height: 26px;
+}
+
+/* Sidebar icon theme states */
+.sidebar.focus .sidebar-icon {
+  color: var(--focus-timer-color);
+}
+
+.sidebar.focus .sidebar-icon:hover {
+  background: var(--focus-secondary-btn);
+  color: var(--focus-timer-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(71, 21, 21, 0.2);
+}
+
+.sidebar.focus .sidebar-icon.active {
+  background: var(--focus-primary-btn);
+  color: var(--focus-timer-color);
+  box-shadow: 0 4px 16px rgba(71, 21, 21, 0.3);
+}
+
+.sidebar.break .sidebar-icon {
+  color: var(--break-timer-color);
+}
+
+.sidebar.break .sidebar-icon:hover {
+  background: var(--break-secondary-btn);
+  color: var(--break-timer-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(20, 64, 29, 0.2);
+}
+
+.sidebar.break .sidebar-icon.active {
+  background: var(--break-primary-btn);
+  color: var(--break-timer-color);
+  box-shadow: 0 4px 16px rgba(20, 64, 29, 0.3);
+}
+
+.sidebar.longBreak .sidebar-icon {
+  color: var(--long-break-timer-color);
+}
+
+.sidebar.longBreak .sidebar-icon:hover {
+  background: var(--long-break-secondary-btn);
+  color: var(--long-break-timer-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(21, 48, 71, 0.2);
+}
+
+.sidebar.longBreak .sidebar-icon.active {
+  background: var(--long-break-primary-btn);
+  color: var(--long-break-timer-color);
+  box-shadow: 0 4px 16px rgba(21, 48, 71, 0.3);
+}
+
+/* Large settings icon theme states */
+.sidebar.focus .sidebar-icon-large {
+  color: var(--focus-timer-color);
+}
+
+.sidebar.focus .sidebar-icon-large:hover {
+  background: var(--focus-secondary-btn);
+  color: var(--focus-timer-color);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(71, 21, 21, 0.2);
+}
+
+.sidebar.focus .sidebar-icon-large.active {
+  background: var(--focus-primary-btn);
+  color: var(--focus-timer-color);
+  box-shadow: 0 6px 20px rgba(71, 21, 21, 0.3);
+}
+
+.sidebar.break .sidebar-icon-large {
+  color: var(--break-timer-color);
+}
+
+.sidebar.break .sidebar-icon-large:hover {
+  background: var(--break-secondary-btn);
+  color: var(--break-timer-color);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(20, 64, 29, 0.2);
+}
+
+.sidebar.break .sidebar-icon-large.active {
+  background: var(--break-primary-btn);
+  color: var(--break-timer-color);
+  box-shadow: 0 6px 20px rgba(20, 64, 29, 0.3);
+}
+
+.sidebar.longBreak .sidebar-icon-large {
+  color: var(--long-break-timer-color);
+}
+
+.sidebar.longBreak .sidebar-icon-large:hover {
+  background: var(--long-break-secondary-btn);
+  color: var(--long-break-timer-color);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(21, 48, 71, 0.2);
+}
+
+.sidebar.longBreak .sidebar-icon-large.active {
+  background: var(--long-break-primary-btn);
+  color: var(--long-break-timer-color);
+  box-shadow: 0 6px 20px rgba(21, 48, 71, 0.3);
+}
