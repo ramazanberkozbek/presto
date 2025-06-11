@@ -71,7 +71,7 @@ window.confirmTotalReset = async function () {
 
   } catch (error) {
     console.error("Error in confirmTotalReset:", error);
-    
+
     // Fallback to browser confirm
     const manualConfirm = confirm("Si è verificato un errore nei dialog. Vuoi resettare tutti i dati comunque?");
     if (manualConfirm) {
@@ -158,7 +158,7 @@ function showCustomConfirm(title, message, type = 'warning') {
     // Add hover effects
     const confirmBtn = modal.querySelector('#confirm-btn');
     const cancelBtn = modal.querySelector('#cancel-btn');
-    
+
     confirmBtn.addEventListener('mouseover', () => confirmBtn.style.background = '#bb2d3b');
     confirmBtn.addEventListener('mouseout', () => confirmBtn.style.background = '#dc3545');
     cancelBtn.addEventListener('mouseover', () => cancelBtn.style.background = '#5c636a');
@@ -256,14 +256,14 @@ window.performTotalReset = async function () {
 
     // Show success message before reload
     console.log("Reset completed successfully, reloading..."); // Debug log
-    
+
     // Refresh the UI to show reset state
     location.reload();
 
   } catch (error) {
     console.error('Failed to reset data:', error);
     console.error('Error stack:', error.stack);
-    
+
     // Show detailed error information
     let errorMessage = 'Failed to reset data. ';
     if (error.message.includes('Tauri')) {
@@ -271,7 +271,7 @@ window.performTotalReset = async function () {
     } else {
       errorMessage += 'Error: ' + error.message;
     }
-    
+
     alert('❌ ' + errorMessage);
 
     // Restore button state

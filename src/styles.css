@@ -191,6 +191,15 @@ h1 {
   box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
 }
 
+/* Variazioni hover per il pulsante primario nei diversi stati */
+.container.break .control-btn.primary:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+}
+
+.container.longBreak .control-btn.primary:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+}
+
 .control-btn:not(.primary) {
   background-color: white;
   color: var(--text-light);
@@ -1500,6 +1509,15 @@ body {
   background-color: var(--focus-secondary-btn);
   transition: all 0.3s ease;
   border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Variazioni del dot di base per i diversi modi */
+.container.break .dot {
+  background-color: var(--break-secondary-btn);
+}
+
+.container.longBreak .dot {
+  background-color: var(--long-break-secondary-btn);
 }
 
 .dot.completed {

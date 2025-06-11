@@ -58,6 +58,9 @@ export class PomodoroTimer {
         this.tasks = [];
         this.currentTask = '';
 
+        // Notification preferences
+        this.autoStartBreaks = true; // Default to enabled
+
         // Keyboard shortcuts (will be updated from settings)
         this.customShortcuts = {
             start_stop: "CommandOrControl+Alt+Space",
@@ -490,6 +493,9 @@ export class PomodoroTimer {
         this.isPaused = false;
         clearInterval(this.timerInterval);
 
+        // Check if we should auto-start next session (before resetting sessionStartTime)
+        const wasSessionActive = this.sessionStartTime !== null;
+
         if (this.currentMode === 'focus') {
             this.completedPomodoros++;
             this.updateProgressDots();
@@ -544,6 +550,15 @@ export class PomodoroTimer {
         };
 
         NotificationUtils.showNotificationPing(messages[this.currentMode] || messages.focus, 'success');
+
+        // Auto-start next session if enabled (but not on first load)
+        if (this.autoStartBreaks && wasSessionActive) {
+            console.log('Auto-starting next session in 1.5 seconds...');
+            // Add a small delay to let the user see the completion message
+            setTimeout(() => {
+                this.startTimer();
+            }, 1500); // 1.5 second delay
+        }
     }
 
     updateDisplay() {
@@ -1132,6 +1147,7 @@ export class PomodoroTimer {
         this.enableDesktopNotifications = settings.notifications.desktop_notifications;
         this.enableSoundNotifications = settings.notifications.sound_notifications;
         this.autoStartBreaks = settings.notifications.auto_start_breaks;
+        console.log('Auto-start breaks setting:', this.autoStartBreaks);
 
         // Update smart pause setting and timeout
         this.inactivityThreshold = (settings.notifications.smart_pause_timeout || 30) * 1000; // convert to milliseconds
