@@ -939,6 +939,8 @@ body {
   /* Reduced for tablet */
   padding: 1rem;
   /* Added padding for mobile */
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 @keyframes fadeIn {
@@ -1000,10 +1002,15 @@ body {
   grid-template-columns: repeat(7, 1fr);
   gap: 8px;
   margin-top: 1rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .calendar-day {
   aspect-ratio: 1;
+  min-height: 32px;
+  max-height: 50px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1014,6 +1021,8 @@ body {
   position: relative;
   background: #f8f9fa;
   border: 2px solid transparent;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .calendar-day:hover {
@@ -1885,6 +1894,9 @@ body {
   padding: 1.5rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   height: fit-content;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .mini-calendar-container .calendar-header h3 {
@@ -2380,6 +2392,44 @@ body {
   background: #ffe6e6;
 }
 
+/* Responsive Calendar Layout - Stack calendar and statistics vertically under 1024px */
+@media (max-width: 1024px) {
+  .calendar-main-layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .calendar-left-column {
+    order: 1;
+  }
+
+  .calendar-right-column {
+    order: 2;
+  }
+
+  #calendar-view {
+    max-width: 100%;
+    padding: 0.75rem;
+  }
+
+  .mini-calendar-container {
+    padding: 1rem;
+  }
+
+  .calendar-grid {
+    gap: 4px;
+  }
+
+  .calendar-day {
+    min-height: 28px;
+    max-height: 40px;
+  }
+
+  .calendar-day-number {
+    font-size: 0.8rem;
+  }
+}
+
 /* Responsive Timeline */
 @media (max-width: 768px) {
   .timeline-hours {
@@ -2397,21 +2447,37 @@ body {
   .timeline-session-time {
     font-size: 0.55rem;
   }
-}
 
-/* Responsive Calendar Layout */
-@media (max-width: 1024px) {
-  .calendar-main-layout {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-    max-width: 600px;
+  /* Calendar optimizations for small screens */
+  .mini-calendar-container {
+    padding: 0.75rem;
   }
-  
-  .calendar-left-column {
-    order: 1;
+
+  .calendar-grid {
+    gap: 3px;
   }
-  
-  .calendar-right-column {
-    order: 2;
+
+  .calendar-day {
+    min-height: 24px;
+    max-height: 32px;
+  }
+
+  .calendar-day-number {
+    font-size: 0.7rem;
+  }
+
+  .calendar-day-dots {
+    gap: 1px;
+  }
+
+  .calendar-dot {
+    width: 3px;
+    height: 3px;
+  }
+
+  .nav-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
   }
 }
