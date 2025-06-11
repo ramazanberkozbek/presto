@@ -1,161 +1,178 @@
 /* Animations and Transitions */
 
 @keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes slideIn {
-  from {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
 
 @keyframes breathe {
-  0%, 100% {
-    opacity: 0.7;
-  }
-  50% {
-    opacity: 1;
-  }
+
+    0%,
+    100% {
+        opacity: 0.7;
+    }
+
+    50% {
+        opacity: 1;
+    }
 }
 
 @keyframes slideOut {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(100%);
-    opacity: 0;
-  }
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
 }
 
 @keyframes slideInMobile {
-  from {
-    transform: translateY(-100%) scale(0.95);
-    opacity: 0;
-  }
-  60% {
-    transform: translateY(5%) scale(1.02);
-    opacity: 0.9;
-  }
-  to {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
+    from {
+        transform: translateY(-100%) scale(0.95);
+        opacity: 0;
+    }
+
+    60% {
+        transform: translateY(5%) scale(1.02);
+        opacity: 0.9;
+    }
+
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
 }
 
 @keyframes slideOutMobile {
-  from {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-  to {
-    transform: translateY(-120%) scale(0.95);
-    opacity: 0;
-  }
+    from {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+
+    to {
+        transform: translateY(-120%) scale(0.95);
+        opacity: 0;
+    }
 }
 
 @keyframes shake {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(-2px);
-  }
-  75% {
-    transform: translateX(2px);
-  }
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-2px);
+    }
+
+    75% {
+        transform: translateX(2px);
+    }
 }
 
 @keyframes modalSlideIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9) translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 @keyframes sessionAdd {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+    from {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 /* Animation Classes */
 .timer-container.focus .timer-display {
-  animation: pulse 2s infinite ease-in-out;
+    animation: pulse 2s infinite ease-in-out;
 }
 
 .timer-container.running .timer-display {
-  color: var(--focus-color);
-  text-shadow: 0 0 10px rgba(231, 76, 60, 0.3);
+    color: var(--focus-color);
+    text-shadow: 0 0 10px rgba(231, 76, 60, 0.3);
 }
 
 .timer-container.warning .timer-display {
-  color: #e67e22;
-  animation: pulse 1s infinite ease-in-out;
+    color: #e67e22;
+    animation: pulse 1s infinite ease-in-out;
 }
 
 .timer-container.auto-paused .timer-display {
-  color: #f39c12;
-  animation: breathe 2s infinite ease-in-out;
+    color: #f39c12;
+    animation: breathe 2s infinite ease-in-out;
 }
 
 .timer-container.auto-paused .timer-status {
-  color: #f39c12;
-  font-style: italic;
+    color: #f39c12;
+    font-style: italic;
 }
 
 .task-item {
-  animation: slideIn 0.3s ease-out;
+    animation: slideIn 0.3s ease-out;
 }
 
 .pomodoro-dot.completed {
-  animation: fadeIn 0.5s ease-out;
+    animation: fadeIn 0.5s ease-out;
 }
 
 .notification-ping.dismissing {
-  animation: slideOut 0.3s ease-in forwards;
+    animation: slideOut 0.3s ease-in forwards;
 }
 
 .timeline-session.overlap-warning {
-  border: 2px solid #ff6b6b;
-  animation: shake 0.5s ease;
+    border: 2px solid #ff6b6b;
+    animation: shake 0.5s ease;
 }
 
 .timeline-session.just-added {
-  animation: sessionAdd 0.4s ease;
+    animation: sessionAdd 0.4s ease;
 }

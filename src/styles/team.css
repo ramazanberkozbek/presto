@@ -1,6 +1,8 @@
 /* Team View Styles */
 
 #team-view {
+  background-color: #f6f6f6 !important;
+  min-height: 100vh;
   max-width: 1200px;
   padding: 2rem;
 }

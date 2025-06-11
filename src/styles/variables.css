@@ -73,6 +73,13 @@ body {
   background-color: var(--long-break-bg);
 }
 
+/* Force light gray background for specific views */
+.container:has(#calendar-view:not(.hidden)),
+.container:has(#team-view:not(.hidden)),
+.container:has(#settings-view:not(.hidden)) {
+  background-color: #f6f6f6 !important;
+}
+
 h1 {
   text-align: center;
   margin-bottom: 1.5rem;
