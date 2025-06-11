@@ -2,6 +2,7 @@
 import { NavigationManager } from './managers/navigation-manager.js';
 import { SettingsManager } from './managers/settings-manager.js';
 import { SessionManager } from './managers/session-manager.js';
+import { TeamManager } from './managers/team-manager.js';
 import { PomodoroTimer } from './core/pomodoro-timer.js';
 import { NotificationUtils } from './utils/common-utils.js';
 
@@ -10,6 +11,7 @@ let timer = null;
 let navigation = null;
 let settingsManager = null;
 let sessionManager = null;
+let teamManager = null;
 
 // Global functions for settings (backwards compatibility)
 window.saveSettings = async function () {
@@ -358,6 +360,11 @@ async function initializeApplication() {
     console.log('📊 Initializing Session Manager...');
     sessionManager = new SessionManager(navigation);
     window.sessionManager = sessionManager;
+
+    // Initialize Team Manager
+    console.log('👥 Initializing Team Manager...');
+    teamManager = new TeamManager();
+    window.teamManager = teamManager;
 
     // Setup global event listeners
     setupGlobalEventListeners();

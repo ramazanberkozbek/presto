@@ -66,6 +66,11 @@ export class NavigationManager {
             if (window.settingsManager) {
                 window.settingsManager.populateSettingsUI();
             }
+        } else if (view === 'team') {
+            // Team view will be handled by TeamManager
+            if (window.teamManager) {
+                await window.teamManager.init();
+            }
         }
     }
 
