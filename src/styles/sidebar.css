@@ -15,7 +15,6 @@
   align-items: center;
   padding: 1.5rem 0;
   z-index: 1000;
-  border-right: 2px solid rgba(71, 21, 21, 0.2);
   box-shadow: 2px 0 20px rgba(231, 76, 60, 0.1);
   transition: all 0.3s ease;
 }
@@ -23,19 +22,16 @@
 /* Sidebar theme states */
 .sidebar.focus {
   background: rgba(255, 242, 242, 0.9);
-  border-right: 2px solid rgba(71, 21, 21, 0.3);
   box-shadow: 2px 0 20px rgba(231, 76, 60, 0.15);
 }
 
 .sidebar.break {
   background: rgba(240, 250, 240, 0.9);
-  border-right: 2px solid rgba(20, 64, 29, 0.3);
   box-shadow: 2px 0 20px rgba(46, 204, 113, 0.15);
 }
 
 .sidebar.longBreak {
   background: rgba(232, 244, 255, 0.9);
-  border-right: 2px solid rgba(21, 48, 71, 0.3);
   box-shadow: 2px 0 20px rgba(52, 152, 219, 0.15);
 }
 
