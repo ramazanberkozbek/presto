@@ -48,6 +48,10 @@ export class PomodoroTimer {
         this.stopIcon = document.getElementById('stop-icon');
         this.undoIcon = document.getElementById('undo-icon');
         this.skipBtn = document.getElementById('skip-btn');
+        this.skipCoffeeIcon = document.getElementById('skip-coffee-icon');
+        this.skipSleepIcon = document.getElementById('skip-sleep-icon');
+        this.skipBrainIcon = document.getElementById('skip-brain-icon');
+        this.skipDefaultIcon = document.getElementById('skip-default-icon');
         this.progressDots = document.getElementById('progress-dots');
 
         // Task management
@@ -70,6 +74,7 @@ export class PomodoroTimer {
         this.updateDisplay();
         this.updateProgressDots();
         this.updateStopUndoButton(); // Initialize stop/undo button state
+        this.updateSkipIcon(); // Initialize skip button icon
         this.setupEventListeners();
         await this.loadSessionData();
         await this.loadTasks();
@@ -622,6 +627,9 @@ export class PomodoroTimer {
         // Update stop/undo button icon based on current mode
         this.updateStopUndoButton();
 
+        // Update skip button icon based on current mode and next state
+        this.updateSkipIcon();
+
         // Update progress dots
         this.updateProgressDots();
     }
@@ -683,6 +691,31 @@ export class PomodoroTimer {
                 this.stopIcon.style.display = 'block';
                 this.undoIcon.style.display = 'none';
             }
+        }
+    }
+
+    // Update skip button icon based on current mode and next state
+    updateSkipIcon() {
+        // Hide all skip icons first
+        this.skipCoffeeIcon.style.display = 'none';
+        this.skipSleepIcon.style.display = 'none';
+        this.skipBrainIcon.style.display = 'none';
+        this.skipDefaultIcon.style.display = 'none';
+
+        if (this.currentMode === 'focus') {
+            // During focus: skip will go to break/longBreak
+            // Show icon representing the next break type
+            if ((this.completedPomodoros + 1) % 4 === 0) {
+                // Next will be long break - show sleep icon
+                this.skipSleepIcon.style.display = 'block';
+            } else {
+                // Next will be short break - show coffee icon
+                this.skipCoffeeIcon.style.display = 'block';
+            }
+        } else {
+            // During break/longBreak: skip will go to focus
+            // Show brain icon
+            this.skipBrainIcon.style.display = 'block';
         }
     }
 
