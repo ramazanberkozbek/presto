@@ -2473,74 +2473,119 @@ body {
   background: #ffe6e6;
 }
 
-/* Responsive Timeline */
+/* Mobile Sidebar Styles */
 @media (max-width: 768px) {
-  .timeline-hours {
-    font-size: 0.6rem;
+  .sidebar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: 100vw;
+    height: 70px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-top: 2px solid rgba(71, 21, 21, 0.2);
+    box-shadow: 0 -2px 20px rgba(231, 76, 60, 0.1);
+    margin: 0;
   }
 
-  .timeline-session {
-    font-size: 0.7rem;
+  /* Mobile theme states */
+  .sidebar.focus {
+    border-top: 2px solid rgba(71, 21, 21, 0.3);
+    box-shadow: 0 -2px 20px rgba(231, 76, 60, 0.15);
   }
 
-  .timeline-session-type {
-    font-size: 0.65rem;
+  .sidebar.break {
+    border-top: 2px solid rgba(20, 64, 29, 0.3);
+    box-shadow: 0 -2px 20px rgba(46, 204, 113, 0.15);
   }
 
-  .timeline-session-time {
-    font-size: 0.55rem;
+  .sidebar.longBreak {
+    border-top: 2px solid rgba(21, 48, 71, 0.3);
+    box-shadow: 0 -2px 20px rgba(52, 152, 219, 0.15);
+  }
+
+  .sidebar-icons {
+    flex-direction: row;
+    gap: 1rem;
+    margin-bottom: 0;
+    margin-right: 1rem;
+  }
+
+  .sidebar-bottom {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  .sidebar-icon,
+  .sidebar-icon-large {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+
+  .sidebar-icon svg,
+  .sidebar-icon-large svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Rimuovi transform verticale su mobile e usa scale invece */
+  .sidebar.focus .sidebar-icon:hover,
+  .sidebar.break .sidebar-icon:hover,
+  .sidebar.longBreak .sidebar-icon:hover {
+    transform: scale(1.05);
+  }
+
+  .sidebar.focus .sidebar-icon-large:hover,
+  .sidebar.break .sidebar-icon-large:hover,
+  .sidebar.longBreak .sidebar-icon-large:hover {
+    transform: scale(1.05);
+  }
+
+  /* Main Content Layout Adjustment for mobile */
+  body {
+    padding-left: 0;
+    padding-bottom: 70px; /* Space for bottom sidebar */
   }
 }
 
-/* Struttura contenuto notifiche */
-.notification-content-mobile,
-.notification-content-desktop {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.notification-icon {
-  font-size: 1.2rem;
-  flex-shrink: 0;
-}
-
-.notification-message {
-  flex: 1;
-  font-weight: 600;
-}
-
-.notification-dismiss-hint {
-  font-size: 0.8rem;
-  opacity: 0.7;
-  flex-shrink: 0;
-  animation: pulseHint 2s infinite;
-}
-
-@keyframes pulseHint {
-
-  0%,
-  100% {
-    opacity: 0.4;
+/* Extra small screens */
+@media (max-width: 480px) {
+  .sidebar {
+    height: 65px;
+    padding: 0.5rem 0.75rem;
+    width: 100vw;
+    left: 0;
+    right: 0;
+    border: none;
+    border-top: 2px solid rgba(71, 21, 21, 0.2);
+    margin: 0;
   }
 
-  50% {
-    opacity: 0.8;
-  }
-}
-
-/* Mobile specific notification content */
-@media (max-width: 768px) {
-  .notification-content-mobile {
-    justify-content: space-between;
+  .sidebar-icons {
+    gap: 0.75rem;
+    margin-right: 0.75rem;
   }
 
-  .notification-message {
-    text-align: left;
-    line-height: 1.4;
+  .sidebar-icon,
+  .sidebar-icon-large {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
   }
 
-  .notification-icon {
-    font-size: 1.4rem;
+  .sidebar-icon svg,
+  .sidebar-icon-large svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  body {
+    padding-bottom: 65px;
   }
 }
