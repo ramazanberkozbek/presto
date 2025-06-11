@@ -74,16 +74,16 @@ export class NotificationUtils {
             // Check if we're in a Tauri context
             if (window.__TAURI__ && window.__TAURI__.notification) {
                 const { isPermissionGranted, requestPermission, sendNotification } = window.__TAURI__.notification;
-                
+
                 // Check if permission is granted
                 let permissionGranted = await isPermissionGranted();
-                
+
                 // If not granted, request permission
                 if (!permissionGranted) {
                     const permission = await requestPermission();
                     permissionGranted = permission === 'granted';
                 }
-                
+
                 // Send notification if permission is granted
                 if (permissionGranted) {
                     await sendNotification({

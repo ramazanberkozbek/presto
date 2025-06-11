@@ -1095,16 +1095,16 @@ export class PomodoroTimer {
             // Check if we're in a Tauri context and use Tauri notifications
             if (window.__TAURI__ && window.__TAURI__.notification) {
                 const { isPermissionGranted, requestPermission, sendNotification } = window.__TAURI__.notification;
-                
+
                 // Check if permission is granted
                 let permissionGranted = await isPermissionGranted();
-                
+
                 // If not granted, request permission
                 if (!permissionGranted) {
                     const permission = await requestPermission();
                     permissionGranted = permission === 'granted';
                 }
-                
+
                 // Send notification if permission is granted
                 if (permissionGranted) {
                     const messages = {
@@ -1136,8 +1136,8 @@ export class PomodoroTimer {
             // Fallback to in-app notification
             this.showNotificationPing(
                 this.currentMode === 'focus' ? 'Break time! Take a rest 😌' :
-                this.currentMode === 'break' ? 'Break over! Time to focus 🍅' :
-                'Long break over! Ready for more focus? 🚀'
+                    this.currentMode === 'break' ? 'Break over! Time to focus 🍅' :
+                        'Long break over! Ready for more focus? 🚀'
             );
         }
     }
@@ -1204,7 +1204,7 @@ export class PomodoroTimer {
         if (this.smartPauseEnabled) {
             try {
                 const timeoutSeconds = Math.floor(this.inactivityThreshold / 1000);
-                await invoke('update_activity_timeout', { timeout_seconds: timeoutSeconds });
+                await invoke('update_activity_timeout', { timeoutSeconds: timeoutSeconds });
             } catch (error) {
                 console.log('Activity monitoring not active or failed to update timeout:', error);
             }

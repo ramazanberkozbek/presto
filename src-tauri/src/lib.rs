@@ -278,11 +278,11 @@ async fn stop_activity_monitoring() -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn update_activity_timeout(timeout_seconds: u64) -> Result<(), String> {
+async fn update_activity_timeout(timeoutSeconds: u64) -> Result<(), String> {
     let monitor = ACTIVITY_MONITOR.lock().unwrap();
 
     if let Some(ref monitor) = *monitor {
-        monitor.update_threshold(timeout_seconds);
+        monitor.update_threshold(timeoutSeconds);
         Ok(())
     } else {
         Err("Activity monitor not initialized".to_string())

@@ -289,16 +289,16 @@ async function requestNotificationPermission() {
     if (window.__TAURI__ && window.__TAURI__.notification) {
       console.log('🔔 Requesting notification permission using Tauri v2...');
       const { isPermissionGranted, requestPermission } = window.__TAURI__.notification;
-      
+
       // Check if permission is already granted
       let permissionGranted = await isPermissionGranted();
-      
+
       // If not granted, request permission
       if (!permissionGranted) {
         console.log('Requesting notification permission...');
         const permission = await requestPermission();
         permissionGranted = permission === 'granted';
-        
+
         if (permissionGranted) {
           console.log('✅ Notification permission granted');
         } else {
