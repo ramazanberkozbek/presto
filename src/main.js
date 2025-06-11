@@ -245,10 +245,14 @@ class NavigationManager {
     try {
       const history = await invoke('get_stats_history');
       const weekStart = this.getWeekStart(this.currentDate);
+      const today = new Date();
 
       // First pass: collect all session data for the week to determine max value
       const weekData = [];
       let maxSessionsMinutes = 0;
+      let totalSessionTime = 0;
+      let totalSessions = 0;
+      let daysConsidered = 0;
 
       days.forEach((day, index) => {
         // Calculate date for this day of the week
@@ -258,13 +262,23 @@ class NavigationManager {
         // Find real session data for this date
         const dayData = history.find(h => h.date === date.toDateString());
         const sessionsMinutes = dayData ? dayData.total_focus_time / 60 : 0; // Convert seconds to minutes
+        const sessions = dayData ? dayData.completed_pomodoros : 0;
+
+        // Only consider days that have completely passed (exclude today)
+        const isCompletePastDay = date.toDateString() !== today.toDateString() && date < today;
+        if (isCompletePastDay && sessions > 0) {
+          totalSessionTime += sessionsMinutes;
+          totalSessions += sessions;
+          daysConsidered++;
+        }
 
         weekData.push({
           day,
           date,
           dayData,
           sessionsMinutes,
-          sessions: dayData ? dayData.completed_pomodoros : 0
+          sessions,
+          isPast: date <= today
         });
 
         // Track maximum for proportional scaling
@@ -273,11 +287,52 @@ class NavigationManager {
         }
       });
 
+      // Calculate average session time (only for past days with data)
+      const avgSessionTime = totalSessions > 0 ? totalSessionTime / totalSessions : 0;
+
       // Use a minimum baseline for maxSessionsMinutes to avoid tiny bars
-      const scalingMax = Math.max(maxSessionsMinutes, 60); // At least 1 hour for scaling
+      const scalingMax = Math.max(maxSessionsMinutes, Math.max(avgSessionTime, 60)); // Include average in scaling
+
+      // Add average session time line if we have data
+      if (avgSessionTime > 0 && daysConsidered > 0) {
+        const avgLine = document.createElement('div');
+        avgLine.className = 'week-average-line';
+        
+        // Calculate position of average line
+        const avgLineHeight = (avgSessionTime / scalingMax) * maxHeight;
+        avgLine.style.bottom = `${avgLineHeight}px`;
+        avgLine.style.left = '0';
+        avgLine.style.right = '0';
+        avgLine.style.position = 'absolute';
+        avgLine.style.height = '2px';
+        avgLine.style.backgroundColor = '#3498db';
+        avgLine.style.zIndex = '10';
+        avgLine.style.opacity = '0.8';
+        
+        // Add label for average
+        const avgLabel = document.createElement('div');
+        avgLabel.className = 'week-average-label';
+        avgLabel.textContent = `Avg: ${Math.round(avgSessionTime)}m`;
+        avgLabel.style.position = 'absolute';
+        avgLabel.style.right = '5px';
+        avgLabel.style.top = '-18px';
+        avgLabel.style.fontSize = '10px';
+        avgLabel.style.color = '#3498db';
+        avgLabel.style.fontWeight = '600';
+        avgLabel.style.background = 'white';
+        avgLabel.style.padding = '1px 4px';
+        avgLabel.style.borderRadius = '3px';
+        avgLabel.style.whiteSpace = 'nowrap';
+        
+        avgLine.appendChild(avgLabel);
+        
+        // Set relative positioning on chart to contain the absolute line
+        weeklyChart.style.position = 'relative';
+        weeklyChart.appendChild(avgLine);
+      }
 
       // Second pass: create the bars with proportional scaling
-      weekData.forEach(({ day, sessionsMinutes, sessions, dayData }) => {
+      weekData.forEach(({ day, sessionsMinutes, sessions, dayData, isPast }) => {
         const dayBar = document.createElement('div');
         dayBar.className = 'week-day-bar';
 
@@ -288,6 +343,11 @@ class NavigationManager {
 
         dayBar.style.height = `${height}px`;
 
+        // Add visual indicator if this day was used in average calculation
+        if (isPast && sessions > 0) {
+          dayBar.style.borderTop = '2px solid #3498db';
+        }
+
         // Add value label on hover
         if (sessionsMinutes > 0) {
           const valueLabel = document.createElement('div');
@@ -296,11 +356,15 @@ class NavigationManager {
           dayBar.appendChild(valueLabel);
         }
 
-        // Add hover tooltip
+        // Add hover tooltip with average session time info
         const hours = Math.floor(sessionsMinutes / 60);
         const minutes = Math.floor(sessionsMinutes % 60);
         const timeText = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-        dayBar.title = `${day}: ${timeText} (${sessions} sessions)`;
+        const avgPerSession = sessions > 0 ? Math.round(sessionsMinutes / sessions) : 0;
+        const tooltipText = sessions > 0 
+          ? `${day}: ${timeText} (${sessions} sessions, ${avgPerSession}m avg/session)`
+          : `${day}: ${timeText} (${sessions} sessions)`;
+        dayBar.title = tooltipText;
 
         weeklyChart.appendChild(dayBar);
       });

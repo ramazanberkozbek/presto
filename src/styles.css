@@ -1658,6 +1658,56 @@ body {
   white-space: nowrap;
 }
 
+/* Average session time line in weekly chart */
+.week-average-line {
+  position: absolute;
+  height: 2px;
+  background: #3498db;
+  z-index: 10;
+  opacity: 0.8;
+  border-radius: 1px;
+  box-shadow: 0 1px 3px rgba(52, 152, 219, 0.3);
+}
+
+.week-average-line::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: -2px;
+  width: 6px;
+  height: 6px;
+  background: #3498db;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px white, 0 1px 3px rgba(52, 152, 219, 0.4);
+}
+
+.week-average-line::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: -2px;
+  width: 6px;
+  height: 6px;
+  background: #3498db;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px white, 0 1px 3px rgba(52, 152, 219, 0.4);
+}
+
+.week-average-label {
+  position: absolute;
+  right: 5px;
+  top: -18px;
+  font-size: 10px;
+  color: #3498db;
+  font-weight: 600;
+  background: white;
+  padding: 1px 4px;
+  border-radius: 3px;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(52, 152, 219, 0.2);
+}
+
 .week-days-labels {
   display: flex;
   justify-content: space-between;
