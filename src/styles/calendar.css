@@ -3,6 +3,8 @@
 #calendar-view {
   background-color: #f6f6f6 !important;
   min-height: 100vh;
+  padding: 2rem !important;
+  box-sizing: border-box;
 }
 
 .calendar-container {
@@ -42,7 +44,7 @@
 }
 
 .nav-btn:hover {
-  background: #8e44ad;
+  background: #1a252f;
   transform: scale(1.1);
 }
 
@@ -87,7 +89,7 @@
   background: var(--accent-color);
   color: white;
   font-weight: 600;
-  border-color: #8e44ad;
+  border-color: #1a252f;
 }
 
 .calendar-day.selected .calendar-dot {

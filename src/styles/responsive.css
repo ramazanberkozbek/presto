@@ -101,6 +101,13 @@
     font-size: 1.5rem;
   }
 
+  /* General padding for main views on mobile */
+  #calendar-view,
+  #settings-view,
+  #team-view {
+    padding: 1.5rem !important;
+  }
+
   .team-members-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -176,6 +183,12 @@
 
   #team-view {
     padding: 1rem;
+  }
+
+  /* General padding for main views on extra small screens */
+  #calendar-view,
+  #settings-view {
+    padding: 1rem !important;
   }
 
   /* Timer adjustments for mobile */
