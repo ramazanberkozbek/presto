@@ -92,12 +92,24 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
 }
 
 #status-icon {
-  width: 20px;
-  height: 20px;
+  font-size: 24px !important;
+  line-height: 1 !important;
+  margin-right: 4px !important;
+  color: inherit !important;
+  display: inline-block !important;
+  font-family: "remixicon" !important;
+  font-style: normal !important;
+  font-variant: normal !important;
+  text-rendering: auto !important;
+  -webkit-font-smoothing: antialiased !important;
+  width: 24px !important;
+  height: 24px !important;
+  font-weight: normal !important;
+  text-decoration: none !important;
+  vertical-align: middle !important;
 }
 
 .timer-minutes {
@@ -1386,7 +1398,7 @@ body {
 .container.focus .timer-status {
   color: var(--focus-timer-color);
   background-color: var(--focus-secondary-btn);
-  padding: 0.2rem 2rem;
+  padding: 0.2rem 1rem;
   border-radius: 2rem;
   border: var(--focus-timer-color) 2px solid;
   display: inline-flex;
@@ -1416,7 +1428,7 @@ body {
 .container.break .timer-status {
   color: var(--break-timer-color);
   background-color: var(--break-secondary-btn);
-  padding: 0.2rem 2rem;
+  padding: 0.2rem 1rem;
   border-radius: 2rem;
   border: var(--break-timer-color) 2px solid;
   display: inline-flex;
@@ -1446,7 +1458,7 @@ body {
 .container.longBreak .timer-status {
   color: var(--long-break-timer-color);
   background-color: var(--long-break-secondary-btn);
-  padding: 0.2rem 2rem;
+  padding: 0.2rem 1rem;
   border-radius: 2rem;
   border: var(--long-break-timer-color) 2px solid;
   display: inline-flex;
@@ -1516,6 +1528,42 @@ body {
   background-color: rgba(52, 152, 219, 0.4);
   border-color: var(--long-break-timer-color);
   box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+}
+
+/* Overflow Indicator */
+.overflow-indicator {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--focus-timer-color);
+  background-color: var(--focus-secondary-btn);
+  border-radius: 12px;
+  padding: 2px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  min-width: 24px;
+  height: 16px;
+  margin-top: -4px;
+}
+
+/* Variazioni dell'indicatore di overflow per i diversi modi */
+.container.focus .overflow-indicator {
+  color: var(--focus-timer-color);
+  background-color: var(--focus-secondary-btn);
+  border-color: var(--focus-timer-color);
+}
+
+.container.break .overflow-indicator {
+  color: var(--break-timer-color);
+  background-color: var(--break-secondary-btn);
+  border-color: var(--break-timer-color);
+}
+
+.container.longBreak .overflow-indicator {
+  color: var(--long-break-timer-color);
+  background-color: var(--long-break-secondary-btn);
+  border-color: var(--long-break-timer-color);
 }
 
 /* Calendar View Layout Updates */

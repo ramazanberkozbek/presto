@@ -3,658 +3,658 @@ const { invoke } = window.__TAURI__.core;
 import { TimeUtils } from '../utils/common-utils.js';
 
 export class NavigationManager {
-  constructor() {
-    this.currentView = 'timer';
-    this.initialized = false;
-  }
-
-  async init() {
-    // Prevent duplicate initialization
-    if (this.initialized) {
-      console.log('NavigationManager already initialized, skipping...');
-      return;
+    constructor() {
+        this.currentView = 'timer';
+        this.initialized = false;
     }
 
-    this.initialized = true;
-    console.log('Initializing NavigationManager...');
-
-    // Navigation buttons
-    const navButtons = document.querySelectorAll('.sidebar-icon, .sidebar-icon-large');
-    navButtons.forEach(btn => {
-      // Remove any existing listeners first
-      btn.removeEventListener('click', this.handleNavClick);
-
-      // Add new listener
-      btn.addEventListener('click', this.handleNavClick.bind(this));
-    });
-
-    // Initialize calendar
-    await this.initCalendar();
-  }
-
-  async handleNavClick(e) {
-    const view = e.currentTarget.dataset.view;
-    await this.switchView(view);
-  }
-
-  async switchView(view) {
-    // Update active button
-    document.querySelectorAll('.sidebar-icon, .sidebar-icon-large').forEach(btn => {
-      btn.classList.remove('active');
-    });
-    document.querySelector(`[data-view="${view}"]`).classList.add('active');
-
-    // Hide all views
-    document.querySelectorAll('.view-container').forEach(container => {
-      container.classList.add('hidden');
-    });
-
-    // Show selected view
-    document.getElementById(`${view}-view`).classList.remove('hidden');
-    this.currentView = view;
-
-    // Initialize view-specific content
-    if (view === 'calendar') {
-      await this.updateCalendar();
-      this.updateWeekDisplay();
-      await this.updateFocusSummary();
-      await this.updateWeeklySessionsChart();
-      this.updateDailyChart();
-      await this.updateSelectedDayDetails();
-    } else if (view === 'settings') {
-      // Settings view will be handled by SettingsManager
-      if (window.settingsManager) {
-        window.settingsManager.populateSettingsUI();
-      }
-    }
-  }
-
-  async initCalendar() {
-    const calendarGrid = document.getElementById('calendar-grid');
-    const currentMonthEl = document.getElementById('current-month');
-    const prevBtn = document.getElementById('prev-month');
-    const nextBtn = document.getElementById('next-month');
-
-    // Week selector elements
-    const weekRangeEl = document.getElementById('week-range');
-    const prevWeekBtn = document.getElementById('prev-week');
-    const nextWeekBtn = document.getElementById('next-week');
-
-    this.currentDate = new Date();
-    this.displayMonth = new Date(this.currentDate);
-    this.selectedWeek = this.getWeekStart(this.currentDate);
-
-    // Month navigation
-    prevBtn.addEventListener('click', async () => {
-      this.displayMonth.setMonth(this.displayMonth.getMonth() - 1);
-      await this.updateCalendar();
-    });
-
-    nextBtn.addEventListener('click', async () => {
-      this.displayMonth.setMonth(this.displayMonth.getMonth() + 1);
-      await this.updateCalendar();
-    });
-
-    // Week navigation
-    prevWeekBtn.addEventListener('click', async () => {
-      this.selectedWeek.setDate(this.selectedWeek.getDate() - 7);
-      this.updateWeekDisplay();
-      await this.updateFocusSummary();
-      await this.updateWeeklySessionsChart();
-      this.updateDailyChart();
-    });
-
-    nextWeekBtn.addEventListener('click', async () => {
-      this.selectedWeek.setDate(this.selectedWeek.getDate() + 7);
-      this.updateWeekDisplay();
-      await this.updateFocusSummary();
-      await this.updateWeeklySessionsChart();
-      this.updateDailyChart();
-    });
-
-    // Initial updates will be handled by switchView when calendar is shown
-  }
-
-  getWeekStart(date) {
-    return TimeUtils.getWeekStart(date);
-  }
-
-  updateWeekDisplay() {
-    const weekRangeEl = document.getElementById('week-range');
-    const weekStart = new Date(this.selectedWeek);
-    const weekEnd = new Date(this.selectedWeek);
-    weekEnd.setDate(weekEnd.getDate() + 6);
-
-    const formatOptions = { day: 'numeric', month: 'short' };
-    const startStr = weekStart.toLocaleDateString('en-US', formatOptions);
-    const endStr = weekEnd.toLocaleDateString('en-US', formatOptions);
-    const year = weekEnd.getFullYear();
-
-    weekRangeEl.textContent = `${startStr} - ${endStr} ${year}`;
-  }
-
-  async updateFocusSummary() {
-    const totalFocusTodayEl = document.getElementById('total-focus-today');
-    const avgFocusDayEl = document.getElementById('avg-focus-day');
-
-    // Calculate today's total focus (real data only)
-    const isToday = this.isSameDay(new Date(), this.currentDate);
-    let todayFocus = 0;
-
-    if (isToday && window.pomodoroTimer) {
-      todayFocus = window.pomodoroTimer.totalFocusTime;
-    } else {
-      // Load real data for selected date
-      try {
-        const history = await invoke('get_stats_history');
-        const selectedDateStr = this.currentDate.toDateString();
-        const dayData = history.find(h => h.date === selectedDateStr);
-        todayFocus = dayData ? dayData.total_focus_time : 0;
-      } catch (error) {
-        console.error('Failed to load focus data:', error);
-        todayFocus = 0;
-      }
-    }
-
-    // Calculate weekly average (real data only)
-    let avgFocus = 0;
-    try {
-      const history = await invoke('get_stats_history');
-      const weekStart = this.getWeekStart(this.currentDate);
-      let weekTotal = 0;
-      let daysWithData = 0;
-
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(weekStart);
-        date.setDate(weekStart.getDate() + i);
-        const dayData = history.find(h => h.date === date.toDateString());
-        if (dayData && dayData.total_focus_time > 0) {
-          weekTotal += dayData.total_focus_time;
-          daysWithData++;
-        }
-      }
-
-      avgFocus = daysWithData > 0 ? weekTotal / daysWithData : 0;
-    } catch (error) {
-      console.error('Failed to load weekly data:', error);
-      avgFocus = 0;
-    }
-
-    totalFocusTodayEl.textContent = TimeUtils.formatTime(todayFocus);
-    avgFocusDayEl.textContent = TimeUtils.formatTime(avgFocus);
-  }
-
-  updateDailyChart() {
-    const dailyChart = document.getElementById('daily-chart');
-    dailyChart.innerHTML = '';
-
-    const hours = Array.from({ length: 24 }, (_, i) => i);
-    const maxHeight = 160;
-
-    hours.forEach(hour => {
-      const hourBar = document.createElement('div');
-      hourBar.className = 'hour-bar';
-
-      // Real data only - no demo data for now
-      const focusMinutes = 0;
-      const breakMinutes = 0;
-
-      const totalMinutes = focusMinutes + breakMinutes;
-      const height = Math.max((totalMinutes / 60) * maxHeight, 4);
-
-      hourBar.style.height = `${height}px`;
-
-      if (focusMinutes > 0) {
-        // Create focus and break segments
-        const focusSegment = document.createElement('div');
-        focusSegment.className = 'hour-bar-focus';
-        focusSegment.style.height = `${(focusMinutes / totalMinutes) * 100}%`;
-
-        const breakSegment = document.createElement('div');
-        breakSegment.className = 'hour-bar-break';
-        breakSegment.style.height = `${(breakMinutes / totalMinutes) * 100}%`;
-
-        hourBar.appendChild(focusSegment);
-        hourBar.appendChild(breakSegment);
-      }
-
-      const hourLabel = document.createElement('div');
-      hourLabel.className = 'hour-label';
-      hourLabel.textContent = hour.toString().padStart(2, '0');
-
-      hourBar.appendChild(hourLabel);
-
-      // Add hover tooltip
-      hourBar.title = `${hour}:00 - Focus: ${focusMinutes}m, Break: ${breakMinutes}m`;
-
-      dailyChart.appendChild(hourBar);
-    });
-  }
-
-  async updateWeeklySessionsChart() {
-    const weeklyChart = document.getElementById('weekly-chart');
-    weeklyChart.innerHTML = '';
-
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    const maxHeight = 70;
-
-    try {
-      const history = await invoke('get_stats_history');
-      const weekStart = this.getWeekStart(this.currentDate);
-      const today = new Date();
-
-      // First pass: collect all session data for the week to determine max value
-      const weekData = [];
-      let maxSessionsMinutes = 0;
-      let totalSessionTime = 0;
-      let totalSessions = 0;
-      let daysConsidered = 0;
-
-      days.forEach((day, index) => {
-        // Calculate date for this day of the week
-        const date = new Date(weekStart);
-        date.setDate(weekStart.getDate() + index);
-
-        // Find real session data for this date
-        const dayData = history.find(h => h.date === date.toDateString());
-        const sessionsMinutes = dayData ? dayData.total_focus_time / 60 : 0; // Convert seconds to minutes
-        const sessions = dayData ? dayData.completed_pomodoros : 0;
-
-        // Only consider days that have completely passed (exclude today)
-        const isCompletePastDay = date.toDateString() !== today.toDateString() && date < today;
-        if (isCompletePastDay && sessions > 0) {
-          totalSessionTime += sessionsMinutes;
-          totalSessions += sessions;
-          daysConsidered++;
+    async init() {
+        // Prevent duplicate initialization
+        if (this.initialized) {
+            console.log('NavigationManager already initialized, skipping...');
+            return;
         }
 
-        weekData.push({
-          day,
-          date,
-          dayData,
-          sessionsMinutes,
-          sessions,
-          isPast: date <= today
+        this.initialized = true;
+        console.log('Initializing NavigationManager...');
+
+        // Navigation buttons
+        const navButtons = document.querySelectorAll('.sidebar-icon, .sidebar-icon-large');
+        navButtons.forEach(btn => {
+            // Remove any existing listeners first
+            btn.removeEventListener('click', this.handleNavClick);
+
+            // Add new listener
+            btn.addEventListener('click', this.handleNavClick.bind(this));
         });
 
-        // Track maximum for proportional scaling
-        if (sessionsMinutes > maxSessionsMinutes) {
-          maxSessionsMinutes = sessionsMinutes;
+        // Initialize calendar
+        await this.initCalendar();
+    }
+
+    async handleNavClick(e) {
+        const view = e.currentTarget.dataset.view;
+        await this.switchView(view);
+    }
+
+    async switchView(view) {
+        // Update active button
+        document.querySelectorAll('.sidebar-icon, .sidebar-icon-large').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-view="${view}"]`).classList.add('active');
+
+        // Hide all views
+        document.querySelectorAll('.view-container').forEach(container => {
+            container.classList.add('hidden');
+        });
+
+        // Show selected view
+        document.getElementById(`${view}-view`).classList.remove('hidden');
+        this.currentView = view;
+
+        // Initialize view-specific content
+        if (view === 'calendar') {
+            await this.updateCalendar();
+            this.updateWeekDisplay();
+            await this.updateFocusSummary();
+            await this.updateWeeklySessionsChart();
+            this.updateDailyChart();
+            await this.updateSelectedDayDetails();
+        } else if (view === 'settings') {
+            // Settings view will be handled by SettingsManager
+            if (window.settingsManager) {
+                window.settingsManager.populateSettingsUI();
+            }
         }
-      });
+    }
 
-      // Calculate average session time (only for past days with data)
-      const avgSessionTime = totalSessions > 0 ? totalSessionTime / totalSessions : 0;
+    async initCalendar() {
+        const calendarGrid = document.getElementById('calendar-grid');
+        const currentMonthEl = document.getElementById('current-month');
+        const prevBtn = document.getElementById('prev-month');
+        const nextBtn = document.getElementById('next-month');
 
-      // Use a minimum baseline for maxSessionsMinutes to avoid tiny bars
-      const scalingMax = Math.max(maxSessionsMinutes, Math.max(avgSessionTime, 60)); // Include average in scaling
+        // Week selector elements
+        const weekRangeEl = document.getElementById('week-range');
+        const prevWeekBtn = document.getElementById('prev-week');
+        const nextWeekBtn = document.getElementById('next-week');
 
-      // Add average session time line if we have data
-      if (avgSessionTime > 0 && daysConsidered > 0) {
-        const avgLine = document.createElement('div');
-        avgLine.className = 'week-average-line';
+        this.currentDate = new Date();
+        this.displayMonth = new Date(this.currentDate);
+        this.selectedWeek = this.getWeekStart(this.currentDate);
 
-        // Calculate position of average line
-        const avgLineHeight = (avgSessionTime / scalingMax) * maxHeight;
-        avgLine.style.bottom = `${avgLineHeight}px`;
-        avgLine.style.left = '0';
-        avgLine.style.right = '0';
-        avgLine.style.position = 'absolute';
-        avgLine.style.height = '2px';
-        avgLine.style.backgroundColor = '#3498db';
-        avgLine.style.zIndex = '10';
-        avgLine.style.opacity = '0.8';
+        // Month navigation
+        prevBtn.addEventListener('click', async () => {
+            this.displayMonth.setMonth(this.displayMonth.getMonth() - 1);
+            await this.updateCalendar();
+        });
 
-        // Add label for average
-        const avgLabel = document.createElement('div');
-        avgLabel.className = 'week-average-label';
-        avgLabel.textContent = `Avg: ${Math.round(avgSessionTime)}m`;
-        avgLabel.style.position = 'absolute';
-        avgLabel.style.right = '5px';
-        avgLabel.style.top = '-18px';
-        avgLabel.style.fontSize = '10px';
-        avgLabel.style.color = '#3498db';
-        avgLabel.style.fontWeight = '600';
-        avgLabel.style.background = 'white';
-        avgLabel.style.padding = '1px 4px';
-        avgLabel.style.borderRadius = '3px';
-        avgLabel.style.whiteSpace = 'nowrap';
+        nextBtn.addEventListener('click', async () => {
+            this.displayMonth.setMonth(this.displayMonth.getMonth() + 1);
+            await this.updateCalendar();
+        });
 
-        avgLine.appendChild(avgLabel);
+        // Week navigation
+        prevWeekBtn.addEventListener('click', async () => {
+            this.selectedWeek.setDate(this.selectedWeek.getDate() - 7);
+            this.updateWeekDisplay();
+            await this.updateFocusSummary();
+            await this.updateWeeklySessionsChart();
+            this.updateDailyChart();
+        });
 
-        // Set relative positioning on chart to contain the absolute line
-        weeklyChart.style.position = 'relative';
-        weeklyChart.appendChild(avgLine);
-      }
+        nextWeekBtn.addEventListener('click', async () => {
+            this.selectedWeek.setDate(this.selectedWeek.getDate() + 7);
+            this.updateWeekDisplay();
+            await this.updateFocusSummary();
+            await this.updateWeeklySessionsChart();
+            this.updateDailyChart();
+        });
 
-      // Second pass: create the bars with proportional scaling
-      weekData.forEach(({ day, sessionsMinutes, sessions, dayData, isPast }) => {
-        const dayBar = document.createElement('div');
-        dayBar.className = 'week-day-bar';
+        // Initial updates will be handled by switchView when calendar is shown
+    }
 
-        // Scale height proportionally to the week's maximum value
-        const height = sessionsMinutes > 0
-          ? Math.max((sessionsMinutes / scalingMax) * maxHeight, 8)
-          : 8;
+    getWeekStart(date) {
+        return TimeUtils.getWeekStart(date);
+    }
 
-        dayBar.style.height = `${height}px`;
+    updateWeekDisplay() {
+        const weekRangeEl = document.getElementById('week-range');
+        const weekStart = new Date(this.selectedWeek);
+        const weekEnd = new Date(this.selectedWeek);
+        weekEnd.setDate(weekEnd.getDate() + 6);
 
-        // Add visual indicator if this day was used in average calculation
-        if (isPast && sessions > 0) {
-          dayBar.style.borderTop = '2px solid #3498db';
+        const formatOptions = { day: 'numeric', month: 'short' };
+        const startStr = weekStart.toLocaleDateString('en-US', formatOptions);
+        const endStr = weekEnd.toLocaleDateString('en-US', formatOptions);
+        const year = weekEnd.getFullYear();
+
+        weekRangeEl.textContent = `${startStr} - ${endStr} ${year}`;
+    }
+
+    async updateFocusSummary() {
+        const totalFocusTodayEl = document.getElementById('total-focus-today');
+        const avgFocusDayEl = document.getElementById('avg-focus-day');
+
+        // Calculate today's total focus (real data only)
+        const isToday = this.isSameDay(new Date(), this.currentDate);
+        let todayFocus = 0;
+
+        if (isToday && window.pomodoroTimer) {
+            todayFocus = window.pomodoroTimer.totalFocusTime;
+        } else {
+            // Load real data for selected date
+            try {
+                const history = await invoke('get_stats_history');
+                const selectedDateStr = this.currentDate.toDateString();
+                const dayData = history.find(h => h.date === selectedDateStr);
+                todayFocus = dayData ? dayData.total_focus_time : 0;
+            } catch (error) {
+                console.error('Failed to load focus data:', error);
+                todayFocus = 0;
+            }
         }
 
-        // Add value label on hover
-        if (sessionsMinutes > 0) {
-          const valueLabel = document.createElement('div');
-          valueLabel.className = 'week-day-bar-value';
-          valueLabel.textContent = `${sessions}`;
-          dayBar.appendChild(valueLabel);
+        // Calculate weekly average (real data only)
+        let avgFocus = 0;
+        try {
+            const history = await invoke('get_stats_history');
+            const weekStart = this.getWeekStart(this.currentDate);
+            let weekTotal = 0;
+            let daysWithData = 0;
+
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(weekStart);
+                date.setDate(weekStart.getDate() + i);
+                const dayData = history.find(h => h.date === date.toDateString());
+                if (dayData && dayData.total_focus_time > 0) {
+                    weekTotal += dayData.total_focus_time;
+                    daysWithData++;
+                }
+            }
+
+            avgFocus = daysWithData > 0 ? weekTotal / daysWithData : 0;
+        } catch (error) {
+            console.error('Failed to load weekly data:', error);
+            avgFocus = 0;
         }
 
-        // Add hover tooltip with average session time info
-        const hours = Math.floor(sessionsMinutes / 60);
-        const minutes = Math.floor(sessionsMinutes % 60);
-        const timeText = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-        const avgPerSession = sessions > 0 ? Math.round(sessionsMinutes / sessions) : 0;
-        const tooltipText = sessions > 0
-          ? `${day}: ${timeText} (${sessions} sessions, ${avgPerSession}m avg/session)`
-          : `${day}: ${timeText} (${sessions} sessions)`;
-        dayBar.title = tooltipText;
-
-        weeklyChart.appendChild(dayBar);
-      });
-
-    } catch (error) {
-      console.error('Failed to load weekly chart data:', error);
-      // Show empty chart on error
-      days.forEach((day, index) => {
-        const dayBar = document.createElement('div');
-        dayBar.className = 'week-day-bar';
-        dayBar.style.height = '8px';
-        dayBar.title = `${day}: No data available`;
-        weeklyChart.appendChild(dayBar);
-      });
+        totalFocusTodayEl.textContent = TimeUtils.formatTime(todayFocus);
+        avgFocusDayEl.textContent = TimeUtils.formatTime(avgFocus);
     }
-  }
 
-  async updateSelectedDayDetails(date = this.currentDate) {
-    const selectedDayTitle = document.getElementById('selected-day-title');
-    const timelineTrack = document.getElementById('timeline-track');
-    const timelineHours = document.getElementById('timeline-hours');
+    updateDailyChart() {
+        const dailyChart = document.getElementById('daily-chart');
+        dailyChart.innerHTML = '';
 
-    // Format date for display
-    const dateStr = date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+        const hours = Array.from({ length: 24 }, (_, i) => i);
+        const maxHeight = 160;
 
-    const isToday = this.isSameDay(date, new Date());
-    selectedDayTitle.textContent = isToday ? "Today's Sessions" : `${dateStr} Sessions`;
+        hours.forEach(hour => {
+            const hourBar = document.createElement('div');
+            hourBar.className = 'hour-bar';
 
-    // Setup timeline hours (6 AM to 10 PM)
-    this.setupTimelineHours(timelineHours);
+            // Real data only - no demo data for now
+            const focusMinutes = 0;
+            const breakMinutes = 0;
 
-    // Clear previous sessions
-    timelineTrack.innerHTML = '';
+            const totalMinutes = focusMinutes + breakMinutes;
+            const height = Math.max((totalMinutes / 60) * maxHeight, 4);
 
-    try {
-      // Get sessions from SessionManager first (for manually added sessions)
-      let manualSessions = [];
-      if (window.sessionManager) {
-        manualSessions = window.sessionManager.getSessionsForDate(date);
-      }
+            hourBar.style.height = `${height}px`;
 
-      // Get historical data for completed pomodoros
-      const history = await invoke('get_stats_history');
-      const selectedDateStr = date.toDateString();
-      const dayData = history.find(h => h.date === selectedDateStr);
+            if (focusMinutes > 0) {
+                // Create focus and break segments
+                const focusSegment = document.createElement('div');
+                focusSegment.className = 'hour-bar-focus';
+                focusSegment.style.height = `${(focusMinutes / totalMinutes) * 100}%`;
 
-      // Combine manual sessions with historical data
-      const allSessions = [...manualSessions];
+                const breakSegment = document.createElement('div');
+                breakSegment.className = 'hour-bar-break';
+                breakSegment.style.height = `${(breakMinutes / totalMinutes) * 100}%`;
 
-      // Add historical pomodoros if no manual sessions exist for focus sessions
-      if (dayData && dayData.completed_pomodoros > 0) {
-        const focusSessionsCount = manualSessions.filter(s => s.session_type === 'focus' || s.session_type === 'custom').length;
+                hourBar.appendChild(focusSegment);
+                hourBar.appendChild(breakSegment);
+            }
 
-        // If we have fewer manual focus sessions than completed pomodoros, add the difference
-        for (let i = focusSessionsCount; i < dayData.completed_pomodoros; i++) {
-          const sessionStartTime = new Date(date);
-          sessionStartTime.setHours(9 + Math.floor(i * 0.5), (i * 30) % 60);
+            const hourLabel = document.createElement('div');
+            hourLabel.className = 'hour-label';
+            hourLabel.textContent = hour.toString().padStart(2, '0');
 
-          allSessions.push({
-            id: `historical-${i}`,
-            session_type: 'focus',
-            duration: 25,
-            start_time: sessionStartTime.toLocaleTimeString('en-US', {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: false
-            }),
-            end_time: new Date(sessionStartTime.getTime() + 25 * 60000).toLocaleTimeString('en-US', {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: false
-            }),
-            notes: null,
-            isHistorical: true
-          });
+            hourBar.appendChild(hourLabel);
+
+            // Add hover tooltip
+            hourBar.title = `${hour}:00 - Focus: ${focusMinutes}m, Break: ${breakMinutes}m`;
+
+            dailyChart.appendChild(hourBar);
+        });
+    }
+
+    async updateWeeklySessionsChart() {
+        const weeklyChart = document.getElementById('weekly-chart');
+        weeklyChart.innerHTML = '';
+
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const maxHeight = 70;
+
+        try {
+            const history = await invoke('get_stats_history');
+            const weekStart = this.getWeekStart(this.currentDate);
+            const today = new Date();
+
+            // First pass: collect all session data for the week to determine max value
+            const weekData = [];
+            let maxSessionsMinutes = 0;
+            let totalSessionTime = 0;
+            let totalSessions = 0;
+            let daysConsidered = 0;
+
+            days.forEach((day, index) => {
+                // Calculate date for this day of the week
+                const date = new Date(weekStart);
+                date.setDate(weekStart.getDate() + index);
+
+                // Find real session data for this date
+                const dayData = history.find(h => h.date === date.toDateString());
+                const sessionsMinutes = dayData ? dayData.total_focus_time / 60 : 0; // Convert seconds to minutes
+                const sessions = dayData ? dayData.completed_pomodoros : 0;
+
+                // Only consider days that have completely passed (exclude today)
+                const isCompletePastDay = date.toDateString() !== today.toDateString() && date < today;
+                if (isCompletePastDay && sessions > 0) {
+                    totalSessionTime += sessionsMinutes;
+                    totalSessions += sessions;
+                    daysConsidered++;
+                }
+
+                weekData.push({
+                    day,
+                    date,
+                    dayData,
+                    sessionsMinutes,
+                    sessions,
+                    isPast: date <= today
+                });
+
+                // Track maximum for proportional scaling
+                if (sessionsMinutes > maxSessionsMinutes) {
+                    maxSessionsMinutes = sessionsMinutes;
+                }
+            });
+
+            // Calculate average session time (only for past days with data)
+            const avgSessionTime = totalSessions > 0 ? totalSessionTime / totalSessions : 0;
+
+            // Use a minimum baseline for maxSessionsMinutes to avoid tiny bars
+            const scalingMax = Math.max(maxSessionsMinutes, Math.max(avgSessionTime, 60)); // Include average in scaling
+
+            // Add average session time line if we have data
+            if (avgSessionTime > 0 && daysConsidered > 0) {
+                const avgLine = document.createElement('div');
+                avgLine.className = 'week-average-line';
+
+                // Calculate position of average line
+                const avgLineHeight = (avgSessionTime / scalingMax) * maxHeight;
+                avgLine.style.bottom = `${avgLineHeight}px`;
+                avgLine.style.left = '0';
+                avgLine.style.right = '0';
+                avgLine.style.position = 'absolute';
+                avgLine.style.height = '2px';
+                avgLine.style.backgroundColor = '#3498db';
+                avgLine.style.zIndex = '10';
+                avgLine.style.opacity = '0.8';
+
+                // Add label for average
+                const avgLabel = document.createElement('div');
+                avgLabel.className = 'week-average-label';
+                avgLabel.textContent = `Avg: ${Math.round(avgSessionTime)}m`;
+                avgLabel.style.position = 'absolute';
+                avgLabel.style.right = '5px';
+                avgLabel.style.top = '-18px';
+                avgLabel.style.fontSize = '10px';
+                avgLabel.style.color = '#3498db';
+                avgLabel.style.fontWeight = '600';
+                avgLabel.style.background = 'white';
+                avgLabel.style.padding = '1px 4px';
+                avgLabel.style.borderRadius = '3px';
+                avgLabel.style.whiteSpace = 'nowrap';
+
+                avgLine.appendChild(avgLabel);
+
+                // Set relative positioning on chart to contain the absolute line
+                weeklyChart.style.position = 'relative';
+                weeklyChart.appendChild(avgLine);
+            }
+
+            // Second pass: create the bars with proportional scaling
+            weekData.forEach(({ day, sessionsMinutes, sessions, dayData, isPast }) => {
+                const dayBar = document.createElement('div');
+                dayBar.className = 'week-day-bar';
+
+                // Scale height proportionally to the week's maximum value
+                const height = sessionsMinutes > 0
+                    ? Math.max((sessionsMinutes / scalingMax) * maxHeight, 8)
+                    : 8;
+
+                dayBar.style.height = `${height}px`;
+
+                // Add visual indicator if this day was used in average calculation
+                if (isPast && sessions > 0) {
+                    dayBar.style.borderTop = '2px solid #3498db';
+                }
+
+                // Add value label on hover
+                if (sessionsMinutes > 0) {
+                    const valueLabel = document.createElement('div');
+                    valueLabel.className = 'week-day-bar-value';
+                    valueLabel.textContent = `${sessions}`;
+                    dayBar.appendChild(valueLabel);
+                }
+
+                // Add hover tooltip with average session time info
+                const hours = Math.floor(sessionsMinutes / 60);
+                const minutes = Math.floor(sessionsMinutes % 60);
+                const timeText = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                const avgPerSession = sessions > 0 ? Math.round(sessionsMinutes / sessions) : 0;
+                const tooltipText = sessions > 0
+                    ? `${day}: ${timeText} (${sessions} sessions, ${avgPerSession}m avg/session)`
+                    : `${day}: ${timeText} (${sessions} sessions)`;
+                dayBar.title = tooltipText;
+
+                weeklyChart.appendChild(dayBar);
+            });
+
+        } catch (error) {
+            console.error('Failed to load weekly chart data:', error);
+            // Show empty chart on error
+            days.forEach((day, index) => {
+                const dayBar = document.createElement('div');
+                dayBar.className = 'week-day-bar';
+                dayBar.style.height = '8px';
+                dayBar.title = `${day}: No data available`;
+                weeklyChart.appendChild(dayBar);
+            });
         }
-      }
-
-      // Sort sessions by start time
-      allSessions.sort((a, b) => a.start_time.localeCompare(b.start_time));
-
-      if (allSessions.length === 0) {
-        const noSessions = document.createElement('div');
-        noSessions.className = 'timeline-empty';
-        noSessions.textContent = 'No sessions completed';
-        timelineTrack.appendChild(noSessions);
-        return;
-      }
-
-      // Create timeline session blocks
-      allSessions.forEach(session => {
-        this.createTimelineSession(session, date, timelineTrack);
-      });
-
-      // Initialize timeline interactions
-      this.initializeTimelineInteractions();
-
-    } catch (error) {
-      console.error('Failed to load session details:', error);
-      const errorItem = document.createElement('div');
-      errorItem.className = 'sessions-empty';
-      errorItem.textContent = 'Error loading session data';
-      sessionsList.appendChild(errorItem);
-    }
-  }
-
-  getSessionTypeDisplay(type) {
-    switch (type) {
-      case 'focus':
-        return 'Focus';
-      case 'break':
-        return 'Short Break';
-      case 'longBreak':
-        return 'Long Break';
-      case 'custom':
-        return 'Custom';
-      default:
-        return 'Focus';
-    }
-  }
-
-  async updateCalendar() {
-    const calendarGrid = document.getElementById('calendar-grid');
-    const currentMonthEl = document.getElementById('current-month');
-
-    // Update month display
-    const monthNames = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-    currentMonthEl.textContent = `${monthNames[this.displayMonth.getMonth()]} ${this.displayMonth.getFullYear()}`;
-
-    // Clear previous calendar
-    calendarGrid.innerHTML = '';
-
-    // Add day headers
-    const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    dayHeaders.forEach(day => {
-      const dayEl = document.createElement('div');
-      dayEl.className = 'calendar-day day-name';
-      dayEl.textContent = day;
-      calendarGrid.appendChild(dayEl);
-    });
-
-    // Get first day of month and number of days
-    const firstDay = new Date(this.displayMonth.getFullYear(), this.displayMonth.getMonth(), 1);
-    const lastDay = new Date(this.displayMonth.getFullYear(), this.displayMonth.getMonth() + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDay = firstDay.getDay();
-
-    // Load session history for the month
-    let history = [];
-    try {
-      history = await invoke('get_stats_history');
-    } catch (error) {
-      console.error('Failed to load calendar data:', error);
-      // Continue with empty history
     }
 
-    // Add empty cells for days before month starts
-    for (let i = 0; i < startingDay; i++) {
-      const emptyDay = document.createElement('div');
-      emptyDay.className = 'calendar-day';
-      calendarGrid.appendChild(emptyDay);
-    }
+    async updateSelectedDayDetails(date = this.currentDate) {
+        const selectedDayTitle = document.getElementById('selected-day-title');
+        const timelineTrack = document.getElementById('timeline-track');
+        const timelineHours = document.getElementById('timeline-hours');
 
-    // Add days of the month
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dayEl = document.createElement('div');
-      dayEl.className = 'calendar-day';
+        // Format date for display
+        const dateStr = date.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
 
-      const dayNumber = document.createElement('div');
-      dayNumber.className = 'calendar-day-number';
-      dayNumber.textContent = day;
-      dayEl.appendChild(dayNumber);
+        const isToday = this.isSameDay(date, new Date());
+        selectedDayTitle.textContent = isToday ? "Today's Sessions" : `${dateStr} Sessions`;
 
-      // Check if it's today
-      const dayDate = new Date(this.displayMonth.getFullYear(), this.displayMonth.getMonth(), day);
-      if (this.isSameDay(dayDate, this.currentDate)) {
-        dayEl.classList.add('today');
-      }
+        // Setup timeline hours (6 AM to 10 PM)
+        this.setupTimelineHours(timelineHours);
 
-      // Add session dots based on real data (if available)
-      const dots = document.createElement('div');
-      dots.className = 'calendar-day-dots';
+        // Clear previous sessions
+        timelineTrack.innerHTML = '';
 
-      if (history.length > 0) {
-        const dayData = history.find(h => h.date === dayDate.toDateString());
-        if (dayData && dayData.completed_pomodoros > 0) {
-          dayEl.classList.add('has-sessions');
-          // Create dots for completed pomodoros
-          const numDots = Math.min(dayData.completed_pomodoros, 5); // Max 5 dots
-          for (let i = 0; i < numDots; i++) {
-            const dot = document.createElement('div');
-            dot.className = 'calendar-dot';
-            dots.appendChild(dot);
-          }
+        try {
+            // Get sessions from SessionManager first (for manually added sessions)
+            let manualSessions = [];
+            if (window.sessionManager) {
+                manualSessions = window.sessionManager.getSessionsForDate(date);
+            }
+
+            // Get historical data for completed pomodoros
+            const history = await invoke('get_stats_history');
+            const selectedDateStr = date.toDateString();
+            const dayData = history.find(h => h.date === selectedDateStr);
+
+            // Combine manual sessions with historical data
+            const allSessions = [...manualSessions];
+
+            // Add historical pomodoros if no manual sessions exist for focus sessions
+            if (dayData && dayData.completed_pomodoros > 0) {
+                const focusSessionsCount = manualSessions.filter(s => s.session_type === 'focus' || s.session_type === 'custom').length;
+
+                // If we have fewer manual focus sessions than completed pomodoros, add the difference
+                for (let i = focusSessionsCount; i < dayData.completed_pomodoros; i++) {
+                    const sessionStartTime = new Date(date);
+                    sessionStartTime.setHours(9 + Math.floor(i * 0.5), (i * 30) % 60);
+
+                    allSessions.push({
+                        id: `historical-${i}`,
+                        session_type: 'focus',
+                        duration: 25,
+                        start_time: sessionStartTime.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false
+                        }),
+                        end_time: new Date(sessionStartTime.getTime() + 25 * 60000).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false
+                        }),
+                        notes: null,
+                        isHistorical: true
+                    });
+                }
+            }
+
+            // Sort sessions by start time
+            allSessions.sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+            if (allSessions.length === 0) {
+                const noSessions = document.createElement('div');
+                noSessions.className = 'timeline-empty';
+                noSessions.textContent = 'No sessions completed';
+                timelineTrack.appendChild(noSessions);
+                return;
+            }
+
+            // Create timeline session blocks
+            allSessions.forEach(session => {
+                this.createTimelineSession(session, date, timelineTrack);
+            });
+
+            // Initialize timeline interactions
+            this.initializeTimelineInteractions();
+
+        } catch (error) {
+            console.error('Failed to load session details:', error);
+            const errorItem = document.createElement('div');
+            errorItem.className = 'sessions-empty';
+            errorItem.textContent = 'Error loading session data';
+            sessionsList.appendChild(errorItem);
         }
-      }
-
-      dayEl.appendChild(dots);
-
-      // Add click event
-      dayEl.addEventListener('click', async () => {
-        await this.selectDay(dayDate);
-      });
-
-      calendarGrid.appendChild(dayEl);
     }
-  }
 
-  isSameDay(date1, date2) {
-    return TimeUtils.isSameDay(date1, date2);
-  }
-
-  async selectDay(date) {
-    // Remove previous selection
-    document.querySelectorAll('.calendar-day').forEach(day => {
-      day.classList.remove('selected');
-    });
-
-    // Add selection to clicked day
-    event.currentTarget.classList.add('selected');
-
-    this.selectedDate = date;
-    await this.updateSelectedDayDetails(date);
-    await this.updateFocusSummary();
-    await this.updateWeeklySessionsChart();
-    this.updateDailyChart();
-  }
-
-  updateDailyDetails(date = this.currentDate) {
-    // This method is now replaced by updateSelectedDayDetails, updateFocusSummary, and updateDailyChart
-    // Keeping it for compatibility, but it just calls the new methods
-    this.updateSelectedDayDetails(date);
-    this.updateFocusSummary();
-    this.updateWeeklySessionsChart();
-    this.updateDailyChart();
-  }
-
-  updateWeeklyChart() {
-    // This method is now replaced by updateDailyChart
-    // Keeping it for compatibility
-    this.updateDailyChart();
-  }
-
-  formatTime(seconds) {
-    return TimeUtils.formatTime(seconds);
-  }
-
-  setupTimelineHours(timelineHours) {
-    timelineHours.innerHTML = '';
-
-    // Show hours from 6 AM to 10 PM
-    for (let hour = 6; hour <= 22; hour += 2) {
-      const hourElement = document.createElement('div');
-      hourElement.className = 'timeline-hour';
-      hourElement.textContent = `${hour}:00`;
-      timelineHours.appendChild(hourElement);
+    getSessionTypeDisplay(type) {
+        switch (type) {
+            case 'focus':
+                return 'Focus';
+            case 'break':
+                return 'Short Break';
+            case 'longBreak':
+                return 'Long Break';
+            case 'custom':
+                return 'Custom';
+            default:
+                return 'Focus';
+        }
     }
-  }
 
-  createTimelineSession(session, date, timelineTrack) {
-    const sessionElement = document.createElement('div');
-    sessionElement.className = `timeline-session ${session.session_type}`;
-    sessionElement.dataset.sessionId = session.id;
-    sessionElement.dataset.isHistorical = session.isHistorical || false;
+    async updateCalendar() {
+        const calendarGrid = document.getElementById('calendar-grid');
+        const currentMonthEl = document.getElementById('current-month');
 
-    // Parse start and end times
-    const [startHour, startMinute] = session.start_time.split(':').map(Number);
-    const [endHour, endMinute] = session.end_time.split(':').map(Number);
+        // Update month display
+        const monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        currentMonthEl.textContent = `${monthNames[this.displayMonth.getMonth()]} ${this.displayMonth.getFullYear()}`;
 
-    // Calculate position and width (6 AM = 0%, 10 PM = 100%)
-    const startTimeInMinutes = startHour * 60 + startMinute;
-    const endTimeInMinutes = endHour * 60 + endMinute;
-    const timelineStartMinutes = 6 * 60; // 6 AM
-    const timelineEndMinutes = 22 * 60; // 10 PM
-    const timelineRangeMinutes = timelineEndMinutes - timelineStartMinutes;
+        // Clear previous calendar
+        calendarGrid.innerHTML = '';
 
-    const leftPercent = Math.max(0, ((startTimeInMinutes - timelineStartMinutes) / timelineRangeMinutes) * 100);
-    const rightPercent = Math.min(100, ((endTimeInMinutes - timelineStartMinutes) / timelineRangeMinutes) * 100);
-    const widthPercent = rightPercent - leftPercent;
+        // Add day headers
+        const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        dayHeaders.forEach(day => {
+            const dayEl = document.createElement('div');
+            dayEl.className = 'calendar-day day-name';
+            dayEl.textContent = day;
+            calendarGrid.appendChild(dayEl);
+        });
 
-    sessionElement.style.left = `${leftPercent}%`;
-    sessionElement.style.width = `${widthPercent}%`;
+        // Get first day of month and number of days
+        const firstDay = new Date(this.displayMonth.getFullYear(), this.displayMonth.getMonth(), 1);
+        const lastDay = new Date(this.displayMonth.getFullYear(), this.displayMonth.getMonth() + 1, 0);
+        const daysInMonth = lastDay.getDate();
+        const startingDay = firstDay.getDay();
 
-    // Session content
-    const sessionType = this.getSessionTypeDisplay(session.session_type);
-    sessionElement.innerHTML = `
+        // Load session history for the month
+        let history = [];
+        try {
+            history = await invoke('get_stats_history');
+        } catch (error) {
+            console.error('Failed to load calendar data:', error);
+            // Continue with empty history
+        }
+
+        // Add empty cells for days before month starts
+        for (let i = 0; i < startingDay; i++) {
+            const emptyDay = document.createElement('div');
+            emptyDay.className = 'calendar-day';
+            calendarGrid.appendChild(emptyDay);
+        }
+
+        // Add days of the month
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dayEl = document.createElement('div');
+            dayEl.className = 'calendar-day';
+
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'calendar-day-number';
+            dayNumber.textContent = day;
+            dayEl.appendChild(dayNumber);
+
+            // Check if it's today
+            const dayDate = new Date(this.displayMonth.getFullYear(), this.displayMonth.getMonth(), day);
+            if (this.isSameDay(dayDate, this.currentDate)) {
+                dayEl.classList.add('today');
+            }
+
+            // Add session dots based on real data (if available)
+            const dots = document.createElement('div');
+            dots.className = 'calendar-day-dots';
+
+            if (history.length > 0) {
+                const dayData = history.find(h => h.date === dayDate.toDateString());
+                if (dayData && dayData.completed_pomodoros > 0) {
+                    dayEl.classList.add('has-sessions');
+                    // Create dots for completed pomodoros
+                    const numDots = Math.min(dayData.completed_pomodoros, 5); // Max 5 dots
+                    for (let i = 0; i < numDots; i++) {
+                        const dot = document.createElement('div');
+                        dot.className = 'calendar-dot';
+                        dots.appendChild(dot);
+                    }
+                }
+            }
+
+            dayEl.appendChild(dots);
+
+            // Add click event
+            dayEl.addEventListener('click', async () => {
+                await this.selectDay(dayDate);
+            });
+
+            calendarGrid.appendChild(dayEl);
+        }
+    }
+
+    isSameDay(date1, date2) {
+        return TimeUtils.isSameDay(date1, date2);
+    }
+
+    async selectDay(date) {
+        // Remove previous selection
+        document.querySelectorAll('.calendar-day').forEach(day => {
+            day.classList.remove('selected');
+        });
+
+        // Add selection to clicked day
+        event.currentTarget.classList.add('selected');
+
+        this.selectedDate = date;
+        await this.updateSelectedDayDetails(date);
+        await this.updateFocusSummary();
+        await this.updateWeeklySessionsChart();
+        this.updateDailyChart();
+    }
+
+    updateDailyDetails(date = this.currentDate) {
+        // This method is now replaced by updateSelectedDayDetails, updateFocusSummary, and updateDailyChart
+        // Keeping it for compatibility, but it just calls the new methods
+        this.updateSelectedDayDetails(date);
+        this.updateFocusSummary();
+        this.updateWeeklySessionsChart();
+        this.updateDailyChart();
+    }
+
+    updateWeeklyChart() {
+        // This method is now replaced by updateDailyChart
+        // Keeping it for compatibility
+        this.updateDailyChart();
+    }
+
+    formatTime(seconds) {
+        return TimeUtils.formatTime(seconds);
+    }
+
+    setupTimelineHours(timelineHours) {
+        timelineHours.innerHTML = '';
+
+        // Show hours from 6 AM to 10 PM
+        for (let hour = 6; hour <= 22; hour += 2) {
+            const hourElement = document.createElement('div');
+            hourElement.className = 'timeline-hour';
+            hourElement.textContent = `${hour}:00`;
+            timelineHours.appendChild(hourElement);
+        }
+    }
+
+    createTimelineSession(session, date, timelineTrack) {
+        const sessionElement = document.createElement('div');
+        sessionElement.className = `timeline-session ${session.session_type}`;
+        sessionElement.dataset.sessionId = session.id;
+        sessionElement.dataset.isHistorical = session.isHistorical || false;
+
+        // Parse start and end times
+        const [startHour, startMinute] = session.start_time.split(':').map(Number);
+        const [endHour, endMinute] = session.end_time.split(':').map(Number);
+
+        // Calculate position and width (6 AM = 0%, 10 PM = 100%)
+        const startTimeInMinutes = startHour * 60 + startMinute;
+        const endTimeInMinutes = endHour * 60 + endMinute;
+        const timelineStartMinutes = 6 * 60; // 6 AM
+        const timelineEndMinutes = 22 * 60; // 10 PM
+        const timelineRangeMinutes = timelineEndMinutes - timelineStartMinutes;
+
+        const leftPercent = Math.max(0, ((startTimeInMinutes - timelineStartMinutes) / timelineRangeMinutes) * 100);
+        const rightPercent = Math.min(100, ((endTimeInMinutes - timelineStartMinutes) / timelineRangeMinutes) * 100);
+        const widthPercent = rightPercent - leftPercent;
+
+        sessionElement.style.left = `${leftPercent}%`;
+        sessionElement.style.width = `${widthPercent}%`;
+
+        // Session content
+        const sessionType = this.getSessionTypeDisplay(session.session_type);
+        sessionElement.innerHTML = `
       <div class="session-handle left"></div>
       <div class="timeline-session-content">
         <span class="timeline-session-type">${sessionType}</span>
@@ -663,223 +663,223 @@ export class NavigationManager {
       <div class="session-handle right"></div>
     `;
 
-    // Add event listeners for non-historical sessions
-    if (!session.isHistorical) {
-      this.addTimelineSessionEventListeners(sessionElement, session, date);
-    } else {
-      // Remove handles for historical sessions
-      sessionElement.classList.add('historical');
-      sessionElement.querySelectorAll('.session-handle').forEach(handle => handle.remove());
+        // Add event listeners for non-historical sessions
+        if (!session.isHistorical) {
+            this.addTimelineSessionEventListeners(sessionElement, session, date);
+        } else {
+            // Remove handles for historical sessions
+            sessionElement.classList.add('historical');
+            sessionElement.querySelectorAll('.session-handle').forEach(handle => handle.remove());
+        }
+
+        timelineTrack.appendChild(sessionElement);
     }
 
-    timelineTrack.appendChild(sessionElement);
-  }
+    addTimelineSessionEventListeners(sessionElement, session, date) {
+        // Double-click to edit
+        sessionElement.addEventListener('dblclick', (e) => {
+            e.preventDefault();
+            if (window.sessionManager) {
+                window.sessionManager.openEditSessionModal(session, date);
+            }
+        });
 
-  addTimelineSessionEventListeners(sessionElement, session, date) {
-    // Double-click to edit
-    sessionElement.addEventListener('dblclick', (e) => {
-      e.preventDefault();
-      if (window.sessionManager) {
-        window.sessionManager.openEditSessionModal(session, date);
-      }
-    });
+        // Right-click context menu
+        sessionElement.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            this.showSessionContextMenu(e, session, date);
+        });
 
-    // Right-click context menu
-    sessionElement.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      this.showSessionContextMenu(e, session, date);
-    });
+        // Drag to move
+        sessionElement.addEventListener('mousedown', (e) => {
+            if (e.target.classList.contains('session-handle')) return;
+            this.startSessionDrag(e, sessionElement, session);
+        });
 
-    // Drag to move
-    sessionElement.addEventListener('mousedown', (e) => {
-      if (e.target.classList.contains('session-handle')) return;
-      this.startSessionDrag(e, sessionElement, session);
-    });
+        // Handle resize
+        const leftHandle = sessionElement.querySelector('.session-handle.left');
+        const rightHandle = sessionElement.querySelector('.session-handle.right');
 
-    // Handle resize
-    const leftHandle = sessionElement.querySelector('.session-handle.left');
-    const rightHandle = sessionElement.querySelector('.session-handle.right');
+        if (leftHandle) {
+            leftHandle.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                this.startSessionResize(e, sessionElement, session, 'left');
+            });
+        }
 
-    if (leftHandle) {
-      leftHandle.addEventListener('mousedown', (e) => {
-        e.stopPropagation();
-        this.startSessionResize(e, sessionElement, session, 'left');
-      });
+        if (rightHandle) {
+            rightHandle.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                this.startSessionResize(e, sessionElement, session, 'right');
+            });
+        }
     }
 
-    if (rightHandle) {
-      rightHandle.addEventListener('mousedown', (e) => {
-        e.stopPropagation();
-        this.startSessionResize(e, sessionElement, session, 'right');
-      });
-    }
-  }
-
-  initializeTimelineInteractions() {
-    // Close context menu on click outside
-    document.addEventListener('click', () => {
-      const contextMenu = document.querySelector('.session-context-menu');
-      if (contextMenu) {
-        contextMenu.remove();
-      }
-    });
-  }
-
-  showSessionContextMenu(e, session, date) {
-    // Remove existing context menu
-    const existingMenu = document.querySelector('.session-context-menu');
-    if (existingMenu) {
-      existingMenu.remove();
+    initializeTimelineInteractions() {
+        // Close context menu on click outside
+        document.addEventListener('click', () => {
+            const contextMenu = document.querySelector('.session-context-menu');
+            if (contextMenu) {
+                contextMenu.remove();
+            }
+        });
     }
 
-    const contextMenu = document.createElement('div');
-    contextMenu.className = 'session-context-menu';
-    contextMenu.style.left = `${e.pageX}px`;
-    contextMenu.style.top = `${e.pageY}px`;
-    contextMenu.style.display = 'block';
+    showSessionContextMenu(e, session, date) {
+        // Remove existing context menu
+        const existingMenu = document.querySelector('.session-context-menu');
+        if (existingMenu) {
+            existingMenu.remove();
+        }
 
-    contextMenu.innerHTML = `
+        const contextMenu = document.createElement('div');
+        contextMenu.className = 'session-context-menu';
+        contextMenu.style.left = `${e.pageX}px`;
+        contextMenu.style.top = `${e.pageY}px`;
+        contextMenu.style.display = 'block';
+
+        contextMenu.innerHTML = `
       <div class="context-menu-item edit-item">Edit Session</div>
       <div class="context-menu-item duplicate-item">Duplicate</div>
       <div class="context-menu-item danger delete-item">Delete</div>
     `;
 
-    // Add event listeners
-    contextMenu.querySelector('.edit-item').addEventListener('click', () => {
-      if (window.sessionManager) {
-        window.sessionManager.openEditSessionModal(session, date);
-      }
-      contextMenu.remove();
-    });
+        // Add event listeners
+        contextMenu.querySelector('.edit-item').addEventListener('click', () => {
+            if (window.sessionManager) {
+                window.sessionManager.openEditSessionModal(session, date);
+            }
+            contextMenu.remove();
+        });
 
-    contextMenu.querySelector('.delete-item').addEventListener('click', () => {
-      if (window.sessionManager && confirm('Are you sure you want to delete this session?')) {
-        window.sessionManager.currentEditingSession = session;
-        window.sessionManager.selectedDate = date;
-        window.sessionManager.deleteCurrentSession();
-      }
-      contextMenu.remove();
-    });
+        contextMenu.querySelector('.delete-item').addEventListener('click', () => {
+            if (window.sessionManager && confirm('Are you sure you want to delete this session?')) {
+                window.sessionManager.currentEditingSession = session;
+                window.sessionManager.selectedDate = date;
+                window.sessionManager.deleteCurrentSession();
+            }
+            contextMenu.remove();
+        });
 
-    contextMenu.querySelector('.duplicate-item').addEventListener('click', () => {
-      // TODO: Implement session duplication
-      console.log('Duplicate session:', session);
-      contextMenu.remove();
-    });
+        contextMenu.querySelector('.duplicate-item').addEventListener('click', () => {
+            // TODO: Implement session duplication
+            console.log('Duplicate session:', session);
+            contextMenu.remove();
+        });
 
-    document.body.appendChild(contextMenu);
-  }
-
-  startSessionDrag(e, sessionElement, session) {
-    e.preventDefault();
-    sessionElement.classList.add('dragging');
-
-    const timeline = document.getElementById('timeline-track');
-    const timelineRect = timeline.getBoundingClientRect();
-    const sessionRect = sessionElement.getBoundingClientRect();
-
-    const offsetX = e.clientX - sessionRect.left;
-
-    const handleMouseMove = (e) => {
-      const x = e.clientX - timelineRect.left - offsetX;
-      const percentage = Math.max(0, Math.min(100, (x / timelineRect.width) * 100));
-      sessionElement.style.left = `${percentage}%`;
-    };
-
-    const handleMouseUp = () => {
-      sessionElement.classList.remove('dragging');
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-
-      // Update session time based on new position
-      this.updateSessionTimeFromPosition(sessionElement, session);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }
-
-  startSessionResize(e, sessionElement, session, side) {
-    e.preventDefault();
-    sessionElement.classList.add('resizing');
-
-    const timeline = document.getElementById('timeline-track');
-    const timelineRect = timeline.getBoundingClientRect();
-
-    const handleMouseMove = (e) => {
-      const x = e.clientX - timelineRect.left;
-      const percentage = Math.max(0, Math.min(100, (x / timelineRect.width) * 100));
-
-      const currentLeft = parseFloat(sessionElement.style.left);
-      const currentWidth = parseFloat(sessionElement.style.width);
-      const currentRight = currentLeft + currentWidth;
-
-      if (side === 'left') {
-        const newLeft = Math.min(percentage, currentRight - 2); // Minimum 2% width
-        const newWidth = currentRight - newLeft;
-        sessionElement.style.left = `${newLeft}%`;
-        sessionElement.style.width = `${newWidth}%`;
-      } else {
-        const newWidth = Math.max(2, percentage - currentLeft); // Minimum 2% width
-        sessionElement.style.width = `${newWidth}%`;
-      }
-    };
-
-    const handleMouseUp = () => {
-      sessionElement.classList.remove('resizing');
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-
-      // Update session time based on new size and position
-      this.updateSessionTimeFromPosition(sessionElement, session);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }
-
-  updateSessionTimeFromPosition(sessionElement, session) {
-    const leftPercent = parseFloat(sessionElement.style.left);
-    const widthPercent = parseFloat(sessionElement.style.width);
-    const rightPercent = leftPercent + widthPercent;
-
-    // Convert percentages back to time (6 AM to 10 PM range)
-    const timelineStartMinutes = 6 * 60; // 6 AM
-    const timelineRangeMinutes = 16 * 60; // 16 hours (6 AM to 10 PM)
-
-    const startMinutes = timelineStartMinutes + (leftPercent / 100) * timelineRangeMinutes;
-    const endMinutes = timelineStartMinutes + (rightPercent / 100) * timelineRangeMinutes;
-
-    const startHour = Math.floor(startMinutes / 60);
-    const startMin = Math.round(startMinutes % 60);
-    const endHour = Math.floor(endMinutes / 60);
-    const endMin = Math.round(endMinutes % 60);
-
-    const newStartTime = `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`;
-    const newEndTime = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
-    const newDuration = Math.round((endMinutes - startMinutes));
-
-    // Update session data
-    session.start_time = newStartTime;
-    session.end_time = newEndTime;
-    session.duration = newDuration;
-
-    // Update the display
-    const timeDisplay = sessionElement.querySelector('.timeline-session-time');
-    if (timeDisplay) {
-      timeDisplay.textContent = `${newStartTime} - ${newEndTime}`;
+        document.body.appendChild(contextMenu);
     }
 
-    // Save changes if using SessionManager
-    if (window.sessionManager && !session.isHistorical) {
-      // Update the session in SessionManager
-      const dateString = this.currentDate.toDateString();
-      if (window.sessionManager.sessions[dateString]) {
-        const sessionIndex = window.sessionManager.sessions[dateString].findIndex(s => s.id === session.id);
-        if (sessionIndex !== -1) {
-          window.sessionManager.sessions[dateString][sessionIndex] = { ...session };
+    startSessionDrag(e, sessionElement, session) {
+        e.preventDefault();
+        sessionElement.classList.add('dragging');
+
+        const timeline = document.getElementById('timeline-track');
+        const timelineRect = timeline.getBoundingClientRect();
+        const sessionRect = sessionElement.getBoundingClientRect();
+
+        const offsetX = e.clientX - sessionRect.left;
+
+        const handleMouseMove = (e) => {
+            const x = e.clientX - timelineRect.left - offsetX;
+            const percentage = Math.max(0, Math.min(100, (x / timelineRect.width) * 100));
+            sessionElement.style.left = `${percentage}%`;
+        };
+
+        const handleMouseUp = () => {
+            sessionElement.classList.remove('dragging');
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+
+            // Update session time based on new position
+            this.updateSessionTimeFromPosition(sessionElement, session);
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    startSessionResize(e, sessionElement, session, side) {
+        e.preventDefault();
+        sessionElement.classList.add('resizing');
+
+        const timeline = document.getElementById('timeline-track');
+        const timelineRect = timeline.getBoundingClientRect();
+
+        const handleMouseMove = (e) => {
+            const x = e.clientX - timelineRect.left;
+            const percentage = Math.max(0, Math.min(100, (x / timelineRect.width) * 100));
+
+            const currentLeft = parseFloat(sessionElement.style.left);
+            const currentWidth = parseFloat(sessionElement.style.width);
+            const currentRight = currentLeft + currentWidth;
+
+            if (side === 'left') {
+                const newLeft = Math.min(percentage, currentRight - 2); // Minimum 2% width
+                const newWidth = currentRight - newLeft;
+                sessionElement.style.left = `${newLeft}%`;
+                sessionElement.style.width = `${newWidth}%`;
+            } else {
+                const newWidth = Math.max(2, percentage - currentLeft); // Minimum 2% width
+                sessionElement.style.width = `${newWidth}%`;
+            }
+        };
+
+        const handleMouseUp = () => {
+            sessionElement.classList.remove('resizing');
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+
+            // Update session time based on new size and position
+            this.updateSessionTimeFromPosition(sessionElement, session);
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    updateSessionTimeFromPosition(sessionElement, session) {
+        const leftPercent = parseFloat(sessionElement.style.left);
+        const widthPercent = parseFloat(sessionElement.style.width);
+        const rightPercent = leftPercent + widthPercent;
+
+        // Convert percentages back to time (6 AM to 10 PM range)
+        const timelineStartMinutes = 6 * 60; // 6 AM
+        const timelineRangeMinutes = 16 * 60; // 16 hours (6 AM to 10 PM)
+
+        const startMinutes = timelineStartMinutes + (leftPercent / 100) * timelineRangeMinutes;
+        const endMinutes = timelineStartMinutes + (rightPercent / 100) * timelineRangeMinutes;
+
+        const startHour = Math.floor(startMinutes / 60);
+        const startMin = Math.round(startMinutes % 60);
+        const endHour = Math.floor(endMinutes / 60);
+        const endMin = Math.round(endMinutes % 60);
+
+        const newStartTime = `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`;
+        const newEndTime = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
+        const newDuration = Math.round((endMinutes - startMinutes));
+
+        // Update session data
+        session.start_time = newStartTime;
+        session.end_time = newEndTime;
+        session.duration = newDuration;
+
+        // Update the display
+        const timeDisplay = sessionElement.querySelector('.timeline-session-time');
+        if (timeDisplay) {
+            timeDisplay.textContent = `${newStartTime} - ${newEndTime}`;
         }
-      }
+
+        // Save changes if using SessionManager
+        if (window.sessionManager && !session.isHistorical) {
+            // Update the session in SessionManager
+            const dateString = this.currentDate.toDateString();
+            if (window.sessionManager.sessions[dateString]) {
+                const sessionIndex = window.sessionManager.sessions[dateString].findIndex(s => s.id === session.id);
+                if (sessionIndex !== -1) {
+                    window.sessionManager.sessions[dateString][sessionIndex] = { ...session };
+                }
+            }
+        }
     }
-  }
 }
