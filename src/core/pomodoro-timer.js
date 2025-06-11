@@ -671,6 +671,9 @@ export class PomodoroTimer {
 
         // Update progress dots
         this.updateProgressDots();
+
+        // Update tray icon with timer information
+        this.updateTrayIcon();
     }
 
     // Update status icon based on current mode
@@ -1186,12 +1189,22 @@ export class PomodoroTimer {
             const seconds = this.timeRemaining % 60;
             const timerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
+            // Define icons for different modes
+            const modeIcons = {
+                focus: '🧠',
+                break: '☕',
+                longBreak: '🌙'
+            };
+
+            const modeIcon = modeIcons[this.currentMode] || '🧠';
+
             await invoke('update_tray_icon', {
                 timerText: timerText,
                 isRunning: this.isRunning,
                 sessionMode: this.currentMode,
                 currentSession: this.currentSession,
-                totalSessions: this.totalSessions
+                totalSessions: this.totalSessions,
+                modeIcon: modeIcon
             });
         } catch (error) {
             console.warn('Failed to update tray icon:', error);

@@ -439,20 +439,24 @@ async fn update_tray_icon(
     session_mode: String,
     current_session: u32,
     total_sessions: u32,
+    mode_icon: Option<String>,
 ) -> Result<(), String> {
     // Aggiorna il titolo dell'icona della tray con il timer
     if let Some(tray) = app.tray_by_id("main") {
-        let mode_icon = match session_mode.as_str() {
-            "focus" => "🍅",
-            "break" => "😌",
-            "longBreak" => "🎉",
-            _ => "⏱️",
-        };
+        // Use the provided mode_icon or fallback to default icons
+        let icon = mode_icon.unwrap_or_else(|| {
+            match session_mode.as_str() {
+                "focus" => "🧠".to_string(),
+                "break" => "☕".to_string(),
+                "longBreak" => "🌙".to_string(),
+                _ => "⏱️".to_string(),
+            }
+        });
 
         let status = if is_running { "Running" } else { "Paused" };
 
         // Su macOS, mostra il timer nel titolo dell'icona della menu bar
-        let title = format!("{} {}", mode_icon, timer_text);
+        let title = format!("{} {}", icon, timer_text);
         tray.set_title(Some(title))
             .map_err(|e| format!("Failed to set title: {}", e))?;
 
