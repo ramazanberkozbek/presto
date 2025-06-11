@@ -18,21 +18,118 @@ export class NotificationUtils {
         // Create new notification
         const notification = document.createElement('div');
         notification.className = `notification-ping ${type || 'info'}`;
+        
+        // Miglioramento per mobile: aggiungi attributi di accessibilità
+        notification.setAttribute('role', 'alert');
+        notification.setAttribute('aria-live', 'polite');
         notification.textContent = message;
 
         container.appendChild(notification);
 
-        // Auto-dismiss after 3 seconds
-        setTimeout(() => {
+        // Vibrazione su mobile per notifiche importanti
+        this.triggerMobileHaptics(type);
+
+        // Auto-dismiss con durata dinamica basata sulla lunghezza del messaggio
+        const baseDuration = 3000;
+        const extraTime = Math.max(0, (message.length - 30) * 50); // 50ms per carattere extra
+        const duration = Math.min(baseDuration + extraTime, 6000); // Max 6 secondi
+
+        const dismissTimer = setTimeout(() => {
             if (notification && notification.parentNode) {
                 this.dismissNotification(notification);
             }
-        }, 3000);
+        }, duration);
 
-        // Click to dismiss
-        notification.addEventListener('click', () => {
-            this.dismissNotification(notification);
+        // Migliorata gestione touch per mobile
+        this.addMobileTouchHandlers(notification, dismissTimer);
+    }
+
+    static addMobileTouchHandlers(notification, dismissTimer) {
+        let startY = 0;
+        let currentY = 0;
+        let isDragging = false;
+
+        // Touch start
+        notification.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+            isDragging = false;
+            notification.style.transition = 'none';
+        }, { passive: true });
+
+        // Touch move (swipe to dismiss)
+        notification.addEventListener('touchmove', (e) => {
+            if (!startY) return;
+            
+            currentY = e.touches[0].clientY;
+            const deltaY = startY - currentY;
+            
+            if (Math.abs(deltaY) > 10) {
+                isDragging = true;
+                // Solo swipe verso l'alto per chiudere
+                if (deltaY > 0) {
+                    const opacity = Math.max(0.3, 1 - (deltaY / 100));
+                    const translateY = Math.min(deltaY, 50);
+                    notification.style.transform = `translateY(-${translateY}px)`;
+                    notification.style.opacity = opacity;
+                }
+            }
+        }, { passive: true });
+
+        // Touch end
+        notification.addEventListener('touchend', (e) => {
+            if (isDragging) {
+                const deltaY = startY - currentY;
+                notification.style.transition = 'all 0.3s ease';
+                
+                if (deltaY > 50) {
+                    // Swipe sufficiente per chiudere
+                    clearTimeout(dismissTimer);
+                    this.dismissNotification(notification);
+                } else {
+                    // Ripristina posizione
+                    notification.style.transform = 'translateY(0)';
+                    notification.style.opacity = '1';
+                }
+            } else {
+                // Tap normale per chiudere
+                clearTimeout(dismissTimer);
+                this.dismissNotification(notification);
+            }
+            
+            startY = 0;
+            isDragging = false;
+        }, { passive: true });
+
+        // Fallback click per desktop
+        notification.addEventListener('click', (e) => {
+            if (!('ontouchstart' in window)) {
+                clearTimeout(dismissTimer);
+                this.dismissNotification(notification);
+            }
         });
+    }
+
+    static triggerMobileHaptics(type) {
+        // Vibrazione solo su mobile e solo per certi tipi di notifica
+        if ('vibrate' in navigator && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+            let pattern = [100]; // Vibrazione base
+            
+            switch (type) {
+                case 'success':
+                    pattern = [100, 50, 100]; // Doppia vibrazione per successo
+                    break;
+                case 'warning':
+                    pattern = [200]; // Vibrazione più lunga per warning
+                    break;
+                case 'error':
+                    pattern = [100, 100, 100, 100, 100]; // Pattern urgente per errori
+                    break;
+                default:
+                    pattern = [50]; // Vibrazione sottile per info
+            }
+            
+            navigator.vibrate(pattern);
+        }
     }
 
     static dismissNotification(notification) {

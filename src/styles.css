@@ -694,14 +694,84 @@ kbd {
 /* Mobile responsive for notifications */
 @media (max-width: 768px) {
   .notification-container {
-    top: 80px;
-    right: 10px;
-    left: 10px;
+    top: 20px;
+    right: 16px;
+    left: 16px;
+    /* Assicuriamoci che sia sopra la navbar se c'è */
+    z-index: 1001;
   }
 
   .notification-ping {
     max-width: none;
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.75rem 0;
+    padding: 1.25rem 1.5rem;
+    border-radius: 16px;
+    font-size: 1rem;
+    line-height: 1.4;
+    text-align: left;
+    /* Miglior contrasto e leggibilità */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border-width: 1px;
+    /* Animation più fluida su mobile */
+    animation: slideInMobile 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    /* Miglior touch feedback */
+    cursor: pointer;
+    transform: translateZ(0); /* Forza hardware acceleration */
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .notification-ping:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+
+  .notification-ping.dismissing {
+    animation: slideOutMobile 0.3s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+  }
+}
+
+/* Animazioni specifiche per mobile */
+@keyframes slideInMobile {
+  from {
+    transform: translateY(-100%) scale(0.95);
+    opacity: 0;
+  }
+  
+  60% {
+    transform: translateY(5%) scale(1.02);
+    opacity: 0.9;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutMobile {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateY(-120%) scale(0.95);
+    opacity: 0;
+  }
+}
+
+/* Miglioramenti per schermi molto piccoli */
+@media (max-width: 480px) {
+  .notification-container {
+    top: 16px;
+    right: 12px;
+    left: 12px;
+  }
+
+  .notification-ping {
+    padding: 1rem 1.25rem;
+    font-size: 0.95rem;
+    border-radius: 14px;
   }
 }
 
