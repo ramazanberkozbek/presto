@@ -72,6 +72,16 @@ export class PomodoroTimer {
     }
 
     async init() {
+        // Verify all DOM elements are found
+        if (!this.undoIcon) {
+            console.error('Undo icon element not found, re-searching...');
+            this.undoIcon = document.getElementById('undo-icon');
+        }
+        if (!this.stopIcon) {
+            console.error('Stop icon element not found, re-searching...');
+            this.stopIcon = document.getElementById('stop-icon');
+        }
+
         // Generate initial progress dots
         this.generateProgressDots();
         this.updateDisplay();
@@ -457,10 +467,21 @@ export class PomodoroTimer {
             this.activityTimeout = null;
         }
 
-        // Skip to next mode without counting as completed
+        // Skip to next mode
         if (this.currentMode === 'focus') {
-            // Skip focus session - go to break without incrementing completed pomodoros
-            if ((this.completedPomodoros + 1) % 4 === 0) {
+            // Skip focus session - count as completed and go to break
+            this.completedPomodoros++;
+            this.updateProgressDots();
+
+            // Calculate elapsed time for skipped focus session (partial or full duration)
+            const actualElapsedTime = this.currentSessionElapsedTime || (this.durations.focus - this.timeRemaining);
+            this.totalFocusTime += actualElapsedTime;
+
+            // Store the actual elapsed time for undo functionality
+            this.lastCompletedSessionTime = actualElapsedTime;
+
+            // Determine next mode
+            if (this.completedPomodoros % 4 === 0) {
                 this.currentMode = 'longBreak';
             } else {
                 this.currentMode = 'break';
@@ -695,6 +716,14 @@ export class PomodoroTimer {
 
     // Update stop/undo button icon based on current mode
     updateStopUndoButton() {
+        // Check if DOM elements exist
+        if (!this.stopIcon || !this.undoIcon) {
+            console.error('Stop or undo icon elements not found!');
+            console.log('stopIcon:', this.stopIcon);
+            console.log('undoIcon:', this.undoIcon);
+            return;
+        }
+
         if (this.currentMode === 'focus') {
             // Show X icon during focus sessions for deletion
             this.stopIcon.style.display = 'block';
