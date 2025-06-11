@@ -2200,7 +2200,6 @@ class PomodoroTimer {
 
     this.timeRemaining = this.durations[this.currentMode];
     this.updateDisplay();
-    this.updateProgress();
     this.updateButtons();
 
     // Show skip notification
@@ -2258,7 +2257,6 @@ class PomodoroTimer {
 
     this.timeRemaining = this.durations[this.currentMode];
     this.updateDisplay();
-    this.updateProgress();
     this.updateButtons();
     await this.saveSessionData();
     await this.updateWeeklyStats(); // Update weekly stats after session completion
@@ -2724,7 +2722,6 @@ class PomodoroTimer {
         this.totalFocusTime = data.total_focus_time || 0;
         this.currentSession = data.current_session || 1;
         this.updateProgressDots();
-        this.updateProgress();
       }
     } catch (error) {
       console.error('Failed to load session data from Tauri, using localStorage:', error);
@@ -2736,7 +2733,6 @@ class PomodoroTimer {
           this.totalFocusTime = data.totalFocusTime || 0;
           this.currentSession = data.currentSession || 1;
           this.updateProgressDots();
-          this.updateProgress();
         }
       }
     }
@@ -2941,7 +2937,6 @@ class PomodoroTimer {
 
     // Update all displays
     this.updateDisplay();
-    this.updateProgress();
     this.updateButtons();
     this.renderTasks();
     this.updateWeeklyStats();
