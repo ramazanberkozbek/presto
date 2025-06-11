@@ -173,7 +173,7 @@ export class SettingsManager {
                     break;
                 case 'skip':
                     if (window.pomodoroTimer) {
-                        window.pomodoroTimer.completeSession();
+                        window.pomodoroTimer.skipSession();
                     }
                     break;
             }

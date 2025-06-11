@@ -146,7 +146,7 @@ export class PomodoroTimer {
                     }
                 } else if (this.matchesShortcut(e, this.customShortcuts.skip)) {
                     e.preventDefault();
-                    this.completeSession();
+                    this.skipSession();
                 }
                 // Keep existing hardcoded shortcuts as fallback
                 else {
