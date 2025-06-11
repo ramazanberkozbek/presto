@@ -75,7 +75,7 @@ export class SettingsManager {
         // Check current notification permission and adjust desktop notifications setting
         const hasNotificationPermission = NotificationUtils.getNotificationPermission() === 'granted';
         const desktopNotificationsEnabled = this.settings.notifications.desktop_notifications && hasNotificationPermission;
-        
+
         document.getElementById('desktop-notifications').checked = desktopNotificationsEnabled;
         document.getElementById('sound-notifications').checked = this.settings.notifications.sound_notifications;
         document.getElementById('auto-start-breaks').checked = this.settings.notifications.auto_start_breaks;
@@ -366,7 +366,7 @@ export class SettingsManager {
                     if (permission !== 'granted') {
                         // If permission denied, uncheck the box
                         e.target.checked = false;
-                        const message = permission === 'unsupported' 
+                        const message = permission === 'unsupported'
                             ? 'Desktop notifications are not supported in this browser.'
                             : 'Notification permission denied. Please enable notifications in your browser settings.';
                         NotificationUtils.showNotificationPing(message, 'error');

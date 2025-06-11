@@ -93,7 +93,7 @@ export class NotificationUtils {
         if (!('Notification' in window)) {
             return 'unsupported';
         }
-        
+
         try {
             const permission = await Notification.requestPermission();
             return permission;

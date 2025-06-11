@@ -30,43 +30,182 @@ window.clearShortcut = function (shortcutType) {
   }
 };
 
-window.confirmTotalReset = function () {
+window.confirmTotalReset = async function () {
   console.log("confirmTotalReset called"); // Debug log
 
-  const confirmed = confirm(
-    "⚠️ WARNING: This will permanently delete ALL your data!\n\n" +
-    "This includes:\n" +
-    "• All Pomodoro sessions and statistics\n" +
-    "• All tasks and history\n" +
-    "• All custom settings\n\n" +
-    "This action CANNOT be undone!\n\n" +
-    "Are you absolutely sure you want to continue?"
-  );
-
-  if (confirmed) {
-    console.log("First confirmation received"); // Debug log
-    const doubleConfirm = confirm(
-      "🚨 FINAL WARNING 🚨\n\n" +
-      "You are about to delete ALL your Pomodoro data permanently.\n\n" +
-      "Type your confirmation by clicking OK to proceed, or Cancel to abort."
+  try {
+    // Create custom confirmation dialogs
+    const confirmed = await showCustomConfirm(
+      "⚠️ ATTENZIONE",
+      "Questa azione eliminerà PERMANENTEMENTE tutti i tuoi dati!\n\n" +
+      "Questo include:\n" +
+      "• Tutte le sessioni Pomodoro e statistiche\n" +
+      "• Tutti i task e la cronologia\n" +
+      "• Tutte le impostazioni personalizzate\n\n" +
+      "Questa azione NON PUÒ essere annullata!\n\n" +
+      "Sei assolutamente sicuro di voler continuare?",
+      "warning"
     );
 
-    if (doubleConfirm) {
-      console.log("Second confirmation received, calling performTotalReset"); // Debug log
-      window.performTotalReset();
+    console.log("First confirmation result:", confirmed);
+
+    if (confirmed) {
+      const doubleConfirm = await showCustomConfirm(
+        "🚨 ULTIMO AVVISO 🚨",
+        "Stai per eliminare TUTTI i dati del Pomodoro in modo permanente.\n\n" +
+        "Clicca CONFERMA per procedere, o ANNULLA per interrompere.",
+        "error"
+      );
+
+      console.log("Second confirmation result:", doubleConfirm);
+
+      if (doubleConfirm) {
+        console.log("Both confirmations received, calling performTotalReset");
+        await window.performTotalReset();
+      } else {
+        console.log("Second confirmation cancelled by user");
+      }
+    } else {
+      console.log("First confirmation cancelled by user");
+    }
+
+  } catch (error) {
+    console.error("Error in confirmTotalReset:", error);
+    
+    // Fallback to browser confirm
+    const manualConfirm = confirm("Si è verificato un errore nei dialog. Vuoi resettare tutti i dati comunque?");
+    if (manualConfirm) {
+      await window.performTotalReset();
     }
   }
 };
+
+// Custom confirmation dialog function
+function showCustomConfirm(title, message, type = 'warning') {
+  return new Promise((resolve) => {
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      backdrop-filter: blur(5px);
+    `;
+
+    // Create modal content
+    const modal = document.createElement('div');
+    modal.className = 'custom-confirm-modal';
+    modal.style.cssText = `
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      font-family: system-ui, -apple-system, sans-serif;
+    `;
+
+    // Determine colors based on type
+    const colors = {
+      warning: { bg: '#fff3cd', border: '#ffeaa7', text: '#856404' },
+      error: { bg: '#f8d7da', border: '#f5c6cb', text: '#721c24' }
+    };
+    const color = colors[type] || colors.warning;
+
+    modal.innerHTML = `
+      <div style="background: ${color.bg}; border: 2px solid ${color.border}; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+        <h3 style="margin: 0 0 12px 0; color: ${color.text}; font-size: 20px;">${title}</h3>
+        <p style="margin: 0; color: ${color.text}; line-height: 1.5; white-space: pre-line;">${message}</p>
+      </div>
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <button id="confirm-btn" style="
+          background: #dc3545;
+          color: white;
+          border: none;
+          padding: 12px 24px;
+          border-radius: 6px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s;
+        ">CONFERMA</button>
+        <button id="cancel-btn" style="
+          background: #6c757d;
+          color: white;
+          border: none;
+          padding: 12px 24px;
+          border-radius: 6px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s;
+        ">ANNULLA</button>
+      </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // Add hover effects
+    const confirmBtn = modal.querySelector('#confirm-btn');
+    const cancelBtn = modal.querySelector('#cancel-btn');
+    
+    confirmBtn.addEventListener('mouseover', () => confirmBtn.style.background = '#bb2d3b');
+    confirmBtn.addEventListener('mouseout', () => confirmBtn.style.background = '#dc3545');
+    cancelBtn.addEventListener('mouseover', () => cancelBtn.style.background = '#5c636a');
+    cancelBtn.addEventListener('mouseout', () => cancelBtn.style.background = '#6c757d');
+
+    // Handle button clicks
+    confirmBtn.addEventListener('click', () => {
+      document.body.removeChild(overlay);
+      resolve(true);
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      document.body.removeChild(overlay);
+      resolve(false);
+    });
+
+    // Handle escape key
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        document.body.removeChild(overlay);
+        document.removeEventListener('keydown', handleEscape);
+        resolve(false);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+
+    // Focus on cancel button by default
+    setTimeout(() => cancelBtn.focus(), 100);
+  });
+}
 
 window.performTotalReset = async function () {
   console.log("performTotalReset started"); // Debug log
 
   try {
+    // Check if Tauri is available
+    if (!window.__TAURI__ || !window.__TAURI__.core) {
+      throw new Error("Tauri is not available - app might not be running in Tauri context");
+    }
+
     // Show loading state
     const resetButton = document.querySelector('.btn-danger');
-    const originalText = resetButton.textContent;
-    resetButton.textContent = '🔄 Resetting...';
-    resetButton.disabled = true;
+    const originalText = resetButton ? resetButton.textContent : '🗑️ Reset All Data';
+    if (resetButton) {
+      resetButton.textContent = '🔄 Resetting...';
+      resetButton.disabled = true;
+    }
 
     console.log("Calling reset_all_data..."); // Debug log
 
@@ -87,37 +226,53 @@ window.performTotalReset = async function () {
 
     // Reset the timer in memory
     if (window.pomodoroTimer) {
-      window.pomodoroTimer.resetToInitialState();
-      console.log("Timer reset to initial state"); // Debug log
+      if (typeof window.pomodoroTimer.resetToInitialState === 'function') {
+        window.pomodoroTimer.resetToInitialState();
+        console.log("Timer reset to initial state"); // Debug log
+      } else {
+        console.warn("Timer resetToInitialState method not found");
+      }
     }
 
     // Reset settings to defaults
     if (window.settingsManager) {
-      window.settingsManager.resetToDefaultsForce();
-      console.log("Settings reset to defaults"); // Debug log
+      if (typeof window.settingsManager.resetToDefaultsForce === 'function') {
+        window.settingsManager.resetToDefaultsForce();
+        console.log("Settings reset to defaults"); // Debug log
+      } else {
+        console.warn("SettingsManager resetToDefaultsForce method not found");
+      }
     }
 
     // Reset navigation to timer view
     if (window.navigationManager) {
-      window.navigationManager.switchView('timer');
-      console.log("Switched to timer view"); // Debug log
+      if (typeof window.navigationManager.switchView === 'function') {
+        window.navigationManager.switchView('timer');
+        console.log("Switched to timer view"); // Debug log
+      } else {
+        console.warn("NavigationManager switchView method not found");
+      }
     }
 
+    // Show success message before reload
+    console.log("Reset completed successfully, reloading..."); // Debug log
+    
     // Refresh the UI to show reset state
-    console.log("Refreshing UI..."); // Debug log
     location.reload();
-
-    // Show success message (will be shown after reload)
-    // alert('✅ All data has been successfully reset!\n\nThe application has been restored to its initial state.');
-
-    // Restore button state
-    resetButton.textContent = originalText;
-    resetButton.disabled = false;
 
   } catch (error) {
     console.error('Failed to reset data:', error);
     console.error('Error stack:', error.stack);
-    alert('❌ Failed to reset data. Please try again or contact support.\nError: ' + error.message);
+    
+    // Show detailed error information
+    let errorMessage = 'Failed to reset data. ';
+    if (error.message.includes('Tauri')) {
+      errorMessage += 'Application context error. Please restart the app and try again.';
+    } else {
+      errorMessage += 'Error: ' + error.message;
+    }
+    
+    alert('❌ ' + errorMessage);
 
     // Restore button state
     const resetButton = document.querySelector('.btn-danger');
@@ -228,12 +383,12 @@ function setupGlobalEventListeners() {
 // Application lifecycle management
 window.addEventListener('beforeunload', () => {
   console.log('🔄 Application shutting down...');
-  
+
   // Save any pending data
   if (timer) {
     timer.saveSessionData && timer.saveSessionData();
   }
-  
+
   if (settingsManager) {
     settingsManager.saveSettings && settingsManager.saveSettings();
   }
