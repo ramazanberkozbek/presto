@@ -139,7 +139,7 @@ export class TeamManager {
                     const elapsed = Math.floor((Date.now() - member.currentSessionStart.getTime()) / 1000);
                     const minutes = Math.floor(elapsed / 60);
                     const seconds = elapsed % 60;
-                    
+
                     if (member.status === 'focus') {
                         // Focus sessions are 25 minutes, count down
                         const remaining = (25 * 60) - elapsed;
@@ -182,7 +182,7 @@ export class TeamManager {
                         }
                     }
                 }
-                
+
                 // Update last seen
                 member.lastSeen = new Date();
             }
@@ -297,7 +297,7 @@ export class TeamManager {
 
     updateTeamStats() {
         const stats = this.calculateTeamStats();
-        
+
         document.getElementById('team-focusing').textContent = stats.focusing;
         document.getElementById('team-on-break').textContent = stats.onBreak;
         document.getElementById('team-privacy').textContent = stats.privacy;

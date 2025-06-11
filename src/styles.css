@@ -2550,7 +2550,8 @@ body {
   /* Main Content Layout Adjustment for mobile */
   body {
     padding-left: 0;
-    padding-bottom: 70px; /* Space for bottom sidebar */
+    padding-bottom: 70px;
+    /* Space for bottom sidebar */
   }
 }
 
