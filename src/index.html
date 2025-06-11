@@ -78,9 +78,8 @@
       <!-- Control Buttons -->
       <div class="controls">
         <button id="stop-btn" class="control-btn">
-          <svg id="stop-icon" viewBox="0 0 24 24" fill="currentColor">
-            <path fill-rule="evenodd" d="M4.5 7.5a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-9Z"
-              clip-rule="evenodd" />
+          <svg id="stop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
           <svg id="undo-icon" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
             <path fill-rule="evenodd"
@@ -192,9 +191,24 @@
 
             <!-- Session Details for Selected Day -->
             <div class="selected-day-details" id="selected-day-details">
-              <h4 id="selected-day-title">Today's Sessions</h4>
-              <div class="sessions-list" id="sessions-list">
-                <!-- Will show completed sessions for selected day -->
+              <div class="sessions-header">
+                <h4 id="selected-day-title">Today's Sessions</h4>
+                <button class="add-session-btn" id="add-session-btn" title="Add Session">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
+                  </svg>
+                </button>
+              </div>
+              <!-- Timeline Container -->
+              <div class="sessions-timeline" id="sessions-timeline">
+                <!-- Timeline Hours -->
+                <div class="timeline-hours" id="timeline-hours">
+                  <!-- Will be filled by JavaScript with hour markers -->
+                </div>
+                <!-- Timeline Track -->
+                <div class="timeline-track" id="timeline-track">
+                  <!-- Will show session blocks positioned by time -->
+                </div>
               </div>
             </div>
           </div>
@@ -222,7 +236,7 @@
         </div>
 
         <div class="shortcut-item">
-          <label for="reset-shortcut">Reset Timer:</label>
+          <label for="reset-shortcut">Delete Session / Undo:</label>
           <div class="shortcut-input-container">
             <input type="text" id="reset-shortcut" class="shortcut-input" readonly placeholder="Click to set shortcut">
             <button class="shortcut-clear" onclick="clearShortcut('reset')">×</button>
@@ -230,7 +244,7 @@
         </div>
 
         <div class="shortcut-item">
-          <label for="skip-shortcut">Skip Session:</label>
+          <label for="skip-shortcut">Save Session:</label>
           <div class="shortcut-input-container">
             <input type="text" id="skip-shortcut" class="shortcut-input" readonly placeholder="Click to set shortcut">
             <button class="shortcut-clear" onclick="clearShortcut('skip')">×</button>
@@ -350,6 +364,49 @@
       </div>
     </div>
   </main>
+
+  <!-- Session Edit Modal -->
+  <div class="modal-overlay" id="session-modal-overlay">
+    <div class="session-modal" id="session-modal">
+      <div class="modal-header">
+        <h3 id="session-modal-title">Add Session</h3>
+        <button class="modal-close-btn" id="close-session-modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <form class="session-form" id="session-form">
+        <div class="form-group">
+          <label for="session-type">Session Type</label>
+          <select id="session-type" name="type">
+            <option value="focus">Focus Session (25m)</option>
+            <option value="break">Short Break (5m)</option>
+            <option value="longBreak">Long Break (20m)</option>
+            <option value="custom">Custom Duration</option>
+          </select>
+        </div>
+        <div class="form-group" id="custom-duration-group" style="display: none;">
+          <label for="session-duration">Duration (minutes)</label>
+          <input type="number" id="session-duration" name="duration" min="1" max="120" value="25">
+        </div>
+        <div class="form-group">
+          <label for="session-start-time">Start Time</label>
+          <input type="time" id="session-start-time" name="startTime" required>
+        </div>
+        <div class="form-group">
+          <label for="session-notes">Notes (optional)</label>
+          <input type="text" id="session-notes" name="notes" placeholder="What did you work on?">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="cancel-session-btn">Cancel</button>
+          <button type="button" class="btn-danger" id="delete-session-btn" style="display: none;">Delete</button>
+          <button type="submit" class="btn-primary" id="save-session-btn">Save Session</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 </body>
 
 </html>

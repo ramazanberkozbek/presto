@@ -297,7 +297,7 @@ class NavigationManager {
       if (avgSessionTime > 0 && daysConsidered > 0) {
         const avgLine = document.createElement('div');
         avgLine.className = 'week-average-line';
-        
+
         // Calculate position of average line
         const avgLineHeight = (avgSessionTime / scalingMax) * maxHeight;
         avgLine.style.bottom = `${avgLineHeight}px`;
@@ -308,7 +308,7 @@ class NavigationManager {
         avgLine.style.backgroundColor = '#3498db';
         avgLine.style.zIndex = '10';
         avgLine.style.opacity = '0.8';
-        
+
         // Add label for average
         const avgLabel = document.createElement('div');
         avgLabel.className = 'week-average-label';
@@ -323,9 +323,9 @@ class NavigationManager {
         avgLabel.style.padding = '1px 4px';
         avgLabel.style.borderRadius = '3px';
         avgLabel.style.whiteSpace = 'nowrap';
-        
+
         avgLine.appendChild(avgLabel);
-        
+
         // Set relative positioning on chart to contain the absolute line
         weeklyChart.style.position = 'relative';
         weeklyChart.appendChild(avgLine);
@@ -361,7 +361,7 @@ class NavigationManager {
         const minutes = Math.floor(sessionsMinutes % 60);
         const timeText = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
         const avgPerSession = sessions > 0 ? Math.round(sessionsMinutes / sessions) : 0;
-        const tooltipText = sessions > 0 
+        const tooltipText = sessions > 0
           ? `${day}: ${timeText} (${sessions} sessions, ${avgPerSession}m avg/session)`
           : `${day}: ${timeText} (${sessions} sessions)`;
         dayBar.title = tooltipText;
@@ -383,7 +383,8 @@ class NavigationManager {
 
   async updateSelectedDayDetails(date = this.currentDate) {
     const selectedDayTitle = document.getElementById('selected-day-title');
-    const sessionsList = document.getElementById('sessions-list');
+    const timelineTrack = document.getElementById('timeline-track');
+    const timelineHours = document.getElementById('timeline-hours');
 
     // Format date for display
     const dateStr = date.toLocaleDateString('en-US', {
@@ -396,55 +397,96 @@ class NavigationManager {
     const isToday = this.isSameDay(date, new Date());
     selectedDayTitle.textContent = isToday ? "Today's Sessions" : `${dateStr} Sessions`;
 
+    // Setup timeline hours (6 AM to 10 PM)
+    this.setupTimelineHours(timelineHours);
+
     // Clear previous sessions
-    sessionsList.innerHTML = '';
+    timelineTrack.innerHTML = '';
 
     try {
+      // Get sessions from SessionManager first (for manually added sessions)
+      let manualSessions = [];
+      if (window.sessionManager) {
+        manualSessions = window.sessionManager.getSessionsForDate(date);
+      }
+
+      // Get historical data for completed pomodoros
       const history = await invoke('get_stats_history');
       const selectedDateStr = date.toDateString();
       const dayData = history.find(h => h.date === selectedDateStr);
 
-      if (!dayData || dayData.completed_pomodoros === 0) {
+      // Combine manual sessions with historical data
+      const allSessions = [...manualSessions];
+
+      // Add historical pomodoros if no manual sessions exist for focus sessions
+      if (dayData && dayData.completed_pomodoros > 0) {
+        const focusSessionsCount = manualSessions.filter(s => s.session_type === 'focus' || s.session_type === 'custom').length;
+
+        // If we have fewer manual focus sessions than completed pomodoros, add the difference
+        for (let i = focusSessionsCount; i < dayData.completed_pomodoros; i++) {
+          const sessionStartTime = new Date(date);
+          sessionStartTime.setHours(9 + Math.floor(i * 0.5), (i * 30) % 60);
+
+          allSessions.push({
+            id: `historical-${i}`,
+            session_type: 'focus',
+            duration: 25,
+            start_time: sessionStartTime.toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            }),
+            end_time: new Date(sessionStartTime.getTime() + 25 * 60000).toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            }),
+            notes: null,
+            isHistorical: true
+          });
+        }
+      }
+
+      // Sort sessions by start time
+      allSessions.sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+      if (allSessions.length === 0) {
         const noSessions = document.createElement('div');
-        noSessions.className = 'session-item';
-        noSessions.innerHTML = '<span>No sessions completed</span>';
-        sessionsList.appendChild(noSessions);
+        noSessions.className = 'timeline-empty';
+        noSessions.textContent = 'No sessions completed';
+        timelineTrack.appendChild(noSessions);
         return;
       }
 
-      // Create session items based on completed pomodoros
-      for (let i = 0; i < dayData.completed_pomodoros; i++) {
-        const sessionItem = document.createElement('div');
-        sessionItem.className = 'session-item';
+      // Create timeline session blocks
+      allSessions.forEach(session => {
+        this.createTimelineSession(session, date, timelineTrack);
+      });
 
-        // Estimate session times (this is an approximation)
-        const sessionStartTime = new Date(date);
-        sessionStartTime.setHours(9 + Math.floor(i * 0.5), (i * 30) % 60); // Spread throughout day
+      // Initialize timeline interactions
+      this.initializeTimelineInteractions();
 
-        const sessionType = 'Focus';
-        const duration = '25m';
-        const startTime = sessionStartTime.toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        });
-
-        sessionItem.innerHTML = `
-          <span class="session-type">${sessionType}</span>
-          <div>
-            <span>${duration}</span>
-            <span class="session-time">${startTime}</span>
-          </div>
-        `;
-
-        sessionsList.appendChild(sessionItem);
-      }
     } catch (error) {
       console.error('Failed to load session details:', error);
       const errorItem = document.createElement('div');
-      errorItem.className = 'session-item';
-      errorItem.innerHTML = '<span>Error loading session data</span>';
+      errorItem.className = 'sessions-empty';
+      errorItem.textContent = 'Error loading session data';
       sessionsList.appendChild(errorItem);
+    }
+  }
+
+  getSessionTypeDisplay(type) {
+    switch (type) {
+      case 'focus':
+        return 'Focus';
+      case 'break':
+        return 'Short Break';
+      case 'longBreak':
+        return 'Long Break';
+      case 'custom':
+        return 'Custom';
+      default:
+        return 'Focus';
     }
   }
 
@@ -579,6 +621,273 @@ class NavigationManager {
     const minutes = Math.floor((seconds % 3600) / 60);
     return `${hours}h ${minutes}m`;
   }
+
+  setupTimelineHours(timelineHours) {
+    timelineHours.innerHTML = '';
+
+    // Show hours from 6 AM to 10 PM
+    for (let hour = 6; hour <= 22; hour += 2) {
+      const hourElement = document.createElement('div');
+      hourElement.className = 'timeline-hour';
+      hourElement.textContent = `${hour}:00`;
+      timelineHours.appendChild(hourElement);
+    }
+  }
+
+  createTimelineSession(session, date, timelineTrack) {
+    const sessionElement = document.createElement('div');
+    sessionElement.className = `timeline-session ${session.session_type}`;
+    sessionElement.dataset.sessionId = session.id;
+    sessionElement.dataset.isHistorical = session.isHistorical || false;
+
+    // Parse start and end times
+    const [startHour, startMinute] = session.start_time.split(':').map(Number);
+    const [endHour, endMinute] = session.end_time.split(':').map(Number);
+
+    // Calculate position and width (6 AM = 0%, 10 PM = 100%)
+    const startTimeInMinutes = startHour * 60 + startMinute;
+    const endTimeInMinutes = endHour * 60 + endMinute;
+    const timelineStartMinutes = 6 * 60; // 6 AM
+    const timelineEndMinutes = 22 * 60; // 10 PM
+    const timelineRangeMinutes = timelineEndMinutes - timelineStartMinutes;
+
+    const leftPercent = Math.max(0, ((startTimeInMinutes - timelineStartMinutes) / timelineRangeMinutes) * 100);
+    const rightPercent = Math.min(100, ((endTimeInMinutes - timelineStartMinutes) / timelineRangeMinutes) * 100);
+    const widthPercent = rightPercent - leftPercent;
+
+    sessionElement.style.left = `${leftPercent}%`;
+    sessionElement.style.width = `${widthPercent}%`;
+
+    // Session content
+    const sessionType = this.getSessionTypeDisplay(session.session_type);
+    sessionElement.innerHTML = `
+      <div class="session-handle left"></div>
+      <div class="timeline-session-content">
+        <span class="timeline-session-type">${sessionType}</span>
+        <span class="timeline-session-time">${session.start_time} - ${session.end_time}</span>
+      </div>
+      <div class="session-handle right"></div>
+    `;
+
+    // Add event listeners for non-historical sessions
+    if (!session.isHistorical) {
+      this.addTimelineSessionEventListeners(sessionElement, session, date);
+    } else {
+      // Remove handles for historical sessions
+      sessionElement.classList.add('historical');
+      sessionElement.querySelectorAll('.session-handle').forEach(handle => handle.remove());
+    }
+
+    timelineTrack.appendChild(sessionElement);
+  }
+
+  addTimelineSessionEventListeners(sessionElement, session, date) {
+    // Double-click to edit
+    sessionElement.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      if (window.sessionManager) {
+        window.sessionManager.openEditSessionModal(session, date);
+      }
+    });
+
+    // Right-click context menu
+    sessionElement.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      this.showSessionContextMenu(e, session, date);
+    });
+
+    // Drag to move
+    sessionElement.addEventListener('mousedown', (e) => {
+      if (e.target.classList.contains('session-handle')) return;
+      this.startSessionDrag(e, sessionElement, session);
+    });
+
+    // Handle resize
+    const leftHandle = sessionElement.querySelector('.session-handle.left');
+    const rightHandle = sessionElement.querySelector('.session-handle.right');
+
+    if (leftHandle) {
+      leftHandle.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        this.startSessionResize(e, sessionElement, session, 'left');
+      });
+    }
+
+    if (rightHandle) {
+      rightHandle.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        this.startSessionResize(e, sessionElement, session, 'right');
+      });
+    }
+  }
+
+  initializeTimelineInteractions() {
+    // Close context menu on click outside
+    document.addEventListener('click', () => {
+      const contextMenu = document.querySelector('.session-context-menu');
+      if (contextMenu) {
+        contextMenu.remove();
+      }
+    });
+  }
+
+  showSessionContextMenu(e, session, date) {
+    // Remove existing context menu
+    const existingMenu = document.querySelector('.session-context-menu');
+    if (existingMenu) {
+      existingMenu.remove();
+    }
+
+    const contextMenu = document.createElement('div');
+    contextMenu.className = 'session-context-menu';
+    contextMenu.style.left = `${e.pageX}px`;
+    contextMenu.style.top = `${e.pageY}px`;
+    contextMenu.style.display = 'block';
+
+    contextMenu.innerHTML = `
+      <div class="context-menu-item edit-item">Edit Session</div>
+      <div class="context-menu-item duplicate-item">Duplicate</div>
+      <div class="context-menu-item danger delete-item">Delete</div>
+    `;
+
+    // Add event listeners
+    contextMenu.querySelector('.edit-item').addEventListener('click', () => {
+      if (window.sessionManager) {
+        window.sessionManager.openEditSessionModal(session, date);
+      }
+      contextMenu.remove();
+    });
+
+    contextMenu.querySelector('.delete-item').addEventListener('click', () => {
+      if (window.sessionManager && confirm('Are you sure you want to delete this session?')) {
+        window.sessionManager.currentEditingSession = session;
+        window.sessionManager.selectedDate = date;
+        window.sessionManager.deleteCurrentSession();
+      }
+      contextMenu.remove();
+    });
+
+    contextMenu.querySelector('.duplicate-item').addEventListener('click', () => {
+      // TODO: Implement session duplication
+      console.log('Duplicate session:', session);
+      contextMenu.remove();
+    });
+
+    document.body.appendChild(contextMenu);
+  }
+
+  startSessionDrag(e, sessionElement, session) {
+    e.preventDefault();
+    sessionElement.classList.add('dragging');
+
+    const timeline = document.getElementById('timeline-track');
+    const timelineRect = timeline.getBoundingClientRect();
+    const sessionRect = sessionElement.getBoundingClientRect();
+
+    const offsetX = e.clientX - sessionRect.left;
+
+    const handleMouseMove = (e) => {
+      const x = e.clientX - timelineRect.left - offsetX;
+      const percentage = Math.max(0, Math.min(100, (x / timelineRect.width) * 100));
+      sessionElement.style.left = `${percentage}%`;
+    };
+
+    const handleMouseUp = () => {
+      sessionElement.classList.remove('dragging');
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+
+      // Update session time based on new position
+      this.updateSessionTimeFromPosition(sessionElement, session);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }
+
+  startSessionResize(e, sessionElement, session, side) {
+    e.preventDefault();
+    sessionElement.classList.add('resizing');
+
+    const timeline = document.getElementById('timeline-track');
+    const timelineRect = timeline.getBoundingClientRect();
+
+    const handleMouseMove = (e) => {
+      const x = e.clientX - timelineRect.left;
+      const percentage = Math.max(0, Math.min(100, (x / timelineRect.width) * 100));
+
+      const currentLeft = parseFloat(sessionElement.style.left);
+      const currentWidth = parseFloat(sessionElement.style.width);
+      const currentRight = currentLeft + currentWidth;
+
+      if (side === 'left') {
+        const newLeft = Math.min(percentage, currentRight - 2); // Minimum 2% width
+        const newWidth = currentRight - newLeft;
+        sessionElement.style.left = `${newLeft}%`;
+        sessionElement.style.width = `${newWidth}%`;
+      } else {
+        const newWidth = Math.max(2, percentage - currentLeft); // Minimum 2% width
+        sessionElement.style.width = `${newWidth}%`;
+      }
+    };
+
+    const handleMouseUp = () => {
+      sessionElement.classList.remove('resizing');
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+
+      // Update session time based on new size and position
+      this.updateSessionTimeFromPosition(sessionElement, session);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }
+
+  updateSessionTimeFromPosition(sessionElement, session) {
+    const leftPercent = parseFloat(sessionElement.style.left);
+    const widthPercent = parseFloat(sessionElement.style.width);
+    const rightPercent = leftPercent + widthPercent;
+
+    // Convert percentages back to time (6 AM to 10 PM range)
+    const timelineStartMinutes = 6 * 60; // 6 AM
+    const timelineRangeMinutes = 16 * 60; // 16 hours (6 AM to 10 PM)
+
+    const startMinutes = timelineStartMinutes + (leftPercent / 100) * timelineRangeMinutes;
+    const endMinutes = timelineStartMinutes + (rightPercent / 100) * timelineRangeMinutes;
+
+    const startHour = Math.floor(startMinutes / 60);
+    const startMin = Math.round(startMinutes % 60);
+    const endHour = Math.floor(endMinutes / 60);
+    const endMin = Math.round(endMinutes % 60);
+
+    const newStartTime = `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`;
+    const newEndTime = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
+    const newDuration = Math.round((endMinutes - startMinutes));
+
+    // Update session data
+    session.start_time = newStartTime;
+    session.end_time = newEndTime;
+    session.duration = newDuration;
+
+    // Update the display
+    const timeDisplay = sessionElement.querySelector('.timeline-session-time');
+    if (timeDisplay) {
+      timeDisplay.textContent = `${newStartTime} - ${newEndTime}`;
+    }
+
+    // Save changes if using SessionManager
+    if (window.sessionManager && !session.isHistorical) {
+      // Update the session in SessionManager
+      const dateString = this.currentDate.toDateString();
+      if (window.sessionManager.sessions[dateString]) {
+        const sessionIndex = window.sessionManager.sessions[dateString].findIndex(s => s.id === session.id);
+        if (sessionIndex !== -1) {
+          window.sessionManager.sessions[dateString][sessionIndex] = { ...session };
+        }
+      }
+    }
+  }
 }
 
 // Settings Manager for Global Shortcuts and Preferences
@@ -613,8 +922,8 @@ class SettingsManager {
     return {
       shortcuts: {
         start_stop: "CommandOrControl+Alt+Space",
-        reset: "CommandOrControl+Alt+R",
-        skip: "CommandOrControl+Alt+S"
+        reset: "CommandOrControl+Alt+R", // Delete Session (focus) / Undo (break)
+        skip: "CommandOrControl+Alt+S"   // Save Session
       },
       timer: {
         focus_duration: 25,
@@ -740,12 +1049,16 @@ class SettingsManager {
           break;
         case 'reset':
           if (window.pomodoroTimer) {
-            window.pomodoroTimer.resetTimer();
+            if (window.pomodoroTimer.currentMode === 'focus') {
+              window.pomodoroTimer.resetTimer();
+            } else {
+              window.pomodoroTimer.undoLastSession();
+            }
           }
           break;
         case 'skip':
           if (window.pomodoroTimer) {
-            window.pomodoroTimer.skipSession();
+            window.pomodoroTimer.completeSession();
           }
           break;
       }
@@ -1033,6 +1346,339 @@ class SettingsManager {
   }
 }
 
+// Session Management Functions
+class SessionManager {
+  constructor(navigationManager) {
+    this.navManager = navigationManager;
+    this.currentEditingSession = null;
+    this.selectedDate = null;
+    this.sessions = []; // Local session storage for now
+    this.init();
+  }
+
+  init() {
+    this.setupEventListeners();
+  }
+
+  setupEventListeners() {
+    // Add session button
+    const addSessionBtn = document.getElementById('add-session-btn');
+    if (addSessionBtn) {
+      addSessionBtn.addEventListener('click', () => this.openAddSessionModal());
+    }
+
+    // Modal controls
+    const modalOverlay = document.getElementById('session-modal-overlay');
+    const closeModalBtn = document.getElementById('close-session-modal');
+    const cancelBtn = document.getElementById('cancel-session-btn');
+    const sessionForm = document.getElementById('session-form');
+    const sessionTypeSelect = document.getElementById('session-type');
+    const deleteSessionBtn = document.getElementById('delete-session-btn');
+
+    if (modalOverlay) {
+      modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
+          this.closeModal();
+        }
+      });
+    }
+
+    if (closeModalBtn) {
+      closeModalBtn.addEventListener('click', () => this.closeModal());
+    }
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => this.closeModal());
+    }
+
+    if (sessionForm) {
+      sessionForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.saveSession();
+      });
+    }
+
+    if (sessionTypeSelect) {
+      sessionTypeSelect.addEventListener('change', (e) => {
+        this.toggleCustomDuration(e.target.value);
+      });
+    }
+
+    if (deleteSessionBtn) {
+      deleteSessionBtn.addEventListener('click', () => this.deleteCurrentSession());
+    }
+
+    // Keyboard shortcuts for modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.isModalOpen()) {
+        this.closeModal();
+      }
+    });
+  }
+
+  openAddSessionModal(date = null) {
+    this.selectedDate = date || this.navManager.currentDate || new Date();
+    this.currentEditingSession = null;
+
+    const modal = document.getElementById('session-modal-overlay');
+    const modalTitle = document.getElementById('session-modal-title');
+    const deleteBtn = document.getElementById('delete-session-btn');
+    const saveBtn = document.getElementById('save-session-btn');
+
+    modalTitle.textContent = 'Add Session';
+    deleteBtn.style.display = 'none';
+    saveBtn.textContent = 'Save Session';
+
+    // Set default time to now
+    const now = new Date();
+    const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    document.getElementById('session-start-time').value = timeString;
+
+    // Reset form
+    document.getElementById('session-form').reset();
+    document.getElementById('session-start-time').value = timeString;
+    this.toggleCustomDuration('focus');
+
+    modal.classList.add('show');
+    document.getElementById('session-start-time').focus();
+  }
+
+  openEditSessionModal(session, date) {
+    this.selectedDate = new Date(date);
+    this.currentEditingSession = session;
+
+    const modal = document.getElementById('session-modal-overlay');
+    const modalTitle = document.getElementById('session-modal-title');
+    const deleteBtn = document.getElementById('delete-session-btn');
+    const saveBtn = document.getElementById('save-session-btn');
+
+    modalTitle.textContent = 'Edit Session';
+    deleteBtn.style.display = 'block';
+    saveBtn.textContent = 'Update Session';
+
+    // Populate form with session data
+    document.getElementById('session-type').value = session.session_type;
+    document.getElementById('session-duration').value = session.duration;
+    document.getElementById('session-start-time').value = session.start_time;
+    document.getElementById('session-notes').value = session.notes || '';
+
+    this.toggleCustomDuration(session.session_type);
+
+    modal.classList.add('show');
+    document.getElementById('session-start-time').focus();
+  }
+
+  closeModal() {
+    const modal = document.getElementById('session-modal-overlay');
+    modal.classList.remove('show');
+    this.currentEditingSession = null;
+    this.selectedDate = null;
+  }
+
+  isModalOpen() {
+    const modal = document.getElementById('session-modal-overlay');
+    return modal && modal.classList.contains('show');
+  }
+
+  toggleCustomDuration(sessionType) {
+    const customGroup = document.getElementById('custom-duration-group');
+    const durationInput = document.getElementById('session-duration');
+
+    if (sessionType === 'custom') {
+      customGroup.style.display = 'block';
+      durationInput.value = 25; // Default custom duration
+      durationInput.focus();
+    } else {
+      customGroup.style.display = 'none';
+      // Set duration based on session type
+      switch (sessionType) {
+        case 'focus':
+          durationInput.value = 25;
+          break;
+        case 'break':
+          durationInput.value = 5;
+          break;
+        case 'longBreak':
+          durationInput.value = 20;
+          break;
+        default:
+          durationInput.value = 25;
+      }
+    }
+  }
+
+  async saveSession() {
+    const formData = new FormData(document.getElementById('session-form'));
+    const sessionData = {
+      id: this.currentEditingSession?.id || this.generateSessionId(),
+      session_type: formData.get('type'),
+      duration: parseInt(formData.get('duration')),
+      start_time: formData.get('startTime'),
+      end_time: this.calculateEndTime(formData.get('startTime'), parseInt(formData.get('duration'))),
+      notes: formData.get('notes') || null,
+      created_at: new Date().toISOString()
+    };
+
+    // Validate form
+    if (!sessionData.start_time) {
+      alert('Please enter a start time');
+      return;
+    }
+
+    if (!sessionData.duration || sessionData.duration < 1) {
+      alert('Please enter a valid duration');
+      return;
+    }
+
+    try {
+      if (this.currentEditingSession) {
+        // Update existing session
+        await this.updateSession(sessionData);
+        this.showNotification('Session updated successfully', 'success');
+      } else {
+        // Add new session
+        await this.addSession(sessionData);
+        this.showNotification('Session added successfully', 'success');
+      }
+
+      this.closeModal();
+
+      // Refresh the session list
+      if (this.navManager) {
+        await this.navManager.updateSelectedDayDetails(this.selectedDate);
+        await this.navManager.updateFocusSummary();
+        await this.navManager.updateWeeklySessionsChart();
+      }
+
+    } catch (error) {
+      console.error('Error saving session:', error);
+      this.showNotification('Failed to save session', 'error');
+    }
+  }
+
+  async addSession(sessionData) {
+    const dateString = this.selectedDate.toDateString();
+
+    // For now, store locally (later we'll integrate with backend)
+    if (!this.sessions[dateString]) {
+      this.sessions[dateString] = [];
+    }
+
+    this.sessions[dateString].push(sessionData);
+
+    // TODO: Call backend when available
+    // await invoke('add_session', { date: dateString, session: sessionData });
+  }
+
+  async updateSession(sessionData) {
+    const dateString = this.selectedDate.toDateString();
+
+    // Update local storage
+    if (this.sessions[dateString]) {
+      const index = this.sessions[dateString].findIndex(s => s.id === sessionData.id);
+      if (index !== -1) {
+        this.sessions[dateString][index] = sessionData;
+      }
+    }
+
+    // TODO: Call backend when available
+    // await invoke('update_session', { date: dateString, sessionId: sessionData.id, updatedSession: sessionData });
+  }
+
+  async deleteCurrentSession() {
+    if (!this.currentEditingSession) return;
+
+    if (!confirm('Are you sure you want to delete this session?')) return;
+
+    try {
+      const dateString = this.selectedDate.toDateString();
+
+      // Remove from local storage
+      if (this.sessions[dateString]) {
+        this.sessions[dateString] = this.sessions[dateString].filter(s => s.id !== this.currentEditingSession.id);
+      }
+
+      // TODO: Call backend when available
+      // await invoke('delete_session', { date: dateString, sessionId: this.currentEditingSession.id });
+
+      this.closeModal();
+      this.showNotification('Session deleted successfully', 'success');
+
+      // Refresh the session list
+      if (this.navManager) {
+        await this.navManager.updateSelectedDayDetails(this.selectedDate);
+        await this.navManager.updateFocusSummary();
+        await this.navManager.updateWeeklySessionsChart();
+      }
+
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      this.showNotification('Failed to delete session', 'error');
+    }
+  }
+
+  getSessionsForDate(date) {
+    const dateString = date.toDateString();
+    return this.sessions[dateString] || [];
+  }
+
+  generateSessionId() {
+    return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+  }
+
+  calculateEndTime(startTime, durationMinutes) {
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const startDate = new Date();
+    startDate.setHours(hours, minutes, 0, 0);
+
+    const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
+
+    return `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
+  }
+
+  showNotification(message, type = 'info') {
+    // Create a simple notification
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      max-width: 300px;
+    `;
+
+    switch (type) {
+      case 'success':
+        notification.style.backgroundColor = '#4CAF50';
+        break;
+      case 'error':
+        notification.style.backgroundColor = '#f44336';
+        break;
+      default:
+        notification.style.backgroundColor = '#2196F3';
+    }
+
+    document.body.appendChild(notification);
+
+    // Animate in
+    setTimeout(() => notification.style.opacity = '1', 10);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+      notification.style.opacity = '0';
+      setTimeout(() => document.body.removeChild(notification), 300);
+    }, 3000);
+  }
+}
+
 class PomodoroTimer {
   constructor() {
     // Timer states
@@ -1083,8 +1729,8 @@ class PomodoroTimer {
     // Keyboard shortcuts (will be updated from settings)
     this.customShortcuts = {
       start_stop: "CommandOrControl+Alt+Space",
-      reset: "CommandOrControl+Alt+R",
-      skip: "CommandOrControl+Alt+S"
+      reset: "CommandOrControl+Alt+R", // Delete Session (focus) / Undo (break)
+      skip: "CommandOrControl+Alt+S"   // Save Session
     };
 
     this.init();
@@ -1129,12 +1775,12 @@ class PomodoroTimer {
       }
     });
 
-    this.skipBtn.addEventListener('click', () => this.skipSession());
+    this.skipBtn.addEventListener('click', () => this.completeSession());
 
     this.stopBtn.addEventListener('click', () => {
       if (this.currentMode === 'focus') {
-        // Stop the current session and mark it as completed
-        this.completeSession();
+        // Delete/reset the current session
+        this.resetTimer();
       } else {
         // In break/longBreak mode: undo last session
         this.undoLastSession();
@@ -1155,10 +1801,14 @@ class PomodoroTimer {
           }
         } else if (this.matchesShortcut(e, this.customShortcuts.reset)) {
           e.preventDefault();
-          this.resetTimer();
+          if (this.currentMode === 'focus') {
+            this.resetTimer();
+          } else {
+            this.undoLastSession();
+          }
         } else if (this.matchesShortcut(e, this.customShortcuts.skip)) {
           e.preventDefault();
-          this.skipSession();
+          this.completeSession();
         }
         // Keep existing hardcoded shortcuts as fallback
         else {
@@ -1489,7 +2139,7 @@ class PomodoroTimer {
     this.timeRemaining = this.durations[this.currentMode];
     this.updateDisplay();
     this.updateButtons();
-    this.showNotificationPing('Timer reset 🔄');
+    this.showNotificationPing('Session deleted ❌', 'warning');
   }
 
   skipSession() {
@@ -1681,6 +2331,7 @@ class PomodoroTimer {
     // Define SVG paths for different modes (Heroicons)
     const iconPaths = {
       focus: 'M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443a55.381 55.381 0 0 1 5.25 2.882V15',
+
       break: 'M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z M12.5 3.75a.75.75 0 0 0-1.5 0v5a.75.75 0 0 0 .75.75h3a.75.75 0 0 0 0-1.5h-2.25V3.75Z',
       longBreak: 'M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z M12.5 3.75a.75.75 0 0 0-1.5 0v5a.75.75 0 0 0 .75.75h3a.75.75 0 0 0 0-1.5h-2.25V3.75Z'
     };
@@ -1714,7 +2365,7 @@ class PomodoroTimer {
   // Update stop/undo button icon based on current mode
   updateStopUndoButton() {
     if (this.currentMode === 'focus') {
-      // Show stop icon during focus sessions
+      // Show X icon during focus sessions for deletion
       this.stopIcon.style.display = 'block';
       this.undoIcon.style.display = 'none';
     } else {
@@ -1723,7 +2374,7 @@ class PomodoroTimer {
         this.stopIcon.style.display = 'none';
         this.undoIcon.style.display = 'block';
       } else {
-        // No sessions to undo, hide the button or show stop icon
+        // No sessions to undo, show X icon
         this.stopIcon.style.display = 'block';
         this.undoIcon.style.display = 'none';
       }
@@ -1764,33 +2415,6 @@ class PomodoroTimer {
 
     // Show undo notification
     this.showNotificationPing('Last session undone! Back to focus mode 🔄', 'info');
-  }
-
-  updateProgress() {
-    // Metodo disabilitato per la versione semplificata
-    // TODO: Implementare se necessario per altre viste
-    /*
-    // Create dots for each session
-    this.pomodoroDotsContainer.innerHTML = '';
-    for (let i = 0; i < this.totalSessions; i++) {
-      const dot = document.createElement('div');
-      dot.className = 'pomodoro-dot';
-
-      if (i < this.completedPomodoros) {
-        dot.classList.add('completed');
-      } else if (i === this.completedPomodoros && this.currentMode === 'focus') {
-        dot.classList.add('current');
-      }
-
-      this.pomodoroDotsContainer.appendChild(dot);
-    }
-
-    // Update stats
-    this.completedCountEl.textContent = this.completedPomodoros;
-    const hours = Math.floor(this.totalFocusTime / 3600);
-    const minutes = Math.floor((this.totalFocusTime % 3600) / 60);
-    this.focusTimeEl.textContent = `${hours}h ${minutes}m`;
-    */
   }
 
   // Progress dots update
@@ -2159,12 +2783,6 @@ class PomodoroTimer {
     }, 300);
   }
 
-  formatTime(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
-
   // Add warning styling
   addWarningClass() {
     const container = document.querySelector('.timer-container');
@@ -2430,6 +3048,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   navigation = new NavigationManager();
   window.navigationManager = navigation; // Make it globally accessible
   await navigation.init();
+
+  // Initialize Session Manager
+  window.sessionManager = new SessionManager(window.navigationManager);
 
   // Setup reset button event listener
   const resetButton = document.getElementById('reset-all-data-btn');
