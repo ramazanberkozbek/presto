@@ -435,7 +435,7 @@ export class NavigationManager {
                 const sessionsMinutes = dayData ? dayData.total_focus_time / 60 : 0; // Convert seconds to minutes
                 const sessions = dayData ? dayData.completed_pomodoros : 0;
 
-                // Only consider days that have completely passed (exclude today)
+                // Only consider days that have completely passed (exclude today) for average calculation
                 const isCompletePastDay = date.toDateString() !== today.toDateString() && date < today;
                 if (isCompletePastDay && sessions > 0) {
                     totalSessionTime += sessionsMinutes;
@@ -458,14 +458,25 @@ export class NavigationManager {
                 }
             });
 
-            // Calculate average session time (only for past days with data)
-            const avgSessionTime = totalSessions > 0 ? totalSessionTime / totalSessions : 0;
+            // Calculate average daily session time (include all days with data, including today)
+            let avgSessionTime = 0;
+            let totalDailyTime = 0;
+            let daysWithSessions = 0;
+            
+            weekData.forEach(({ sessionsMinutes }) => {
+                if (sessionsMinutes > 0) {
+                    totalDailyTime += sessionsMinutes;
+                    daysWithSessions++;
+                }
+            });
+            
+            avgSessionTime = daysWithSessions > 0 ? totalDailyTime / daysWithSessions : 0;
 
             // Use a minimum baseline for maxSessionsMinutes to avoid tiny bars
             const scalingMax = Math.max(maxSessionsMinutes, Math.max(avgSessionTime, 60)); // Include average in scaling
 
             // Add average session time line if we have data
-            if (avgSessionTime > 0 && daysConsidered > 0) {
+            if (avgSessionTime > 0 && daysWithSessions > 0) {
                 const avgLine = document.createElement('div');
                 avgLine.className = 'week-average-line';
 
@@ -475,10 +486,11 @@ export class NavigationManager {
                 avgLine.style.left = '0';
                 avgLine.style.right = '0';
                 avgLine.style.position = 'absolute';
-                avgLine.style.height = '2px';
-                avgLine.style.backgroundColor = '#6b7280'; // Changed to gray
+                avgLine.style.height = '1px'; // Reduced thickness for dashed line
+                avgLine.style.backgroundColor = 'transparent'; // No solid background
+                avgLine.style.borderTop = '1px dashed #d1d5db'; // Light gray dashed line
                 avgLine.style.zIndex = '10';
-                avgLine.style.opacity = '0.8';
+                avgLine.style.opacity = '0.6'; // Semi-transparent
 
                 // Add label for average
                 const avgLabel = document.createElement('div');
@@ -488,12 +500,13 @@ export class NavigationManager {
                 avgLabel.style.right = '5px';
                 avgLabel.style.top = '-18px';
                 avgLabel.style.fontSize = '10px';
-                avgLabel.style.color = '#6b7280'; // Changed to gray
-                avgLabel.style.fontWeight = '600';
+                avgLabel.style.color = '#9ca3af'; // Light gray to match dashed line
+                avgLabel.style.fontWeight = '500'; // Slightly lighter weight
                 avgLabel.style.background = 'white';
                 avgLabel.style.padding = '1px 4px';
                 avgLabel.style.borderRadius = '3px';
                 avgLabel.style.whiteSpace = 'nowrap';
+                avgLabel.style.opacity = '0.8'; // Semi-transparent like the line
 
                 avgLine.appendChild(avgLabel);
 
@@ -516,7 +529,7 @@ export class NavigationManager {
 
                 // Add visual indicator if this day was used in average calculation
                 if (isPast && sessions > 0) {
-                    dayBar.style.borderTop = '2px solid #6b7280'; // Changed to gray
+                    dayBar.style.borderTop = '1px solid #d1d5db'; // Light gray to match dashed line
                 }
 
                 // Add value label on hover
