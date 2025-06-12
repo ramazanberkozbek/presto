@@ -1,4 +1,4 @@
-# Tempo - Pomodoro Timer
+# Presto - Pomodoro Timer
 
 A modern, cross-platform Pomodoro timer application built with Tauri (Rust + HTML/CSS/JavaScript). Tempo helps you boost productivity using the proven Pomodoro Technique with a beautiful, intuitive interface.
 
@@ -163,4 +163,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Start your productive journey with Tempo!** 🍅✨
+**Start your productive journey with Presto!** 🍅✨
