@@ -603,7 +603,7 @@ export class NavigationManager {
 
         // Clear previous sessions
         timelineTrack.innerHTML = '';
-        
+
         // Reset timeline track height
         timelineTrack.style.height = '50px';
 
@@ -828,11 +828,11 @@ export class NavigationManager {
 
         // Show only major hours every 3 hours: 6, 9, 12, 15, 18
         const majorHours = [6, 9, 12, 15, 18];
-        
+
         majorHours.forEach(hour => {
             const hourElement = document.createElement('div');
             hourElement.className = 'timeline-hour';
-            // No text content - empty labels
+            hourElement.textContent = `${hour}:00`;
             timelineHours.appendChild(hourElement);
         });
     }
@@ -883,7 +883,7 @@ export class NavigationManager {
             // For historical sessions: ultra-minimal display, just colored block
             sessionElement.classList.add('historical');
             sessionElement.innerHTML = `<div class="timeline-session-content-minimal"></div>`;
-            
+
             // Set tooltip with basic information
             sessionElement.title = `${sessionType}: ${session.start_time} - ${session.end_time} (${session.duration}m)`;
         } else {
@@ -908,7 +908,7 @@ export class NavigationManager {
         if (offset > 0) {
             sessionElement.style.transform = `translateY(${offset}px)`;
             sessionElement.classList.add('session-stacked');
-            
+
             // Expand timeline track height if needed
             const currentHeight = parseInt(timelineTrack.style.height) || 50;
             const requiredHeight = 50 + offset + 35; // base height + offset + session height
@@ -1256,7 +1256,7 @@ export class NavigationManager {
 
         // Check all sessions that come before this one in the array
         const sessionIndex = allSessions.findIndex(s => s.id === session.id);
-        
+
         for (let i = 0; i < sessionIndex; i++) {
             const otherSession = allSessions[i];
             const [otherStartHour, otherStartMin] = otherSession.start_time.split(':').map(Number);
