@@ -1196,7 +1196,13 @@ export class PomodoroTimer {
                 longBreak: '🌙'
             };
 
-            const modeIcon = modeIcons[this.currentMode] || '🧠';
+            // Show pause icon if timer is paused or auto-paused
+            let modeIcon;
+            if (this.isPaused || this.isAutoPaused) {
+                modeIcon = '⏸️';
+            } else {
+                modeIcon = modeIcons[this.currentMode] || '🧠';
+            }
 
             await invoke('update_tray_icon', {
                 timerText: timerText,
