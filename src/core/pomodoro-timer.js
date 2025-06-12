@@ -326,8 +326,18 @@ export class PomodoroTimer {
             this.updateDisplay();
             this.updateTrayIcon();
 
+            // Check if timer should complete
             if (this.timeRemaining <= 0) {
-                this.completeSession();
+                if (this.allowContinuousSessions) {
+                    // For continuous sessions, show completion notification but keep timer running
+                    if (this.timeRemaining === 0) {
+                        this.showSessionCompletedNotification();
+                    }
+                    // Timer continues in negative (overtime)
+                } else {
+                    // Traditional behavior - complete and stop the session
+                    this.completeSession();
+                }
             }
         }, 1000);
 
@@ -399,8 +409,18 @@ export class PomodoroTimer {
                     NotificationUtils.showNotificationPing('30 seconds left! ⏰', 'warning', this.currentMode);
                 }
 
+                // Check if timer should complete
                 if (this.timeRemaining <= 0) {
-                    this.completeSession();
+                    if (this.allowContinuousSessions) {
+                        // For continuous sessions, show completion notification but keep timer running
+                        if (this.timeRemaining === 0) {
+                            this.showSessionCompletedNotification();
+                        }
+                        // Timer continues in negative (overtime)
+                    } else {
+                        // Traditional behavior - complete and stop the session
+                        this.completeSession();
+                    }
                 }
             }, 1000);
 
@@ -663,13 +683,71 @@ export class PomodoroTimer {
         }
     }
 
+    // Show completion notification for continuous sessions without stopping the timer
+    async showSessionCompletedNotification() {
+        // Update completed sessions count for focus sessions
+        if (this.currentMode === 'focus') {
+            this.completedPomodoros++;
+            this.updateProgressDots();
+
+            // Calculate actual elapsed time for focus sessions
+            const actualElapsedTime = this.currentSessionElapsedTime || this.durations.focus;
+            this.totalFocusTime += actualElapsedTime;
+
+            // Store the actual elapsed time for undo functionality
+            this.lastCompletedSessionTime = actualElapsedTime;
+
+            // Mark current task as completed if exists
+            if (this.currentTask.trim()) {
+                await this.markTaskCompleted(this.currentTask.trim());
+                if (this.taskInput) {
+                    this.taskInput.value = '';
+                }
+                this.currentTask = '';
+            }
+        }
+
+        // Save session data
+        await this.saveSessionData();
+        await this.updateWeeklyStats();
+        
+        // Show notification
+        this.showNotification();
+        NotificationUtils.playNotificationSound();
+
+        // Show completion message for continuous sessions
+        const continuousMessages = {
+            focus: 'Pomodoro completed! You can continue working or take a break 🍅⏰',
+            break: 'Break time completed! You can continue resting or start focusing ☕⏰',
+            longBreak: 'Long break completed! You can continue resting or start working 🌙⏰'
+        };
+        
+        const completionMessage = continuousMessages[this.currentMode];
+        NotificationUtils.showNotificationPing(completionMessage, 'success', this.currentMode);
+
+        // Update tray icon to show completion but keep running
+        this.updateTrayIcon();
+    }
+
     updateDisplay() {
-        const minutes = Math.floor(this.timeRemaining / 60);
-        const seconds = this.timeRemaining % 60;
+        let displayMinutes, displaySeconds, isOvertime = false;
+        
+        if (this.timeRemaining < 0 && this.allowContinuousSessions) {
+            // Show overtime in continuous sessions
+            isOvertime = true;
+            const overtimeSeconds = Math.abs(this.timeRemaining);
+            displayMinutes = Math.floor(overtimeSeconds / 60);
+            displaySeconds = overtimeSeconds % 60;
+        } else {
+            // Normal display or traditional mode
+            const absTime = Math.abs(this.timeRemaining);
+            displayMinutes = Math.floor(absTime / 60);
+            displaySeconds = absTime % 60;
+        }
 
         // Update the split display
-        this.timerMinutes.textContent = minutes.toString().padStart(2, '0');
-        this.timerSeconds.textContent = seconds.toString().padStart(2, '0');
+        this.timerMinutes.textContent = displayMinutes.toString().padStart(2, '0');
+        this.timerSeconds.textContent = displaySeconds.toString().padStart(2, '0');
 
         // Update status
         const statusTexts = {
@@ -680,8 +758,12 @@ export class PomodoroTimer {
 
         let statusText = statusTexts[this.currentMode];
 
+        // Add overtime indicator for continuous sessions
+        if (isOvertime) {
+            statusText += ' (Overtime)';
+        }
         // Add auto-pause indicator
-        if (this.isAutoPaused) {
+        else if (this.isAutoPaused) {
             statusText += ' (Auto-paused)';
         } else if (this.isPaused && !this.isRunning) {
             statusText += ' (Paused)';
@@ -710,12 +792,20 @@ export class PomodoroTimer {
 
         // Update main container class for background styling
         const mainContainer = document.querySelector('.container');
-        mainContainer.className = `container ${this.currentMode}`;
+        let containerClass = `container ${this.currentMode}`;
+        if (isOvertime) {
+            containerClass += ' overtime';
+        }
+        mainContainer.className = containerClass;
 
         // Update sidebar class to match current timer state
         const sidebar = document.querySelector('.sidebar');
         if (sidebar) {
-            sidebar.className = `sidebar ${this.currentMode}`;
+            let sidebarClass = `sidebar ${this.currentMode}`;
+            if (isOvertime) {
+                sidebarClass += ' overtime';
+            }
+            sidebar.className = sidebarClass;
         }
 
         // Update timer container class for styling
@@ -739,7 +829,8 @@ export class PomodoroTimer {
 
         // Update page title
         const statusIcon = this.currentMode === 'focus' ? '🍅' : (this.currentMode === 'break' ? '😌' : '🎉');
-        document.title = `${statusIcon} ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} - Tempo`;
+        const overtimePrefix = isOvertime ? '+' : '';
+        document.title = `${statusIcon} ${overtimePrefix}${displayMinutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')} - Tempo`;
 
         // Update stop/undo button icon based on current mode
         this.updateStopUndoButton();
@@ -1263,13 +1354,28 @@ export class PomodoroTimer {
     // Update tray icon with timer information
     async updateTrayIcon() {
         try {
-            const minutes = Math.floor(this.timeRemaining / 60);
-            const seconds = this.timeRemaining % 60;
-            const timerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            let displayMinutes, displaySeconds, isOvertime = false;
+            
+            if (this.timeRemaining < 0 && this.allowContinuousSessions) {
+                // Show overtime in continuous sessions
+                isOvertime = true;
+                const overtimeSeconds = Math.abs(this.timeRemaining);
+                displayMinutes = Math.floor(overtimeSeconds / 60);
+                displaySeconds = overtimeSeconds % 60;
+            } else {
+                // Normal display or traditional mode
+                const absTime = Math.abs(this.timeRemaining);
+                displayMinutes = Math.floor(absTime / 60);
+                displaySeconds = absTime % 60;
+            }
+
+            const timerText = `${displayMinutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')}`;
+            const overtimePrefix = isOvertime ? '+' : '';
+            const fullTimerText = `${overtimePrefix}${timerText}`;
 
             // Add session counter to timer text
             const sessionCounter = `(${this.completedPomodoros}/${this.totalSessions})`;
-            const fullTimerText = `${timerText} ${sessionCounter}`;
+            const completeTimerText = `${fullTimerText} ${sessionCounter}`;
 
             // Define icons for different modes
             const modeIcons = {
@@ -1282,12 +1388,15 @@ export class PomodoroTimer {
             let modeIcon;
             if (this.isPaused || this.isAutoPaused) {
                 modeIcon = '⏸️';
+            } else if (isOvertime) {
+                // Show overtime indicator in tray
+                modeIcon = '⏰';
             } else {
                 modeIcon = modeIcons[this.currentMode] || '🧠';
             }
 
             await invoke('update_tray_icon', {
-                timerText: fullTimerText,
+                timerText: completeTimerText,
                 isRunning: this.isRunning,
                 sessionMode: this.currentMode,
                 currentSession: this.currentSession,

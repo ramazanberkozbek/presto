@@ -108,3 +108,34 @@
 .container.longBreak .timer-seconds {
   color: var(--long-break-timer-color);
 }
+
+/* Overtime styles for continuous sessions */
+.container.overtime .timer-minutes,
+.container.overtime .timer-seconds {
+  color: var(--warning-color);
+  text-shadow: 0 0 10px rgba(230, 126, 34, 0.3);
+  animation: overtime-pulse 2s infinite ease-in-out;
+}
+
+.container.overtime .timer-status {
+  color: var(--warning-color);
+}
+
+.container.overtime #status-icon {
+  color: var(--warning-color);
+}
+
+.sidebar.overtime {
+  background: linear-gradient(135deg, var(--warning-color), #d35400);
+}
+
+@keyframes overtime-pulse {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
