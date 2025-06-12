@@ -49,6 +49,7 @@ export class SettingsManager {
                 sound_notifications: true,
                 auto_start_breaks: true,
                 auto_start_focus: false, // New setting for auto-starting focus after breaks
+                allow_continuous_sessions: false, // Allow sessions to continue beyond timer
                 smart_pause: false,
                 smart_pause_timeout: 30 // default 30 seconds
             },
@@ -83,6 +84,7 @@ export class SettingsManager {
         document.getElementById('sound-notifications').checked = this.settings.notifications.sound_notifications;
         document.getElementById('auto-start-breaks').checked = this.settings.notifications.auto_start_breaks;
         document.getElementById('auto-start-focus').checked = this.settings.notifications.auto_start_focus || false;
+        document.getElementById('allow-continuous-sessions').checked = this.settings.notifications.allow_continuous_sessions || false;
         document.getElementById('smart-pause').checked = this.settings.notifications.smart_pause;
 
         // Populate smart pause timeout
@@ -397,7 +399,8 @@ export class SettingsManager {
             'desktop-notifications',
             'sound-notifications',
             'auto-start-breaks',
-            'auto-start-focus'
+            'auto-start-focus',
+            'allow-continuous-sessions'
         ];
 
         checkboxFields.forEach(fieldId => {
@@ -447,6 +450,7 @@ export class SettingsManager {
             this.settings.notifications.sound_notifications = document.getElementById('sound-notifications').checked;
             this.settings.notifications.auto_start_breaks = document.getElementById('auto-start-breaks').checked;
             this.settings.notifications.auto_start_focus = document.getElementById('auto-start-focus').checked;
+            this.settings.notifications.allow_continuous_sessions = document.getElementById('allow-continuous-sessions').checked;
             this.settings.notifications.smart_pause = document.getElementById('smart-pause').checked;
             this.settings.notifications.smart_pause_timeout = parseInt(document.getElementById('smart-pause-timeout').value);
 
