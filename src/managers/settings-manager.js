@@ -17,6 +17,7 @@ export class SettingsManager {
         this.setupEventListeners();
         await this.registerGlobalShortcuts();
         this.setupGlobalShortcutHandlers();
+        this.setupSettingsNavigation();
     }
 
     async loadSettings() {
@@ -489,5 +490,28 @@ export class SettingsManager {
         setTimeout(() => {
             feedback.style.opacity = '0';
         }, 2000);
+    }
+
+    setupSettingsNavigation() {
+        // Setup navigation between settings categories
+        const navItems = document.querySelectorAll('.settings-nav-item');
+        const categories = document.querySelectorAll('.settings-category');
+
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const targetCategory = item.dataset.category;
+                
+                // Remove active class from all nav items and categories
+                navItems.forEach(nav => nav.classList.remove('active'));
+                categories.forEach(cat => cat.classList.remove('active'));
+                
+                // Add active class to clicked nav item and corresponding category
+                item.classList.add('active');
+                const targetElement = document.getElementById(`category-${targetCategory}`);
+                if (targetElement) {
+                    targetElement.classList.add('active');
+                }
+            });
+        });
     }
 }

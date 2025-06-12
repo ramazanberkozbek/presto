@@ -296,153 +296,295 @@
 
     <!-- Settings View -->
     <div class="view-container hidden" id="settings-view">
-      <h1>Settings</h1>
+      <div class="settings-layout">
+        
+        <!-- Settings Sidebar -->
+        <div class="settings-sidebar">
+          <h2>Settings</h2>
+          <nav class="settings-nav">
+            <button class="settings-nav-item active" data-category="general">
+              <i class="ri-timer-line"></i>
+              <span>General</span>
+            </button>
+            <button class="settings-nav-item" data-category="shortcuts">
+              <i class="ri-keyboard-line"></i>
+              <span>Shortcuts</span>
+            </button>
+            <button class="settings-nav-item" data-category="notifications">
+              <i class="ri-notification-line"></i>
+              <span>Notifications</span>
+            </button>
+            <button class="settings-nav-item" data-category="automation">
+              <i class="ri-magic-line"></i>
+              <span>Automation</span>
+            </button>
+            <button class="settings-nav-item" data-category="goals">
+              <i class="ri-trophy-line"></i>
+              <span>Goals</span>
+            </button>
+            <button class="settings-nav-item" data-category="advanced">
+              <i class="ri-settings-3-line"></i>
+              <span>Advanced</span>
+            </button>
+          </nav>
+        </div>
 
-      <!-- Global Shortcuts Section -->
-      <div class="settings-section">
-        <h2>Global Shortcuts</h2>
-        <p class="settings-description">Configure keyboard shortcuts that work even when the app is in the background
-        </p>
+        <!-- Settings Content -->
+        <div class="settings-content">
+          
+          <!-- General Settings (Timer) -->
+          <div class="settings-category active" id="category-general">
+            <div class="category-header">
+              <h1>General Settings</h1>
+              <p class="category-description">Configure timer durations and basic behavior</p>
+            </div>
 
-        <div class="shortcut-item">
-          <label for="start-stop-shortcut">Start/Stop Timer:</label>
-          <div class="shortcut-input-container">
-            <input type="text" id="start-stop-shortcut" class="shortcut-input" readonly placeholder="Cmd+Alt+S"
-              value="Cmd+Alt+S">
-            <button class="shortcut-clear" onclick="clearShortcut('start-stop')">×</button>
+            <div class="settings-section">
+              <h3>Timer Durations</h3>
+              
+              <div class="setting-item">
+                <label for="focus-duration">Focus Duration (minutes):</label>
+                <input type="number" id="focus-duration" min="1" max="60" value="25">
+                <p class="setting-description">How long should focus sessions last</p>
+              </div>
+
+              <div class="setting-item">
+                <label for="break-duration">Short Break (minutes):</label>
+                <input type="number" id="break-duration" min="1" max="30" value="5">
+                <p class="setting-description">Duration for short breaks between focus sessions</p>
+              </div>
+
+              <div class="setting-item">
+                <label for="long-break-duration">Long Break (minutes):</label>
+                <input type="number" id="long-break-duration" min="1" max="60" value="20">
+                <p class="setting-description">Duration for long breaks after completing a cycle</p>
+              </div>
+
+              <div class="setting-item">
+                <label for="total-sessions">Daily Sessions:</label>
+                <input type="number" id="total-sessions" min="1" max="20" value="10">
+                <p class="setting-description">Number of focus sessions to complete each day</p>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div class="shortcut-item">
-          <label for="reset-shortcut">Delete Session / Undo:</label>
-          <div class="shortcut-input-container">
-            <input type="text" id="reset-shortcut" class="shortcut-input" readonly placeholder="Click to set shortcut">
-            <button class="shortcut-clear" onclick="clearShortcut('reset')">×</button>
+          <!-- Shortcuts Settings -->
+          <div class="settings-category" id="category-shortcuts">
+            <div class="category-header">
+              <h1>Global Shortcuts</h1>
+              <p class="category-description">Configure keyboard shortcuts that work even when the app is in the background</p>
+            </div>
+
+            <div class="settings-section">
+              <h3>Keyboard Shortcuts</h3>
+              
+              <div class="shortcut-item">
+                <label for="start-stop-shortcut">Start/Stop Timer:</label>
+                <div class="shortcut-input-container">
+                  <input type="text" id="start-stop-shortcut" class="shortcut-input" readonly placeholder="Cmd+Alt+S"
+                    value="Cmd+Alt+S">
+                  <button class="shortcut-clear" onclick="clearShortcut('start-stop')">×</button>
+                </div>
+                <p class="setting-description">Toggle timer between start and pause states</p>
+              </div>
+
+              <div class="shortcut-item">
+                <label for="reset-shortcut">Delete Session / Undo:</label>
+                <div class="shortcut-input-container">
+                  <input type="text" id="reset-shortcut" class="shortcut-input" readonly placeholder="Click to set shortcut">
+                  <button class="shortcut-clear" onclick="clearShortcut('reset')">×</button>
+                </div>
+                <p class="setting-description">Reset current session or undo during breaks</p>
+              </div>
+
+              <div class="shortcut-item">
+                <label for="skip-shortcut">Save Session:</label>
+                <div class="shortcut-input-container">
+                  <input type="text" id="skip-shortcut" class="shortcut-input" readonly placeholder="Click to set shortcut">
+                  <button class="shortcut-clear" onclick="clearShortcut('skip')">×</button>
+                </div>
+                <p class="setting-description">Skip to next phase and save current progress</p>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div class="shortcut-item">
-          <label for="skip-shortcut">Save Session:</label>
-          <div class="shortcut-input-container">
-            <input type="text" id="skip-shortcut" class="shortcut-input" readonly placeholder="Click to set shortcut">
-            <button class="shortcut-clear" onclick="clearShortcut('skip')">×</button>
+          <!-- Notifications Settings -->
+          <div class="settings-category" id="category-notifications">
+            <div class="category-header">
+              <h1>Notifications</h1>
+              <p class="category-description">Control how and when you receive notifications</p>
+            </div>
+
+            <div class="settings-section">
+              <h3>Notification Types</h3>
+              
+              <div class="setting-item">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="desktop-notifications" checked>
+                  <span class="checkmark"></span>
+                  Desktop Notifications
+                </label>
+                <p class="setting-description">Show system notifications when timer completes. Browser permission will be
+                  requested when enabled.</p>
+              </div>
+
+              <div class="setting-item">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="sound-notifications" checked>
+                  <span class="checkmark"></span>
+                  Sound Notifications
+                </label>
+                <p class="setting-description">Play a sound when timer phases complete</p>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Timer Settings Section -->
-      <div class="settings-section">
-        <h2>Timer Settings</h2>
+          <!-- Automation Settings -->
+          <div class="settings-category" id="category-automation">
+            <div class="category-header">
+              <h1>Automation</h1>
+              <p class="category-description">Configure automatic behaviors and smart features</p>
+            </div>
 
-        <div class="setting-item">
-          <label for="focus-duration">Focus Duration (minutes):</label>
-          <input type="number" id="focus-duration" min="1" max="60" value="25">
-        </div>
+            <div class="settings-section">
+              <h3>Timer Automation</h3>
+              
+              <div class="setting-item">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="auto-start-breaks" checked>
+                  <span class="checkmark"></span>
+                  Auto-start Timer
+                </label>
+                <p class="setting-description">Automatically start the timer when manually skipping to the next session (using
+                  the skip button).</p>
+              </div>
 
-        <div class="setting-item">
-          <label for="break-duration">Short Break (minutes):</label>
-          <input type="number" id="break-duration" min="1" max="30" value="5">
-        </div>
+              <div class="setting-item">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="auto-start-focus">
+                  <span class="checkmark"></span>
+                  Auto-start Focus Sessions
+                </label>
+                <p class="setting-description">Automatically start focus sessions after breaks end without user intervention.</p>
+              </div>
 
-        <div class="setting-item">
-          <label for="long-break-duration">Long Break (minutes):</label>
-          <input type="number" id="long-break-duration" min="1" max="60" value="20">
-        </div>
+              <div class="setting-item">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="auto-long-break">
+                  <span class="checkmark"></span>
+                  Automatic Long Breaks
+                </label>
+                <p class="setting-description">Automatically trigger long breaks after completing the configured number of focus sessions.</p>
+              </div>
+            </div>
 
-        <div class="setting-item">
-          <label for="total-sessions">Daily Sessions:</label>
-          <input type="number" id="total-sessions" min="1" max="20" value="10">
-        </div>
-      </div>
+            <div class="settings-section">
+              <h3>Smart Features</h3>
+              
+              <div class="setting-item">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="smart-pause">
+                  <span class="checkmark"></span>
+                  Smart Pause (Auto-pause when inactive)
+                </label>
+                <p class="setting-description">Automatically pause the timer during focus sessions when no mouse or keyboard
+                  activity is detected, and resume when activity resumes. Only works during focus periods, not breaks.</p>
+              </div>
 
-      <!-- Weekly Goals Section -->
-      <div class="settings-section">
-        <h2>Weekly Goals</h2>
-        <p class="settings-description">Set your weekly focus time target. Saturday and Sunday are excluded from the
-          calculation.</p>
+              <div class="setting-item" id="smart-pause-timeout-setting">
+                <label for="smart-pause-timeout">Inactivity Timeout: <span id="timeout-value">30</span> seconds</label>
+                <input type="range" id="smart-pause-timeout" min="5" max="120" value="30" step="5">
+                <div class="slider-labels">
+                  <span>5s</span>
+                  <span>2min</span>
+                </div>
+                <p class="setting-description">How long to wait before pausing during inactivity</p>
+              </div>
 
-        <div class="setting-item">
-          <label for="weekly-goal-minutes">Weekly Goal (minutes):</label>
-          <input type="number" id="weekly-goal-minutes" min="30" max="2400" value="125" step="5">
-          <p class="setting-description">Target focus time for Monday through Friday (default: 125 minutes = 5 sessions
-            of 25 minutes)</p>
-        </div>
-      </div>
+              <div class="setting-item">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="smart-sessions">
+                  <span class="checkmark"></span>
+                  Smart Session Management
+                </label>
+                <p class="setting-description">Automatically save completed sessions and suggest optimal break durations based on your productivity patterns.</p>
+              </div>
+            </div>
 
-      <!-- Notifications Section -->
-      <div class="settings-section">
-        <h2>Notifications</h2>
+            <div class="settings-section">
+              <h3>Session Management</h3>
+              
+              <div class="setting-item">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="auto-save-sessions" checked>
+                  <span class="checkmark"></span>
+                  Auto-save Completed Sessions
+                </label>
+                <p class="setting-description">Automatically save session data when timer completes without manual confirmation.</p>
+              </div>
 
-        <div class="setting-item">
-          <label class="checkbox-label">
-            <input type="checkbox" id="desktop-notifications" checked>
-            <span class="checkmark"></span>
-            Desktop Notifications
-          </label>
-          <p class="setting-description">Show system notifications when timer completes. Browser permission will be
-            requested when enabled.</p>
-        </div>
-
-        <div class="setting-item">
-          <label class="checkbox-label">
-            <input type="checkbox" id="sound-notifications" checked>
-            <span class="checkmark"></span>
-            Sound Notifications
-          </label>
-        </div>
-
-        <div class="setting-item">
-          <label class="checkbox-label">
-            <input type="checkbox" id="auto-start-breaks" checked>
-            <span class="checkmark"></span>
-            Auto-play Timer
-          </label>
-          <p class="setting-description">Automatically start the timer when manually skipping to the next session (using
-            the skip button).</p>
-        </div>
-
-        <div class="setting-item">
-          <label class="checkbox-label">
-            <input type="checkbox" id="smart-pause">
-            <span class="checkmark"></span>
-            Smart Pause (Auto-pause when inactive)
-          </label>
-          <p class="setting-description">Automatically pause the timer during focus sessions when no mouse or keyboard
-            activity is detected, and resume when activity resumes. Only works during focus periods, not breaks.</p>
-        </div>
-
-        <div class="setting-item" id="smart-pause-timeout-setting">
-          <label for="smart-pause-timeout">Inactivity Timeout: <span id="timeout-value">30</span> seconds</label>
-          <input type="range" id="smart-pause-timeout" min="5" max="120" value="30" step="5">
-          <div class="slider-labels">
-            <span>5s</span>
-            <span>2min</span>
+              <div class="setting-item">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="prevent-interruptions">
+                  <span class="checkmark"></span>
+                  Prevent Interruptions
+                </label>
+                <p class="setting-description">Show confirmation dialog before allowing session resets during active focus periods.</p>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Danger Zone -->
-      <div class="settings-section danger-zone">
-        <h2>⚠️ Danger Zone</h2>
-        <p class="settings-description">These actions are irreversible and will permanently delete your data.</p>
+          <!-- Goals Settings -->
+          <div class="settings-category" id="category-goals">
+            <div class="category-header">
+              <h1>Weekly Goals</h1>
+              <p class="category-description">Set your weekly focus time targets and productivity goals</p>
+            </div>
 
-        <div class="danger-actions">
-          <button class="btn-danger" id="reset-all-data-btn">
-            🗑️ Reset All Data
-          </button>
-          <p class="danger-description">
-            This will permanently delete all your Pomodoro sessions, tasks, statistics, and reset all settings to
-            default. This action cannot be undone.
-          </p>
-        </div>
-      </div>
+            <div class="settings-section">
+              <h3>Focus Goals</h3>
+              
+              <div class="setting-item">
+                <label for="weekly-goal-minutes">Weekly Goal (minutes):</label>
+                <input type="number" id="weekly-goal-minutes" min="30" max="2400" value="125" step="5">
+                <p class="setting-description">Target focus time for Monday through Friday (default: 125 minutes = 5 sessions
+                  of 25 minutes). Saturday and Sunday are excluded from calculation.</p>
+              </div>
+            </div>
+          </div>
 
-      <!-- Actions -->
-      <div class="settings-actions">
-        <div class="auto-save-info">
-          <span class="auto-save-text">✓ Settings are saved automatically</span>
+          <!-- Advanced Settings -->
+          <div class="settings-category" id="category-advanced">
+            <div class="category-header">
+              <h1>Advanced Settings</h1>
+              <p class="category-description">Danger zone and advanced configuration options</p>
+            </div>
+
+            <div class="settings-section danger-zone">
+              <h3>⚠️ Danger Zone</h3>
+              <p class="settings-description">These actions are irreversible and will permanently delete your data.</p>
+
+              <div class="danger-actions">
+                <button class="btn-danger" id="reset-all-data-btn">
+                  🗑️ Reset All Data
+                </button>
+                <p class="danger-description">
+                  This will permanently delete all your Pomodoro sessions, tasks, statistics, and reset all settings to
+                  default. This action cannot be undone.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Settings Actions -->
+          <div class="settings-actions">
+            <div class="auto-save-info">
+              <span class="auto-save-text">✓ Settings are saved automatically</span>
+            </div>
+            <button class="btn-secondary">Reset to Defaults</button>
+          </div>
+
         </div>
-        <button class="btn-secondary">Reset to Defaults</button>
       </div>
     </div>
   </main>

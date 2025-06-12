@@ -2,6 +2,7 @@
 
 /* Tablet and small desktop responsive */
 @media (max-width: 1024px) {
+
   /* Calendar layout adjustments for tablets and small desktops */
   .calendar-main-layout {
     grid-template-columns: 1fr;
@@ -26,7 +27,7 @@
     padding: 1.5rem !important;
   }
 
-  .calendar-container, 
+  .calendar-container,
   .mini-calendar-container,
   .focus-summary-card,
   .weekly-chart-card,
