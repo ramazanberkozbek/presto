@@ -6,6 +6,8 @@ export class NavigationManager {
     constructor() {
         this.currentView = 'timer';
         this.initialized = false;
+        this.currentTooltip = null; // Track current tooltip for proper cleanup
+        this.tooltipTimeout = null; // Track timeout for debounced tooltip removal
     }
 
     async init() {
@@ -1083,17 +1085,21 @@ export class NavigationManager {
     }
 
     addTooltipEvents(element) {
-        let tooltipElement = null;
-
         element.addEventListener('mouseenter', (e) => {
             const tooltipText = e.target.dataset.tooltip;
             if (!tooltipText) return;
 
-            // Remove any existing tooltip
+            // Clear any pending tooltip removal
+            if (this.tooltipTimeout) {
+                clearTimeout(this.tooltipTimeout);
+                this.tooltipTimeout = null;
+            }
+
+            // Remove any existing tooltip first
             this.removeTooltip();
 
             // Create tooltip element
-            tooltipElement = document.createElement('div');
+            const tooltipElement = document.createElement('div');
             tooltipElement.className = 'custom-tooltip';
             tooltipElement.textContent = tooltipText;
             
@@ -1134,27 +1140,56 @@ export class NavigationManager {
 
             document.body.appendChild(tooltipElement);
             
+            // Store reference to current tooltip for cleanup
+            this.currentTooltip = tooltipElement;
+            
             // Fade in
             requestAnimationFrame(() => {
-                tooltipElement.style.opacity = '1';
+                if (tooltipElement.parentNode) {
+                    tooltipElement.style.opacity = '1';
+                }
             });
         });
 
         element.addEventListener('mouseleave', () => {
-            this.removeTooltip();
+            // Add slight delay to prevent flicker when moving between adjacent elements
+            this.tooltipTimeout = setTimeout(() => {
+                this.removeTooltip();
+            }, 50);
         });
     }
 
     removeTooltip() {
-        const existingTooltip = document.querySelector('.custom-tooltip');
-        if (existingTooltip) {
-            existingTooltip.style.opacity = '0';
+        // Clear any pending timeout
+        if (this.tooltipTimeout) {
+            clearTimeout(this.tooltipTimeout);
+            this.tooltipTimeout = null;
+        }
+
+        // Use stored reference first, then fallback to querySelector
+        if (this.currentTooltip && this.currentTooltip.parentNode) {
+            this.currentTooltip.style.opacity = '0';
             setTimeout(() => {
-                if (existingTooltip.parentNode) {
-                    existingTooltip.parentNode.removeChild(existingTooltip);
+                if (this.currentTooltip && this.currentTooltip.parentNode) {
+                    this.currentTooltip.parentNode.removeChild(this.currentTooltip);
+                }
+                this.currentTooltip = null;
+            }, 200);
+            return;
+        }
+
+        // Fallback: remove any remaining tooltips
+        const existingTooltips = document.querySelectorAll('.custom-tooltip');
+        existingTooltips.forEach(tooltip => {
+            tooltip.style.opacity = '0';
+            setTimeout(() => {
+                if (tooltip.parentNode) {
+                    tooltip.parentNode.removeChild(tooltip);
                 }
             }, 200);
-        }
+        });
+        
+        this.currentTooltip = null;
     }
 
     // ...existing methods...
