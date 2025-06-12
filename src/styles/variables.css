@@ -40,6 +40,12 @@
   --focus-secondary-btn: #FFD9D9;
   --break-secondary-btn: #DAFAE0;
   --long-break-secondary-btn: #D9EEFF;
+
+  /* Smart indicator colors */
+  --smart-indicator-active: #3b82f6;
+  --smart-indicator-inactive: #94a3b8;
+  --smart-indicator-bg: rgba(255, 255, 255, 0.1);
+  --smart-indicator-bg-hover: rgba(255, 255, 255, 0.2);
 }
 
 body {

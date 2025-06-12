@@ -9,6 +9,7 @@
 @import 'progress.css';
 @import 'tasks.css';
 @import 'statistics.css';
+@import 'smart-indicator.css';
 
 /* Layout and navigation */
 @import 'layout.css';

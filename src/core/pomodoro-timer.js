@@ -53,6 +53,7 @@ export class PomodoroTimer {
         this.skipBrainIcon = document.getElementById('skip-brain-icon');
         this.skipDefaultIcon = document.getElementById('skip-default-icon');
         this.progressDots = document.getElementById('progress-dots');
+        this.smartIndicator = document.getElementById('smart-indicator');
 
         // Task management
         this.tasks = [];
@@ -90,6 +91,12 @@ export class PomodoroTimer {
         this.updateProgressDots();
         this.updateStopUndoButton(); // Initialize stop/undo button state
         this.updateSkipIcon(); // Initialize skip button icon
+        this.updateSmartIndicator(); // Initialize smart pause indicator
+        
+        // Add tooltip to smart indicator if NavigationManager is available
+        if (window.navigationManager && this.smartIndicator) {
+            window.navigationManager.addTooltipEvents(this.smartIndicator);
+        }
         this.setupEventListeners();
         await this.loadSessionData();
         await this.loadTasks();
@@ -108,6 +115,19 @@ export class PomodoroTimer {
 
         // Render loaded tasks
         this.renderTasks();
+
+        // Initialize smart indicator tooltip and click handler
+        if (this.smartIndicator) {
+            // Add click handler for toggle
+            this.smartIndicator.addEventListener('click', () => {
+                this.toggleSmartPause();
+            });
+            
+            // Add tooltip using NavigationManager
+            if (window.navigation) {
+                window.navigation.addTooltipEvents(this.smartIndicator);
+            }
+        }
 
         // Initialize sidebar state to match timer
         const sidebar = document.querySelector('.sidebar');
@@ -375,6 +395,9 @@ export class PomodoroTimer {
         }
 
         console.log('Smart pause', enabled ? 'enabled' : 'disabled');
+        
+        // Update the smart indicator
+        this.updateSmartIndicator();
     }
 
     startTimer() {
@@ -865,6 +888,46 @@ export class PomodoroTimer {
 
         // Clear any fallback text content since we're using icons
         this.statusIcon.textContent = '';
+    }
+
+    // Update smart pause indicator
+    updateSmartIndicator() {
+        if (!this.smartIndicator) {
+            console.error('Smart indicator element not found!');
+            return;
+        }
+
+        // Always show the indicator
+        this.smartIndicator.style.display = 'block';
+        
+        if (this.smartPauseEnabled) {
+            // Use filled bulb icon when active
+            this.smartIndicator.className = 'ri-lightbulb-fill active';
+        } else {
+            // Use line bulb icon when inactive
+            this.smartIndicator.className = 'ri-lightbulb-line';
+        }
+    }
+
+    // Toggle smart pause on/off
+    async toggleSmartPause() {
+        const newState = !this.smartPauseEnabled;
+        await this.enableSmartPause(newState);
+        
+        // Save the setting by updating checkbox and triggering auto-save
+        if (window.settingsManager) {
+            const smartPauseCheckbox = document.getElementById('smart-pause');
+            if (smartPauseCheckbox) {
+                smartPauseCheckbox.checked = newState;
+                window.settingsManager.scheduleAutoSave();
+            }
+        }
+        
+        // Show notification
+        const message = newState 
+            ? 'Smart Pause enabled! Timer will auto-pause during inactivity 🧠'
+            : 'Smart Pause disabled 💡';
+        NotificationUtils.showNotificationPing(message, 'info');
     }
 
     updateButtons() {
