@@ -7,6 +7,7 @@ use std::time::{Duration, Instant};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager};
+use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 
 // Global activity monitoring state
@@ -45,6 +46,7 @@ struct AppSettings {
     shortcuts: ShortcutSettings,
     timer: TimerSettings,
     notifications: NotificationSettings,
+    autostart: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -92,6 +94,7 @@ impl Default for AppSettings {
                 smart_pause: false,
                 smart_pause_timeout: 30, // default 30 seconds
             },
+            autostart: false, // default to disabled
         }
     }
 }
@@ -641,6 +644,32 @@ async fn reset_all_data(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+async fn enable_autostart(app: tauri::AppHandle) -> Result<(), String> {
+    let autostart_manager = app.autolaunch();
+    autostart_manager
+        .enable()
+        .map_err(|e| format!("Failed to enable autostart: {}", e))?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn disable_autostart(app: tauri::AppHandle) -> Result<(), String> {
+    let autostart_manager = app.autolaunch();
+    autostart_manager
+        .disable()
+        .map_err(|e| format!("Failed to disable autostart: {}", e))?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn is_autostart_enabled(app: tauri::AppHandle) -> Result<bool, String> {
+    let autostart_manager = app.autolaunch();
+    autostart_manager
+        .is_enabled()
+        .map_err(|e| format!("Failed to check autostart status: {}", e))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -648,6 +677,10 @@ pub fn run() {
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+        ))
         .invoke_handler(tauri::generate_handler![
             greet,
             save_session_data,
@@ -665,7 +698,10 @@ pub fn run() {
             reset_all_data,
             start_activity_monitoring,
             stop_activity_monitoring,
-            update_activity_timeout
+            update_activity_timeout,
+            enable_autostart,
+            disable_autostart,
+            is_autostart_enabled
         ])
         .setup(|app| {
             // Crea il menu della tray

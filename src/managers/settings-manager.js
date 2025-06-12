@@ -50,7 +50,8 @@ export class SettingsManager {
                 auto_start_breaks: true,
                 smart_pause: false,
                 smart_pause_timeout: 30 // default 30 seconds
-            }
+            },
+            autostart: false // default to disabled
         };
     }
 
@@ -92,6 +93,9 @@ export class SettingsManager {
 
         // Setup slider event listener
         this.setupSliderEventListener();
+
+        // Populate autostart setting and check current system status
+        this.loadAutostartSetting();
     }
 
     setupEventListeners() {
@@ -513,5 +517,64 @@ export class SettingsManager {
                 }
             });
         });
+    }
+
+    async loadAutostartSetting() {
+        try {
+            // Check if autostart is enabled in the system
+            const isEnabled = await invoke('is_autostart_enabled');
+
+            // Update the setting and UI
+            this.settings.autostart = isEnabled;
+            const checkbox = document.getElementById('autostart-enabled');
+            if (checkbox) {
+                checkbox.checked = isEnabled;
+
+                // Setup event listener for the autostart checkbox
+                checkbox.addEventListener('change', async (e) => {
+                    await this.toggleAutostart(e.target.checked);
+                });
+            }
+        } catch (error) {
+            console.error('Failed to check autostart status:', error);
+            // Default to false if we can't check the status
+            const checkbox = document.getElementById('autostart-enabled');
+            if (checkbox) {
+                checkbox.checked = false;
+                checkbox.addEventListener('change', async (e) => {
+                    await this.toggleAutostart(e.target.checked);
+                });
+            }
+        }
+    }
+
+    async toggleAutostart(enabled) {
+        try {
+            if (enabled) {
+                await invoke('enable_autostart');
+                console.log('Autostart enabled');
+                NotificationUtils.showNotificationPing('✓ Autostart enabled - Tempo will start with your system', 'success');
+            } else {
+                await invoke('disable_autostart');
+                console.log('Autostart disabled');
+                NotificationUtils.showNotificationPing('✓ Autostart disabled', 'success');
+            }
+
+            // Update our settings
+            this.settings.autostart = enabled;
+
+            // Schedule auto-save to persist the setting
+            this.scheduleAutoSave();
+
+        } catch (error) {
+            console.error('Failed to toggle autostart:', error);
+            NotificationUtils.showNotificationPing('❌ Failed to toggle autostart: ' + error, 'error');
+
+            // Revert the checkbox state on error
+            const checkbox = document.getElementById('autostart-enabled');
+            if (checkbox) {
+                checkbox.checked = !enabled;
+            }
+        }
     }
 }
