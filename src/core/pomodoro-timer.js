@@ -1189,6 +1189,10 @@ export class PomodoroTimer {
             const seconds = this.timeRemaining % 60;
             const timerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
+            // Add session counter to timer text
+            const sessionCounter = `(${this.completedPomodoros}/${this.totalSessions})`;
+            const fullTimerText = `${timerText} ${sessionCounter}`;
+
             // Define icons for different modes
             const modeIcons = {
                 focus: '🧠',
@@ -1205,7 +1209,7 @@ export class PomodoroTimer {
             }
 
             await invoke('update_tray_icon', {
-                timerText: timerText,
+                timerText: fullTimerText,
                 isRunning: this.isRunning,
                 sessionMode: this.currentMode,
                 currentSession: this.currentSession,
