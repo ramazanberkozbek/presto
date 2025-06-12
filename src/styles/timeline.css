@@ -1,39 +1,46 @@
-/* Timeline and Session Management Styles */
+/* Timeline and Session Management Styles - Simplified */
 
 .sessions-timeline {
   margin-top: 1rem;
   background: #f8f9fa;
-  border-radius: 10px;
-  padding: 1rem;
-  min-height: 120px;
+  border-radius: 6px;
+  padding: 0.5rem;
+  min-height: 75px;
+  height: auto;
   position: relative;
 }
 
 .timeline-hours {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.3rem;
   position: relative;
-  height: 20px;
+  height: 5px;
+  padding: 0 5px;
 }
 
 .timeline-hour {
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   color: var(--text-light);
   position: relative;
-  flex: 1;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 5px;
+  max-height: 5px;
 }
 
 .timeline-hour::after {
   content: '';
   position: absolute;
-  top: 15px;
+  top: 5px;
   left: 50%;
   transform: translateX(-50%);
   width: 1px;
-  height: 10px;
-  background: #ddd;
+  height: 50px;
+  background: #e0e0e0;
+  z-index: 1;
 }
 
 .timeline-hour:first-child::after {
@@ -49,66 +56,76 @@
 
 .timeline-track {
   position: relative;
-  height: 60px;
+  height: 50px;
+  min-height: 50px;
   background: white;
-  border-radius: 8px;
-  border: 2px dashed #e0e0e0;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
   overflow: visible;
+  transition: height 0.3s ease;
 }
 
 .timeline-session {
   position: absolute;
-  height: 50px;
-  border-radius: 8px;
+  height: 35px;
+  border-radius: 4px;
   cursor: move;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 500;
   color: white;
-  top: 5px;
-  min-width: 40px;
+  top: 7px;
+  min-width: 30px;
   user-select: none;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  z-index: 5;
 }
 
 .timeline-session:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .timeline-session.focus {
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  background: #e74c3c;
 }
 
 .timeline-session.break {
-  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+  background: #2ecc71;
 }
 
 .timeline-session.longBreak {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  background: #3498db;
 }
 
 .timeline-session.custom {
-  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+  background: #9b59b6;
 }
 
 .timeline-session.historical {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: default;
+  height: 20px;
+  top: 15px;
+  min-width: 20px;
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .timeline-session.historical:hover {
   transform: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  opacity: 0.8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 /* Today's Sessions - Minimal Display */
 .timeline-session.today-session {
   height: 30px;
-  top: 15px;
+  top: 10px;
+  z-index: 10;
 }
 
 .timeline-session.today-session .timeline-session-content-minimal {
@@ -125,6 +142,7 @@
 .timeline-session.today-session .session-handle {
   opacity: 0;
   transition: opacity 0.2s ease;
+  z-index: 15;
 }
 
 .timeline-session.today-session:hover .session-handle {
@@ -139,7 +157,7 @@
 .timeline-session.today-session:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-  z-index: 10;
+  z-index: 20;
 }
 
 .timeline-session.time-constraint {
@@ -191,8 +209,8 @@
 /* Dragging States */
 .timeline-session.dragging {
   z-index: 10;
-  transform: scale(1.05);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  transform: scale(1.02);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
 }
 
 .timeline-session.resizing {
@@ -204,22 +222,21 @@
   background: rgba(155, 89, 182, 0.05);
 }
 
-/* Session Context Menu (for right-click actions) */
 .session-context-menu {
   position: fixed;
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  padding: 0.5rem 0;
+  border-radius: 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 0.3rem 0;
   z-index: 1000;
   display: none;
-  min-width: 120px;
+  min-width: 100px;
 }
 
 .context-menu-item {
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.8rem;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   transition: background 0.2s ease;
 }
 
@@ -235,7 +252,6 @@
   background: #ffe6e6;
 }
 
-/* Average session time line in weekly chart */
 .week-average-line {
   position: absolute;
   height: 2px;
@@ -250,11 +266,11 @@
   position: absolute;
   left: 0;
   top: -2px;
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
   background: #3498db;
   border-radius: 50%;
-  box-shadow: 0 0 0 2px white, 0 1px 3px rgba(52, 152, 219, 0.4);
+  box-shadow: 0 0 0 1px white;
 }
 
 .week-average-line::after {
@@ -262,24 +278,34 @@
   position: absolute;
   right: 0;
   top: -2px;
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
   background: #3498db;
   border-radius: 50%;
-  box-shadow: 0 0 0 2px white, 0 1px 3px rgba(52, 152, 219, 0.4);
+  box-shadow: 0 0 0 1px white;
 }
 
 .week-average-label {
   position: absolute;
   right: 5px;
-  top: -18px;
-  font-size: 10px;
+  top: -15px;
+  font-size: 9px;
   color: #3498db;
-  font-weight: 600;
+  font-weight: 500;
   background: white;
-  padding: 1px 4px;
-  border-radius: 3px;
+  padding: 1px 3px;
+  border-radius: 2px;
   white-space: nowrap;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(52, 152, 219, 0.2);
+}
+
+.timeline-session.session-stacked {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.timeline-session.session-stacked:hover {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.8);
 }

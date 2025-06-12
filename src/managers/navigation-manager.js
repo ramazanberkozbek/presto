@@ -603,6 +603,9 @@ export class NavigationManager {
 
         // Clear previous sessions
         timelineTrack.innerHTML = '';
+        
+        // Reset timeline track height
+        timelineTrack.style.height = '50px';
 
         try {
             // Get sessions from SessionManager first (for manually added sessions)
@@ -661,7 +664,7 @@ export class NavigationManager {
 
             // Create timeline session blocks
             allSessions.forEach(session => {
-                this.createTimelineSession(session, date, timelineTrack);
+                this.createTimelineSession(session, date, timelineTrack, allSessions);
             });
 
             // Initialize timeline interactions
@@ -823,16 +826,18 @@ export class NavigationManager {
     setupTimelineHours(timelineHours) {
         timelineHours.innerHTML = '';
 
-        // Show hours from 6 AM to 10 PM
-        for (let hour = 6; hour <= 22; hour += 2) {
+        // Show only major hours every 3 hours: 6, 9, 12, 15, 18
+        const majorHours = [6, 9, 12, 15, 18];
+        
+        majorHours.forEach(hour => {
             const hourElement = document.createElement('div');
             hourElement.className = 'timeline-hour';
-            hourElement.textContent = `${hour}:00`;
+            // No text content - empty labels
             timelineHours.appendChild(hourElement);
-        }
+        });
     }
 
-    createTimelineSession(session, date, timelineTrack) {
+    createTimelineSession(session, date, timelineTrack, allSessions = []) {
         const sessionElement = document.createElement('div');
         sessionElement.className = `timeline-session ${session.session_type}`;
         sessionElement.dataset.sessionId = session.id;
@@ -874,8 +879,15 @@ export class NavigationManager {
             // Set tooltip with full information
             const notes = session.notes ? ` - ${session.notes}` : '';
             sessionElement.title = `${sessionType}: ${session.start_time} - ${session.end_time} (${session.duration}m)${notes}`;
+        } else if (session.isHistorical) {
+            // For historical sessions: ultra-minimal display, just colored block
+            sessionElement.classList.add('historical');
+            sessionElement.innerHTML = `<div class="timeline-session-content-minimal"></div>`;
+            
+            // Set tooltip with basic information
+            sessionElement.title = `${sessionType}: ${session.start_time} - ${session.end_time} (${session.duration}m)`;
         } else {
-            // For other days or historical sessions: show full content
+            // For other days: show full content
             sessionElement.innerHTML = `
         <div class="session-handle left"></div>
         <div class="timeline-session-content">
@@ -889,10 +901,20 @@ export class NavigationManager {
         // Add event listeners for non-historical sessions
         if (!session.isHistorical) {
             this.addTimelineSessionEventListeners(sessionElement, session, date);
-        } else {
-            // Remove handles for historical sessions
-            sessionElement.classList.add('historical');
-            sessionElement.querySelectorAll('.session-handle').forEach(handle => handle.remove());
+        }
+
+        // Handle overlapping sessions by stacking them vertically
+        const offset = this.calculateSessionOffset(session, allSessions);
+        if (offset > 0) {
+            sessionElement.style.transform = `translateY(${offset}px)`;
+            sessionElement.classList.add('session-stacked');
+            
+            // Expand timeline track height if needed
+            const currentHeight = parseInt(timelineTrack.style.height) || 50;
+            const requiredHeight = 50 + offset + 35; // base height + offset + session height
+            if (requiredHeight > currentHeight) {
+                timelineTrack.style.height = `${requiredHeight}px`;
+            }
         }
 
         timelineTrack.appendChild(sessionElement);
@@ -1221,5 +1243,37 @@ export class NavigationManager {
         this.currentTooltip = null;
     }
 
-    // ...existing methods...
+    calculateSessionOffset(session, allSessions) {
+        if (!allSessions || allSessions.length <= 1) return 0;
+
+        const [sessionStartHour, sessionStartMin] = session.start_time.split(':').map(Number);
+        const [sessionEndHour, sessionEndMin] = session.end_time.split(':').map(Number);
+        const sessionStartMinutes = sessionStartHour * 60 + sessionStartMin;
+        const sessionEndMinutes = sessionEndHour * 60 + sessionEndMin;
+
+        let offset = 0;
+        const stackHeight = 40; // Height for each stacked session
+
+        // Check all sessions that come before this one in the array
+        const sessionIndex = allSessions.findIndex(s => s.id === session.id);
+        
+        for (let i = 0; i < sessionIndex; i++) {
+            const otherSession = allSessions[i];
+            const [otherStartHour, otherStartMin] = otherSession.start_time.split(':').map(Number);
+            const [otherEndHour, otherEndMin] = otherSession.end_time.split(':').map(Number);
+            const otherStartMinutes = otherStartHour * 60 + otherStartMin;
+            const otherEndMinutes = otherEndHour * 60 + otherEndMin;
+
+            // Check if sessions overlap
+            const isOverlapping = (
+                sessionStartMinutes < otherEndMinutes && sessionEndMinutes > otherStartMinutes
+            );
+
+            if (isOverlapping) {
+                offset += stackHeight;
+            }
+        }
+
+        return offset;
+    }
 }
