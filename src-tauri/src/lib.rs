@@ -69,6 +69,8 @@ struct NotificationSettings {
     desktop_notifications: bool,
     sound_notifications: bool,
     auto_start_breaks: bool,
+    #[serde(default)]
+    auto_start_focus: bool,
     smart_pause: bool,
     smart_pause_timeout: u32, // timeout in seconds
 }
@@ -91,6 +93,7 @@ impl Default for AppSettings {
                 desktop_notifications: true,
                 sound_notifications: true,
                 auto_start_breaks: true,
+                auto_start_focus: false, // default to disabled
                 smart_pause: false,
                 smart_pause_timeout: 30, // default 30 seconds
             },
