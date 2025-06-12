@@ -362,7 +362,7 @@
 
 .week-day-bar {
   flex: 1;
-  background: linear-gradient(180deg, var(--focus-color), #c0392b);
+  background: var(--focus-color); /* Changed from gradient to flat color */
   border-radius: 3px 3px 0 0;
   min-height: 8px;
   position: relative;

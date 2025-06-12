@@ -476,7 +476,7 @@ export class NavigationManager {
                 avgLine.style.right = '0';
                 avgLine.style.position = 'absolute';
                 avgLine.style.height = '2px';
-                avgLine.style.backgroundColor = '#3498db';
+                avgLine.style.backgroundColor = '#6b7280'; // Changed to gray
                 avgLine.style.zIndex = '10';
                 avgLine.style.opacity = '0.8';
 
@@ -488,7 +488,7 @@ export class NavigationManager {
                 avgLabel.style.right = '5px';
                 avgLabel.style.top = '-18px';
                 avgLabel.style.fontSize = '10px';
-                avgLabel.style.color = '#3498db';
+                avgLabel.style.color = '#6b7280'; // Changed to gray
                 avgLabel.style.fontWeight = '600';
                 avgLabel.style.background = 'white';
                 avgLabel.style.padding = '1px 4px';
@@ -516,7 +516,7 @@ export class NavigationManager {
 
                 // Add visual indicator if this day was used in average calculation
                 if (isPast && sessions > 0) {
-                    dayBar.style.borderTop = '2px solid #3498db';
+                    dayBar.style.borderTop = '2px solid #6b7280'; // Changed to gray
                 }
 
                 // Add value label on hover
@@ -535,9 +535,19 @@ export class NavigationManager {
                 const tooltipText = sessions > 0
                     ? `${day}: ${timeText} (${sessions} sessions, ${avgPerSession}m avg/session)`
                     : `${day}: ${timeText} (${sessions} sessions)`;
-                dayBar.title = tooltipText;
+                
+                // Use custom tooltip instead of native title
+                dayBar.dataset.tooltip = tooltipText;
+                
+                // Add hover event listeners for custom tooltip
+                this.addTooltipEvents(dayBar);
 
                 weeklyChart.appendChild(dayBar);
+            });
+
+            // Add cleanup event for when mouse leaves the entire chart
+            weeklyChart.addEventListener('mouseleave', () => {
+                this.removeTooltip();
             });
 
         } catch (error) {
@@ -547,7 +557,13 @@ export class NavigationManager {
                 const dayBar = document.createElement('div');
                 dayBar.className = 'week-day-bar';
                 dayBar.style.height = '8px';
-                dayBar.title = `${day}: No data available`;
+                
+                // Use custom tooltip instead of native title
+                dayBar.dataset.tooltip = `${day}: No data available`;
+                
+                // Add hover event listeners for custom tooltip
+                this.addTooltipEvents(dayBar);
+                
                 weeklyChart.appendChild(dayBar);
             });
         }
@@ -1112,7 +1128,7 @@ export class NavigationManager {
             tooltipElement.style.left = `${rect.left + scrollLeft + rect.width / 2}px`;
             tooltipElement.style.top = `${rect.top + scrollTop - 10}px`;
             tooltipElement.style.transform = 'translateX(-50%) translateY(-100%)';
-            tooltipElement.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+            tooltipElement.style.backgroundColor = '#1f2937'; // Changed to flat dark gray
             tooltipElement.style.color = 'white';
             tooltipElement.style.padding = '8px 12px';
             tooltipElement.style.borderRadius = '6px';
@@ -1135,7 +1151,7 @@ export class NavigationManager {
             arrow.style.height = '0';
             arrow.style.borderLeft = '5px solid transparent';
             arrow.style.borderRight = '5px solid transparent';
-            arrow.style.borderTop = '5px solid rgba(0, 0, 0, 0.9)';
+            arrow.style.borderTop = '5px solid #1f2937'; // Changed to match flat background
             tooltipElement.appendChild(arrow);
 
             document.body.appendChild(tooltipElement);
