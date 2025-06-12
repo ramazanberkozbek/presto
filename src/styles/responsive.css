@@ -1,5 +1,40 @@
 /* Responsive Design and Mobile Styles */
 
+/* Tablet and small desktop responsive */
+@media (max-width: 1024px) {
+  /* Calendar layout adjustments for tablets and small desktops */
+  .calendar-main-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    max-width: 800px;
+  }
+
+  .focus-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .weekly-chart {
+    height: 100px;
+  }
+
+  .daily-chart {
+    height: 70px;
+  }
+
+  #calendar-view {
+    padding: 1.5rem !important;
+  }
+
+  .calendar-container, 
+  .mini-calendar-container,
+  .focus-summary-card,
+  .weekly-chart-card,
+  .daily-chart-card {
+    padding: 1.25rem;
+  }
+}
+
 /* Mobile Sidebar Styles */
 @media (max-width: 768px) {
   .sidebar {
