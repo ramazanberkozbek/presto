@@ -515,11 +515,11 @@ export class PomodoroTimer {
 
         // Only auto-start if continuous sessions are disabled
         if (!this.allowContinuousSessions) {
-            if (this.currentMode === 'focus') {
-                // About to go to break - check if breaks should auto-start
+            if (this.currentMode === 'break' || this.currentMode === 'longBreak') {
+                // Skipped focus session, now in break - check if breaks should auto-start
                 shouldAutoStart = this.autoStartBreaks;
-            } else {
-                // About to go to focus - check if focus should auto-start
+            } else if (this.currentMode === 'focus') {
+                // Skipped break, now in focus - check if focus should auto-start
                 shouldAutoStart = this.autoStartFocus;
             }
         }
@@ -538,95 +538,35 @@ export class PomodoroTimer {
         this.isPaused = false;
         clearInterval(this.timerInterval);
 
-        // Check if we should auto-start next session (before resetting sessionStartTime)
-        const wasSessionActive = this.sessionStartTime !== null;
+        // Track completion state
+        let shouldChangeMode = true;
 
         if (this.currentMode === 'focus') {
+            this.completedPomodoros++;
+            this.updateProgressDots();
+
+            // Calculate actual elapsed time for focus sessions
+            const actualElapsedTime = this.currentSessionElapsedTime || (this.durations.focus - this.timeRemaining);
+            this.totalFocusTime += actualElapsedTime;
+
+            // Store the actual elapsed time for undo functionality
+            this.lastCompletedSessionTime = actualElapsedTime;
+
+            // Mark current task as completed if exists
+            if (this.currentTask.trim()) {
+                await this.markTaskCompleted(this.currentTask.trim());
+                if (this.taskInput) {
+                    this.taskInput.value = '';
+                }
+                this.currentTask = '';
+            }
+
             // Check if continuous sessions are enabled
             if (this.allowContinuousSessions) {
-                // Save the completed session data but don't change mode
-                this.completedPomodoros++;
-                this.updateProgressDots();
-
-                // Calculate actual elapsed time for focus sessions
-                const actualElapsedTime = this.currentSessionElapsedTime || (this.durations.focus - this.timeRemaining);
-                this.totalFocusTime += actualElapsedTime;
-
-                // Store the actual elapsed time for undo functionality
-                this.lastCompletedSessionTime = actualElapsedTime;
-
-                // Mark current task as completed if exists
-                if (this.currentTask.trim()) {
-                    await this.markTaskCompleted(this.currentTask.trim());
-                    if (this.taskInput) {
-                        this.taskInput.value = '';
-                    }
-                    this.currentTask = '';
-                }
-
-                // Reset the timer to the focus duration but keep the mode as 'focus'
-                this.timeRemaining = this.durations.focus;
-                
-                // Reset session tracking for continued session
-                this.sessionStartTime = null;
-                this.currentSessionElapsedTime = 0;
-
-                // Don't change mode - stay in focus
-                // currentMode stays 'focus'
-
-                this.updateDisplay();
-                this.updateButtons();
-                await this.saveSessionData();
-                await this.updateWeeklyStats();
-                this.showNotification();
-                NotificationUtils.playNotificationSound();
-
-                // Show completion message for continuous sessions
-                NotificationUtils.showNotificationPing('Pomodoro completed! Continue working or take a break? 🍅', 'success', this.currentMode);
-
-                // Stop the timer - user needs to manually start next session
-                this.isRunning = false;
-                this.isPaused = false;
-                this.isAutoPaused = false;
-
-                // Clear intervals and timeouts
-                if (this.timerInterval) {
-                    clearInterval(this.timerInterval);
-                    this.timerInterval = null;
-                }
-                if (this.activityTimeout) {
-                    clearTimeout(this.activityTimeout);
-                    this.activityTimeout = null;
-                }
-
-                this.updateDisplay();
-                this.updateButtons();
-                this.updateTrayIcon();
-                
-                // Exit early - don't execute the rest of the method
-                return;
+                // Don't change mode - stay in focus for continuous sessions
+                shouldChangeMode = false;
             } else {
-                // Traditional behavior - proceed to break
-                this.completedPomodoros++;
-                this.updateProgressDots();
-
-                // Calculate actual elapsed time for focus sessions
-                const actualElapsedTime = this.currentSessionElapsedTime || (this.durations.focus - this.timeRemaining);
-                this.totalFocusTime += actualElapsedTime;
-
-                // Store the actual elapsed time for undo functionality
-                this.lastCompletedSessionTime = actualElapsedTime;
-
-                // Mark current task as completed if exists
-                if (this.currentTask.trim()) {
-                    await this.markTaskCompleted(this.currentTask.trim());
-                    if (this.taskInput) {
-                        this.taskInput.value = '';
-                    }
-                    this.currentTask = '';
-                }
-
-                // Determine next mode
+                // Determine next mode for traditional behavior
                 if (this.completedPomodoros % 4 === 0) {
                     this.currentMode = 'longBreak';
                 } else {
@@ -636,55 +576,10 @@ export class PomodoroTimer {
         } else {
             // Break completed
             if (this.allowContinuousSessions) {
-                // Save session data but don't change mode - allow user to decide when to continue
-                
-                // Reset the timer to the current break duration but keep the mode as current break type
-                this.timeRemaining = this.durations[this.currentMode];
-                
-                // Reset session tracking for continued session
-                this.sessionStartTime = null;
-                this.currentSessionElapsedTime = 0;
-
-                // Don't change mode - stay in current break type
-                // currentMode stays 'break' or 'longBreak'
-
-                this.updateDisplay();
-                this.updateButtons();
-                await this.saveSessionData();
-                await this.updateWeeklyStats();
-                this.showNotification();
-                NotificationUtils.playNotificationSound();
-
-                // Show completion message for continuous break sessions
-                const messages = {
-                    break: 'Break time completed! Continue resting or ready to focus? ☕',
-                    longBreak: 'Long break completed! Continue resting or ready to work? 🌙'
-                };
-                NotificationUtils.showNotificationPing(messages[this.currentMode] || 'Break completed!', 'success', this.currentMode);
-
-                // Stop the timer - user needs to manually start next session
-                this.isRunning = false;
-                this.isPaused = false;
-                this.isAutoPaused = false;
-
-                // Clear intervals and timeouts
-                if (this.timerInterval) {
-                    clearInterval(this.timerInterval);
-                    this.timerInterval = null;
-                }
-                if (this.activityTimeout) {
-                    clearTimeout(this.activityTimeout);
-                    this.activityTimeout = null;
-                }
-
-                this.updateDisplay();
-                this.updateButtons();
-                this.updateTrayIcon();
-                
-                // Exit early - don't execute the rest of the method
-                return;
+                // Don't change mode - stay in current break type for continuous sessions
+                shouldChangeMode = false;
             } else {
-                // Traditional behavior - proceed to focus
+                // Traditional behavior - go back to focus
                 this.currentMode = 'focus';
                 if (this.completedPomodoros < this.totalSessions) {
                     this.currentSession = this.completedPomodoros + 1;
@@ -700,31 +595,42 @@ export class PomodoroTimer {
         this.updateDisplay();
         this.updateButtons();
         await this.saveSessionData();
-        await this.updateWeeklyStats(); // Update weekly stats after session completion
+        await this.updateWeeklyStats();
         this.showNotification();
         NotificationUtils.playNotificationSound();
 
         // Show completion message
-        const messages = {
-            focus: this.currentMode === 'longBreak' ? 'Great work! Take a long break 🎉' : 'Pomodoro completed! Take a short break 😌',
-            break: 'Break over! Ready to focus? 🍅',
-            longBreak: 'Long break over! Time to get back to work 🚀'
-        };
+        let completionMessage;
+        if (this.allowContinuousSessions) {
+            // Messages for continuous sessions
+            const continuousMessages = {
+                focus: 'Pomodoro completed! Continue working or take a break? 🍅',
+                break: 'Break time completed! Continue resting or ready to focus? ☕',
+                longBreak: 'Long break completed! Continue resting or ready to work? 🌙'
+            };
+            completionMessage = continuousMessages[this.currentMode];
+        } else {
+            // Messages for traditional mode
+            const traditionalMessages = {
+                focus: this.currentMode === 'longBreak' ? 'Great work! Take a long break 🎉' : 'Pomodoro completed! Take a short break 😌',
+                break: 'Break over! Ready to focus? 🍅',
+                longBreak: 'Long break over! Time to get back to work 🚀'
+            };
+            completionMessage = traditionalMessages[this.currentMode] || traditionalMessages.focus;
+        }
 
-        NotificationUtils.showNotificationPing(messages[this.currentMode] || messages.focus, 'success', this.currentMode);
+        NotificationUtils.showNotificationPing(completionMessage, 'success', this.currentMode);
 
-        // Stop the timer after session completion - user can start manually or via auto-start setting
+        // Stop the timer after session completion
         this.isRunning = false;
         this.isPaused = false;
         this.isAutoPaused = false;
 
-        // Clear the timer interval to stop counting
+        // Clear intervals and timeouts
         if (this.timerInterval) {
             clearInterval(this.timerInterval);
             this.timerInterval = null;
         }
-
-        // Clear smart pause timeout if active
         if (this.activityTimeout) {
             clearTimeout(this.activityTimeout);
             this.activityTimeout = null;
@@ -733,17 +639,17 @@ export class PomodoroTimer {
         // Update display and buttons to reflect stopped state
         this.updateDisplay();
         this.updateButtons();
+        this.updateTrayIcon();
 
-        // Auto-start next session if enabled and continuous sessions are not enabled
+        // Auto-start logic - only if continuous sessions are disabled AND mode changed
         let shouldAutoStart = false;
 
-        // Only auto-start if continuous sessions are disabled
-        if (!this.allowContinuousSessions) {
-            if (this.currentMode === 'focus') {
-                // Focus session completed - check if breaks should auto-start
+        if (!this.allowContinuousSessions && shouldChangeMode) {
+            if (this.currentMode === 'break' || this.currentMode === 'longBreak') {
+                // Focus session completed and moved to break - check if breaks should auto-start
                 shouldAutoStart = this.autoStartBreaks;
-            } else {
-                // Break/longBreak completed - check if focus should auto-start
+            } else if (this.currentMode === 'focus') {
+                // Break completed and moved to focus - check if focus should auto-start
                 shouldAutoStart = this.autoStartFocus;
             }
         }
