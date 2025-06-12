@@ -500,11 +500,11 @@ export class SettingsManager {
         navItems.forEach(item => {
             item.addEventListener('click', () => {
                 const targetCategory = item.dataset.category;
-                
+
                 // Remove active class from all nav items and categories
                 navItems.forEach(nav => nav.classList.remove('active'));
                 categories.forEach(cat => cat.classList.remove('active'));
-                
+
                 // Add active class to clicked nav item and corresponding category
                 item.classList.add('active');
                 const targetElement = document.getElementById(`category-${targetCategory}`);

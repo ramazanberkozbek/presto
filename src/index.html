@@ -297,7 +297,7 @@
     <!-- Settings View -->
     <div class="view-container hidden" id="settings-view">
       <div class="settings-layout">
-        
+
         <!-- Settings Sidebar -->
         <div class="settings-sidebar">
           <h2>Settings</h2>
@@ -331,7 +331,7 @@
 
         <!-- Settings Content -->
         <div class="settings-content">
-          
+
           <!-- General Settings (Timer) -->
           <div class="settings-category active" id="category-general">
             <div class="category-header">
@@ -341,7 +341,7 @@
 
             <div class="settings-section">
               <h3>Timer Durations</h3>
-              
+
               <div class="setting-item">
                 <label for="focus-duration">Focus Duration (minutes):</label>
                 <input type="number" id="focus-duration" min="1" max="60" value="25">
@@ -372,12 +372,13 @@
           <div class="settings-category" id="category-shortcuts">
             <div class="category-header">
               <h1>Global Shortcuts</h1>
-              <p class="category-description">Configure keyboard shortcuts that work even when the app is in the background</p>
+              <p class="category-description">Configure keyboard shortcuts that work even when the app is in the
+                background</p>
             </div>
 
             <div class="settings-section">
               <h3>Keyboard Shortcuts</h3>
-              
+
               <div class="shortcut-item">
                 <label for="start-stop-shortcut">Start/Stop Timer:</label>
                 <div class="shortcut-input-container">
@@ -391,7 +392,8 @@
               <div class="shortcut-item">
                 <label for="reset-shortcut">Delete Session / Undo:</label>
                 <div class="shortcut-input-container">
-                  <input type="text" id="reset-shortcut" class="shortcut-input" readonly placeholder="Click to set shortcut">
+                  <input type="text" id="reset-shortcut" class="shortcut-input" readonly
+                    placeholder="Click to set shortcut">
                   <button class="shortcut-clear" onclick="clearShortcut('reset')">×</button>
                 </div>
                 <p class="setting-description">Reset current session or undo during breaks</p>
@@ -400,7 +402,8 @@
               <div class="shortcut-item">
                 <label for="skip-shortcut">Save Session:</label>
                 <div class="shortcut-input-container">
-                  <input type="text" id="skip-shortcut" class="shortcut-input" readonly placeholder="Click to set shortcut">
+                  <input type="text" id="skip-shortcut" class="shortcut-input" readonly
+                    placeholder="Click to set shortcut">
                   <button class="shortcut-clear" onclick="clearShortcut('skip')">×</button>
                 </div>
                 <p class="setting-description">Skip to next phase and save current progress</p>
@@ -417,14 +420,15 @@
 
             <div class="settings-section">
               <h3>Notification Types</h3>
-              
+
               <div class="setting-item">
                 <label class="checkbox-label">
                   <input type="checkbox" id="desktop-notifications" checked>
                   <span class="checkmark"></span>
                   Desktop Notifications
                 </label>
-                <p class="setting-description">Show system notifications when timer completes. Browser permission will be
+                <p class="setting-description">Show system notifications when timer completes. Browser permission will
+                  be
                   requested when enabled.</p>
               </div>
 
@@ -448,14 +452,15 @@
 
             <div class="settings-section">
               <h3>Timer Automation</h3>
-              
+
               <div class="setting-item">
                 <label class="checkbox-label">
                   <input type="checkbox" id="auto-start-breaks" checked>
                   <span class="checkmark"></span>
                   Auto-start Timer
                 </label>
-                <p class="setting-description">Automatically start the timer when manually skipping to the next session (using
+                <p class="setting-description">Automatically start the timer when manually skipping to the next session
+                  (using
                   the skip button).</p>
               </div>
 
@@ -465,7 +470,8 @@
                   <span class="checkmark"></span>
                   Auto-start Focus Sessions
                 </label>
-                <p class="setting-description">Automatically start focus sessions after breaks end without user intervention.</p>
+                <p class="setting-description">Automatically start focus sessions after breaks end without user
+                  intervention.</p>
               </div>
 
               <div class="setting-item">
@@ -474,21 +480,24 @@
                   <span class="checkmark"></span>
                   Automatic Long Breaks
                 </label>
-                <p class="setting-description">Automatically trigger long breaks after completing the configured number of focus sessions.</p>
+                <p class="setting-description">Automatically trigger long breaks after completing the configured number
+                  of focus sessions.</p>
               </div>
             </div>
 
             <div class="settings-section">
               <h3>Smart Features</h3>
-              
+
               <div class="setting-item">
                 <label class="checkbox-label">
                   <input type="checkbox" id="smart-pause">
                   <span class="checkmark"></span>
                   Smart Pause (Auto-pause when inactive)
                 </label>
-                <p class="setting-description">Automatically pause the timer during focus sessions when no mouse or keyboard
-                  activity is detected, and resume when activity resumes. Only works during focus periods, not breaks.</p>
+                <p class="setting-description">Automatically pause the timer during focus sessions when no mouse or
+                  keyboard
+                  activity is detected, and resume when activity resumes. Only works during focus periods, not breaks.
+                </p>
               </div>
 
               <div class="setting-item" id="smart-pause-timeout-setting">
@@ -507,20 +516,22 @@
                   <span class="checkmark"></span>
                   Smart Session Management
                 </label>
-                <p class="setting-description">Automatically save completed sessions and suggest optimal break durations based on your productivity patterns.</p>
+                <p class="setting-description">Automatically save completed sessions and suggest optimal break durations
+                  based on your productivity patterns.</p>
               </div>
             </div>
 
             <div class="settings-section">
               <h3>Session Management</h3>
-              
+
               <div class="setting-item">
                 <label class="checkbox-label">
                   <input type="checkbox" id="auto-save-sessions" checked>
                   <span class="checkmark"></span>
                   Auto-save Completed Sessions
                 </label>
-                <p class="setting-description">Automatically save session data when timer completes without manual confirmation.</p>
+                <p class="setting-description">Automatically save session data when timer completes without manual
+                  confirmation.</p>
               </div>
 
               <div class="setting-item">
@@ -529,7 +540,8 @@
                   <span class="checkmark"></span>
                   Prevent Interruptions
                 </label>
-                <p class="setting-description">Show confirmation dialog before allowing session resets during active focus periods.</p>
+                <p class="setting-description">Show confirmation dialog before allowing session resets during active
+                  focus periods.</p>
               </div>
             </div>
           </div>
@@ -543,11 +555,12 @@
 
             <div class="settings-section">
               <h3>Focus Goals</h3>
-              
+
               <div class="setting-item">
                 <label for="weekly-goal-minutes">Weekly Goal (minutes):</label>
                 <input type="number" id="weekly-goal-minutes" min="30" max="2400" value="125" step="5">
-                <p class="setting-description">Target focus time for Monday through Friday (default: 125 minutes = 5 sessions
+                <p class="setting-description">Target focus time for Monday through Friday (default: 125 minutes = 5
+                  sessions
                   of 25 minutes). Saturday and Sunday are excluded from calculation.</p>
               </div>
             </div>
