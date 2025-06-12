@@ -250,7 +250,8 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  overflow: visible; /* Allow tooltips to show outside */
+  overflow: visible;
+  /* Allow tooltips to show outside */
 }
 
 .calendar-right-column {
@@ -362,7 +363,8 @@
 
 .week-day-bar {
   flex: 1;
-  background: var(--focus-color); /* Changed from gradient to flat color */
+  background: var(--focus-color);
+  /* Changed from gradient to flat color */
   border-radius: 3px 3px 0 0;
   min-height: 8px;
   position: relative;
@@ -403,7 +405,8 @@
   padding: 1.25rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   flex: 1;
-  overflow: visible; /* Allow tooltips to show outside the card */
+  overflow: visible;
+  /* Allow tooltips to show outside the card */
 }
 
 .daily-chart-card h3 {
@@ -415,23 +418,31 @@
 }
 
 .daily-chart {
-  height: 160px; /* Increased height to accommodate tooltips */
+  height: 160px;
+  /* Increased height to accommodate tooltips */
   display: flex;
   align-items: end;
-  gap: 2px; /* Reduced gap for more compact view */
-  margin-bottom: 1rem; /* Increased margin for hour labels */
-  padding: 1rem 0.5rem 2rem 0.5rem; /* Added top padding for tooltips and bottom for labels */
+  gap: 2px;
+  /* Reduced gap for more compact view */
+  margin-bottom: 1rem;
+  /* Increased margin for hour labels */
+  padding: 1rem 0.5rem 2rem 0.5rem;
+  /* Added top padding for tooltips and bottom for labels */
   background: #f8f9fa;
   border-radius: 8px;
   overflow-x: auto;
-  overflow-y: visible; /* Ensure tooltips are visible */
+  overflow-y: visible;
+  /* Ensure tooltips are visible */
 }
 
 .hour-bar {
   flex: 1;
-  min-width: 12px; /* Reduced minimum width */
-  max-width: 18px; /* Added max width to prevent bars from being too wide */
-  background: #e9ecef; /* Light background for empty hours */
+  min-width: 12px;
+  /* Reduced minimum width */
+  max-width: 18px;
+  /* Added max width to prevent bars from being too wide */
+  background: #e9ecef;
+  /* Light background for empty hours */
   border-radius: 3px;
   position: relative;
   transition: all 0.3s ease;

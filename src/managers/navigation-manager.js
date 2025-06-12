@@ -236,10 +236,10 @@ export class NavigationManager {
 
     updateChangeElement(element, change) {
         element.classList.remove('positive', 'negative', 'neutral');
-        
+
         const icon = element.querySelector('i');
         const span = element.querySelector('span');
-        
+
         if (change > 0) {
             span.textContent = `+${change}%`;
             icon.className = 'ri-arrow-up-line';
@@ -258,18 +258,18 @@ export class NavigationManager {
     async updateDailyChart() {
         const dailyChart = document.getElementById('daily-chart');
         if (!dailyChart) return;
-        
+
         dailyChart.innerHTML = '';
 
         const hours = Array.from({ length: 24 }, (_, i) => i);
         const maxHeight = 140; // Increased height to use more of available space
-        
+
         try {
             // Get today's sessions to calculate hourly data
-            const todaysSessions = window.sessionManager 
+            const todaysSessions = window.sessionManager
                 ? window.sessionManager.getSessionsForDate(new Date())
                 : [];
-            
+
             // Also try to get current timer session data if available
             let timerSessionData = null;
             if (window.pomodoroTimer) {
@@ -284,7 +284,7 @@ export class NavigationManager {
                     console.log('No timer session data available:', error);
                 }
             }
-            
+
             // Initialize hourly data
             const hourlyData = hours.map(hour => ({
                 hour,
@@ -296,7 +296,7 @@ export class NavigationManager {
             todaysSessions.forEach(session => {
                 const [startHour] = session.start_time.split(':').map(Number);
                 const duration = session.duration || 0;
-                
+
                 if (session.session_type === 'focus') {
                     hourlyData[startHour].focusMinutes += duration;
                 } else if (session.session_type === 'break' || session.session_type === 'longBreak') {
@@ -308,7 +308,7 @@ export class NavigationManager {
             if (timerSessionData && todaysSessions.length === 0 && timerSessionData.completed_pomodoros > 0) {
                 const currentHour = new Date().getHours();
                 const totalTimerFocusMinutes = Math.floor(timerSessionData.total_focus_time / 60);
-                
+
                 // Distribute the focus time to the current hour (as a simple approximation)
                 if (totalTimerFocusMinutes > 0) {
                     hourlyData[currentHour].focusMinutes += totalTimerFocusMinutes;
@@ -324,12 +324,12 @@ export class NavigationManager {
             hours.forEach(hour => {
                 const data = hourlyData[hour];
                 const totalMinutes = data.focusMinutes + data.breakMinutes;
-                
+
                 const hourBar = document.createElement('div');
                 hourBar.className = 'hour-bar';
 
                 // Calculate height based on total activity in this hour
-                const height = totalMinutes > 0 
+                const height = totalMinutes > 0
                     ? Math.max((totalMinutes / maxTotalMinutes) * maxHeight, 8)
                     : 8; // Minimum height for visibility
 
@@ -343,7 +343,7 @@ export class NavigationManager {
                         focusSegment.style.height = `${(data.focusMinutes / totalMinutes) * 100}%`;
                         hourBar.appendChild(focusSegment);
                     }
-                    
+
                     if (data.breakMinutes > 0) {
                         const breakSegment = document.createElement('div');
                         breakSegment.className = 'hour-bar-break';
@@ -365,10 +365,10 @@ export class NavigationManager {
                 const focusText = data.focusMinutes > 0 ? `${data.focusMinutes}m focus` : '';
                 const breakText = data.breakMinutes > 0 ? `${data.breakMinutes}m break` : '';
                 const activityText = [focusText, breakText].filter(text => text).join(', ') || 'No activity';
-                
+
                 // Use custom tooltip instead of native title
                 hourBar.dataset.tooltip = `${hour}:00 - ${activityText}`;
-                
+
                 // Add hover event listeners for custom tooltip
                 this.addTooltipEvents(hourBar);
 
@@ -387,18 +387,18 @@ export class NavigationManager {
 
         } catch (error) {
             console.error('Failed to load daily chart data:', error);
-            
+
             // Show fallback empty state
             hours.forEach(hour => {
                 const hourBar = document.createElement('div');
                 hourBar.className = 'hour-bar hour-bar-empty';
                 hourBar.style.height = '8px';
-                
+
                 const hourLabel = document.createElement('div');
                 hourLabel.className = 'hour-label';
                 hourLabel.textContent = hour.toString().padStart(2, '0');
                 hourBar.appendChild(hourLabel);
-                
+
                 hourBar.dataset.tooltip = `${hour}:00 - No data available`;
                 this.addTooltipEvents(hourBar);
                 dailyChart.appendChild(hourBar);
@@ -462,14 +462,14 @@ export class NavigationManager {
             let avgSessionTime = 0;
             let totalDailyTime = 0;
             let daysWithSessions = 0;
-            
+
             weekData.forEach(({ sessionsMinutes }) => {
                 if (sessionsMinutes > 0) {
                     totalDailyTime += sessionsMinutes;
                     daysWithSessions++;
                 }
             });
-            
+
             avgSessionTime = daysWithSessions > 0 ? totalDailyTime / daysWithSessions : 0;
 
             // Use a minimum baseline for maxSessionsMinutes to avoid tiny bars
@@ -548,10 +548,10 @@ export class NavigationManager {
                 const tooltipText = sessions > 0
                     ? `${day}: ${timeText} (${sessions} sessions, ${avgPerSession}m avg/session)`
                     : `${day}: ${timeText} (${sessions} sessions)`;
-                
+
                 // Use custom tooltip instead of native title
                 dayBar.dataset.tooltip = tooltipText;
-                
+
                 // Add hover event listeners for custom tooltip
                 this.addTooltipEvents(dayBar);
 
@@ -570,13 +570,13 @@ export class NavigationManager {
                 const dayBar = document.createElement('div');
                 dayBar.className = 'week-day-bar';
                 dayBar.style.height = '8px';
-                
+
                 // Use custom tooltip instead of native title
                 dayBar.dataset.tooltip = `${day}: No data available`;
-                
+
                 // Add hover event listeners for custom tooltip
                 this.addTooltipEvents(dayBar);
-                
+
                 weeklyChart.appendChild(dayBar);
             });
         }
@@ -840,7 +840,7 @@ export class NavigationManager {
 
         // Check if this session is from today
         const isToday = this.isSameDay(date, new Date());
-        
+
         // Parse start and end times
         const [startHour, startMinute] = session.start_time.split(':').map(Number);
         const [endHour, endMinute] = session.end_time.split(':').map(Number);
@@ -861,7 +861,7 @@ export class NavigationManager {
 
         // Session content - different display for today's sessions
         const sessionType = this.getSessionTypeDisplay(session.session_type);
-        
+
         if (isToday && !session.isHistorical) {
             // For today's sessions: minimal display, information only in tooltip
             sessionElement.classList.add('today-session');
@@ -870,7 +870,7 @@ export class NavigationManager {
         <div class="timeline-session-content-minimal"></div>
         <div class="session-handle right"></div>
       `;
-            
+
             // Set tooltip with full information
             const notes = session.notes ? ` - ${session.notes}` : '';
             sessionElement.title = `${sessionType}: ${session.start_time} - ${session.end_time} (${session.duration}m)${notes}`;
@@ -1131,12 +1131,12 @@ export class NavigationManager {
             const tooltipElement = document.createElement('div');
             tooltipElement.className = 'custom-tooltip';
             tooltipElement.textContent = tooltipText;
-            
+
             // Position tooltip above the element
             const rect = e.target.getBoundingClientRect();
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
             const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-            
+
             tooltipElement.style.position = 'absolute';
             tooltipElement.style.left = `${rect.left + scrollLeft + rect.width / 2}px`;
             tooltipElement.style.top = `${rect.top + scrollTop - 10}px`;
@@ -1153,7 +1153,7 @@ export class NavigationManager {
             tooltipElement.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
             tooltipElement.style.opacity = '0';
             tooltipElement.style.transition = 'opacity 0.2s ease';
-            
+
             // Add arrow
             const arrow = document.createElement('div');
             arrow.style.position = 'absolute';
@@ -1168,10 +1168,10 @@ export class NavigationManager {
             tooltipElement.appendChild(arrow);
 
             document.body.appendChild(tooltipElement);
-            
+
             // Store reference to current tooltip for cleanup
             this.currentTooltip = tooltipElement;
-            
+
             // Fade in
             requestAnimationFrame(() => {
                 if (tooltipElement.parentNode) {
@@ -1217,7 +1217,7 @@ export class NavigationManager {
                 }
             }, 200);
         });
-        
+
         this.currentTooltip = null;
     }
 

@@ -710,7 +710,7 @@ export class PomodoroTimer {
         // Save session data
         await this.saveSessionData();
         await this.updateWeeklyStats();
-        
+
         // Show notification
         this.showNotification();
         NotificationUtils.playNotificationSound();
@@ -721,7 +721,7 @@ export class PomodoroTimer {
             break: 'Break time completed! You can continue resting or start focusing ☕⏰',
             longBreak: 'Long break completed! You can continue resting or start working 🌙⏰'
         };
-        
+
         const completionMessage = continuousMessages[this.currentMode];
         NotificationUtils.showNotificationPing(completionMessage, 'success', this.currentMode);
 
@@ -731,7 +731,7 @@ export class PomodoroTimer {
 
     updateDisplay() {
         let displayMinutes, displaySeconds, isOvertime = false;
-        
+
         if (this.timeRemaining < 0 && this.allowContinuousSessions) {
             // Show overtime in continuous sessions
             isOvertime = true;
@@ -1366,7 +1366,7 @@ export class PomodoroTimer {
     async updateTrayIcon() {
         try {
             let displayMinutes, displaySeconds, isOvertime = false;
-            
+
             if (this.timeRemaining < 0 && this.allowContinuousSessions) {
                 // Show overtime in continuous sessions
                 isOvertime = true;
