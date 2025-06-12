@@ -1264,6 +1264,17 @@ export class PomodoroTimer {
             // Fallback to localStorage
             localStorage.setItem('pomodoro-session', JSON.stringify(data));
         }
+
+        // Update navigation charts if navigation manager is available
+        if (window.navigationManager) {
+            try {
+                await window.navigationManager.updateDailyChart();
+                await window.navigationManager.updateFocusSummary();
+                await window.navigationManager.updateWeeklySessionsChart();
+            } catch (error) {
+                console.error('Failed to update navigation charts:', error);
+            }
+        }
     }
 
     async loadSessionData() {

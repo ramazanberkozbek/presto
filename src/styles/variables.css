@@ -47,6 +47,8 @@ body {
   padding: 0;
   padding-left: 80px;
   /* Space for sidebar */
+  overflow-x: auto; /* Allow horizontal scroll if needed */
+  overflow-y: visible; /* Allow tooltips to show outside */
 }
 
 .container {
@@ -59,6 +61,7 @@ body {
   margin: 0 auto;
   background-color: var(--focus-bg);
   transition: background-color 0.3s ease;
+  overflow: visible; /* Allow tooltips to show outside */
 }
 
 /* Background states */

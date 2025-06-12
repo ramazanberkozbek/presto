@@ -253,51 +253,155 @@ export class NavigationManager {
         }
     }
 
-    updateDailyChart() {
+    async updateDailyChart() {
         const dailyChart = document.getElementById('daily-chart');
+        if (!dailyChart) return;
+        
         dailyChart.innerHTML = '';
 
         const hours = Array.from({ length: 24 }, (_, i) => i);
-        const maxHeight = 160;
+        const maxHeight = 140; // Increased height to use more of available space
+        
+        try {
+            // Get today's sessions to calculate hourly data
+            const todaysSessions = window.sessionManager 
+                ? window.sessionManager.getSessionsForDate(new Date())
+                : [];
+            
+            // Also try to get current timer session data if available
+            let timerSessionData = null;
+            if (window.pomodoroTimer) {
+                const today = new Date().toDateString();
+                try {
+                    // Check if there are completed pomodoros from the timer today
+                    const currentSession = await invoke('load_session_data');
+                    if (currentSession && currentSession.date === today && currentSession.completed_pomodoros > 0) {
+                        timerSessionData = currentSession;
+                    }
+                } catch (error) {
+                    console.log('No timer session data available:', error);
+                }
+            }
+            
+            // Initialize hourly data
+            const hourlyData = hours.map(hour => ({
+                hour,
+                focusMinutes: 0,
+                breakMinutes: 0
+            }));
 
-        hours.forEach(hour => {
-            const hourBar = document.createElement('div');
-            hourBar.className = 'hour-bar';
+            // Process today's sessions
+            todaysSessions.forEach(session => {
+                const [startHour] = session.start_time.split(':').map(Number);
+                const duration = session.duration || 0;
+                
+                if (session.session_type === 'focus') {
+                    hourlyData[startHour].focusMinutes += duration;
+                } else if (session.session_type === 'break' || session.session_type === 'longBreak') {
+                    hourlyData[startHour].breakMinutes += duration;
+                }
+            });
 
-            // Real data only - no demo data for now
-            const focusMinutes = 0;
-            const breakMinutes = 0;
-
-            const totalMinutes = focusMinutes + breakMinutes;
-            const height = Math.max((totalMinutes / 60) * maxHeight, 4);
-
-            hourBar.style.height = `${height}px`;
-
-            if (focusMinutes > 0) {
-                // Create focus and break segments
-                const focusSegment = document.createElement('div');
-                focusSegment.className = 'hour-bar-focus';
-                focusSegment.style.height = `${(focusMinutes / totalMinutes) * 100}%`;
-
-                const breakSegment = document.createElement('div');
-                breakSegment.className = 'hour-bar-break';
-                breakSegment.style.height = `${(breakMinutes / totalMinutes) * 100}%`;
-
-                hourBar.appendChild(focusSegment);
-                hourBar.appendChild(breakSegment);
+            // If we have timer session data but no manual sessions, distribute timer sessions across the current hour
+            if (timerSessionData && todaysSessions.length === 0 && timerSessionData.completed_pomodoros > 0) {
+                const currentHour = new Date().getHours();
+                const totalTimerFocusMinutes = Math.floor(timerSessionData.total_focus_time / 60);
+                
+                // Distribute the focus time to the current hour (as a simple approximation)
+                if (totalTimerFocusMinutes > 0) {
+                    hourlyData[currentHour].focusMinutes += totalTimerFocusMinutes;
+                }
             }
 
-            const hourLabel = document.createElement('div');
-            hourLabel.className = 'hour-label';
-            hourLabel.textContent = hour.toString().padStart(2, '0');
+            // Find max total minutes for scaling
+            const maxTotalMinutes = Math.max(
+                ...hourlyData.map(data => data.focusMinutes + data.breakMinutes),
+                60 // Minimum scale of 1 hour
+            );
 
-            hourBar.appendChild(hourLabel);
+            hours.forEach(hour => {
+                const data = hourlyData[hour];
+                const totalMinutes = data.focusMinutes + data.breakMinutes;
+                
+                const hourBar = document.createElement('div');
+                hourBar.className = 'hour-bar';
 
-            // Add hover tooltip
-            hourBar.title = `${hour}:00 - Focus: ${focusMinutes}m, Break: ${breakMinutes}m`;
+                // Calculate height based on total activity in this hour
+                const height = totalMinutes > 0 
+                    ? Math.max((totalMinutes / maxTotalMinutes) * maxHeight, 8)
+                    : 8; // Minimum height for visibility
 
-            dailyChart.appendChild(hourBar);
-        });
+                hourBar.style.height = `${height}px`;
+
+                // Create segments for focus and break time if there's data
+                if (totalMinutes > 0) {
+                    if (data.focusMinutes > 0) {
+                        const focusSegment = document.createElement('div');
+                        focusSegment.className = 'hour-bar-focus';
+                        focusSegment.style.height = `${(data.focusMinutes / totalMinutes) * 100}%`;
+                        hourBar.appendChild(focusSegment);
+                    }
+                    
+                    if (data.breakMinutes > 0) {
+                        const breakSegment = document.createElement('div');
+                        breakSegment.className = 'hour-bar-break';
+                        breakSegment.style.height = `${(data.breakMinutes / totalMinutes) * 100}%`;
+                        hourBar.appendChild(breakSegment);
+                    }
+                } else {
+                    // Empty hour - show subtle background
+                    hourBar.classList.add('hour-bar-empty');
+                }
+
+                // Hour label at bottom
+                const hourLabel = document.createElement('div');
+                hourLabel.className = 'hour-label';
+                hourLabel.textContent = hour.toString().padStart(2, '0');
+                hourBar.appendChild(hourLabel);
+
+                // Enhanced tooltip with session details
+                const focusText = data.focusMinutes > 0 ? `${data.focusMinutes}m focus` : '';
+                const breakText = data.breakMinutes > 0 ? `${data.breakMinutes}m break` : '';
+                const activityText = [focusText, breakText].filter(text => text).join(', ') || 'No activity';
+                
+                // Use custom tooltip instead of native title
+                hourBar.dataset.tooltip = `${hour}:00 - ${activityText}`;
+                
+                // Add hover event listeners for custom tooltip
+                this.addTooltipEvents(hourBar);
+
+                // Add data attributes for potential future interactions
+                hourBar.dataset.hour = hour;
+                hourBar.dataset.focusMinutes = data.focusMinutes;
+                hourBar.dataset.breakMinutes = data.breakMinutes;
+
+                dailyChart.appendChild(hourBar);
+            });
+
+            // Add cleanup event for when mouse leaves the entire chart
+            dailyChart.addEventListener('mouseleave', () => {
+                this.removeTooltip();
+            });
+
+        } catch (error) {
+            console.error('Failed to load daily chart data:', error);
+            
+            // Show fallback empty state
+            hours.forEach(hour => {
+                const hourBar = document.createElement('div');
+                hourBar.className = 'hour-bar hour-bar-empty';
+                hourBar.style.height = '8px';
+                
+                const hourLabel = document.createElement('div');
+                hourLabel.className = 'hour-label';
+                hourLabel.textContent = hour.toString().padStart(2, '0');
+                hourBar.appendChild(hourLabel);
+                
+                hourBar.dataset.tooltip = `${hour}:00 - No data available`;
+                this.addTooltipEvents(hourBar);
+                dailyChart.appendChild(hourBar);
+            });
+        }
     }
 
     async updateWeeklySessionsChart() {
@@ -977,4 +1081,81 @@ export class NavigationManager {
             }
         }
     }
+
+    addTooltipEvents(element) {
+        let tooltipElement = null;
+
+        element.addEventListener('mouseenter', (e) => {
+            const tooltipText = e.target.dataset.tooltip;
+            if (!tooltipText) return;
+
+            // Remove any existing tooltip
+            this.removeTooltip();
+
+            // Create tooltip element
+            tooltipElement = document.createElement('div');
+            tooltipElement.className = 'custom-tooltip';
+            tooltipElement.textContent = tooltipText;
+            
+            // Position tooltip above the element
+            const rect = e.target.getBoundingClientRect();
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+            
+            tooltipElement.style.position = 'absolute';
+            tooltipElement.style.left = `${rect.left + scrollLeft + rect.width / 2}px`;
+            tooltipElement.style.top = `${rect.top + scrollTop - 10}px`;
+            tooltipElement.style.transform = 'translateX(-50%) translateY(-100%)';
+            tooltipElement.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+            tooltipElement.style.color = 'white';
+            tooltipElement.style.padding = '8px 12px';
+            tooltipElement.style.borderRadius = '6px';
+            tooltipElement.style.fontSize = '0.75rem';
+            tooltipElement.style.fontWeight = '500';
+            tooltipElement.style.whiteSpace = 'nowrap';
+            tooltipElement.style.zIndex = '10000';
+            tooltipElement.style.pointerEvents = 'none';
+            tooltipElement.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+            tooltipElement.style.opacity = '0';
+            tooltipElement.style.transition = 'opacity 0.2s ease';
+            
+            // Add arrow
+            const arrow = document.createElement('div');
+            arrow.style.position = 'absolute';
+            arrow.style.top = '100%';
+            arrow.style.left = '50%';
+            arrow.style.transform = 'translateX(-50%)';
+            arrow.style.width = '0';
+            arrow.style.height = '0';
+            arrow.style.borderLeft = '5px solid transparent';
+            arrow.style.borderRight = '5px solid transparent';
+            arrow.style.borderTop = '5px solid rgba(0, 0, 0, 0.9)';
+            tooltipElement.appendChild(arrow);
+
+            document.body.appendChild(tooltipElement);
+            
+            // Fade in
+            requestAnimationFrame(() => {
+                tooltipElement.style.opacity = '1';
+            });
+        });
+
+        element.addEventListener('mouseleave', () => {
+            this.removeTooltip();
+        });
+    }
+
+    removeTooltip() {
+        const existingTooltip = document.querySelector('.custom-tooltip');
+        if (existingTooltip) {
+            existingTooltip.style.opacity = '0';
+            setTimeout(() => {
+                if (existingTooltip.parentNode) {
+                    existingTooltip.parentNode.removeChild(existingTooltip);
+                }
+            }, 200);
+        }
+    }
+
+    // ...existing methods...
 }

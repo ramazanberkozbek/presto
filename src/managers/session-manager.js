@@ -202,6 +202,7 @@ export class SessionManager {
                 await this.navManager.updateSelectedDayDetails(this.selectedDate);
                 await this.navManager.updateFocusSummary();
                 await this.navManager.updateWeeklySessionsChart();
+                await this.navManager.updateDailyChart();
             }
 
         } catch (error) {
@@ -263,6 +264,7 @@ export class SessionManager {
                 await this.navManager.updateSelectedDayDetails(this.selectedDate);
                 await this.navManager.updateFocusSummary();
                 await this.navManager.updateWeeklySessionsChart();
+                await this.navManager.updateDailyChart();
             }
 
         } catch (error) {
