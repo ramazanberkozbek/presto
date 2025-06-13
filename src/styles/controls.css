@@ -69,41 +69,35 @@
   box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
 }
 
-/* Specific text colors for secondary buttons based on background */
-.container.longBreak .control-btn:not(.primary) {
-  /* Dark text on light blue background */
-  color: var(--long-break-timer-color);
-}
-
-.container.break .control-btn:not(.primary) {
-  /* Dark text on light green background */
-  color: var(--break-timer-color);
-}
-
-.container.focus .control-btn:not(.primary) {
-  /* Dark text on light green background */
-}
-
+/* Focus state buttons */
 .container.focus .control-btn.primary {
   background-color: var(--focus-primary-btn);
+  color: var(--focus-timer-color);
 }
 
 .container.focus .control-btn:not(.primary) {
   background-color: var(--focus-secondary-btn);
+  color: var(--focus-timer-color);
 }
 
+/* Break state buttons */
 .container.break .control-btn.primary {
   background-color: var(--break-primary-btn);
+  color: var(--break-timer-color);
 }
 
 .container.break .control-btn:not(.primary) {
   background-color: var(--break-secondary-btn);
+  color: var(--break-timer-color);
 }
 
+/* Long break state buttons */
 .container.longBreak .control-btn.primary {
   background-color: var(--long-break-primary-btn);
+  color: var(--long-break-timer-color);
 }
 
 .container.longBreak .control-btn:not(.primary) {
   background-color: var(--long-break-secondary-btn);
+  color: var(--long-break-timer-color);
 }

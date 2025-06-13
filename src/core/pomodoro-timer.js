@@ -92,7 +92,7 @@ export class PomodoroTimer {
         this.updateStopUndoButton(); // Initialize stop/undo button state
         this.updateSkipIcon(); // Initialize skip button icon
         this.updateSmartIndicator(); // Initialize smart pause indicator
-        
+
         // Add tooltip to smart indicator if NavigationManager is available
         if (window.navigationManager && this.smartIndicator) {
             window.navigationManager.addTooltipEvents(this.smartIndicator);
@@ -122,7 +122,7 @@ export class PomodoroTimer {
             this.smartIndicator.addEventListener('click', () => {
                 this.toggleSmartPause();
             });
-            
+
             // Add tooltip using NavigationManager
             if (window.navigation) {
                 window.navigation.addTooltipEvents(this.smartIndicator);
@@ -395,7 +395,7 @@ export class PomodoroTimer {
         }
 
         console.log('Smart pause', enabled ? 'enabled' : 'disabled');
-        
+
         // Update the smart indicator
         this.updateSmartIndicator();
     }
@@ -899,7 +899,7 @@ export class PomodoroTimer {
 
         // Always show the indicator
         this.smartIndicator.style.display = 'block';
-        
+
         if (this.smartPauseEnabled) {
             // Use filled bulb icon when active
             this.smartIndicator.className = 'ri-lightbulb-fill active';
@@ -913,7 +913,7 @@ export class PomodoroTimer {
     async toggleSmartPause() {
         const newState = !this.smartPauseEnabled;
         await this.enableSmartPause(newState);
-        
+
         // Save the setting by updating checkbox and triggering auto-save
         if (window.settingsManager) {
             const smartPauseCheckbox = document.getElementById('smart-pause');
@@ -922,9 +922,9 @@ export class PomodoroTimer {
                 window.settingsManager.scheduleAutoSave();
             }
         }
-        
+
         // Show notification
-        const message = newState 
+        const message = newState
             ? 'Smart Pause enabled! Timer will auto-pause during inactivity 🧠'
             : 'Smart Pause disabled 💡';
         NotificationUtils.showNotificationPing(message, 'info');

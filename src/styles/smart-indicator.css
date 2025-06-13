@@ -4,7 +4,7 @@
     position: absolute;
     bottom: 20px;
     right: 20px;
-    font-size: 24px;
+    font-size: 20px;
     cursor: pointer;
     z-index: 100;
 
@@ -20,6 +20,22 @@
     /* Default inactive state */
     opacity: 0.7;
     transform: scale(1);
+    
+    /* Default color (focus state) */
+    color: var(--focus-timer-color);
+}
+
+/* Theme-based coloring */
+.container.focus #smart-indicator {
+    color: var(--focus-timer-color);
+}
+
+.container.break #smart-indicator {
+    color: var(--break-timer-color);
+}
+
+.container.longBreak #smart-indicator {
+    color: var(--long-break-timer-color);
 }
 
 /* Hover effects */
@@ -33,6 +49,19 @@
     opacity: 1;
 }
 
+/* Theme-specific active states */
+.container.focus #smart-indicator.active {
+    color: var(--focus-timer-color);
+}
+
+.container.break #smart-indicator.active {
+    color: var(--break-timer-color);
+}
+
+.container.longBreak #smart-indicator.active {
+    color: var(--long-break-timer-color);
+}
+
 /* Click animation */
 #smart-indicator:active {
     transform: scale(0.95);
@@ -44,7 +73,7 @@
     #smart-indicator {
         bottom: 15px;
         right: 15px;
-        font-size: 20px;
+        font-size: 16px;
         padding: 6px;
     }
 }
