@@ -111,8 +111,11 @@
       <!-- Settings Indicators -->
       <div class="settings-indicators">
         <!-- Smart Pause Indicator -->
-        <i id="smart-indicator" class="ri-lightbulb-line"
-          data-tooltip="Smart Pause: Click to toggle automatic pause when inactive"></i>
+        <div class="smart-pause-container">
+          <span id="smart-pause-countdown" class="countdown-number" style="display: none;"></span>
+          <i id="smart-indicator" class="ri-lightbulb-line"
+            data-tooltip="Smart Pause: Click to toggle automatic pause when inactive"></i>
+        </div>
 
         <!-- Auto-start Indicator -->
         <i id="auto-start-indicator" class="ri-play-circle-line"

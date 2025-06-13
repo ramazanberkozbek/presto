@@ -37,7 +37,7 @@ export class SettingsManager {
     // Merge loaded settings with defaults to ensure all required fields exist
     mergeWithDefaults(loadedSettings) {
         const defaultSettings = this.getDefaultSettings();
-        
+
         return {
             shortcuts: { ...defaultSettings.shortcuts, ...loadedSettings.shortcuts },
             timer: { ...defaultSettings.timer, ...loadedSettings.timer },
@@ -102,12 +102,12 @@ export class SettingsManager {
         document.getElementById('desktop-notifications').checked = desktopNotificationsEnabled;
         document.getElementById('sound-notifications').checked = this.settings.notifications.sound_notifications;
         document.getElementById('auto-start-timer').checked = this.settings.notifications.auto_start_timer;
-        
+
         // Debug log for continuous sessions
         console.log('🔧 PopulateUI - Raw continuous sessions value:', this.settings.notifications.allow_continuous_sessions);
         const continuousValue = this.settings.notifications.allow_continuous_sessions || false;
         console.log('🔧 PopulateUI - Final continuous sessions value:', continuousValue);
-        
+
         document.getElementById('allow-continuous-sessions').checked = continuousValue;
         document.getElementById('smart-pause').checked = this.settings.notifications.smart_pause;
 
@@ -333,6 +333,14 @@ export class SettingsManager {
             // Update timer with new settings
             if (window.pomodoroTimer) {
                 await window.pomodoroTimer.applySettings(this.settings);
+
+                // If smart pause is active and countdown is running, restart it with new timeout
+                if (window.pomodoroTimer.smartPauseEnabled &&
+                    window.pomodoroTimer.smartPauseCountdownInterval &&
+                    window.pomodoroTimer.currentMode === 'focus' &&
+                    window.pomodoroTimer.isRunning) {
+                    window.pomodoroTimer.handleUserActivity();
+                }
             }
 
             alert('Settings saved successfully!');
@@ -506,7 +514,7 @@ export class SettingsManager {
             console.log('auto_start_timer checkbox:', document.getElementById('auto-start-timer').checked);
             console.log('allow_continuous_sessions checkbox:', document.getElementById('allow-continuous-sessions').checked);
             console.log('smart_pause checkbox:', document.getElementById('smart-pause').checked);
-            
+
             // Debug log the full settings object being saved
             console.log('🔧 AutoSave - Full settings object being saved:', this.settings);
 
@@ -519,6 +527,14 @@ export class SettingsManager {
             // Update timer with new settings
             if (window.pomodoroTimer) {
                 await window.pomodoroTimer.applySettings(this.settings);
+
+                // If smart pause is active and countdown is running, restart it with new timeout
+                if (window.pomodoroTimer.smartPauseEnabled &&
+                    window.pomodoroTimer.smartPauseCountdownInterval &&
+                    window.pomodoroTimer.currentMode === 'focus' &&
+                    window.pomodoroTimer.isRunning) {
+                    window.pomodoroTimer.handleUserActivity();
+                }
             }
 
             // Show a subtle feedback that settings were saved

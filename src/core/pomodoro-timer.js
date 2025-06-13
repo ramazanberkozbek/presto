@@ -16,6 +16,8 @@ export class PomodoroTimer {
         this.isAutoPaused = false;
         this.activityTimeout = null;
         this.inactivityThreshold = 30000; // 30 seconds in milliseconds (configurable)
+        this.smartPauseCountdownInterval = null;
+        this.smartPauseSecondsRemaining = 0;
 
         // Session tracking
         this.completedPomodoros = 0;
@@ -54,6 +56,7 @@ export class PomodoroTimer {
         this.skipDefaultIcon = document.getElementById('skip-default-icon');
         this.progressDots = document.getElementById('progress-dots');
         this.smartIndicator = document.getElementById('smart-indicator');
+        this.smartPauseCountdown = document.getElementById('smart-pause-countdown');
         this.autoStartIndicator = document.getElementById('auto-start-indicator');
         this.continuousSessionIndicator = document.getElementById('continuous-session-indicator');
 
@@ -325,15 +328,61 @@ export class PomodoroTimer {
             this.resumeFromAutoPause();
         }
 
-        // Clear existing timeout
+        // Clear existing timeout and countdown
         if (this.activityTimeout) {
             clearTimeout(this.activityTimeout);
         }
+        this.stopSmartPauseCountdown();
 
         // Set new timeout for auto-pause after configured inactivity period
         this.activityTimeout = setTimeout(() => {
             this.autoPauseTimer();
         }, this.inactivityThreshold); // Use configurable timeout
+
+        // Start countdown display
+        this.startSmartPauseCountdown();
+    }
+
+    startSmartPauseCountdown() {
+        if (!this.smartPauseEnabled || !this.smartPauseCountdown) return;
+
+        this.smartPauseSecondsRemaining = Math.floor(this.inactivityThreshold / 1000);
+        this.updateSmartPauseCountdownDisplay();
+
+        // Start the countdown interval
+        this.smartPauseCountdownInterval = setInterval(() => {
+            this.smartPauseSecondsRemaining--;
+            this.updateSmartPauseCountdownDisplay();
+
+            if (this.smartPauseSecondsRemaining <= 0) {
+                this.stopSmartPauseCountdown();
+            }
+        }, 1000);
+    }
+
+    stopSmartPauseCountdown() {
+        if (this.smartPauseCountdownInterval) {
+            clearInterval(this.smartPauseCountdownInterval);
+            this.smartPauseCountdownInterval = null;
+        }
+
+        if (this.smartPauseCountdown) {
+            this.smartPauseCountdown.style.display = 'none';
+        }
+
+        this.smartPauseSecondsRemaining = 0;
+    }
+
+    updateSmartPauseCountdownDisplay() {
+        if (!this.smartPauseCountdown) return;
+
+        // Mostra il countdown solo quando mancano 10 secondi o meno
+        if (this.smartPauseSecondsRemaining > 0 && this.smartPauseSecondsRemaining <= 10) {
+            this.smartPauseCountdown.textContent = this.smartPauseSecondsRemaining;
+            this.smartPauseCountdown.style.display = 'flex';
+        } else {
+            this.smartPauseCountdown.style.display = 'none';
+        }
     }
 
     autoPauseTimer() {
@@ -343,9 +392,10 @@ export class PomodoroTimer {
         this.isAutoPaused = true;
         this.isPaused = true;
 
-        // Stop the timer interval
+        // Stop the timer interval and countdown
         clearInterval(this.timerInterval);
         this.timerInterval = null;
+        this.stopSmartPauseCountdown();
 
         // Show auto-pause notification
         NotificationUtils.showNotificationPing('Timer auto-paused due to inactivity 💤', 'warning', this.currentMode);
@@ -397,6 +447,11 @@ export class PomodoroTimer {
         this.updateDisplay();
         this.updateButtons();
         this.updateTrayIcon();
+
+        // Restart smart pause monitoring if enabled and in focus mode
+        if (this.smartPauseEnabled && this.currentMode === 'focus') {
+            this.handleUserActivity();
+        }
     }
 
     async enableSmartPause(enabled) {
@@ -416,11 +471,13 @@ export class PomodoroTimer {
                 console.error('Failed to stop activity monitoring:', error);
             }
 
-            // Clear local timeout and resume if auto-paused
+            // Clear local timeout, countdown, and resume if auto-paused
             if (this.activityTimeout) {
                 clearTimeout(this.activityTimeout);
                 this.activityTimeout = null;
             }
+            this.stopSmartPauseCountdown();
+
             if (this.isAutoPaused) {
                 this.resumeFromAutoPause();
             }
@@ -498,11 +555,12 @@ export class PomodoroTimer {
             this.isAutoPaused = false; // Manual pause overrides auto-pause
             clearInterval(this.timerInterval);
 
-            // Clear smart pause timeout
+            // Clear smart pause timeout and countdown
             if (this.activityTimeout) {
                 clearTimeout(this.activityTimeout);
                 this.activityTimeout = null;
             }
+            this.stopSmartPauseCountdown();
 
             this.updateButtons();
             this.updateDisplay();
@@ -516,11 +574,12 @@ export class PomodoroTimer {
         this.isAutoPaused = false;
         clearInterval(this.timerInterval);
 
-        // Clear smart pause timeout
+        // Clear smart pause timeout and countdown
         if (this.activityTimeout) {
             clearTimeout(this.activityTimeout);
             this.activityTimeout = null;
         }
+        this.stopSmartPauseCountdown();
 
         // Reset session tracking
         this.sessionStartTime = null;
@@ -538,11 +597,12 @@ export class PomodoroTimer {
         this.isAutoPaused = false;
         clearInterval(this.timerInterval);
 
-        // Clear smart pause timeout
+        // Clear smart pause timeout and countdown
         if (this.activityTimeout) {
             clearTimeout(this.activityTimeout);
             this.activityTimeout = null;
         }
+        this.stopSmartPauseCountdown();
 
         // Skip to next mode
         if (this.currentMode === 'focus') {
@@ -599,6 +659,13 @@ export class PomodoroTimer {
         this.isRunning = false;
         this.isPaused = false;
         clearInterval(this.timerInterval);
+
+        // Clear smart pause timeout and countdown
+        if (this.activityTimeout) {
+            clearTimeout(this.activityTimeout);
+            this.activityTimeout = null;
+        }
+        this.stopSmartPauseCountdown();
 
         // Track completion state
         let shouldChangeMode = true;
@@ -873,6 +940,11 @@ export class PomodoroTimer {
 
         // Update tray icon with timer information
         this.updateTrayIcon();
+
+        // Hide smart pause countdown if not in focus mode
+        if (this.currentMode !== 'focus') {
+            this.stopSmartPauseCountdown();
+        }
     }
 
     // Update status icon based on current mode
@@ -1655,6 +1727,7 @@ export class PomodoroTimer {
             clearTimeout(this.activityTimeout);
             this.activityTimeout = null;
         }
+        this.stopSmartPauseCountdown();
         this.smartPauseEnabled = false;
         this.inactivityThreshold = 30000; // Reset to default 30 seconds
 
