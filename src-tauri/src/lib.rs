@@ -85,9 +85,7 @@ struct AdvancedSettings {
 
 impl Default for AdvancedSettings {
     fn default() -> Self {
-        Self {
-            debug_mode: false,
-        }
+        Self { debug_mode: false }
     }
 }
 

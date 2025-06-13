@@ -672,6 +672,15 @@ export class PomodoroTimer {
         this.updateDisplay();
         this.updateButtons();
         this.updateTrayIcon();
+
+        // Auto-start new session if enabled and mode changed (traditional mode only)
+        if (this.autoStartTimer && !this.allowContinuousSessions && shouldChangeMode) {
+            console.log('Auto-starting new session after completion in 1.5 seconds...');
+            // Add a small delay to let the user see the completion message
+            setTimeout(() => {
+                this.startTimer();
+            }, 1500); // 1.5 second delay
+        }
     }
 
     // Show completion notification for continuous sessions without stopping the timer
@@ -1455,7 +1464,7 @@ export class PomodoroTimer {
         this.durations.focus = settings.timer.focus_duration * 60;
         this.durations.break = settings.timer.break_duration * 60;
         this.durations.longBreak = settings.timer.long_break_duration * 60;
-        
+
         // Apply debug mode if enabled (overrides all timer durations)
         if (settings.advanced?.debug_mode) {
             console.log('Debug mode enabled - all timers set to 3 seconds');
@@ -1463,7 +1472,7 @@ export class PomodoroTimer {
             this.durations.break = 3;
             this.durations.longBreak = 3;
         }
-        
+
         this.totalSessions = settings.timer.total_sessions;
 
         // If timer is not running, update current time remaining
@@ -1481,10 +1490,10 @@ export class PomodoroTimer {
         this.enableSoundNotifications = settings.notifications.sound_notifications;
         this.autoStartTimer = settings.notifications.auto_start_timer;
         this.allowContinuousSessions = settings.notifications.allow_continuous_sessions || false;
-        
+
         // Update debug mode state
         this.debugMode = settings.advanced?.debug_mode || false;
-        
+
         console.log('Auto-start timer setting:', this.autoStartTimer);
         console.log('Allow continuous sessions setting:', this.allowContinuousSessions);
         console.log('Debug mode setting:', this.debugMode);
