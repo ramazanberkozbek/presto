@@ -52,6 +52,9 @@ export class SettingsManager {
                 smart_pause: false,
                 smart_pause_timeout: 30 // default 30 seconds
             },
+            advanced: {
+                debug_mode: false // Debug mode with 3-second timers
+            },
             autostart: false // default to disabled
         };
     }
@@ -95,6 +98,12 @@ export class SettingsManager {
 
         // Setup slider event listener
         this.setupSliderEventListener();
+
+        // Populate advanced settings
+        const debugModeCheckbox = document.getElementById('debug-mode');
+        if (debugModeCheckbox) {
+            debugModeCheckbox.checked = this.settings.advanced?.debug_mode || false;
+        }
 
         // Populate autostart setting and check current system status
         this.loadAutostartSetting();
@@ -283,6 +292,15 @@ export class SettingsManager {
             this.settings.notifications.smart_pause = document.getElementById('smart-pause').checked;
             this.settings.notifications.smart_pause_timeout = parseInt(document.getElementById('smart-pause-timeout').value);
 
+            // Advanced settings
+            const debugModeCheckbox = document.getElementById('debug-mode');
+            if (debugModeCheckbox) {
+                if (!this.settings.advanced) {
+                    this.settings.advanced = {};
+                }
+                this.settings.advanced.debug_mode = debugModeCheckbox.checked;
+            }
+
             // Save to file
             await invoke('save_settings', { settings: this.settings });
 
@@ -397,7 +415,8 @@ export class SettingsManager {
             'desktop-notifications',
             'sound-notifications',
             'auto-start-timer',
-            'allow-continuous-sessions'
+            'allow-continuous-sessions',
+            'debug-mode'
         ];
 
         checkboxFields.forEach(fieldId => {
@@ -449,6 +468,15 @@ export class SettingsManager {
             this.settings.notifications.allow_continuous_sessions = document.getElementById('allow-continuous-sessions').checked;
             this.settings.notifications.smart_pause = document.getElementById('smart-pause').checked;
             this.settings.notifications.smart_pause_timeout = parseInt(document.getElementById('smart-pause-timeout').value);
+
+            // Advanced settings
+            const debugModeCheckbox = document.getElementById('debug-mode');
+            if (debugModeCheckbox) {
+                if (!this.settings.advanced) {
+                    this.settings.advanced = {};
+                }
+                this.settings.advanced.debug_mode = debugModeCheckbox.checked;
+            }
 
             // Save to file
             await invoke('save_settings', { settings: this.settings });

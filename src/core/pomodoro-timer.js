@@ -63,6 +63,9 @@ export class PomodoroTimer {
         this.autoStartTimer = true; // Default to enabled for skip auto-start
         this.allowContinuousSessions = false; // Allow focus sessions to continue beyond timer
 
+        // Debug mode
+        this.debugMode = false; // Debug mode with 3-second timers
+
         // Keyboard shortcuts (will be updated from settings)
         this.customShortcuts = {
             start_stop: "CommandOrControl+Alt+Space",
@@ -1452,6 +1455,15 @@ export class PomodoroTimer {
         this.durations.focus = settings.timer.focus_duration * 60;
         this.durations.break = settings.timer.break_duration * 60;
         this.durations.longBreak = settings.timer.long_break_duration * 60;
+        
+        // Apply debug mode if enabled (overrides all timer durations)
+        if (settings.advanced?.debug_mode) {
+            console.log('Debug mode enabled - all timers set to 3 seconds');
+            this.durations.focus = 3;
+            this.durations.break = 3;
+            this.durations.longBreak = 3;
+        }
+        
         this.totalSessions = settings.timer.total_sessions;
 
         // If timer is not running, update current time remaining
@@ -1469,8 +1481,13 @@ export class PomodoroTimer {
         this.enableSoundNotifications = settings.notifications.sound_notifications;
         this.autoStartTimer = settings.notifications.auto_start_timer;
         this.allowContinuousSessions = settings.notifications.allow_continuous_sessions || false;
+        
+        // Update debug mode state
+        this.debugMode = settings.advanced?.debug_mode || false;
+        
         console.log('Auto-start timer setting:', this.autoStartTimer);
         console.log('Allow continuous sessions setting:', this.allowContinuousSessions);
+        console.log('Debug mode setting:', this.debugMode);
 
         // Update smart pause setting and timeout
         this.inactivityThreshold = (settings.notifications.smart_pause_timeout || 30) * 1000; // convert to milliseconds

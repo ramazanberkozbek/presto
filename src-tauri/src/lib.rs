@@ -46,6 +46,8 @@ struct AppSettings {
     shortcuts: ShortcutSettings,
     timer: TimerSettings,
     notifications: NotificationSettings,
+    #[serde(default)]
+    advanced: AdvancedSettings,
     autostart: bool,
 }
 
@@ -75,6 +77,20 @@ struct NotificationSettings {
     smart_pause_timeout: u32, // timeout in seconds
 }
 
+#[derive(Serialize, Deserialize, Clone)]
+struct AdvancedSettings {
+    #[serde(default)]
+    debug_mode: bool, // Debug mode with 3-second timers
+}
+
+impl Default for AdvancedSettings {
+    fn default() -> Self {
+        Self {
+            debug_mode: false,
+        }
+    }
+}
+
 impl Default for AppSettings {
     fn default() -> Self {
         Self {
@@ -97,6 +113,7 @@ impl Default for AppSettings {
                 smart_pause: false,
                 smart_pause_timeout: 30, // default 30 seconds
             },
+            advanced: AdvancedSettings::default(),
             autostart: false, // default to disabled
         }
     }
