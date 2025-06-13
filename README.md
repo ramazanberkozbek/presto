@@ -1,4 +1,4 @@
-<img src="https://github.com/murdercode/presto/raw/HEAD/art/banner.png" width="100%" alt="YaTTA banner" style="max-width: 100%;">
+<img src="https://github.com/murdercode/presto/raw/HEAD/art/banner.png" width="100%" alt="Presto banner" style="max-width: 100%;">
 
 # Presto - Pomodoro Timer
 
