@@ -13,11 +13,22 @@ export class SettingsManager {
     }
 
     async init() {
+        // Clean up any existing auto-save feedback elements
+        this.cleanupOldNotificationElements();
+        
         await this.loadSettings();
         this.setupEventListeners();
         await this.registerGlobalShortcuts();
         this.setupGlobalShortcutHandlers();
         this.setupSettingsNavigation();
+    }
+
+    cleanupOldNotificationElements() {
+        // Remove any old auto-save feedback elements that might exist
+        const oldFeedback = document.getElementById('auto-save-feedback');
+        if (oldFeedback) {
+            oldFeedback.remove();
+        }
     }
 
     async loadSettings() {
@@ -343,10 +354,10 @@ export class SettingsManager {
                 }
             }
 
-            alert('Settings saved successfully!');
+            NotificationUtils.showNotificationPing('✓ Settings saved successfully!', 'success');
         } catch (error) {
             console.error('Failed to save settings:', error);
-            alert('Failed to save settings');
+            NotificationUtils.showNotificationPing('❌ Failed to save settings', 'error');
         }
     }
 
@@ -547,34 +558,8 @@ export class SettingsManager {
     }
 
     showAutoSaveFeedback() {
-        // Find or create a feedback element
-        let feedback = document.getElementById('auto-save-feedback');
-        if (!feedback) {
-            feedback = document.createElement('div');
-            feedback.id = 'auto-save-feedback';
-            feedback.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #4CAF50;
-        color: white;
-        padding: 8px 16px;
-        border-radius: 4px;
-        font-size: 14px;
-        z-index: 10000;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-      `;
-            document.body.appendChild(feedback);
-        }
-
-        feedback.textContent = '✓ Settings saved';
-        feedback.style.opacity = '1';
-
-        // Fade out after 2 seconds
-        setTimeout(() => {
-            feedback.style.opacity = '0';
-        }, 2000);
+        // Use the unified notification system instead of custom feedback
+        NotificationUtils.showNotificationPing('✓ Settings saved', 'success');
     }
 
     setupSettingsNavigation() {

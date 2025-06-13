@@ -1,5 +1,10 @@
 // Notification Utility Functions
 export class NotificationUtils {
+    // Static properties for notification queue management
+    static notificationQueue = [];
+    static activeNotifications = new Set();
+    static maxSimultaneousNotifications = 3;
+
     static showNotificationPing(message, type = null, timerState = null) {
         // Ensure notification container exists
         let container = document.querySelector('.notification-container');
@@ -9,11 +14,30 @@ export class NotificationUtils {
             document.body.appendChild(container);
         }
 
-        // Remove existing notifications
+        // Check if we have too many active notifications
+        if (this.activeNotifications.size >= this.maxSimultaneousNotifications) {
+            // If it's a low priority notification (like auto-save), queue it
+            if (type === 'success' && message.includes('Settings saved')) {
+                this.queueNotification(message, type, timerState);
+                return;
+            }
+            
+            // For high priority notifications, dismiss the oldest one
+            const oldestNotification = container.querySelector('.notification-ping');
+            if (oldestNotification) {
+                this.dismissNotification(oldestNotification);
+            }
+        }
+
+        // Check for duplicate messages and update if found
         const existingNotifications = container.querySelectorAll('.notification-ping');
-        existingNotifications.forEach(notification => {
-            this.dismissNotification(notification);
-        });
+        for (const existing of existingNotifications) {
+            if (existing.textContent === message) {
+                // Update existing notification instead of creating a new one
+                this.refreshNotification(existing);
+                return;
+            }
+        }
 
         // Create new notification
         const notification = document.createElement('div');
@@ -39,13 +63,18 @@ export class NotificationUtils {
         // Contenuto semplice e pulito
         notification.textContent = message;
 
+        // Add unique ID for tracking
+        const notificationId = `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        notification.setAttribute('data-notification-id', notificationId);
+        this.activeNotifications.add(notificationId);
+
         container.appendChild(notification);
 
         // Vibrazione su mobile per notifiche importanti
         this.triggerMobileHaptics(type);
 
         // Auto-dismiss con durata dinamica basata sulla lunghezza del messaggio
-        const baseDuration = 3000;
+        const baseDuration = type === 'success' && message.includes('Settings saved') ? 2000 : 3000;
         const extraTime = Math.max(0, (message.length - 30) * 50); // 50ms per carattere extra
         const duration = Math.min(baseDuration + extraTime, 6000); // Max 6 secondi
 
@@ -57,6 +86,32 @@ export class NotificationUtils {
 
         // Migliorata gestione touch per mobile
         this.addMobileTouchHandlers(notification, dismissTimer);
+    }
+
+    static queueNotification(message, type, timerState) {
+        this.notificationQueue.push({ message, type, timerState });
+        
+        // Process queue when a notification slot becomes available
+        setTimeout(() => {
+            this.processNotificationQueue();
+        }, 500);
+    }
+
+    static processNotificationQueue() {
+        if (this.notificationQueue.length > 0 && this.activeNotifications.size < this.maxSimultaneousNotifications) {
+            const { message, type, timerState } = this.notificationQueue.shift();
+            this.showNotificationPing(message, type, timerState);
+        }
+    }
+
+    static refreshNotification(notification) {
+        // Add a refresh animation class
+        notification.classList.add('refreshing');
+        
+        // Remove the class after animation
+        setTimeout(() => {
+            notification.classList.remove('refreshing');
+        }, 300);
     }
 
     static addMobileTouchHandlers(notification, dismissTimer) {
@@ -150,10 +205,19 @@ export class NotificationUtils {
     static dismissNotification(notification) {
         if (!notification || !notification.parentNode) return;
 
+        // Remove from active notifications tracking
+        const notificationId = notification.getAttribute('data-notification-id');
+        if (notificationId) {
+            this.activeNotifications.delete(notificationId);
+        }
+
         notification.classList.add('dismissing');
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.parentNode.removeChild(notification);
+                
+                // Process any queued notifications after dismissing
+                this.processNotificationQueue();
             }
         }, 300);
     }
