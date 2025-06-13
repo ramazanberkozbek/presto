@@ -20,7 +20,7 @@
     /* Default inactive state */
     opacity: 0.7;
     transform: scale(1);
-    
+
     /* Default color (focus state) */
     color: var(--focus-timer-color);
 }

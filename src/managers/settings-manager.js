@@ -47,8 +47,7 @@ export class SettingsManager {
             notifications: {
                 desktop_notifications: true,
                 sound_notifications: true,
-                auto_start_breaks: true,
-                auto_start_focus: false, // New setting for auto-starting focus after breaks
+                auto_start_timer: true, // Renamed from auto_start_breaks
                 allow_continuous_sessions: false, // Allow sessions to continue beyond timer
                 smart_pause: false,
                 smart_pause_timeout: 30 // default 30 seconds
@@ -82,8 +81,7 @@ export class SettingsManager {
 
         document.getElementById('desktop-notifications').checked = desktopNotificationsEnabled;
         document.getElementById('sound-notifications').checked = this.settings.notifications.sound_notifications;
-        document.getElementById('auto-start-breaks').checked = this.settings.notifications.auto_start_breaks;
-        document.getElementById('auto-start-focus').checked = this.settings.notifications.auto_start_focus || false;
+        document.getElementById('auto-start-timer').checked = this.settings.notifications.auto_start_timer;
         document.getElementById('allow-continuous-sessions').checked = this.settings.notifications.allow_continuous_sessions || false;
         document.getElementById('smart-pause').checked = this.settings.notifications.smart_pause;
 
@@ -280,8 +278,8 @@ export class SettingsManager {
 
             this.settings.notifications.desktop_notifications = document.getElementById('desktop-notifications').checked;
             this.settings.notifications.sound_notifications = document.getElementById('sound-notifications').checked;
-            this.settings.notifications.auto_start_breaks = document.getElementById('auto-start-breaks').checked;
-            this.settings.notifications.auto_start_focus = document.getElementById('auto-start-focus').checked;
+            this.settings.notifications.auto_start_timer = document.getElementById('auto-start-timer').checked;
+            this.settings.notifications.allow_continuous_sessions = document.getElementById('allow-continuous-sessions').checked;
             this.settings.notifications.smart_pause = document.getElementById('smart-pause').checked;
             this.settings.notifications.smart_pause_timeout = parseInt(document.getElementById('smart-pause-timeout').value);
 
@@ -398,8 +396,7 @@ export class SettingsManager {
         const checkboxFields = [
             'desktop-notifications',
             'sound-notifications',
-            'auto-start-breaks',
-            'auto-start-focus',
+            'auto-start-timer',
             'allow-continuous-sessions'
         ];
 
@@ -448,8 +445,7 @@ export class SettingsManager {
 
             this.settings.notifications.desktop_notifications = document.getElementById('desktop-notifications').checked;
             this.settings.notifications.sound_notifications = document.getElementById('sound-notifications').checked;
-            this.settings.notifications.auto_start_breaks = document.getElementById('auto-start-breaks').checked;
-            this.settings.notifications.auto_start_focus = document.getElementById('auto-start-focus').checked;
+            this.settings.notifications.auto_start_timer = document.getElementById('auto-start-timer').checked;
             this.settings.notifications.allow_continuous_sessions = document.getElementById('allow-continuous-sessions').checked;
             this.settings.notifications.smart_pause = document.getElementById('smart-pause').checked;
             this.settings.notifications.smart_pause_timeout = parseInt(document.getElementById('smart-pause-timeout').value);

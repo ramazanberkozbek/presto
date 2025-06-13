@@ -60,8 +60,7 @@ export class PomodoroTimer {
         this.currentTask = '';
 
         // Notification preferences
-        this.autoStartBreaks = true; // Default to enabled (for breaks after focus)
-        this.autoStartFocus = false; // Default to disabled (for focus after breaks)
+        this.autoStartTimer = true; // Default to enabled for skip auto-start
         this.allowContinuousSessions = false; // Allow focus sessions to continue beyond timer
 
         // Keyboard shortcuts (will be updated from settings)
@@ -553,21 +552,8 @@ export class PomodoroTimer {
 
         NotificationUtils.showNotificationPing(messages[this.currentMode] || 'Session skipped 📤', 'info', this.currentMode);
 
-        // Auto-start new session if enabled and continuous sessions are not enabled
-        let shouldAutoStart = false;
-
-        // Only auto-start if continuous sessions are disabled
-        if (!this.allowContinuousSessions) {
-            if (this.currentMode === 'break' || this.currentMode === 'longBreak') {
-                // Skipped focus session, now in break - check if breaks should auto-start
-                shouldAutoStart = this.autoStartBreaks;
-            } else if (this.currentMode === 'focus') {
-                // Skipped break, now in focus - check if focus should auto-start
-                shouldAutoStart = this.autoStartFocus;
-            }
-        }
-
-        if (shouldAutoStart) {
+        // Auto-start new session if enabled
+        if (this.autoStartTimer) {
             console.log('Auto-starting new session after skip in 1.5 seconds...');
             // Add a small delay to let the user see the skip message
             setTimeout(() => {
@@ -683,27 +669,6 @@ export class PomodoroTimer {
         this.updateDisplay();
         this.updateButtons();
         this.updateTrayIcon();
-
-        // Auto-start logic - only if continuous sessions are disabled AND mode changed
-        let shouldAutoStart = false;
-
-        if (!this.allowContinuousSessions && shouldChangeMode) {
-            if (this.currentMode === 'break' || this.currentMode === 'longBreak') {
-                // Focus session completed and moved to break - check if breaks should auto-start
-                shouldAutoStart = this.autoStartBreaks;
-            } else if (this.currentMode === 'focus') {
-                // Break completed and moved to focus - check if focus should auto-start
-                shouldAutoStart = this.autoStartFocus;
-            }
-        }
-
-        if (shouldAutoStart) {
-            console.log('Auto-starting next session after completion in 2 seconds...');
-            // Add a small delay to let the user see the completion message
-            setTimeout(() => {
-                this.startTimer();
-            }, 2000); // 2 second delay
-        }
     }
 
     // Show completion notification for continuous sessions without stopping the timer
@@ -1502,11 +1467,9 @@ export class PomodoroTimer {
         // Update notification preferences
         this.enableDesktopNotifications = settings.notifications.desktop_notifications;
         this.enableSoundNotifications = settings.notifications.sound_notifications;
-        this.autoStartBreaks = settings.notifications.auto_start_breaks;
-        this.autoStartFocus = settings.notifications.auto_start_focus || false; // New setting for focus auto-start
-        this.allowContinuousSessions = settings.notifications.allow_continuous_sessions || false; // New setting for continuous sessions
-        console.log('Auto-start breaks setting:', this.autoStartBreaks);
-        console.log('Auto-start focus setting:', this.autoStartFocus);
+        this.autoStartTimer = settings.notifications.auto_start_timer;
+        this.allowContinuousSessions = settings.notifications.allow_continuous_sessions || false;
+        console.log('Auto-start timer setting:', this.autoStartTimer);
         console.log('Allow continuous sessions setting:', this.allowContinuousSessions);
 
         // Update smart pause setting and timeout
@@ -1576,8 +1539,7 @@ export class PomodoroTimer {
         }
 
         // Reset notification preferences to defaults
-        this.autoStartBreaks = true;
-        this.autoStartFocus = false;
+        this.autoStartTimer = true;
         this.allowContinuousSessions = false;
 
         // Update all displays
