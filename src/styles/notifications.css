@@ -79,10 +79,12 @@
     transform: scale(1);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
+
   50% {
     transform: scale(1.02);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   }
+
   100% {
     transform: scale(1);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -90,7 +92,7 @@
 }
 
 /* Stacked notifications spacing */
-.notification-ping + .notification-ping {
+.notification-ping+.notification-ping {
   margin-top: -2px;
   animation-delay: 0.1s;
 }

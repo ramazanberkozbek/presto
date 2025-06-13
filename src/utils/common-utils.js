@@ -21,7 +21,7 @@ export class NotificationUtils {
                 this.queueNotification(message, type, timerState);
                 return;
             }
-            
+
             // For high priority notifications, dismiss the oldest one
             const oldestNotification = container.querySelector('.notification-ping');
             if (oldestNotification) {
@@ -41,10 +41,10 @@ export class NotificationUtils {
 
         // Create new notification
         const notification = document.createElement('div');
-        
+
         // Determina la classe CSS da usare
         let notificationClass = 'notification-ping';
-        
+
         // Se è fornito lo stato del timer, usa quello, altrimenti usa il tipo
         if (timerState) {
             notificationClass += ` ${timerState}`;
@@ -53,13 +53,13 @@ export class NotificationUtils {
         } else {
             notificationClass += ' info';
         }
-        
+
         notification.className = notificationClass;
-        
+
         // Miglioramento per mobile: aggiungi attributi di accessibilità
         notification.setAttribute('role', 'alert');
         notification.setAttribute('aria-live', 'polite');
-        
+
         // Contenuto semplice e pulito
         notification.textContent = message;
 
@@ -90,7 +90,7 @@ export class NotificationUtils {
 
     static queueNotification(message, type, timerState) {
         this.notificationQueue.push({ message, type, timerState });
-        
+
         // Process queue when a notification slot becomes available
         setTimeout(() => {
             this.processNotificationQueue();
@@ -107,7 +107,7 @@ export class NotificationUtils {
     static refreshNotification(notification) {
         // Add a refresh animation class
         notification.classList.add('refreshing');
-        
+
         // Remove the class after animation
         setTimeout(() => {
             notification.classList.remove('refreshing');
@@ -129,10 +129,10 @@ export class NotificationUtils {
         // Touch move (swipe to dismiss)
         notification.addEventListener('touchmove', (e) => {
             if (!startY) return;
-            
+
             currentY = e.touches[0].clientY;
             const deltaY = startY - currentY;
-            
+
             if (Math.abs(deltaY) > 10) {
                 isDragging = true;
                 // Solo swipe verso l'alto per chiudere
@@ -150,7 +150,7 @@ export class NotificationUtils {
             if (isDragging) {
                 const deltaY = startY - currentY;
                 notification.style.transition = 'all 0.3s ease';
-                
+
                 if (deltaY > 50) {
                     // Swipe sufficiente per chiudere
                     clearTimeout(dismissTimer);
@@ -165,7 +165,7 @@ export class NotificationUtils {
                 clearTimeout(dismissTimer);
                 this.dismissNotification(notification);
             }
-            
+
             startY = 0;
             isDragging = false;
         }, { passive: true });
@@ -183,7 +183,7 @@ export class NotificationUtils {
         // Vibrazione solo su mobile e solo per certi tipi di notifica
         if ('vibrate' in navigator && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
             let pattern = [100]; // Vibrazione base
-            
+
             switch (type) {
                 case 'success':
                     pattern = [100, 50, 100]; // Doppia vibrazione per successo
@@ -197,7 +197,7 @@ export class NotificationUtils {
                 default:
                     pattern = [50]; // Vibrazione sottile per info
             }
-            
+
             navigator.vibrate(pattern);
         }
     }
@@ -215,7 +215,7 @@ export class NotificationUtils {
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.parentNode.removeChild(notification);
-                
+
                 // Process any queued notifications after dismissing
                 this.processNotificationQueue();
             }
@@ -348,12 +348,12 @@ export class NotificationUtils {
             break: '☕',
             longBreak: '🌙'
         };
-        
+
         const icon = icons[type] || icons.info;
-        
+
         // Per dispositivi mobile, usa un layout migliorato
         const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
+
         if (isMobile) {
             return `
                 <div class="notification-content-mobile">

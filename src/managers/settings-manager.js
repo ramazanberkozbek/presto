@@ -15,7 +15,7 @@ export class SettingsManager {
     async init() {
         // Clean up any existing auto-save feedback elements
         this.cleanupOldNotificationElements();
-        
+
         await this.loadSettings();
         this.setupEventListeners();
         await this.registerGlobalShortcuts();
