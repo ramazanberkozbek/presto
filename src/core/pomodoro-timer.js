@@ -158,6 +158,7 @@ export class PomodoroTimer {
         }
 
         // Update all setting indicators
+        // Note: This will be called again in applySettings() with the correct values
         this.updateSettingIndicators();
 
         // Initialize sidebar state to match timer
@@ -898,6 +899,11 @@ export class PomodoroTimer {
 
     // Update all setting indicators
     updateSettingIndicators() {
+        console.log('🔄 Updating setting indicators...');
+        console.log('autoStartTimer:', this.autoStartTimer);
+        console.log('allowContinuousSessions:', this.allowContinuousSessions);
+        console.log('smartPauseEnabled:', this.smartPauseEnabled);
+
         // Update smart pause indicator
         if (this.smartIndicator) {
             // Always show the indicator
@@ -910,6 +916,9 @@ export class PomodoroTimer {
                 // Use line bulb icon when inactive
                 this.smartIndicator.className = 'ri-lightbulb-line';
             }
+            console.log('✅ Smart indicator updated:', this.smartIndicator.className);
+        } else {
+            console.log('❌ Smart indicator element not found');
         }
 
         // Update auto-start indicator
@@ -921,6 +930,9 @@ export class PomodoroTimer {
                 // Use line play icon when inactive
                 this.autoStartIndicator.className = 'ri-play-circle-line';
             }
+            console.log('✅ Auto-start indicator updated:', this.autoStartIndicator.className);
+        } else {
+            console.log('❌ Auto-start indicator element not found');
         }
 
         // Update continuous session indicator
@@ -932,6 +944,9 @@ export class PomodoroTimer {
                 // Use line repeat icon when inactive
                 this.continuousSessionIndicator.className = 'ri-repeat-line';
             }
+            console.log('✅ Continuous sessions indicator updated:', this.continuousSessionIndicator.className);
+        } else {
+            console.log('❌ Continuous sessions indicator element not found');
         }
     }
 
@@ -993,7 +1008,11 @@ export class PomodoroTimer {
             const continuousCheckbox = document.getElementById('allow-continuous-sessions');
             if (continuousCheckbox) {
                 continuousCheckbox.checked = this.allowContinuousSessions;
+                console.log('🔄 Toggle - Set checkbox to:', this.allowContinuousSessions);
+                console.log('🔄 Toggle - Checkbox actual value:', continuousCheckbox.checked);
                 window.settingsManager.scheduleAutoSave();
+            } else {
+                console.log('❌ Toggle - Checkbox element not found!');
             }
         }
 
@@ -1594,6 +1613,7 @@ export class PomodoroTimer {
         // Update debug mode state
         this.debugMode = settings.advanced?.debug_mode || false;
 
+        console.log('🔧 Applying settings in PomodoroTimer:');
         console.log('Auto-start timer setting:', this.autoStartTimer);
         console.log('Allow continuous sessions setting:', this.allowContinuousSessions);
         console.log('Debug mode setting:', this.debugMode);
@@ -1619,6 +1639,7 @@ export class PomodoroTimer {
         this.enableSmartPause(settings.notifications.smart_pause);
 
         // Update all setting indicators to reflect current state
+        console.log('🔄 Calling updateSettingIndicators from applySettings...');
         this.updateSettingIndicators();
     }
 

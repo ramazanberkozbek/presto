@@ -22,12 +22,29 @@ export class SettingsManager {
 
     async loadSettings() {
         try {
-            this.settings = await invoke('load_settings');
+            const loadedSettings = await invoke('load_settings');
+            console.log('📋 Raw loaded settings:', loadedSettings);
+            // Merge loaded settings with defaults to ensure all fields exist
+            this.settings = this.mergeWithDefaults(loadedSettings);
+            console.log('📋 Final merged settings:', this.settings);
             this.populateSettingsUI();
         } catch (error) {
             console.error('Failed to load settings:', error);
             this.settings = this.getDefaultSettings();
         }
+    }
+
+    // Merge loaded settings with defaults to ensure all required fields exist
+    mergeWithDefaults(loadedSettings) {
+        const defaultSettings = this.getDefaultSettings();
+        
+        return {
+            shortcuts: { ...defaultSettings.shortcuts, ...loadedSettings.shortcuts },
+            timer: { ...defaultSettings.timer, ...loadedSettings.timer },
+            notifications: { ...defaultSettings.notifications, ...loadedSettings.notifications },
+            advanced: { ...defaultSettings.advanced, ...loadedSettings.advanced },
+            autostart: loadedSettings.autostart !== undefined ? loadedSettings.autostart : defaultSettings.autostart
+        };
     }
 
     getDefaultSettings() {
@@ -85,7 +102,13 @@ export class SettingsManager {
         document.getElementById('desktop-notifications').checked = desktopNotificationsEnabled;
         document.getElementById('sound-notifications').checked = this.settings.notifications.sound_notifications;
         document.getElementById('auto-start-timer').checked = this.settings.notifications.auto_start_timer;
-        document.getElementById('allow-continuous-sessions').checked = this.settings.notifications.allow_continuous_sessions || false;
+        
+        // Debug log for continuous sessions
+        console.log('🔧 PopulateUI - Raw continuous sessions value:', this.settings.notifications.allow_continuous_sessions);
+        const continuousValue = this.settings.notifications.allow_continuous_sessions || false;
+        console.log('🔧 PopulateUI - Final continuous sessions value:', continuousValue);
+        
+        document.getElementById('allow-continuous-sessions').checked = continuousValue;
         document.getElementById('smart-pause').checked = this.settings.notifications.smart_pause;
 
         // Populate smart pause timeout
@@ -477,6 +500,15 @@ export class SettingsManager {
                 }
                 this.settings.advanced.debug_mode = debugModeCheckbox.checked;
             }
+
+            // Debug logging for continuous sessions
+            console.log('🔧 AutoSave - Reading checkbox values:');
+            console.log('auto_start_timer checkbox:', document.getElementById('auto-start-timer').checked);
+            console.log('allow_continuous_sessions checkbox:', document.getElementById('allow-continuous-sessions').checked);
+            console.log('smart_pause checkbox:', document.getElementById('smart-pause').checked);
+            
+            // Debug log the full settings object being saved
+            console.log('🔧 AutoSave - Full settings object being saved:', this.settings);
 
             // Save to file
             await invoke('save_settings', { settings: this.settings });
