@@ -1,11 +1,12 @@
 /* Settings Indicators Container */
 .settings-indicators {
     position: absolute;
-    bottom: 20px;
+    bottom: 50%;
     right: 20px;
+    transform: translateY(50%);
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
     z-index: 100;
 }
 
@@ -19,7 +20,7 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 0.7;
     transform: scale(1);
-    
+
     /* Default color (focus state) */
     color: var(--focus-timer-color);
 }
@@ -88,11 +89,12 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .settings-indicators {
-        bottom: 15px;
+        bottom: 50%;
         right: 15px;
-        gap: 10px;
+        transform: translateY(50%);
+        gap: 6px;
     }
-    
+
     .settings-indicators i {
         font-size: 16px;
         padding: 6px;

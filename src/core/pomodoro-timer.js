@@ -967,7 +967,7 @@ export class PomodoroTimer {
 
         // Save the setting by updating checkbox and triggering auto-save
         if (window.settingsManager) {
-            const autoStartCheckbox = document.getElementById('auto-start');
+            const autoStartCheckbox = document.getElementById('auto-start-timer');
             if (autoStartCheckbox) {
                 autoStartCheckbox.checked = this.autoStartTimer;
                 window.settingsManager.scheduleAutoSave();
@@ -990,7 +990,7 @@ export class PomodoroTimer {
 
         // Save the setting by updating checkbox and triggering auto-save
         if (window.settingsManager) {
-            const continuousCheckbox = document.getElementById('continuous-sessions');
+            const continuousCheckbox = document.getElementById('allow-continuous-sessions');
             if (continuousCheckbox) {
                 continuousCheckbox.checked = this.allowContinuousSessions;
                 window.settingsManager.scheduleAutoSave();
