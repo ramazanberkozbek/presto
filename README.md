@@ -1,3 +1,5 @@
+<img src="https://github.com/murdercode/presto/raw/HEAD/art/banner.png" width="100%" alt="YaTTA banner" style="max-width: 100%;">
+
 # Presto - Pomodoro Timer
 
 A modern, cross-platform Pomodoro timer application built with Tauri (Rust + HTML/CSS/JavaScript). Tempo helps you boost productivity using the proven Pomodoro Technique with a beautiful, intuitive interface.
