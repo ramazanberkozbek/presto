@@ -1,84 +1,105 @@
-/* Smart Pause Indicator Styles */
-
-#smart-indicator {
+/* Settings Indicators Container */
+.settings-indicators {
     position: absolute;
     bottom: 20px;
     right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 100;
+}
+
+/* Base styles for all setting indicators */
+.settings-indicators i {
     font-size: 20px;
     cursor: pointer;
-    z-index: 100;
-
-    /* Initially hidden */
-    display: none;
-
-    /* Base styles */
     border-radius: 50%;
     padding: 8px;
     backdrop-filter: blur(5px);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-    /* Default inactive state */
     opacity: 0.7;
     transform: scale(1);
-
+    
     /* Default color (focus state) */
     color: var(--focus-timer-color);
 }
 
-/* Theme-based coloring */
-.container.focus #smart-indicator {
+/* Smart Pause Indicator Styles */
+#smart-indicator {
+    /* Initially hidden */
+    display: none;
+}
+
+/* Auto-start Indicator Styles */
+#auto-start-indicator {
+    /* Initially visible */
+    display: block;
+}
+
+/* Continuous Session Indicator Styles */
+#continuous-session-indicator {
+    /* Initially visible */
+    display: block;
+}
+
+/* Theme-based coloring for all indicators */
+.container.focus .settings-indicators i {
     color: var(--focus-timer-color);
 }
 
-.container.break #smart-indicator {
+.container.break .settings-indicators i {
     color: var(--break-timer-color);
 }
 
-.container.longBreak #smart-indicator {
+.container.longBreak .settings-indicators i {
     color: var(--long-break-timer-color);
 }
 
-/* Hover effects */
-#smart-indicator:hover {
+/* Hover effects for all indicators */
+.settings-indicators i:hover {
     opacity: 1;
     transform: scale(1.1);
 }
 
-/* Active state (when smart pause is enabled) */
-#smart-indicator.active {
+/* Active state (when setting is enabled) */
+.settings-indicators i.active {
     opacity: 1;
 }
 
 /* Theme-specific active states */
-.container.focus #smart-indicator.active {
+.container.focus .settings-indicators i.active {
     color: var(--focus-timer-color);
 }
 
-.container.break #smart-indicator.active {
+.container.break .settings-indicators i.active {
     color: var(--break-timer-color);
 }
 
-.container.longBreak #smart-indicator.active {
+.container.longBreak .settings-indicators i.active {
     color: var(--long-break-timer-color);
 }
 
-/* Click animation */
-#smart-indicator:active {
+/* Click animation for all indicators */
+.settings-indicators i:active {
     transform: scale(0.95);
     transition: transform 0.1s ease;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    #smart-indicator {
+    .settings-indicators {
         bottom: 15px;
         right: 15px;
+        gap: 10px;
+    }
+    
+    .settings-indicators i {
         font-size: 16px;
         padding: 6px;
     }
 }
 
-/* When the indicator is hidden */
-#smart-indicator[style*="display: none"] {
+/* When indicators are hidden */
+.settings-indicators i[style*="display: none"] {
     display: none !important;
 }

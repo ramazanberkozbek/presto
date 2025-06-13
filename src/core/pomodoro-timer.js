@@ -54,6 +54,8 @@ export class PomodoroTimer {
         this.skipDefaultIcon = document.getElementById('skip-default-icon');
         this.progressDots = document.getElementById('progress-dots');
         this.smartIndicator = document.getElementById('smart-indicator');
+        this.autoStartIndicator = document.getElementById('auto-start-indicator');
+        this.continuousSessionIndicator = document.getElementById('continuous-session-indicator');
 
         // Task management
         this.tasks = [];
@@ -130,6 +132,33 @@ export class PomodoroTimer {
                 window.navigation.addTooltipEvents(this.smartIndicator);
             }
         }
+
+        // Initialize auto-start indicator
+        if (this.autoStartIndicator) {
+            this.autoStartIndicator.addEventListener('click', () => {
+                this.toggleAutoStart();
+            });
+
+            // Add tooltip using NavigationManager
+            if (window.navigation) {
+                window.navigation.addTooltipEvents(this.autoStartIndicator);
+            }
+        }
+
+        // Initialize continuous session indicator
+        if (this.continuousSessionIndicator) {
+            this.continuousSessionIndicator.addEventListener('click', () => {
+                this.toggleContinuousSessions();
+            });
+
+            // Add tooltip using NavigationManager
+            if (window.navigation) {
+                window.navigation.addTooltipEvents(this.continuousSessionIndicator);
+            }
+        }
+
+        // Update all setting indicators
+        this.updateSettingIndicators();
 
         // Initialize sidebar state to match timer
         const sidebar = document.querySelector('.sidebar');
@@ -867,23 +896,48 @@ export class PomodoroTimer {
         this.statusIcon.textContent = '';
     }
 
-    // Update smart pause indicator
+    // Update all setting indicators
+    updateSettingIndicators() {
+        // Update smart pause indicator
+        if (this.smartIndicator) {
+            // Always show the indicator
+            this.smartIndicator.style.display = 'block';
+
+            if (this.smartPauseEnabled) {
+                // Use filled bulb icon when active
+                this.smartIndicator.className = 'ri-lightbulb-fill active';
+            } else {
+                // Use line bulb icon when inactive
+                this.smartIndicator.className = 'ri-lightbulb-line';
+            }
+        }
+
+        // Update auto-start indicator
+        if (this.autoStartIndicator) {
+            if (this.autoStartTimer) {
+                // Use filled play icon when active
+                this.autoStartIndicator.className = 'ri-play-circle-fill active';
+            } else {
+                // Use line play icon when inactive
+                this.autoStartIndicator.className = 'ri-play-circle-line';
+            }
+        }
+
+        // Update continuous session indicator
+        if (this.continuousSessionIndicator) {
+            if (this.allowContinuousSessions) {
+                // Use filled repeat icon when active
+                this.continuousSessionIndicator.className = 'ri-repeat-fill active';
+            } else {
+                // Use line repeat icon when inactive
+                this.continuousSessionIndicator.className = 'ri-repeat-line';
+            }
+        }
+    }
+
+    // Legacy method for backward compatibility
     updateSmartIndicator() {
-        if (!this.smartIndicator) {
-            console.error('Smart indicator element not found!');
-            return;
-        }
-
-        // Always show the indicator
-        this.smartIndicator.style.display = 'block';
-
-        if (this.smartPauseEnabled) {
-            // Use filled bulb icon when active
-            this.smartIndicator.className = 'ri-lightbulb-fill active';
-        } else {
-            // Use line bulb icon when inactive
-            this.smartIndicator.className = 'ri-lightbulb-line';
-        }
+        this.updateSettingIndicators();
     }
 
     // Toggle smart pause on/off
@@ -904,6 +958,52 @@ export class PomodoroTimer {
         const message = newState
             ? 'Smart Pause enabled! Timer will auto-pause during inactivity 🧠'
             : 'Smart Pause disabled 💡';
+        NotificationUtils.showNotificationPing(message, 'info');
+    }
+
+    // Toggle auto-start on/off
+    async toggleAutoStart() {
+        this.autoStartTimer = !this.autoStartTimer;
+
+        // Save the setting by updating checkbox and triggering auto-save
+        if (window.settingsManager) {
+            const autoStartCheckbox = document.getElementById('auto-start');
+            if (autoStartCheckbox) {
+                autoStartCheckbox.checked = this.autoStartTimer;
+                window.settingsManager.scheduleAutoSave();
+            }
+        }
+
+        // Update the indicator
+        this.updateSettingIndicators();
+
+        // Show notification
+        const message = this.autoStartTimer
+            ? 'Auto-start enabled! Sessions will start automatically ⚡'
+            : 'Auto-start disabled 🛑';
+        NotificationUtils.showNotificationPing(message, 'info');
+    }
+
+    // Toggle continuous sessions on/off
+    async toggleContinuousSessions() {
+        this.allowContinuousSessions = !this.allowContinuousSessions;
+
+        // Save the setting by updating checkbox and triggering auto-save
+        if (window.settingsManager) {
+            const continuousCheckbox = document.getElementById('continuous-sessions');
+            if (continuousCheckbox) {
+                continuousCheckbox.checked = this.allowContinuousSessions;
+                window.settingsManager.scheduleAutoSave();
+            }
+        }
+
+        // Update the indicator
+        this.updateSettingIndicators();
+
+        // Show notification
+        const message = this.allowContinuousSessions
+            ? 'Continuous Sessions enabled! Sessions will continue beyond timer ♾️'
+            : 'Continuous Sessions disabled ⏹️';
         NotificationUtils.showNotificationPing(message, 'info');
     }
 
@@ -1517,6 +1617,9 @@ export class PomodoroTimer {
         }
 
         this.enableSmartPause(settings.notifications.smart_pause);
+
+        // Update all setting indicators to reflect current state
+        this.updateSettingIndicators();
     }
 
     resetToInitialState() {
@@ -1574,6 +1677,7 @@ export class PomodoroTimer {
         this.renderTasks();
         this.updateWeeklyStats();
         this.updateTrayIcon();
+        this.updateSettingIndicators();
 
         console.log('Timer reset to initial state');
     }
