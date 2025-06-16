@@ -129,3 +129,130 @@
 :root[data-timer-theme="pommodore64"] .sidebar.longBreak {
     background: linear-gradient(135deg, var(--long-break-color), #55efc4) !important;
 }
+
+/* === SHARED COMPONENTS STYLES === */
+/* Stili per statistiche e impostazioni nel tema Pommodore64 */
+
+:root[data-timer-theme="pommodore64"] .view-section {
+    background-color: #f0f0f0 !important;
+}
+
+:root[data-timer-theme="pommodore64"] .base-card,
+:root[data-timer-theme="pommodore64"] .base-card-compact,
+:root[data-timer-theme="pommodore64"] .base-section {
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+:root[data-timer-theme="pommodore64"] .stat-card {
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+:root[data-timer-theme="pommodore64"] .day-stat-base {
+    background: #e8e8e8;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+}
+
+:root[data-timer-theme="pommodore64"] .day-stat-base.today {
+    border-color: var(--focus-color);
+    background: var(--focus-bg);
+    box-shadow: 0 0 5px rgba(108, 92, 231, 0.3);
+}
+
+:root[data-timer-theme="pommodore64"] .day-stat-base.completed {
+    background: var(--focus-color);
+    color: white;
+    border-color: var(--focus-color);
+}
+
+:root[data-timer-theme="pommodore64"] .nav-item-base {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    border-radius: 4px;
+}
+
+:root[data-timer-theme="pommodore64"] .nav-item-base:hover {
+    background: #e8e8e8;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+:root[data-timer-theme="pommodore64"] .nav-item-base.active {
+    background: var(--focus-color);
+    color: white;
+    box-shadow: 0 2px 8px rgba(108, 92, 231, 0.3);
+}
+
+:root[data-timer-theme="pommodore64"] .nav-item-base.active:hover {
+    background: var(--focus-color) !important;
+    color: white !important;
+}
+
+:root[data-timer-theme="pommodore64"] .sidebar-base {
+    background: white;
+    border-color: #ddd;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+:root[data-timer-theme="pommodore64"] .row-base {
+    background: #f8f8f8;
+    border-radius: 4px;
+}
+
+:root[data-timer-theme="pommodore64"] .row-base:hover {
+    background: #e8e8e8;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Headers e testo in stile retrò */
+:root[data-timer-theme="pommodore64"] .section-header,
+:root[data-timer-theme="pommodore64"] .page-header,
+:root[data-timer-theme="pommodore64"] .card-header {
+    color: var(--focus-color);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+}
+
+:root[data-timer-theme="pommodore64"] .stat-number {
+    color: var(--focus-color);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+}
+
+:root[data-timer-theme="pommodore64"] .stat-label {
+    color: #666;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 400;
+}
+
+/* Badge retrò */
+:root[data-timer-theme="pommodore64"] .badge-focus {
+    background: var(--focus-bg);
+    color: var(--focus-color);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    font-weight: 500;
+}
+
+:root[data-timer-theme="pommodore64"] .badge-break {
+    background: var(--break-bg);
+    color: var(--break-color);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    font-weight: 500;
+}
+
+:root[data-timer-theme="pommodore64"] .badge-long-break {
+    background: var(--long-break-bg);
+    color: var(--long-break-color);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    font-weight: 500;
+}

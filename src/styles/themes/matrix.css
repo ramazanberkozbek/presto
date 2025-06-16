@@ -267,14 +267,102 @@
     box-shadow: 0 0 20px rgba(0, 204, 51, 0.3);
 }
 
-/* Effetti aggiuntivi per elementi del tema */
-:root[data-timer-theme="matrix"] * {
-    color: var(--matrix-text) !important;
+/* === SHARED COMPONENTS STYLES === */
+/* Stili per statistiche e impostazioni nel tema Matrix */
+
+:root[data-timer-theme="matrix"] .base-card,
+:root[data-timer-theme="matrix"] .base-card-compact,
+:root[data-timer-theme="matrix"] .base-section {
+    background: var(--matrix-dark-green);
+    border: 1px solid var(--matrix-text);
+    box-shadow: 0 0 10px var(--matrix-glow);
 }
 
-:root[data-timer-theme="matrix"] body,
-:root[data-timer-theme="matrix"] .main-container {
-    background: var(--matrix-bg) !important;
+:root[data-timer-theme="matrix"] .stat-card {
+    background: var(--matrix-dark-green);
+    border: 1px solid var(--matrix-text);
+    box-shadow: 0 0 5px var(--matrix-glow);
+}
+
+:root[data-timer-theme="matrix"] .day-stat-base {
+    background: rgba(0, 255, 65, 0.1);
+    border: 1px solid transparent;
+    color: var(--matrix-text);
+}
+
+:root[data-timer-theme="matrix"] .day-stat-base.today {
+    border-color: var(--focus-color);
+    background: rgba(0, 255, 65, 0.2);
+    box-shadow: 0 0 5px var(--matrix-glow);
+}
+
+:root[data-timer-theme="matrix"] .day-stat-base.completed {
+    background: var(--focus-color);
+    color: var(--matrix-bg);
+    box-shadow: 0 0 10px var(--matrix-glow);
+}
+
+:root[data-timer-theme="matrix"] .nav-item-base {
+    font-family: 'Share Tech Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--matrix-text);
+}
+
+:root[data-timer-theme="matrix"] .nav-item-base:hover {
+    background: rgba(0, 255, 65, 0.1);
+    box-shadow: 0 0 5px var(--matrix-glow);
+}
+
+:root[data-timer-theme="matrix"] .nav-item-base.active {
+    background: var(--focus-color);
+    color: var(--matrix-bg);
+    box-shadow: 0 0 15px var(--matrix-glow);
+}
+
+:root[data-timer-theme="matrix"] .nav-item-base.active:hover {
+    background: var(--focus-color) !important;
+    color: var(--matrix-bg) !important;
+}
+
+:root[data-timer-theme="matrix"] .sidebar-base {
+    background: var(--matrix-bg);
+    border-color: var(--matrix-text);
+    box-shadow: 2px 0 10px var(--matrix-glow);
+}
+
+:root[data-timer-theme="matrix"] .row-base {
+    background: rgba(0, 255, 65, 0.05);
+    color: var(--matrix-text);
+}
+
+:root[data-timer-theme="matrix"] .row-base:hover {
+    background: rgba(0, 255, 65, 0.1);
+    box-shadow: 0 0 3px var(--matrix-glow);
+}
+
+/* Testo e headers Matrix style */
+:root[data-timer-theme="matrix"] .section-header,
+:root[data-timer-theme="matrix"] .page-header,
+:root[data-timer-theme="matrix"] .card-header {
+    color: var(--matrix-text);
+    font-family: 'Share Tech Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 5px var(--matrix-glow);
+}
+
+:root[data-timer-theme="matrix"] .stat-number {
+    color: var(--focus-color);
+    font-family: 'Share Tech Mono', monospace;
+    text-shadow: 0 0 5px var(--matrix-glow);
+}
+
+:root[data-timer-theme="matrix"] .stat-label {
+    color: var(--matrix-text);
+    font-family: 'Share Tech Mono', monospace;
+    text-transform: uppercase;
+    font-size: 0.8rem;
 }
 
 /* Effetto cursore lampeggiante per input */
@@ -313,4 +401,9 @@
 :root[data-timer-theme="matrix"] ::-webkit-scrollbar-thumb:hover {
     background: var(--focus-color);
     box-shadow: 0 0 10px var(--matrix-glow);
+}
+
+:root[data-timer-theme="matrix"] body {
+    background: rgba(0, 16, 0, 1);
+    border-radius: 0;
 }

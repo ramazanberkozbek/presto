@@ -580,13 +580,14 @@
 [data-theme="dark"] .weekly-chart-card,
 [data-theme="dark"] .daily-chart-card,
 [data-theme="dark"] .mini-calendar-container {
-  background: #1e293b;
-  border-color: #334155;
+  background: var(--setting-item-hover-bg);
+  border-color: var(--setting-item-hover-border);
 }
 
 [data-theme="dark"] .week-selector {
-  background: #1e293b;
-  border-color: #334155;
+  background: var(--setting-item-hover-bg);
+  border-color: var(--setting-item-hover-border);
+  color: var(--text-light);
 }
 
 [data-theme="dark"] .calendar-day {

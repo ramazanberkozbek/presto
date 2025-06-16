@@ -6,11 +6,6 @@ body {
   padding: 0;
 }
 
-/* Dark theme default background */
-[data-theme="dark"] body {
-  background-color: #0f172a;
-}
-
 /* Timer background states - applied to body when timer is active */
 /* These styles have higher specificity and will override the default background */
 body.focus {
@@ -45,7 +40,6 @@ body.longBreak {
 .view-container {
   display: block;
   animation: fadeIn 0.3s ease;
-  max-width: 1200px;
   width: 100%;
 }
 
@@ -54,10 +48,6 @@ body.longBreak {
 }
 
 /* Specific styling for calendar view */
-#calendar-view {
-  max-width: 1000px;
-}
-
 @keyframes fadeIn {
   from {
     opacity: 0;

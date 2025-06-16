@@ -190,10 +190,6 @@
 }
 
 /* Dark theme styles for team */
-[data-theme="dark"] #team-view {
-  background-color: #0f172a !important;
-}
-
 [data-theme="dark"] .team-stat-card {
   background: #1e293b;
   border-color: #334155;
@@ -214,10 +210,6 @@
 
 /* Auto theme dark styles for team */
 @media (prefers-color-scheme: dark) {
-  [data-theme="auto"] #team-view {
-    background-color: #0f172a !important;
-  }
-
   [data-theme="auto"] .team-stat-card {
     background: #1e293b;
     border-color: #334155;

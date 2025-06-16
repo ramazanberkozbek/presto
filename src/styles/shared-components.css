@@ -4,7 +4,6 @@
 
 /* Common view container */
 .view-section {
-    background-color: #f6f6f6 !important;
     min-height: 100vh;
     padding: 2rem !important;
     box-sizing: border-box;
@@ -51,10 +50,6 @@
 }
 
 /* Dark theme styles for shared components */
-[data-theme="dark"] .view-section {
-    background-color: #0f172a !important;
-}
-
 [data-theme="dark"] .base-card,
 [data-theme="dark"] .base-card-compact,
 [data-theme="dark"] .base-section {
@@ -106,9 +101,6 @@
 
 /* Auto theme dark styles for shared components */
 @media (prefers-color-scheme: dark) {
-    [data-theme="auto"] .view-section {
-        background-color: #0f172a !important;
-    }
 
     [data-theme="auto"] .base-card,
     [data-theme="auto"] .base-card-compact,
@@ -326,7 +318,7 @@
 
 .nav-item-base.active {
     background: var(--accent-color);
-    color: white;
+    color: var(--text-light);
     box-shadow: 0 4px 12px rgba(155, 89, 182, 0.3);
 }
 
@@ -441,6 +433,7 @@
     margin-left: 280px;
     padding: 2rem;
     overflow-y: auto;
+    max-width: 1200px;
 }
 
 /* === ROW LAYOUTS === */

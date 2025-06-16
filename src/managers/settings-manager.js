@@ -1081,16 +1081,16 @@ export class SettingsManager {
         const previewDisplay = optionElement.querySelector('.timer-preview-display');
         const previewTime = optionElement.querySelector('.timer-preview-time');
         const previewStatus = optionElement.querySelector('.timer-preview-status');
-        
+
         if (!previewDisplay || !previewTime || !previewStatus) return;
 
         // Apply theme-specific styles to the preview
         const themeId = theme.id;
-        
+
         // Set preview colors based on theme
         previewTime.style.color = theme.preview.focus;
         previewStatus.style.color = theme.preview.focus;
-        
+
         // Special handling for specific themes
         if (themeId === 'matrix') {
             previewDisplay.style.background = '#000011';
