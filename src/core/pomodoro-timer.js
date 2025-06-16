@@ -29,6 +29,11 @@ export class PomodoroTimer {
         this.sessionStartTime = null; // When the current session was started
         this.currentSessionElapsedTime = 0; // Actual elapsed time for current session (in seconds)
         this.lastCompletedSessionTime = 0; // Time of the last completed session for undo functionality
+        
+        // Timer accuracy tracking (for background throttling fix)
+        this.timerStartTime = null; // When the timer was started (Date.now())
+        this.timerDuration = null; // Original duration when timer was started
+        this.lastUpdateTime = null; // Last time we updated the display
 
         // Timer durations (in seconds)
         this.durations = {
@@ -416,32 +421,14 @@ export class PomodoroTimer {
         // Show resume notification
         NotificationUtils.showNotificationPing('Timer resumed - you\'re back! 🎯', 'info', this.currentMode);
 
-        // Restart the timer interval
+        // Initialize timer accuracy tracking for resume
+        this.timerStartTime = Date.now();
+        this.timerDuration = this.timeRemaining;
+
+        // Restart the timer interval with accuracy updates
         this.timerInterval = setInterval(() => {
-            this.timeRemaining--;
-
-            // Continue tracking elapsed time for focus sessions
-            if (this.currentMode === 'focus') {
-                this.currentSessionElapsedTime++;
-            }
-
-            this.updateDisplay();
-            this.updateTrayIcon();
-
-            // Check if timer should complete
-            if (this.timeRemaining <= 0) {
-                if (this.allowContinuousSessions) {
-                    // For continuous sessions, show completion notification but keep timer running
-                    if (this.timeRemaining === 0) {
-                        this.showSessionCompletedNotification();
-                    }
-                    // Timer continues in negative (overtime)
-                } else {
-                    // Traditional behavior - complete and stop the session
-                    this.completeSession();
-                }
-            }
-        }, 1000);
+            this.updateTimerWithAccuracy();
+        }, 100); // Update more frequently (10 times per second) for smoother display
 
         // Update UI
         this.updateDisplay();
@@ -500,41 +487,14 @@ export class PomodoroTimer {
                 this.currentSessionElapsedTime = 0;
             }
 
+            // Initialize timer accuracy tracking
+            this.timerStartTime = Date.now();
+            this.timerDuration = this.timeRemaining;
+            this.lastUpdateTime = this.timerStartTime;
+
             this.timerInterval = setInterval(() => {
-                this.timeRemaining--;
-
-                // Track elapsed time for focus sessions
-                if (this.currentMode === 'focus') {
-                    this.currentSessionElapsedTime++;
-                }
-
-                this.updateDisplay();
-
-                // Warning when less than 2 minutes remaining
-                if (this.timeRemaining === 120 && this.currentMode === 'focus') {
-                    this.addWarningClass();
-                    NotificationUtils.showNotificationPing('2 minutes remaining! 🔥', 'warning', this.currentMode);
-                }
-
-                // Final warning at 30 seconds
-                if (this.timeRemaining === 30) {
-                    NotificationUtils.showNotificationPing('30 seconds left! ⏰', 'warning', this.currentMode);
-                }
-
-                // Check if timer should complete
-                if (this.timeRemaining <= 0) {
-                    if (this.allowContinuousSessions) {
-                        // For continuous sessions, show completion notification but keep timer running
-                        if (this.timeRemaining === 0) {
-                            this.showSessionCompletedNotification();
-                        }
-                        // Timer continues in negative (overtime)
-                    } else {
-                        // Traditional behavior - complete and stop the session
-                        this.completeSession();
-                    }
-                }
-            }, 1000);
+                this.updateTimerWithAccuracy();
+            }, 100); // Update more frequently (10 times per second) for smoother display
 
             this.updateButtons();
             this.updateDisplay();
@@ -548,12 +508,67 @@ export class PomodoroTimer {
         }
     }
 
+    // New method for accurate timer updates that works even when app is in background
+    updateTimerWithAccuracy() {
+        const now = Date.now();
+        const elapsedSinceStart = Math.floor((now - this.timerStartTime) / 1000);
+        const newTimeRemaining = this.timerDuration - elapsedSinceStart;
+        
+        // Only update if the time has actually changed (to avoid unnecessary updates)
+        if (newTimeRemaining !== this.timeRemaining) {
+            const oldTimeRemaining = this.timeRemaining;
+            this.timeRemaining = newTimeRemaining;
+
+            // Track elapsed time for focus sessions based on actual time passed
+            if (this.currentMode === 'focus') {
+                const timeDiff = oldTimeRemaining - this.timeRemaining;
+                if (timeDiff > 0) {
+                    this.currentSessionElapsedTime += timeDiff;
+                }
+            }
+
+            this.updateDisplay();
+
+            // Warning when less than 2 minutes remaining
+            if (this.timeRemaining <= 120 && this.timeRemaining > 0 && oldTimeRemaining > 120 && this.currentMode === 'focus') {
+                this.addWarningClass();
+                NotificationUtils.showNotificationPing('2 minutes remaining! 🔥', 'warning', this.currentMode);
+            }
+
+            // Final warning at 30 seconds
+            if (this.timeRemaining <= 30 && this.timeRemaining > 0 && oldTimeRemaining > 30) {
+                NotificationUtils.showNotificationPing('30 seconds left! ⏰', 'warning', this.currentMode);
+            }
+
+            // Check if timer should complete
+            if (this.timeRemaining <= 0 && oldTimeRemaining > 0) {
+                if (this.allowContinuousSessions) {
+                    // For continuous sessions, show completion notification but keep timer running
+                    this.showSessionCompletedNotification();
+                    // Reset timer tracking for overtime
+                    this.timerStartTime = now;
+                    this.timerDuration = 0; // Start from 0 for overtime
+                } else {
+                    // Traditional behavior - complete and stop the session
+                    this.completeSession();
+                }
+            }
+        }
+    }
+
     pauseTimer() {
         if (this.isRunning) {
             this.isRunning = false;
             this.isPaused = true;
             this.isAutoPaused = false; // Manual pause overrides auto-pause
             clearInterval(this.timerInterval);
+
+            // Update timer with current accurate time before pausing
+            if (this.timerStartTime) {
+                const now = Date.now();
+                const elapsedSinceStart = Math.floor((now - this.timerStartTime) / 1000);
+                this.timeRemaining = this.timerDuration - elapsedSinceStart;
+            }
 
             // Clear smart pause timeout and countdown
             if (this.activityTimeout) {
@@ -584,6 +599,11 @@ export class PomodoroTimer {
         // Reset session tracking
         this.sessionStartTime = null;
         this.currentSessionElapsedTime = 0;
+        
+        // Reset timer accuracy tracking
+        this.timerStartTime = null;
+        this.timerDuration = null;
+        this.lastUpdateTime = null;
 
         this.timeRemaining = this.durations[this.currentMode];
         this.updateDisplay();
@@ -719,6 +739,11 @@ export class PomodoroTimer {
         // Reset session tracking for next session
         this.sessionStartTime = null;
         this.currentSessionElapsedTime = 0;
+        
+        // Reset timer accuracy tracking
+        this.timerStartTime = null;
+        this.timerDuration = null;
+        this.lastUpdateTime = null;
 
         this.timeRemaining = this.durations[this.currentMode];
         this.updateDisplay();
@@ -1212,6 +1237,11 @@ export class PomodoroTimer {
         this.sessionStartTime = null;
         this.currentSessionElapsedTime = 0;
         this.lastCompletedSessionTime = 0;
+        
+        // Reset timer accuracy tracking
+        this.timerStartTime = null;
+        this.timerDuration = null;
+        this.lastUpdateTime = null;
 
         // Update all displays
         this.updateDisplay();
@@ -1762,6 +1792,11 @@ export class PomodoroTimer {
         this.sessionStartTime = null;
         this.currentSessionElapsedTime = 0;
         this.lastCompletedSessionTime = 0;
+        
+        // Reset timer accuracy tracking
+        this.timerStartTime = null;
+        this.timerDuration = null;
+        this.lastUpdateTime = null;
 
         // Reset durations to defaults
         this.durations = {

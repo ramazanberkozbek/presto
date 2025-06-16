@@ -293,7 +293,8 @@
   background: #fff5f5 !important;
   border-radius: 20px !important;
   padding: 2.5rem !important;
-  margin-top: 3rem !important; /* Spazio extra sopra la Danger Zone */
+  margin-top: 3rem !important;
+  /* Spazio extra sopra la Danger Zone */
 }
 
 .danger-zone h3 {
