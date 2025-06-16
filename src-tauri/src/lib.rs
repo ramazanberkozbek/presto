@@ -495,25 +495,18 @@ async fn update_tray_icon(
                     _ => "⏱️".to_string(),
                 });
 
-                let status = if is_running { "Running" } else { "Paused" };
+                let status = if is_running { "Running" } else { "Paused" };                let title = format!("{} {}", icon, timer_text);
+                tray.set_title(Some(title))
+                    .map_err(|e| format!("Failed to set title: {}", e))?;
 
-        let title = format!("{} {}", icon, timer_text);
-        tray.set_title(Some(title))
-            .map_err(|e| format!("Failed to set title: {}", e))?;
-
-        let tooltip = if session_mode == "focus" {
-            format!(
-                "Presto - Session {}/{} ({})",
-                current_session, total_sessions, status
-            )
-        } else {
-            format!(
-                "Presto - {} ({})",
-                if session_mode == "longBreak" {
-                    "Long Break"
+                let tooltip = if session_mode == "focus" {
+                    format!(
+                        "Presto - Session {}/{} ({})",
+                        current_session, total_sessions, status
+                    )
                 } else {
                     format!(
-                        "Tempo - {} ({})",
+                        "Presto - {} ({})",
                         if session_mode == "longBreak" {
                             "Long Break"
                         } else {
