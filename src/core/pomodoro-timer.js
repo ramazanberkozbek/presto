@@ -1693,7 +1693,7 @@ export class PomodoroTimer {
         // Update notification preferences
         this.enableDesktopNotifications = settings.notifications.desktop_notifications;
         this.enableSoundNotifications = settings.notifications.sound_notifications;
-        
+
         // Enable auto-start using the dedicated method
         await this.enableAutoStart(settings.notifications.auto_start_timer);
 

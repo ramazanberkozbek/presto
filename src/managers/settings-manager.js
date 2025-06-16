@@ -164,7 +164,7 @@ export class SettingsManager {
         if (smartPauseCheckbox) {
             smartPauseCheckbox.addEventListener('change', (e) => {
                 this.toggleTimeoutSetting(e.target.checked);
-                
+
                 // Call the timer's enableSmartPause method directly to ensure consistency
                 if (window.pomodoroTimer) {
                     // Use enableSmartPause instead of toggleSmartPause to avoid toggling twice

@@ -28,12 +28,12 @@
 
 @keyframes slideIn {
     from {
-        transform: translateX(-100%);
+        transform: translateX(100%) scale(0.95);
         opacity: 0;
     }
 
     to {
-        transform: translateX(0);
+        transform: translateX(0) scale(1);
         opacity: 1;
     }
 }
@@ -52,12 +52,12 @@
 
 @keyframes slideOut {
     from {
-        transform: translateX(0);
+        transform: translateX(0) scale(1);
         opacity: 1;
     }
 
     to {
-        transform: translateX(100%);
+        transform: translateX(100%) scale(0.95);
         opacity: 0;
     }
 }
@@ -69,8 +69,8 @@
     }
 
     60% {
-        transform: translateY(5%) scale(1.02);
-        opacity: 0.9;
+        transform: translateY(2%) scale(1.01);
+        opacity: 0.95;
     }
 
     to {

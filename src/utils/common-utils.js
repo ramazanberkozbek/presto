@@ -4,8 +4,27 @@ export class NotificationUtils {
     static notificationQueue = [];
     static activeNotifications = new Set();
     static maxSimultaneousNotifications = 3;
+    static lastNotificationTimes = new Map(); // Track last notification times to prevent spam
 
     static showNotificationPing(message, type = null, timerState = null) {
+        // Prevent spam notifications - check if the same message was shown recently
+        const now = Date.now();
+        const lastTime = this.lastNotificationTimes.get(message);
+        const cooldownTime = type === 'success' && message.includes('Settings saved') ? 1000 : 500;
+        
+        if (lastTime && (now - lastTime) < cooldownTime) {
+            return; // Skip if shown too recently
+        }
+        
+        this.lastNotificationTimes.set(message, now);
+
+        // Clean up old entries from notification times cache (keep only last 10 minutes)
+        for (const [msg, time] of this.lastNotificationTimes.entries()) {
+            if (now - time > 600000) { // 10 minutes
+                this.lastNotificationTimes.delete(msg);
+            }
+        }
+
         // Ensure notification container exists
         let container = document.querySelector('.notification-container');
         if (!container) {
@@ -22,10 +41,15 @@ export class NotificationUtils {
                 return;
             }
 
-            // For high priority notifications, dismiss the oldest one
+            // For high priority notifications, dismiss the oldest one and wait briefly
             const oldestNotification = container.querySelector('.notification-ping');
             if (oldestNotification) {
                 this.dismissNotification(oldestNotification);
+                // Wait a moment for the dismissal to process before showing new notification
+                setTimeout(() => {
+                    this.showNotificationPing(message, type, timerState);
+                }, 100);
+                return;
             }
         }
 
@@ -33,8 +57,11 @@ export class NotificationUtils {
         const existingNotifications = container.querySelectorAll('.notification-ping');
         for (const existing of existingNotifications) {
             if (existing.textContent === message) {
-                // Update existing notification instead of creating a new one
-                this.refreshNotification(existing);
+                // Don't refresh if notification is already dismissing
+                if (!existing.classList.contains('dismissing')) {
+                    // Update existing notification instead of creating a new one
+                    this.refreshNotification(existing);
+                }
                 return;
             }
         }
@@ -68,7 +95,20 @@ export class NotificationUtils {
         notification.setAttribute('data-notification-id', notificationId);
         this.activeNotifications.add(notificationId);
 
+        // Initially hide the notification for smooth animation start
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
+
         container.appendChild(notification);
+
+        // Force a reflow to ensure the initial styles are applied
+        notification.offsetHeight;
+
+        // Start the animation by removing initial styles and letting CSS take over
+        requestAnimationFrame(() => {
+            notification.style.opacity = '';
+            notification.style.transform = '';
+        });
 
         // Vibrazione su mobile per notifiche importanti
         this.triggerMobileHaptics(type);
@@ -89,12 +129,17 @@ export class NotificationUtils {
     }
 
     static queueNotification(message, type, timerState) {
+        // Check if this notification is already in the queue
+        const isDuplicate = this.notificationQueue.some(item => item.message === message);
+        if (isDuplicate) {
+            return; // Don't queue duplicates
+        }
+
         this.notificationQueue.push({ message, type, timerState });
 
-        // Process queue when a notification slot becomes available
-        setTimeout(() => {
-            this.processNotificationQueue();
-        }, 500);
+        // Process queue immediately when a notification slot becomes available
+        // Don't use setTimeout to avoid animation conflicts
+        this.processNotificationQueue();
     }
 
     static processNotificationQueue() {
@@ -205,21 +250,27 @@ export class NotificationUtils {
     static dismissNotification(notification) {
         if (!notification || !notification.parentNode) return;
 
-        // Remove from active notifications tracking
+        // Remove from active notifications tracking immediately
         const notificationId = notification.getAttribute('data-notification-id');
         if (notificationId) {
             this.activeNotifications.delete(notificationId);
         }
 
+        // Add dismissing class for animation
         notification.classList.add('dismissing');
+        
+        // Wait for animation to complete before removing from DOM
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.parentNode.removeChild(notification);
-
-                // Process any queued notifications after dismissing
-                this.processNotificationQueue();
             }
         }, 300);
+
+        // Process queued notifications immediately after tracking removal
+        // Use a small delay to ensure DOM update
+        setTimeout(() => {
+            this.processNotificationQueue();
+        }, 50);
     }
 
     static playNotificationSound() {

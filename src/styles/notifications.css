@@ -2,70 +2,62 @@
 
 .notification-container {
   position: fixed;
-  top: 16px;
-  right: 16px;
+  top: 20px;
+  right: 20px;
   z-index: 1000;
   pointer-events: none;
 }
 
 .notification-ping {
-  background: white;
+  background: var(--focus-bg);
   color: var(--focus-timer-color);
-  padding: 0.75rem 1rem;
-  margin-bottom: 0.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid var(--focus-color);
-  border-left: 3px solid var(--focus-color);
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: none;
   animation: slideIn 0.3s ease-out;
-  max-width: 250px;
+  max-width: 280px;
   pointer-events: auto;
   font-weight: 500;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   text-align: left;
 }
 
 /* Timer state notifications */
 .notification-ping.focus {
-  border-color: var(--focus-color);
-  border-left-color: var(--focus-color);
+  background: var(--focus-bg);
   color: var(--focus-timer-color);
 }
 
 .notification-ping.break {
-  border-color: var(--break-color);
-  border-left-color: var(--break-color);
+  background: var(--break-bg);
   color: var(--break-timer-color);
 }
 
 .notification-ping.longBreak {
-  border-color: var(--long-break-color);
-  border-left-color: var(--long-break-color);
+  background: var(--long-break-bg);
   color: var(--long-break-timer-color);
 }
 
 /* Notification types */
 .notification-ping.success {
-  border-color: var(--break-color);
-  border-left-color: var(--break-color);
+  background: var(--break-bg);
   color: var(--break-timer-color);
 }
 
 .notification-ping.warning {
-  border-color: #f39c12;
-  border-left-color: #f39c12;
-  color: #8b4513;
+  background: #FFF9E6;
+  color: #8B5A00;
 }
 
 .notification-ping.error {
-  border-color: var(--focus-color);
-  border-left-color: var(--focus-color);
+  background: var(--focus-bg);
   color: var(--focus-timer-color);
 }
 
 .notification-ping.info {
-  border-color: var(--long-break-color);
-  border-left-color: var(--long-break-color);
+  background: var(--long-break-bg);
   color: var(--long-break-timer-color);
 }
 
@@ -77,23 +69,23 @@
 @keyframes refreshPulse {
   0% {
     transform: scale(1);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    opacity: 1;
   }
 
   50% {
     transform: scale(1.02);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    opacity: 0.95;
   }
 
   100% {
     transform: scale(1);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    opacity: 1;
   }
 }
 
 /* Stacked notifications spacing */
 .notification-ping+.notification-ping {
-  margin-top: -2px;
+  margin-top: -4px;
   animation-delay: 0.1s;
 }
 
@@ -115,23 +107,22 @@
 /* Mobile responsive for notifications */
 @media (max-width: 768px) {
   .notification-container {
-    top: 16px;
-    right: 12px;
-    left: 12px;
+    top: 20px;
+    right: 16px;
+    left: 16px;
     z-index: 1001;
   }
 
   .notification-ping {
     max-width: none;
-    margin: 0 0 0.5rem 0;
-    padding: 1rem 1.25rem;
-    border-radius: 10px;
-    font-size: 0.9rem;
+    margin: 0 0 0.75rem 0;
+    padding: 1.25rem 1.5rem;
+    border-radius: 16px;
+    font-size: 1rem;
     line-height: 1.4;
     text-align: left;
-    box-shadow: 0 3px 16px rgba(0, 0, 0, 0.12);
-    border-width: 1px;
-    border-left-width: 3px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border: none;
     animation: slideInMobile 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     cursor: pointer;
     transform: translateZ(0);
@@ -151,14 +142,15 @@
 /* Small screens */
 @media (max-width: 480px) {
   .notification-container {
-    top: 12px;
-    right: 10px;
-    left: 10px;
+    top: 16px;
+    right: 12px;
+    left: 12px;
   }
 
   .notification-ping {
-    padding: 0.9rem 1rem;
-    font-size: 0.85rem;
-    border-radius: 8px;
+    padding: 1.125rem 1.25rem;
+    font-size: 0.95rem;
+    border-radius: 14px;
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.09);
   }
 }
