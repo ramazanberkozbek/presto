@@ -1,156 +1,156 @@
-# 🎨 Sistema Automatico di Gestione Temi
+# 🎨 Automatic Theme Management System
 
-Questo sistema permette di aggiungere nuovi temi al timer Pomodoro **senza dover modificare manualmente il codice**. I temi vengono scoperti e caricati automaticamente.
+This system allows you to add new themes to the Pomodoro timer **without manually modifying the code**. Themes are automatically discovered and loaded.
 
-## 🚀 Come Aggiungere un Nuovo Tema
+## 🚀 How to Add a New Theme
 
-### 1. Crea il File CSS del Tema
+### 1. Create the Theme CSS File
 
-Crea un nuovo file CSS nella cartella `src/styles/themes/` con il seguente formato:
+Create a new CSS file in the `src/styles/themes/` folder with the following format:
 
 ```css
-/* Timer Theme: [Nome del Tema]
- * Author: [Tuo Nome]
- * Description: [Descrizione del tema]
+/* Timer Theme: [Theme Name]
+ * Author: [Your Name]
+ * Description: [Theme description]
  * Supports: [Light mode only / Dark mode only / Light + Dark mode]
  */
 
-/* Import dei font se necessari */
+/* Font imports if needed */
 @import url('https://fonts.googleapis.com/css2?family=...');
 
-/* Definizione dei colori del tema */
-:root[data-timer-theme="[tema-id]"] {
+/* Theme color definitions */
+:root[data-timer-theme="[theme-id]"] {
     /* Timer Colors */
-    --focus-color: #colore-focus;
-    --break-color: #colore-break;
-    --long-break-color: #colore-long-break;
+    --focus-color: #focus-color;
+    --break-color: #break-color;
+    --long-break-color: #long-break-color;
 
     /* Background Colors */
-    --focus-bg: #sfondo-focus;
-    --break-bg: #sfondo-break;
-    --long-break-bg: #sfondo-long-break;
+    --focus-bg: #focus-background;
+    --break-bg: #break-background;
+    --long-break-bg: #long-break-background;
 
     /* Timer Text Colors */
-    --focus-timer-color: #testo-focus;
-    --break-timer-color: #testo-break;
-    --long-break-timer-color: #testo-long-break;
+    --focus-timer-color: #focus-text;
+    --break-timer-color: #break-text;
+    --long-break-timer-color: #long-break-text;
 
     /* Button Colors */
-    --focus-primary-btn: #bottone-focus;
-    --break-primary-btn: #bottone-break;
-    --long-break-primary-btn: #bottone-long-break;
+    --focus-primary-btn: #focus-button;
+    --break-primary-btn: #break-button;
+    --long-break-primary-btn: #long-break-button;
 
-    --focus-secondary-btn: #bottone-secondario-focus;
-    --break-secondary-btn: #bottone-secondario-break;
-    --long-break-secondary-btn: #bottone-secondario-long-break;
+    --focus-secondary-btn: #focus-secondary-button;
+    --break-secondary-btn: #break-secondary-button;
+    --long-break-secondary-btn: #long-break-secondary-button;
 }
 
-/* Stili personalizzati del tema */
-:root[data-timer-theme="[tema-id]"] .timer-minutes,
-:root[data-timer-theme="[tema-id]"] .timer-seconds {
-    /* Personalizzazioni per i numeri del timer */
+/* Custom theme styles */
+:root[data-timer-theme="[theme-id]"] .timer-minutes,
+:root[data-timer-theme="[theme-id]"] .timer-seconds {
+    /* Timer number customizations */
 }
 
-/* Altri stili personalizzati... */
+/* Other custom styles... */
 ```
 
-### 2. Esempi di Temi Esistenti
+### 2. Examples of Existing Themes
 
-- **`espresso.css`** - Tema di default con colori caldi
-- **`pommodore64.css`** - Tema retrò ispirato al Commodore 64
-- **`matrix.css`** - Tema Matrix con effetti digitali verdi
+- **`espresso.css`** - Default theme with warm colors
+- **`pommodore64.css`** - Retro theme inspired by Commodore 64
+- **`matrix.css`** - Matrix theme with green digital effects
 
-### 3. Il Sistema Fa il Resto!
+### 3. The System Does the Rest!
 
-Una volta creato il file CSS:
+Once you create the CSS file:
 
-1. **Scoperta Automatica**: Il sistema scopre automaticamente il nuovo tema
-2. **Caricamento Dinamico**: Il CSS viene caricato dinamicamente
-3. **Registrazione**: Il tema viene registrato automaticamente
-4. **Disponibilità**: Appare immediatamente nel selettore temi
+1. **Automatic Discovery**: The system automatically discovers the new theme
+2. **Dynamic Loading**: CSS is loaded dynamically
+3. **Registration**: The theme is automatically registered
+4. **Availability**: Appears immediately in the theme selector
 
-## 🛠️ Sistema Tecnico
+## 🛠️ Technical System
 
-### Build Script Automatico
+### Automatic Build Script
 
-Il file `build-themes.js` scansiona automaticamente la cartella `src/styles/themes/` e aggiorna la lista dei temi disponibili.
+The `build-themes.js` file automatically scans the `src/styles/themes/` folder and updates the list of available themes.
 
-**Esecuzione automatica:**
-- Prima del `npm run dev`
-- Prima del `npm run build`
-- Manualmente con `npm run build-themes`
+**Automatic execution:**
+- Before `npm run dev`
+- Before `npm run build`
+- Manually with `npm run build-themes`
 
 ### Theme Loader
 
-Il `src/utils/theme-loader.js` gestisce:
-- Scoperta automatica dei file CSS
-- Caricamento dinamico dei temi
-- Estrazione automatica dei metadati
-- Registrazione nel sistema
+The `src/utils/theme-loader.js` handles:
+- Automatic discovery of CSS files
+- Dynamic theme loading
+- Automatic metadata extraction
+- System registration
 
-### Metadati Automatici
+### Automatic Metadata
 
-Il sistema estrae automaticamente:
-- **Nome** dal commento "Timer Theme:"
-- **Descrizione** dal commento "Description:"
-- **Modalità supportate** dal commento "Supports:"
-- **Colori di anteprima** dalle variabili CSS `--focus-color`, `--break-color`, `--long-break-color`
+The system automatically extracts:
+- **Name** from "Timer Theme:" comment
+- **Description** from "Description:" comment
+- **Supported modes** from "Supports:" comment
+- **Preview colors** from CSS variables `--focus-color`, `--break-color`, `--long-break-color`
 
-## 📝 Struttura Metadati
+## 📝 Metadata Structure
 
-I metadati vengono estratti dai commenti CSS:
+Metadata is extracted from CSS comments:
 
 ```css
-/* Timer Theme: Nome Bellissimo
- * Author: Il Tuo Nome
- * Description: Una descrizione accattivante del tema
+/* Timer Theme: Beautiful Name
+ * Author: Your Name
+ * Description: An engaging theme description
  * Supports: Light + Dark mode
  */
 ```
 
-**Valori supportati per "Supports":**
-- `Light mode only` - Solo modalità chiara
-- `Dark mode only` - Solo modalità scura  
-- `Light + Dark mode` - Entrambe le modalità
+**Supported values for "Supports":**
+- `Light mode only` - Light mode only
+- `Dark mode only` - Dark mode only
+- `Light + Dark mode` - Both modes
 
-## 🎯 Vantaggi del Sistema
+## 🎯 System Benefits
 
-### ✅ Per gli Sviluppatori
-- **Zero configurazione** - aggiungi un file CSS e funziona
-- **No modifiche al codice** - nessun import manuale
-- **Metadati automatici** - estratti dai commenti CSS
-- **Hot reload** - funziona con il dev server
+### ✅ For Developers
+- **Zero configuration** - add a CSS file and it works
+- **No code changes** - no manual imports
+- **Automatic metadata** - extracted from CSS comments
+- **Hot reload** - works with dev server
 
-### ✅ Per i Designer
-- **Focus sulla creatività** - concentrati sui colori e stili
-- **Esempi chiari** - segui la struttura dei temi esistenti
-- **Anteprima immediata** - vedi subito il risultato
-- **Feedback visivo** - compatibilità mode mostrata automaticamente
+### ✅ For Designers
+- **Focus on creativity** - concentrate on colors and styles
+- **Clear examples** - follow existing theme structure
+- **Immediate preview** - see results instantly
+- **Visual feedback** - mode compatibility shown automatically
 
-### ✅ Per gli Utenti
-- **Più scelta** - temi sempre aggiornati
-- **Interfaccia pulita** - selezione automatica per compatibilità
-- **Esperienza fluida** - cambio tema istantaneo
+### ✅ For Users
+- **More choice** - always updated themes
+- **Clean interface** - automatic selection for compatibility
+- **Smooth experience** - instant theme switching
 
-## 🔄 Workflow di Sviluppo
+## 🔄 Development Workflow
 
-1. **Crea** `src/styles/themes/mio-tema.css`
-2. **Sviluppa** usando gli esempi esistenti
-3. **Testa** con `npm run dev` (auto-reload)
-4. **Condividi** - il tema è pronto!
+1. **Create** `src/styles/themes/my-theme.css`
+2. **Develop** using existing examples
+3. **Test** with `npm run dev` (auto-reload)
+4. **Share** - the theme is ready!
 
-## 🎨 Template Tema Veloce
+## 🎨 Quick Theme Template
 
-Copia e personalizza questo template:
+Copy and customize this template:
 
 ```css
-/* Timer Theme: Il Mio Tema
- * Author: Il Mio Nome  
- * Description: La mia descrizione
+/* Timer Theme: My Theme
+ * Author: My Name
+ * Description: My description
  * Supports: Light + Dark mode
  */
 
-:root[data-timer-theme="mio-tema"] {
+:root[data-timer-theme="my-theme"] {
     --focus-color: #e74c3c;
     --break-color: #2ecc71;
     --long-break-color: #3498db;
@@ -175,4 +175,4 @@ Copia e personalizza questo template:
 
 ---
 
-**🎉 Divertiti a creare temi fantastici!**
+**🎉 Have fun creating fantastic themes!**
