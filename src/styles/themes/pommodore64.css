@@ -10,28 +10,41 @@
 /* Light Mode Colors - Commodore 64 Style */
 :root[data-timer-theme="pommodore64"] {
     /* Timer Colors - Ispirate al C64 */
-    --focus-color: #6c5ce7;        /* Viola C64 */
-    --break-color: #0984e3;        /* Blu C64 */
-    --long-break-color: #00b894;   /* Verde acqua C64 */
+    --focus-color: #6c5ce7;
+    /* Viola C64 */
+    --break-color: #0984e3;
+    /* Blu C64 */
+    --long-break-color: #00b894;
+    /* Verde acqua C64 */
 
     /* Background Colors - Sfondo chiaro con accenti retro */
-    --focus-bg: #f8f7ff;          /* Sfondo viola molto chiaro */
-    --break-bg: #f0f8ff;          /* Sfondo blu molto chiaro */
-    --long-break-bg: #f0fff9;     /* Sfondo verde molto chiaro */
+    --focus-bg: #f8f7ff;
+    /* Sfondo viola molto chiaro */
+    --break-bg: #f0f8ff;
+    /* Sfondo blu molto chiaro */
+    --long-break-bg: #f0fff9;
+    /* Sfondo verde molto chiaro */
 
     /* Timer Text Colors - Contrastanti su sfondo chiaro */
-    --focus-timer-color: #2d3436; /* Grigio scuro per buona leggibilità */
+    --focus-timer-color: #2d3436;
+    /* Grigio scuro per buona leggibilità */
     --break-timer-color: #2d3436;
     --long-break-timer-color: #2d3436;
 
     /* Button Colors - Stile retrò */
-    --focus-primary-btn: #a29bfe;   /* Viola chiaro */
-    --break-primary-btn: #74b9ff;   /* Blu chiaro */
-    --long-break-primary-btn: #55efc4; /* Verde chiaro */
+    --focus-primary-btn: #a29bfe;
+    /* Viola chiaro */
+    --break-primary-btn: #74b9ff;
+    /* Blu chiaro */
+    --long-break-primary-btn: #55efc4;
+    /* Verde chiaro */
 
-    --focus-secondary-btn: #e8e7ff;   /* Viola molto chiaro */
-    --break-secondary-btn: #e8f4ff;   /* Blu molto chiaro */
-    --long-break-secondary-btn: #e8fff5; /* Verde molto chiaro */
+    --focus-secondary-btn: #e8e7ff;
+    /* Viola molto chiaro */
+    --break-secondary-btn: #e8f4ff;
+    /* Blu molto chiaro */
+    --long-break-secondary-btn: #e8fff5;
+    /* Verde molto chiaro */
 }
 
 /* Font moderno override per il tema Pommodore64 */
@@ -54,7 +67,8 @@
 /* Effetti retrò per i pulsanti nel tema Pommodore64 */
 :root[data-timer-theme="pommodore64"] .control-btn {
     border: 2px solid currentColor !important;
-    border-radius: 4px !important; /* Bordi più squadrati stile retro */
+    border-radius: 4px !important;
+    /* Bordi più squadrati stile retro */
     box-shadow: 3px 3px 0px rgba(45, 52, 54, 0.3) !important;
     transition: all 0.1s ease !important;
 }
@@ -76,7 +90,8 @@
 
 /* Progress dots stile pixel art */
 :root[data-timer-theme="pommodore64"] .progress-dot {
-    border-radius: 2px !important; /* Più squadrati */
+    border-radius: 2px !important;
+    /* Più squadrati */
     border: 1px solid rgba(45, 52, 54, 0.3) !important;
 }
 
@@ -88,13 +103,11 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(108, 92, 231, 0.03) 2px,
-        rgba(108, 92, 231, 0.03) 4px
-    );
+    background: repeating-linear-gradient(0deg,
+            transparent,
+            transparent 2px,
+            rgba(108, 92, 231, 0.03) 2px,
+            rgba(108, 92, 231, 0.03) 4px);
     pointer-events: none;
     z-index: 1;
 }

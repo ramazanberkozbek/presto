@@ -1,0 +1,300 @@
+/* Timer Theme: Matrix
+ * Author: Tempo Team
+ * Description: Un tema ispirato al film Matrix con effetti digitali, colori verdi e animazioni futuristiche
+ * Supports: Dark mode only
+ */
+
+/* Import del font monospazio per effetto terminale */
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;500;700;900&display=swap');
+
+/* Matrix Colors - Verde digitale su nero */
+:root[data-timer-theme="matrix"] {
+    /* Timer Colors - Verde Matrix in diverse tonalità */
+    --focus-color: #00ff41;
+    /* Verde Matrix classico */
+    --break-color: #39ff14;
+    /* Verde lime brillante */
+    --long-break-color: #00cc33;
+    /* Verde più scuro */
+
+    /* Background Colors - Nero profondo con sfumature verdi */
+    --focus-bg: #0d1117;
+    /* Nero Matrix */
+    --break-bg: #0a0f0a;
+    /* Nero con tinta verde */
+    --long-break-bg: #0a120a;
+    /* Nero verdastro */
+
+    /* Timer Text Colors - Verde brillante su nero */
+    --focus-timer-color: #00ff41;
+    --break-timer-color: #39ff14;
+    --long-break-timer-color: #00cc33;
+
+    /* Button Colors - Effetto terminale */
+    --focus-primary-btn: #00ff41;
+    --break-primary-btn: #39ff14;
+    --long-break-primary-btn: #00cc33;
+
+    --focus-secondary-btn: rgba(0, 255, 65, 0.1);
+    --break-secondary-btn: rgba(57, 255, 20, 0.1);
+    --long-break-secondary-btn: rgba(0, 204, 51, 0.1);
+
+    /* Colori aggiuntivi per effetti Matrix */
+    --matrix-bg: #000000;
+    --matrix-text: #00ff41;
+    --matrix-glow: rgba(0, 255, 65, 0.5);
+    --matrix-dark-green: #003300;
+}
+
+/* Font Matrix override */
+:root[data-timer-theme="matrix"] .timer-minutes,
+:root[data-timer-theme="matrix"] .timer-seconds {
+    font-family: 'Orbitron', 'Share Tech Mono', monospace !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.1em;
+    text-shadow: 
+        0 0 5px var(--matrix-glow),
+        0 0 10px var(--matrix-glow),
+        0 0 15px var(--matrix-glow),
+        0 0 20px var(--matrix-glow);
+    animation: matrix-glow 2s ease-in-out infinite alternate;
+}
+
+:root[data-timer-theme="matrix"] .timer-status {
+    font-family: 'Share Tech Mono', monospace !important;
+    font-weight: 400 !important;
+    font-size: 16px !important;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px var(--matrix-glow);
+    animation: matrix-flicker 3s infinite;
+}
+
+/* Animazioni Matrix */
+@keyframes matrix-glow {
+    0% {
+        text-shadow: 
+            0 0 5px var(--matrix-glow),
+            0 0 10px var(--matrix-glow),
+            0 0 15px var(--matrix-glow);
+    }
+    100% {
+        text-shadow: 
+            0 0 10px var(--matrix-glow),
+            0 0 20px var(--matrix-glow),
+            0 0 30px var(--matrix-glow),
+            0 0 40px var(--matrix-glow);
+    }
+}
+
+@keyframes matrix-flicker {
+    0%, 90%, 100% { opacity: 1; }
+    95% { opacity: 0.8; }
+}
+
+@keyframes matrix-rain {
+    0% { transform: translateY(-100vh); opacity: 1; }
+    100% { transform: translateY(100vh); opacity: 0; }
+}
+
+@keyframes matrix-scan {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Effetti Matrix per i pulsanti */
+:root[data-timer-theme="matrix"] .control-btn {
+    background: transparent !important;
+    border: 1px solid currentColor !important;
+    border-radius: 0 !important;
+    box-shadow: 
+        0 0 5px var(--matrix-glow),
+        inset 0 0 5px rgba(0, 255, 65, 0.1) !important;
+    font-family: 'Share Tech Mono', monospace !important;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.3s ease !important;
+    position: relative;
+    overflow: hidden;
+}
+
+:root[data-timer-theme="matrix"] .control-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(0, 255, 65, 0.2), 
+        transparent);
+    transition: left 0.5s;
+}
+
+:root[data-timer-theme="matrix"] .control-btn:hover {
+    box-shadow: 
+        0 0 10px var(--matrix-glow),
+        0 0 20px var(--matrix-glow),
+        inset 0 0 10px rgba(0, 255, 65, 0.2) !important;
+    text-shadow: 0 0 5px var(--matrix-glow);
+}
+
+:root[data-timer-theme="matrix"] .control-btn:hover::before {
+    left: 100%;
+}
+
+:root[data-timer-theme="matrix"] .control-btn:active {
+    transform: scale(0.98) !important;
+}
+
+/* Status icons effetto Matrix */
+:root[data-timer-theme="matrix"] #status-icon {
+    filter: 
+        drop-shadow(0 0 5px var(--matrix-glow))
+        drop-shadow(0 0 10px var(--matrix-glow));
+    animation: matrix-glow 2s ease-in-out infinite alternate;
+}
+
+/* Progress dots stile digitale */
+:root[data-timer-theme="matrix"] .progress-dot {
+    border-radius: 0 !important;
+    border: 1px solid var(--matrix-text) !important;
+    background: transparent !important;
+    box-shadow: 0 0 3px var(--matrix-glow);
+    animation: matrix-flicker 4s infinite;
+}
+
+:root[data-timer-theme="matrix"] .progress-dot.completed {
+    background: var(--matrix-text) !important;
+    box-shadow: 
+        0 0 5px var(--matrix-glow),
+        0 0 10px var(--matrix-glow);
+}
+
+/* Effetto "Rain" Matrix per il container del timer */
+:root[data-timer-theme="matrix"] .timer-container {
+    position: relative;
+    overflow: hidden;
+}
+
+:root[data-timer-theme="matrix"] .timer-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 20px,
+            rgba(0, 255, 65, 0.03) 20px,
+            rgba(0, 255, 65, 0.03) 21px
+        );
+    pointer-events: none;
+    z-index: 1;
+    animation: matrix-scan 10s infinite linear;
+}
+
+/* Effetto scanline orizzontale */
+:root[data-timer-theme="matrix"] .timer-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 255, 65, 0.02) 2px,
+            rgba(0, 255, 65, 0.02) 4px
+        );
+    pointer-events: none;
+    z-index: 1;
+}
+
+:root[data-timer-theme="matrix"] .timer-display {
+    position: relative;
+    z-index: 2;
+}
+
+/* Sidebar styling Matrix */
+:root[data-timer-theme="matrix"] .sidebar.focus {
+    background: linear-gradient(135deg, 
+        var(--matrix-bg), 
+        var(--matrix-dark-green),
+        var(--focus-color)) !important;
+    border-right: 1px solid var(--focus-color);
+    box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+}
+
+:root[data-timer-theme="matrix"] .sidebar.break {
+    background: linear-gradient(135deg, 
+        var(--matrix-bg), 
+        var(--matrix-dark-green),
+        var(--break-color)) !important;
+    border-right: 1px solid var(--break-color);
+    box-shadow: 0 0 20px rgba(57, 255, 20, 0.3);
+}
+
+:root[data-timer-theme="matrix"] .sidebar.longBreak {
+    background: linear-gradient(135deg, 
+        var(--matrix-bg), 
+        var(--matrix-dark-green),
+        var(--long-break-color)) !important;
+    border-right: 1px solid var(--long-break-color);
+    box-shadow: 0 0 20px rgba(0, 204, 51, 0.3);
+}
+
+/* Effetti aggiuntivi per elementi del tema */
+:root[data-timer-theme="matrix"] * {
+    color: var(--matrix-text) !important;
+}
+
+:root[data-timer-theme="matrix"] body,
+:root[data-timer-theme="matrix"] .main-container {
+    background: var(--matrix-bg) !important;
+}
+
+/* Effetto cursore lampeggiante per input */
+:root[data-timer-theme="matrix"] input[type="text"],
+:root[data-timer-theme="matrix"] input[type="number"],
+:root[data-timer-theme="matrix"] textarea {
+    background: rgba(0, 255, 65, 0.05) !important;
+    border: 1px solid var(--matrix-text) !important;
+    border-radius: 0 !important;
+    color: var(--matrix-text) !important;
+    font-family: 'Share Tech Mono', monospace !important;
+    box-shadow: 0 0 5px var(--matrix-glow);
+}
+
+:root[data-timer-theme="matrix"] input[type="text"]:focus,
+:root[data-timer-theme="matrix"] input[type="number"]:focus,
+:root[data-timer-theme="matrix"] textarea:focus {
+    box-shadow: 
+        0 0 10px var(--matrix-glow),
+        0 0 20px var(--matrix-glow);
+    outline: none !important;
+}
+
+/* Scrollbar Matrix style */
+:root[data-timer-theme="matrix"] ::-webkit-scrollbar {
+    width: 8px;
+    background: var(--matrix-bg);
+}
+
+:root[data-timer-theme="matrix"] ::-webkit-scrollbar-thumb {
+    background: var(--matrix-text);
+    border-radius: 0;
+    box-shadow: 0 0 5px var(--matrix-glow);
+}
+
+:root[data-timer-theme="matrix"] ::-webkit-scrollbar-thumb:hover {
+    background: var(--focus-color);
+    box-shadow: 0 0 10px var(--matrix-glow);
+}

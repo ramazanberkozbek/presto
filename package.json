@@ -6,7 +6,10 @@
   "scripts": {
     "tauri": "tauri",
     "dev": "tauri dev",
-    "build": "tauri build"
+    "build": "tauri build",
+    "build-themes": "node build-themes.js",
+    "prebuild": "npm run build-themes",
+    "predev": "npm run build-themes"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2"

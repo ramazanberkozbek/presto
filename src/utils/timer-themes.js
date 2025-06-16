@@ -23,8 +23,51 @@ export const TIMER_THEMES = {
             break: '#0984e3',
             longBreak: '#00b894'
         }
+    },
+    matrix: {
+        name: 'Matrix',
+        description: 'Un tema ispirato al film Matrix con effetti digitali, colori verdi e animazioni futuristiche',
+        supports: ['dark'],
+        isDefault: false,
+        preview: {
+            focus: '#00ff41',
+            break: '#39ff14',
+            longBreak: '#00cc33'
+        }
     }
 };
+
+// Function to dynamically register a new theme
+export function registerTheme(themeId, themeConfig) {
+    if (TIMER_THEMES[themeId]) {
+        console.warn(`🎨 Theme ${themeId} already exists, overriding...`);
+    }
+    
+    TIMER_THEMES[themeId] = {
+        name: themeConfig.name || themeId,
+        description: themeConfig.description || `Theme: ${themeId}`,
+        supports: themeConfig.supports || ['light', 'dark'],
+        isDefault: themeConfig.isDefault || false,
+        preview: themeConfig.preview || {
+            focus: '#e74c3c',
+            break: '#2ecc71',
+            longBreak: '#3498db'
+        }
+    };
+    
+    console.log(`✅ Registered theme: ${themeId}`, TIMER_THEMES[themeId]);
+    return TIMER_THEMES[themeId];
+}
+
+// Function to unregister a theme
+export function unregisterTheme(themeId) {
+    if (TIMER_THEMES[themeId] && !TIMER_THEMES[themeId].isDefault) {
+        delete TIMER_THEMES[themeId];
+        console.log(`🗑️ Unregistered theme: ${themeId}`);
+        return true;
+    }
+    return false;
+}
 
 // Get theme by ID
 export function getThemeById(themeId) {

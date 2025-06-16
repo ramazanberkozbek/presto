@@ -1,7 +1,8 @@
 // Settings Manager for Global Shortcuts and Preferences
 const { invoke } = window.__TAURI__.core;
 import { NotificationUtils, KeyboardUtils, StorageUtils } from '../utils/common-utils.js';
-import { TIMER_THEMES, getThemeById, getAllThemes, getCompatibleThemes, isThemeCompatible, getDefaultTheme } from '../utils/timer-themes.js';
+import { TIMER_THEMES, getThemeById, getAllThemes, getCompatibleThemes, isThemeCompatible, getDefaultTheme, registerTheme } from '../utils/timer-themes.js';
+import { initializeAutoThemeLoader } from '../utils/theme-loader.js';
 
 export class SettingsManager {
     constructor() {
@@ -17,6 +18,9 @@ export class SettingsManager {
         // Clean up any existing auto-save feedback elements
         this.cleanupOldNotificationElements();
 
+        // Initialize auto theme loader to discover and load all themes
+        await this.initializeAutoThemeLoader();
+
         await this.loadSettings();
         this.setupEventListeners();
         await this.registerGlobalShortcuts();
@@ -24,6 +28,24 @@ export class SettingsManager {
         this.setupSettingsNavigation();
         await this.initializeTheme();
         await this.initializeTimerTheme();
+    }
+
+    async initializeAutoThemeLoader() {
+        try {
+            console.log('🎨 Starting auto theme discovery...');
+            const loadedThemes = await initializeAutoThemeLoader();
+            console.log(`🎨 Auto-loaded ${loadedThemes.length} themes:`, loadedThemes);
+            
+            // Refresh theme selector if it exists
+            if (document.getElementById('timer-theme-grid')) {
+                this.initializeTimerThemeSelector();
+            }
+            
+            return loadedThemes;
+        } catch (error) {
+            console.error('❌ Failed to initialize auto theme loader:', error);
+            return [];
+        }
     }
 
     cleanupOldNotificationElements() {
@@ -1094,14 +1116,23 @@ export class SettingsManager {
         const currentColorMode = this.getCurrentColorMode();
         const currentTimerTheme = this.settings.appearance?.timer_theme || 'espresso';
 
+        console.log(`🎨 Checking theme compatibility: ${currentTimerTheme} with mode ${currentColorMode}`);
+
         // Check if current timer theme is still compatible
-        if (!isThemeCompatible(currentTimerTheme, currentColorMode)) {
+        const isCompatible = isThemeCompatible(currentTimerTheme, currentColorMode);
+        console.log(`🎨 Theme ${currentTimerTheme} is compatible with ${currentColorMode}: ${isCompatible}`);
+
+        if (!isCompatible) {
+            console.log(`🎨 Theme ${currentTimerTheme} not compatible, switching to compatible theme...`);
             // Switch to a compatible theme
             const compatibleThemes = getCompatibleThemes(currentColorMode);
             if (compatibleThemes.length > 0) {
                 const defaultCompatibleTheme = compatibleThemes.find(t => t.isDefault) || compatibleThemes[0];
+                console.log(`🎨 Switching to compatible theme: ${defaultCompatibleTheme.id}`);
                 this.selectTimerTheme(defaultCompatibleTheme.id);
             }
+        } else {
+            console.log(`🎨 Theme ${currentTimerTheme} is compatible, keeping it`);
         }
 
         // Re-initialize the theme selector with new compatibility
