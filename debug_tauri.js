@@ -1,1 +1,0 @@
-console.log('Tauri available:', npm run devwindow.__TAURI__); console.log('Tauri keys:', window.__TAURI__ ? Object.keys(window.__TAURI__) : 'None'); console.log('Dialog available:', npm run devwindow.__TAURI__?.dialog);

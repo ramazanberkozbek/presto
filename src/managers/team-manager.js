@@ -251,7 +251,7 @@ export class TeamManager {
         this.teams.forEach(team => {
             // Sort members by status priority: active (focus) > break/long-break > offline
             const sortedMembers = this.sortMembersByStatus(team.members);
-            
+
             // Create team section
             const teamSection = this.createTeamSection(team, sortedMembers);
             container.appendChild(teamSection);
@@ -277,25 +277,25 @@ export class TeamManager {
     createTeamSection(team, members) {
         const section = document.createElement('div');
         section.className = 'team-section base-card-compact';
-        
+
         const header = document.createElement('div');
         header.className = 'team-header';
         header.innerHTML = `
             <h3>${team.name}</h3>
             <p class="team-description">${team.description}</p>
         `;
-        
+
         const membersTable = document.createElement('div');
         membersTable.className = 'team-members-table';
-        
+
         members.forEach(member => {
             const memberRow = this.createMemberRow(member);
             membersTable.appendChild(memberRow);
         });
-        
+
         section.appendChild(header);
         section.appendChild(membersTable);
-        
+
         return section;
     }
 
