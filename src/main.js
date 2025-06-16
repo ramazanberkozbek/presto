@@ -291,18 +291,39 @@ async function initializeEarlyTheme() {
     // Try to load theme from saved settings first
     const savedSettings = await invoke('load_settings');
     const themeFromSettings = savedSettings?.appearance?.theme;
+    const timerThemeFromSettings = savedSettings?.appearance?.timer_theme;
 
     if (themeFromSettings) {
       document.documentElement.setAttribute('data-theme', themeFromSettings);
       localStorage.setItem('theme-preference', themeFromSettings);
       console.log(`🎨 Early theme loaded from settings: ${themeFromSettings}`);
+    }
+
+    // Also initialize timer theme early
+    if (timerThemeFromSettings) {
+      document.documentElement.setAttribute('data-timer-theme', timerThemeFromSettings);
+      localStorage.setItem('timer-theme-preference', timerThemeFromSettings);
+      console.log(`🎨 Early timer theme loaded from settings: ${timerThemeFromSettings}`);
+    } else {
+      // Default to espresso theme
+      document.documentElement.setAttribute('data-timer-theme', 'espresso');
+      localStorage.setItem('timer-theme-preference', 'espresso');
+      console.log(`🎨 Early timer theme initialized to default: espresso`);
+    }
+
+    if (themeFromSettings) {
       return;
     }
   } catch (error) {
     console.log('🎨 Could not load theme from settings, using localStorage fallback');
+    
+    // Still initialize timer theme with fallback
+    const storedTimerTheme = localStorage.getItem('timer-theme-preference') || 'espresso';
+    document.documentElement.setAttribute('data-timer-theme', storedTimerTheme);
+    console.log(`🎨 Early timer theme initialized from localStorage: ${storedTimerTheme}`);
   }
 
-  // Fallback to localStorage or default
+  // Fallback to localStorage or default for main theme
   const storedTheme = localStorage.getItem('theme-preference') || 'auto';
   document.documentElement.setAttribute('data-theme', storedTheme);
   console.log(`🎨 Early theme initialized from localStorage: ${storedTheme}`);

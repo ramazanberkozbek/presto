@@ -909,42 +909,64 @@ export class SettingsManager {
     // Timer Theme Management Functions
     getCurrentColorMode() {
         const currentTheme = document.documentElement.getAttribute('data-theme');
-        
+
         if (currentTheme === 'light') return 'light';
         if (currentTheme === 'dark') return 'dark';
         if (currentTheme === 'auto') {
             // Check system preference
             return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
-        
+
         return 'light'; // default fallback
     }
 
     async initializeTimerTheme() {
+        // Check if timer theme was already initialized early
+        const currentTimerTheme = document.documentElement.getAttribute('data-timer-theme');
+        const storedTimerTheme = localStorage.getItem('timer-theme-preference');
+
+        // If early timer theme was set and matches localStorage, keep it
+        if (currentTimerTheme && storedTimerTheme && currentTimerTheme === storedTimerTheme) {
+            console.log(`🎨 Keeping early initialized timer theme: ${currentTimerTheme}`);
+
+            // Update settings to match current timer theme
+            if (this.settings && this.settings.appearance) {
+                this.settings.appearance.timer_theme = currentTimerTheme;
+                try {
+                    await invoke('save_settings', { settings: this.settings });
+                    console.log(`🎨 Settings updated to match current timer theme: ${currentTimerTheme}`);
+                } catch (error) {
+                    console.error('Failed to update timer theme in settings:', error);
+                }
+            }
+            return;
+        }
+
+        // Otherwise apply the timer theme from settings or default to espresso
         const timerTheme = this.settings?.appearance?.timer_theme || 'espresso';
         await this.applyTimerTheme(timerTheme);
     }
 
     async applyTimerTheme(themeId) {
         const html = document.documentElement;
-        
+
         // Remove existing timer theme attribute
         html.removeAttribute('data-timer-theme');
-        
+
         // Apply new timer theme
         html.setAttribute('data-timer-theme', themeId);
-        
+
         // Store timer theme preference in localStorage for quick access
         localStorage.setItem('timer-theme-preference', themeId);
-        
+
         // Update settings object
         if (this.settings && this.settings.appearance) {
             this.settings.appearance.timer_theme = themeId;
         }
-        
+
         console.log(`🎨 Timer theme applied: ${themeId}`);
         console.log(`🎨 DOM attribute check: data-timer-theme="${html.getAttribute('data-timer-theme')}"`);
-        
+
         // Debug: Check CSS variable values
         const computedStyle = getComputedStyle(html);
         console.log(`🎨 CSS Variables check:`, {
@@ -952,7 +974,7 @@ export class SettingsManager {
             focusBg: computedStyle.getPropertyValue('--focus-bg').trim(),
             focusTimerColor: computedStyle.getPropertyValue('--focus-timer-color').trim()
         });
-        
+
         // Force CSS recalculation
         html.style.display = 'none';
         html.offsetHeight; // Trigger reflow
@@ -965,13 +987,13 @@ export class SettingsManager {
 
         const currentColorMode = this.getCurrentColorMode();
         const currentTimerTheme = this.settings.appearance?.timer_theme || 'espresso';
-        
+
         // Clear existing content
         timerThemeGrid.innerHTML = '';
-        
+
         // Get all themes
         const themes = getAllThemes();
-        
+
         themes.forEach(theme => {
             const themeOption = this.createTimerThemeOption(theme, currentTimerTheme, currentColorMode);
             timerThemeGrid.appendChild(themeOption);
@@ -982,13 +1004,13 @@ export class SettingsManager {
         const option = document.createElement('div');
         option.className = 'timer-theme-option';
         option.setAttribute('data-timer-theme', theme.id);
-        
+
         const isCompatible = isThemeCompatible(theme.id, currentColorMode);
         const isActive = theme.id === currentTimerTheme;
-        
+
         if (isActive) option.classList.add('active');
         if (!isCompatible) option.classList.add('disabled');
-        
+
         option.innerHTML = `
             <div class="timer-theme-header">
                 <h4 class="timer-theme-name">${theme.name}</h4>
@@ -1014,31 +1036,31 @@ export class SettingsManager {
                 </div>
             </div>
         `;
-        
+
         // Add click handler (only if compatible)
         if (isCompatible) {
             option.addEventListener('click', async () => {
                 await this.selectTimerTheme(theme.id);
             });
         }
-        
+
         return option;
     }
 
     async selectTimerTheme(themeId) {
         // Update visual state
         this.updateTimerThemeSelector(themeId);
-        
+
         // Apply theme immediately
         await this.applyTimerTheme(themeId);
-        
+
         // Save to settings
         this.settings.appearance.timer_theme = themeId;
-        
+
         try {
             await invoke('save_settings', { settings: this.settings });
             console.log(`🎨 Timer theme saved: ${themeId}`);
-            
+
             // Show feedback
             NotificationUtils.showNotificationPing(`✓ Timer theme changed to ${getThemeById(themeId).name}`, 'success');
         } catch (error) {

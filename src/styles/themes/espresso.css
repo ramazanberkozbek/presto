@@ -4,146 +4,119 @@
  * Supports: Light + Dark mode
  */
 
-/* Default Fallback Colors (before theme is applied) */
+/* IMMEDIATE DEFAULT COLORS - Applied without any conditions */
+/* These provide instant fallbacks before any theme is applied */
 :root {
-  /* Timer Colors */
-  --focus-color: #e74c3c;
-  --break-color: #2ecc71;
-  --long-break-color: #3498db;
+    /* Timer Colors */
+    --focus-color: #e74c3c;
+    --break-color: #2ecc71;
+    --long-break-color: #3498db;
 
-  /* Background Colors */
-  --focus-bg: #FFF2F2;
-  --break-bg: #F0FAF0;
-  --long-break-bg: #E8F4FF;
+    /* Background Colors */
+    --focus-bg: #FFF2F2;
+    --break-bg: #F0FAF0;
+    --long-break-bg: #E8F4FF;
 
-  /* Timer Text Colors */
-  --focus-timer-color: #471515;
-  --break-timer-color: #14401D;
-  --long-break-timer-color: #153047;
+    /* Timer Text Colors */
+    --focus-timer-color: #471515;
+    --break-timer-color: #14401D;
+    --long-break-timer-color: #153047;
 
-  /* Button Colors */
-  --focus-primary-btn: #FF7c7c;
-  --break-primary-btn: #8CE8A1;
-  --long-break-primary-btn: #8BCAFF;
+    /* Button Colors */
+    --focus-primary-btn: #FF7c7c;
+    --break-primary-btn: #8CE8A1;
+    --long-break-primary-btn: #8BCAFF;
 
-  --focus-secondary-btn: #FFD9D9;
-  --break-secondary-btn: #DAFAE0;
-  --long-break-secondary-btn: #D9EEFF;
+    --focus-secondary-btn: #FFD9D9;
+    --break-secondary-btn: #DAFAE0;
+    --long-break-secondary-btn: #D9EEFF;
 }
 
 /* Default Fallback Colors for Dark Mode (before theme is applied) */
 [data-theme="dark"] {
-  /* Timer Colors - darker versions */
-  --focus-color: #ef4444;
-  --break-color: #22c55e;
-  --long-break-color: #3b82f6;
+    /* Timer Colors - darker versions */
+    --focus-color: #ef4444;
+    --break-color: #22c55e;
+    --long-break-color: #3b82f6;
 
-  /* Background Colors - dark versions */
-  --focus-bg: #1e1b1b;
-  --break-bg: #0f1f13;
-  --long-break-bg: #0f1419;
+    /* Background Colors - dark versions */
+    --focus-bg: #1e1b1b;
+    --break-bg: #0f1f13;
+    --long-break-bg: #0f1419;
 
-  /* Timer Text Colors - light for dark background */
-  --focus-timer-color: #fca5a5;
-  --break-timer-color: #86efac;
-  --long-break-timer-color: #93c5fd;
+    /* Timer Text Colors - light for dark background */
+    --focus-timer-color: #fca5a5;
+    --break-timer-color: #86efac;
+    --long-break-timer-color: #93c5fd;
 
-  /* Button Colors - adjusted for dark theme */
-  --focus-primary-btn: #dc2626;
-  --break-primary-btn: #16a34a;
-  --long-break-primary-btn: #2563eb;
+    /* Button Colors - adjusted for dark theme */
+    --focus-primary-btn: #dc2626;
+    --break-primary-btn: #16a34a;
+    --long-break-primary-btn: #2563eb;
 
-  --focus-secondary-btn: #450a0a;
-  --break-secondary-btn: #052e16;
-  --long-break-secondary-btn: #1e3a8a;
+    --focus-secondary-btn: #450a0a;
+    --break-secondary-btn: #052e16;
+    --long-break-secondary-btn: #1e3a8a;
 }
 
 /* Default Fallback Colors for Auto Dark Mode (before theme is applied) */
 @media (prefers-color-scheme: dark) {
-  [data-theme="auto"] {
-    /* Timer Colors - darker versions */
-    --focus-color: #ef4444;
-    --break-color: #22c55e;
-    --long-break-color: #3b82f6;
+    [data-theme="auto"] {
+        /* Timer Colors - darker versions */
+        --focus-color: #ef4444;
+        --break-color: #22c55e;
+        --long-break-color: #3b82f6;
 
-    /* Background Colors - dark versions */
-    --focus-bg: #1e1b1b;
-    --break-bg: #0f1f13;
-    --long-break-bg: #0f1419;
+        /* Background Colors - dark versions */
+        --focus-bg: #1e1b1b;
+        --break-bg: #0f1f13;
+        --long-break-bg: #0f1419;
 
-    /* Timer Text Colors - light for dark background */
-    --focus-timer-color: #fca5a5;
-    --break-timer-color: #86efac;
-    --long-break-timer-color: #93c5fd;
+        /* Timer Text Colors - light for dark background */
+        --focus-timer-color: #fca5a5;
+        --break-timer-color: #86efac;
+        --long-break-timer-color: #93c5fd;
 
-    /* Button Colors - adjusted for dark theme */
-    --focus-primary-btn: #dc2626;
-    --break-primary-btn: #16a34a;
-    --long-break-primary-btn: #2563eb;
+        /* Button Colors - adjusted for dark theme */
+        --focus-primary-btn: #dc2626;
+        --break-primary-btn: #16a34a;
+        --long-break-primary-btn: #2563eb;
 
-    --focus-secondary-btn: #450a0a;
-    --break-secondary-btn: #052e16;
-    --long-break-secondary-btn: #1e3a8a;
-  }
+        --focus-secondary-btn: #450a0a;
+        --break-secondary-btn: #052e16;
+        --long-break-secondary-btn: #1e3a8a;
+    }
 }
 
 /* Light Mode Colors - Explicit Theme */
 :root[data-timer-theme="espresso"] {
-  /* Timer Colors */
-  --focus-color: #e74c3c;
-  --break-color: #2ecc71;
-  --long-break-color: #3498db;
+    /* Timer Colors */
+    --focus-color: #e74c3c;
+    --break-color: #2ecc71;
+    --long-break-color: #3498db;
 
-  /* Background Colors */
-  --focus-bg: #FFF2F2;
-  --break-bg: #F0FAF0;
-  --long-break-bg: #E8F4FF;
+    /* Background Colors */
+    --focus-bg: #FFF2F2;
+    --break-bg: #F0FAF0;
+    --long-break-bg: #E8F4FF;
 
-  /* Timer Text Colors */
-  --focus-timer-color: #471515;
-  --break-timer-color: #14401D;
-  --long-break-timer-color: #153047;
+    /* Timer Text Colors */
+    --focus-timer-color: #471515;
+    --break-timer-color: #14401D;
+    --long-break-timer-color: #153047;
 
-  /* Button Colors */
-  --focus-primary-btn: #FF7c7c;
-  --break-primary-btn: #8CE8A1;
-  --long-break-primary-btn: #8BCAFF;
+    /* Button Colors */
+    --focus-primary-btn: #FF7c7c;
+    --break-primary-btn: #8CE8A1;
+    --long-break-primary-btn: #8BCAFF;
 
-  --focus-secondary-btn: #FFD9D9;
-  --break-secondary-btn: #DAFAE0;
-  --long-break-secondary-btn: #D9EEFF;
+    --focus-secondary-btn: #FFD9D9;
+    --break-secondary-btn: #DAFAE0;
+    --long-break-secondary-btn: #D9EEFF;
 }
 
 /* Dark Mode Colors */
 [data-theme="dark"]:root[data-timer-theme="espresso"] {
-  /* Timer Colors - darker versions */
-  --focus-color: #ef4444;
-  --break-color: #22c55e;
-  --long-break-color: #3b82f6;
-
-  /* Background Colors - dark versions */
-  --focus-bg: #1e1b1b;
-  --break-bg: #0f1f13;
-  --long-break-bg: #0f1419;
-
-  /* Timer Text Colors - light for dark background */
-  --focus-timer-color: #fca5a5;
-  --break-timer-color: #86efac;
-  --long-break-timer-color: #93c5fd;
-
-  /* Button Colors - adjusted for dark theme */
-  --focus-primary-btn: #dc2626;
-  --break-primary-btn: #16a34a;
-  --long-break-primary-btn: #2563eb;
-
-  --focus-secondary-btn: #450a0a;
-  --break-secondary-btn: #052e16;
-  --long-break-secondary-btn: #1e3a8a;
-}
-
-/* Auto theme with dark system preference */
-@media (prefers-color-scheme: dark) {
-  [data-theme="auto"]:root[data-timer-theme="espresso"] {
     /* Timer Colors - darker versions */
     --focus-color: #ef4444;
     --break-color: #22c55e;
@@ -167,5 +140,33 @@
     --focus-secondary-btn: #450a0a;
     --break-secondary-btn: #052e16;
     --long-break-secondary-btn: #1e3a8a;
-  }
+}
+
+/* Auto theme with dark system preference */
+@media (prefers-color-scheme: dark) {
+    [data-theme="auto"]:root[data-timer-theme="espresso"] {
+        /* Timer Colors - darker versions */
+        --focus-color: #ef4444;
+        --break-color: #22c55e;
+        --long-break-color: #3b82f6;
+
+        /* Background Colors - dark versions */
+        --focus-bg: #1e1b1b;
+        --break-bg: #0f1f13;
+        --long-break-bg: #0f1419;
+
+        /* Timer Text Colors - light for dark background */
+        --focus-timer-color: #fca5a5;
+        --break-timer-color: #86efac;
+        --long-break-timer-color: #93c5fd;
+
+        /* Button Colors - adjusted for dark theme */
+        --focus-primary-btn: #dc2626;
+        --break-primary-btn: #16a34a;
+        --long-break-primary-btn: #2563eb;
+
+        --focus-secondary-btn: #450a0a;
+        --break-secondary-btn: #052e16;
+        --long-break-secondary-btn: #1e3a8a;
+    }
 }

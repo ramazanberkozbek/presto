@@ -923,7 +923,8 @@ export class PomodoroTimer {
         // Update body class to match current timer state for background (only in timer view)
         const body = document.body;
         const navigationManager = window.navigationManager;
-        if (body && navigationManager && navigationManager.currentView === 'timer') {
+        // Always apply timer classes if we're in timer view OR if navigation manager isn't initialized yet (default view is timer)
+        if (body && (!navigationManager || navigationManager.currentView === 'timer')) {
             let bodyClass = `${this.currentMode}`;
             if (isOvertime) {
                 bodyClass += ' overtime';

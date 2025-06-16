@@ -1,16 +1,30 @@
-/* Timer background states - applied to body */
+/* Default body background - neutral for all pages */
+body {
+  background-color: #f6f6f6;
+  transition: background-color 0.3s ease;
+  margin: 0;
+  padding: 0;
+}
+
+/* Dark theme default background */
+[data-theme="dark"] body {
+  background-color: #0f172a;
+}
+
+/* Timer background states - applied to body when timer is active */
+/* These styles have higher specificity and will override the default background */
 body.focus {
-  background: var(--focus-bg);
+  background: var(--focus-bg) !important;
   transition: background-color 0.3s ease;
 }
 
 body.break {
-  background: var(--break-bg);
+  background: var(--break-bg) !important;
   transition: background-color 0.3s ease;
 }
 
 body.longBreak {
-  background: var(--long-break-bg);
+  background: var(--long-break-bg) !important;
   transition: background-color 0.3s ease;
 }
 
