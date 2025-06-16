@@ -116,7 +116,7 @@ impl Default for AppSettings {
                 desktop_notifications: true,
                 sound_notifications: true,
                 auto_start_timer: true,
-                auto_start_focus: false, // default to disabled
+                auto_start_focus: false,          // default to disabled
                 allow_continuous_sessions: false, // default to disabled
                 smart_pause: false,
                 smart_pause_timeout: 30, // default 30 seconds
