@@ -215,15 +215,10 @@
         0 0 10px var(--matrix-glow);
 }
 
-/* Effetto "Rain" Matrix per il container del timer */
-:root[data-timer-theme="matrix"] .timer-container {
-    position: relative;
-    overflow: hidden;
-}
-
-:root[data-timer-theme="matrix"] .timer-container::before {
+/* Effetto "Matrix Rain" per tutto lo schermo */
+:root[data-timer-theme="matrix"] html::before {
     content: '';
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
@@ -231,18 +226,18 @@
     background:
         repeating-linear-gradient(90deg,
             transparent,
-            transparent 20px,
-            rgba(0, 255, 65, 0.03) 20px,
-            rgba(0, 255, 65, 0.03) 21px);
+            transparent 15px,
+            rgba(0, 255, 65, 0.08) 15px,
+            rgba(0, 255, 65, 0.08) 17px);
     pointer-events: none;
-    z-index: 1;
-    animation: matrix-scan 10s infinite linear;
+    z-index: 1000;
+    animation: matrix-scan 8s infinite linear;
 }
 
-/* Effetto scanline orizzontale */
-:root[data-timer-theme="matrix"] .timer-container::after {
+/* Effetto scanline orizzontale per tutto lo schermo */
+:root[data-timer-theme="matrix"] html::after {
     content: '';
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
@@ -250,11 +245,16 @@
     background:
         repeating-linear-gradient(0deg,
             transparent,
-            transparent 2px,
-            rgba(0, 255, 65, 0.02) 2px,
-            rgba(0, 255, 65, 0.02) 4px);
+            transparent 1px,
+            rgba(0, 255, 65, 0.05) 1px,
+            rgba(0, 255, 65, 0.05) 3px);
     pointer-events: none;
-    z-index: 1;
+    z-index: 1000;
+}
+
+/* Rimuovo gli effetti dal timer container dato che ora sono applicati globalmente */
+:root[data-timer-theme="matrix"] .timer-container {
+    position: relative;
 }
 
 :root[data-timer-theme="matrix"] .timer-display {
@@ -264,10 +264,7 @@
 
 /* Sidebar styling Matrix */
 :root[data-timer-theme="matrix"] .sidebar.focus {
-    background: linear-gradient(135deg,
-            var(--matrix-bg),
-            var(--matrix-dark-green),
-            var(--focus-color)) !important;
+    background: var(--focus-bg);
     border-right: 1px solid var(--focus-color);
     box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
 }
@@ -426,9 +423,18 @@
     box-shadow: 0 0 10px var(--matrix-glow);
 }
 
+:root[data-timer-theme="matrix"] html,
 :root[data-timer-theme="matrix"] body {
     background: rgba(0, 16, 0, 1);
     border-radius: 0;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+:root[data-timer-theme="matrix"] #app {
+    min-height: 100vh;
+    background: rgba(0, 16, 0, 1);
 }
 
 /* === SHARED COMPONENTS STYLES === */

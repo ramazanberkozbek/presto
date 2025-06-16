@@ -4,8 +4,8 @@
  * Supports: Light mode only
  */
 
-/* Import del font moderno da Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* Import del font Orbitron per C64 */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap');
 
 /* Light Mode Colors - Commodore 64 Style */
 :root[data-timer-theme="pommodore64"] {
@@ -70,21 +70,25 @@
     --input-focus-shadow: rgba(108, 92, 231, 0.1);
 }
 
-/* Font moderno override per il tema Pommodore64 */
+/* Font pixelato pesante per il tema Pommodore64 */
 :root[data-timer-theme="pommodore64"] .timer-minutes,
 :root[data-timer-theme="pommodore64"] .timer-seconds {
-    font-family: 'JetBrains Mono', 'Monaco', 'Menlo', monospace !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.05em;
-    text-shadow: 1px 1px 0px rgba(108, 92, 231, 0.1);
+    font-family: 'Orbitron', 'IBM Plex Mono', 'Courier Prime', monospace !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.1em;
+    text-shadow:
+        2px 2px 0px rgba(108, 92, 231, 0.3),
+        4px 4px 0px rgba(108, 92, 231, 0.2);
+    font-size: 8em;
 }
 
 :root[data-timer-theme="pommodore64"] .timer-status {
-    font-family: 'JetBrains Mono', 'Monaco', 'Menlo', monospace !important;
-    font-weight: 500 !important;
-    font-size: 16px !important;
-    letter-spacing: 0.1em;
+    font-family: 'IBM Plex Mono', 'Courier Prime', monospace !important;
+    font-weight: 700 !important;
+    font-size: 18px !important;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
+    text-shadow: 1px 1px 0px rgba(108, 92, 231, 0.4);
 }
 
 /* Effetti retrò per i pulsanti nel tema Pommodore64 */
