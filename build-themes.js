@@ -36,21 +36,21 @@ function discoverThemeFiles() {
 function updateThemeLoader(themeFiles) {
     try {
         let content = fs.readFileSync(themeLoaderPath, 'utf-8');
-        
+
         // Create the new themes array
         const themesArray = themeFiles.map(file => `'${file}'`).join(',\n            ');
-        
+
         // Replace the knownThemes array in the file
         const newKnownThemes = `        const knownThemes = [
             ${themesArray}
         ];`;
-        
+
         // Find and replace the knownThemes array
         const knownThemesRegex = /const knownThemes = \[[\s\S]*?\];/;
-        
+
         if (knownThemesRegex.test(content)) {
             content = content.replace(knownThemesRegex, newKnownThemes);
-            
+
             fs.writeFileSync(themeLoaderPath, content, 'utf-8');
             console.log('✅ Updated theme-loader.js with discovered themes');
             return true;
@@ -66,16 +66,16 @@ function updateThemeLoader(themeFiles) {
 
 function main() {
     console.log('🔧 Starting theme discovery build script...');
-    
+
     const themeFiles = discoverThemeFiles();
-    
+
     if (themeFiles.length === 0) {
         console.log('⚠️ No theme files discovered');
         return;
     }
-    
+
     const success = updateThemeLoader(themeFiles);
-    
+
     if (success) {
         console.log('🎉 Theme discovery build completed successfully!');
         console.log(`📊 Total themes: ${themeFiles.length}`);

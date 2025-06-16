@@ -14,7 +14,7 @@ class ThemeLoader {
         try {
             // Get all CSS files from the themes directory
             const themeFiles = await this.discoverThemeFiles();
-            
+
             console.log(`🎨 Discovered ${themeFiles.length} theme files:`, themeFiles);
 
             // Load each theme file
@@ -37,9 +37,9 @@ class ThemeLoader {
         // In a browser environment, we need to use a different approach
         // Since we can't directly read the filesystem, we'll use a predefined list
         // that gets updated by the build process or manually maintained
-        
+
         // This could be enhanced to use a build-time script that generates this list
-                        const knownThemes = [
+        const knownThemes = [
             'espresso.css',
             'matrix.css',
             'pommodore64.css'
@@ -53,7 +53,7 @@ class ThemeLoader {
      */
     async loadThemeFile(filename) {
         const themeId = filename.replace('.css', '');
-        
+
         if (this.loadedThemes.has(themeId)) {
             console.log(`🎨 Theme ${themeId} already loaded, skipping`);
             return;
@@ -64,10 +64,10 @@ class ThemeLoader {
             // we just need to register the theme in our loaded themes
             console.log(`✅ Theme registered: ${themeId}`);
             this.loadedThemes.add(themeId);
-            
+
             // Extract theme metadata from CSS file
             await this.extractThemeMetadata(themeId);
-            
+
         } catch (error) {
             console.error(`❌ Error registering theme ${themeId}:`, error);
         }
@@ -81,14 +81,14 @@ class ThemeLoader {
             // Fetch the CSS file to read metadata from comments
             const response = await fetch(`./src/styles/themes/${themeId}.css`);
             const cssContent = await response.text();
-            
+
             // Parse metadata from CSS comments
             const metadata = this.parseThemeMetadata(cssContent);
-            
+
             if (metadata) {
                 // Add to TIMER_THEMES dynamically
                 const { TIMER_THEMES } = await import('./timer-themes.js');
-                
+
                 if (!TIMER_THEMES[themeId]) {
                     TIMER_THEMES[themeId] = {
                         name: metadata.name || this.capitalizeFirst(themeId),
@@ -101,7 +101,7 @@ class ThemeLoader {
                             longBreak: '#3498db'
                         }
                     };
-                    
+
                     console.log(`📝 Auto-registered theme: ${themeId}`, TIMER_THEMES[themeId]);
                 }
             }
@@ -118,15 +118,15 @@ class ThemeLoader {
             // Look for theme metadata in CSS comments
             const metadataRegex = /\/\*\s*Timer Theme:\s*(.+?)\s*\*\s*Author:\s*(.+?)\s*\*\s*Description:\s*(.+?)\s*\*\s*Supports:\s*(.+?)\s*\*\//s;
             const match = cssContent.match(metadataRegex);
-            
+
             if (match) {
                 const [, name, author, description, supports] = match;
-                
+
                 // Parse supports field
-                const supportsModes = supports.toLowerCase().includes('light') && supports.toLowerCase().includes('dark') 
-                    ? ['light', 'dark'] 
-                    : supports.toLowerCase().includes('dark') 
-                        ? ['dark'] 
+                const supportsModes = supports.toLowerCase().includes('light') && supports.toLowerCase().includes('dark')
+                    ? ['light', 'dark']
+                    : supports.toLowerCase().includes('dark')
+                        ? ['dark']
                         : ['light'];
 
                 // Try to extract color values for preview
@@ -143,7 +143,7 @@ class ThemeLoader {
         } catch (error) {
             console.warn('Could not parse theme metadata:', error);
         }
-        
+
         return null;
     }
 

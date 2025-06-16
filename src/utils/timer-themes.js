@@ -42,7 +42,7 @@ export function registerTheme(themeId, themeConfig) {
     if (TIMER_THEMES[themeId]) {
         console.warn(`🎨 Theme ${themeId} already exists, overriding...`);
     }
-    
+
     TIMER_THEMES[themeId] = {
         name: themeConfig.name || themeId,
         description: themeConfig.description || `Theme: ${themeId}`,
@@ -54,7 +54,7 @@ export function registerTheme(themeId, themeConfig) {
             longBreak: '#3498db'
         }
     };
-    
+
     console.log(`✅ Registered theme: ${themeId}`, TIMER_THEMES[themeId]);
     return TIMER_THEMES[themeId];
 }

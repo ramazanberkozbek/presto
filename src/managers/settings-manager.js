@@ -35,12 +35,12 @@ export class SettingsManager {
             console.log('🎨 Starting auto theme discovery...');
             const loadedThemes = await initializeAutoThemeLoader();
             console.log(`🎨 Auto-loaded ${loadedThemes.length} themes:`, loadedThemes);
-            
+
             // Refresh theme selector if it exists
             if (document.getElementById('timer-theme-grid')) {
                 this.initializeTimerThemeSelector();
             }
-            
+
             return loadedThemes;
         } catch (error) {
             console.error('❌ Failed to initialize auto theme loader:', error);
@@ -1040,24 +1040,32 @@ export class SettingsManager {
                     ${theme.supports.map(mode => `
                         <span class="compatibility-badge ${mode}">
                             <i class="ri-${mode === 'light' ? 'sun' : 'moon'}-line"></i>
-                            ${mode}
                         </span>
                     `).join('')}
                 </div>
             </div>
             <p class="timer-theme-description">${theme.description}</p>
             <div class="timer-theme-preview">
-                <div class="preview-color" style="background-color: ${theme.preview.focus}">
-                    <span class="preview-label">Focus</span>
+                <div class="timer-preview-display" data-preview-theme="${theme.id}">
+                    <div class="timer-preview-time">25:00</div>
+                    <div class="timer-preview-status">Focus Session</div>
                 </div>
-                <div class="preview-color" style="background-color: ${theme.preview.break}">
-                    <span class="preview-label">Break</span>
-                </div>
-                <div class="preview-color" style="background-color: ${theme.preview.longBreak}">
-                    <span class="preview-label">Long Break</span>
+                <div class="color-preview-strip">
+                    <div class="preview-color" style="background-color: ${theme.preview.focus}">
+                        <span class="preview-label">Focus</span>
+                    </div>
+                    <div class="preview-color" style="background-color: ${theme.preview.break}">
+                        <span class="preview-label">Break</span>
+                    </div>
+                    <div class="preview-color" style="background-color: ${theme.preview.longBreak}">
+                        <span class="preview-label">Long</span>
+                    </div>
                 </div>
             </div>
         `;
+
+        // Apply theme preview styles
+        this.applyThemePreviewStyles(option, theme);
 
         // Add click handler (only if compatible)
         if (isCompatible) {
@@ -1067,6 +1075,42 @@ export class SettingsManager {
         }
 
         return option;
+    }
+
+    applyThemePreviewStyles(optionElement, theme) {
+        const previewDisplay = optionElement.querySelector('.timer-preview-display');
+        const previewTime = optionElement.querySelector('.timer-preview-time');
+        const previewStatus = optionElement.querySelector('.timer-preview-status');
+        
+        if (!previewDisplay || !previewTime || !previewStatus) return;
+
+        // Apply theme-specific styles to the preview
+        const themeId = theme.id;
+        
+        // Set preview colors based on theme
+        previewTime.style.color = theme.preview.focus;
+        previewStatus.style.color = theme.preview.focus;
+        
+        // Special handling for specific themes
+        if (themeId === 'matrix') {
+            previewDisplay.style.background = '#000011';
+            previewDisplay.style.border = `1px solid ${theme.preview.focus}`;
+            previewDisplay.style.fontFamily = '"Share Tech Mono", monospace';
+            previewTime.style.textShadow = `0 0 5px ${theme.preview.focus}`;
+            previewStatus.style.textShadow = `0 0 3px ${theme.preview.focus}`;
+        } else if (themeId === 'espresso') {
+            previewDisplay.style.background = '#3c2415';
+            previewDisplay.style.border = `1px solid ${theme.preview.focus}`;
+            previewDisplay.style.color = '#f4f1de';
+        } else if (themeId === 'pommodore64') {
+            previewDisplay.style.background = '#40318d';
+            previewDisplay.style.border = `1px solid ${theme.preview.focus}`;
+            previewDisplay.style.color = '#7b68ee';
+        } else {
+            // Default styling for other themes
+            previewDisplay.style.background = '#f8f9fa';
+            previewDisplay.style.border = `1px solid ${theme.preview.focus}`;
+        }
     }
 
     async selectTimerTheme(themeId) {
