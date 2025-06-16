@@ -3,6 +3,11 @@
 /* Base styles and CSS variables */
 @import 'variables.css';
 
+/* Timer themes */
+@import 'themes/espresso.css';
+@import 'themes/pommodore64.css';
+@import 'themes/matrix.css';
+
 /* Shared components for common patterns */
 @import 'shared-components.css';
 

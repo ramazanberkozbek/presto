@@ -72,7 +72,6 @@ export class NotificationUtils {
         // Determina la classe CSS da usare
         let notificationClass = 'notification-ping';
 
-        // Se è fornito lo stato del timer, usa quello, altrimenti usa il tipo
         if (timerState) {
             notificationClass += ` ${timerState}`;
         } else if (type) {
@@ -83,7 +82,6 @@ export class NotificationUtils {
 
         notification.className = notificationClass;
 
-        // Miglioramento per mobile: aggiungi attributi di accessibilità
         notification.setAttribute('role', 'alert');
         notification.setAttribute('aria-live', 'polite');
 
@@ -110,13 +108,11 @@ export class NotificationUtils {
             }
         });
 
-        // Vibrazione su mobile per notifiche importanti
         this.triggerMobileHaptics(type);
 
-        // Auto-dismiss con durata dinamica basata sulla lunghezza del messaggio
         const baseDuration = type === 'success' && message.includes('Settings saved') ? 2000 : 3000;
-        const extraTime = Math.max(0, (message.length - 30) * 50); // 50ms per carattere extra
-        const duration = Math.min(baseDuration + extraTime, 6000); // Max 6 secondi
+        const extraTime = Math.max(0, (message.length - 30) * 50);
+        const duration = Math.min(baseDuration + extraTime, 6000);
 
         const dismissTimer = setTimeout(() => {
             if (notification && notification.parentNode) {
@@ -124,7 +120,6 @@ export class NotificationUtils {
             }
         }, duration);
 
-        // Migliorata gestione touch per mobile
         this.addMobileTouchHandlers(notification, dismissTimer);
     }
 
@@ -180,7 +175,6 @@ export class NotificationUtils {
 
             if (Math.abs(deltaY) > 10) {
                 isDragging = true;
-                // Solo swipe verso l'alto per chiudere
                 if (deltaY > 0) {
                     const opacity = Math.max(0.3, 1 - (deltaY / 100));
                     const translateY = Math.min(deltaY, 50);
@@ -197,7 +191,6 @@ export class NotificationUtils {
                 notification.style.transition = 'all 0.3s ease';
 
                 if (deltaY > 50) {
-                    // Swipe sufficiente per chiudere
                     clearTimeout(dismissTimer);
                     this.dismissNotification(notification);
                 } else {
@@ -206,7 +199,6 @@ export class NotificationUtils {
                     notification.style.opacity = '1';
                 }
             } else {
-                // Tap normale per chiudere
                 clearTimeout(dismissTimer);
                 this.dismissNotification(notification);
             }
@@ -215,7 +207,6 @@ export class NotificationUtils {
             isDragging = false;
         }, { passive: true });
 
-        // Fallback click per desktop
         notification.addEventListener('click', (e) => {
             if (!('ontouchstart' in window)) {
                 clearTimeout(dismissTimer);
@@ -225,22 +216,21 @@ export class NotificationUtils {
     }
 
     static triggerMobileHaptics(type) {
-        // Vibrazione solo su mobile e solo per certi tipi di notifica
         if ('vibrate' in navigator && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-            let pattern = [100]; // Vibrazione base
+            let pattern = [100];
 
             switch (type) {
                 case 'success':
-                    pattern = [100, 50, 100]; // Doppia vibrazione per successo
+                    pattern = [100, 50, 100];
                     break;
                 case 'warning':
-                    pattern = [200]; // Vibrazione più lunga per warning
+                    pattern = [200];
                     break;
                 case 'error':
-                    pattern = [100, 100, 100, 100, 100]; // Pattern urgente per errori
+                    pattern = [100, 100, 100, 100, 100];
                     break;
                 default:
-                    pattern = [50]; // Vibrazione sottile per info
+                    pattern = [50];
             }
 
             navigator.vibrate(pattern);
@@ -389,7 +379,6 @@ export class NotificationUtils {
     }
 
     static createNotificationContent(message, type) {
-        // Definisci icone per ogni tipo di notifica
         const icons = {
             success: '✅',
             warning: '⚠️',
@@ -402,7 +391,6 @@ export class NotificationUtils {
 
         const icon = icons[type] || icons.info;
 
-        // Per dispositivi mobile, usa un layout migliorato
         const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         if (isMobile) {

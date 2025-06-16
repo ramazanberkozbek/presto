@@ -6,10 +6,27 @@
   background: transparent;
 }
 
+/* Timer status label - positioned outside timer-container in HTML */
+#timer-view .timer-status {
+  font-size: 14px;
+  margin-bottom: 0.5rem;
+  color: var(--focus-timer-color);
+  font-family: 'Roboto Flex', sans-serif;
+  font-weight: 800;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 1rem;
+  border-radius: 2rem;
+  background-color: var(--focus-secondary-btn);
+  border: 2px solid var(--focus-timer-color);
+}
+
 .timer-status {
   font-size: 14px;
   margin-bottom: 0.5rem;
-  color: var(--current-timer-color, var(--focus-color));
+  color: var(--focus-timer-color);
   font-family: 'Roboto Flex', sans-serif;
   font-weight: 800;
   text-align: center;
@@ -32,7 +49,7 @@
 .timer-minutes {
   font-size: 10rem;
   font-weight: 800;
-  color: var(--current-timer-color, var(--focus-color));
+  color: var(--focus-timer-color);
   font-family: 'Roboto Flex', sans-serif;
   line-height: 0.4;
   margin-bottom: 0.5rem;
@@ -48,18 +65,57 @@
 }
 
 /* Timer State Styles - Base Class */
-.container[class*=" "] .timer-status {
-  background-color: var(--current-secondary-btn);
-  padding: 0.2rem 1rem;
-  border-radius: 2rem;
-  border: 2px solid var(--current-timer-color);
-  display: inline-flex;
-  color: var(--current-timer-color);
+.timer-container.focus .timer-status,
+.timer-container.focus .timer-minutes,
+.timer-container.focus .timer-seconds {
+  color: var(--focus-timer-color);
 }
 
-.container[class*=" "] .timer-minutes,
-.container[class*=" "] .timer-seconds {
-  color: var(--current-timer-color);
+.timer-container.break .timer-status,
+.timer-container.break .timer-minutes,
+.timer-container.break .timer-seconds {
+  color: var(--break-timer-color);
+}
+
+.timer-container.longBreak .timer-status,
+.timer-container.longBreak .timer-minutes,
+.timer-container.longBreak .timer-seconds {
+  color: var(--long-break-timer-color);
+}
+
+/* Timer status background styles */
+.timer-container.focus .timer-status {
+  background-color: var(--focus-secondary-btn);
+  border: 2px solid var(--focus-timer-color);
+}
+
+.timer-container.break .timer-status {
+  background-color: var(--break-secondary-btn);
+  border: 2px solid var(--break-timer-color);
+}
+
+.timer-container.longBreak .timer-status {
+  background-color: var(--long-break-secondary-btn);
+  border: 2px solid var(--long-break-timer-color);
+}
+
+/* Timer status for container states (when timer-status is outside timer-container) */
+.container.focus #timer-view .timer-status {
+  background-color: var(--focus-secondary-btn);
+  border: 2px solid var(--focus-timer-color);
+  color: var(--focus-timer-color);
+}
+
+.container.break #timer-view .timer-status {
+  background-color: var(--break-secondary-btn);
+  border: 2px solid var(--break-timer-color);
+  color: var(--break-timer-color);
+}
+
+.container.longBreak #timer-view .timer-status {
+  background-color: var(--long-break-secondary-btn);
+  border: 2px solid var(--long-break-timer-color);
+  color: var(--long-break-timer-color);
 }
 
 /* Overtime styles for continuous sessions */

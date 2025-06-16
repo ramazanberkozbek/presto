@@ -381,7 +381,6 @@ export class PomodoroTimer {
     updateSmartPauseCountdownDisplay() {
         if (!this.smartPauseCountdown) return;
 
-        // Mostra il countdown solo quando mancano 10 secondi o meno
         if (this.smartPauseSecondsRemaining > 0 && this.smartPauseSecondsRemaining <= 10) {
             this.smartPauseCountdown.textContent = this.smartPauseSecondsRemaining;
             this.smartPauseCountdown.style.display = 'flex';
@@ -920,6 +919,18 @@ export class PomodoroTimer {
         }
         mainContainer.className = containerClass;
 
+        // Update body class to match current timer state for background (only in timer view)
+        const body = document.body;
+        const navigationManager = window.navigationManager;
+        // Always apply timer classes if we're in timer view OR if navigation manager isn't initialized yet (default view is timer)
+        if (body && (!navigationManager || navigationManager.currentView === 'timer')) {
+            let bodyClass = `${this.currentMode}`;
+            if (isOvertime) {
+                bodyClass += ' overtime';
+            }
+            body.className = bodyClass;
+        }
+
         // Update sidebar class to match current timer state
         const sidebar = document.querySelector('.sidebar');
         if (sidebar) {
@@ -933,6 +944,12 @@ export class PomodoroTimer {
         // Update timer container class for styling
         const timerContainer = document.querySelector('.timer-container');
         timerContainer.className = `timer-container ${this.currentMode}`;
+
+        // Update controls class to match current timer state
+        const controls = document.querySelector('.controls');
+        if (controls) {
+            controls.className = `controls ${this.currentMode}`;
+        }
 
         // Add running class when timer is active
         if (this.isRunning) {
@@ -1138,7 +1155,6 @@ export class PomodoroTimer {
     }
 
     updateButtons() {
-        // Metodo disabilitato per la versione semplificata - i controlli sono ora gestiti in updateDisplay()
         /*
         if (this.isRunning) {
           this.startBtn.disabled = true;
@@ -1286,16 +1302,12 @@ export class PomodoroTimer {
             dot.classList.remove('completed', 'current');
 
             if (index < this.completedPomodoros) {
-                // Sessioni completate - pallino pieno
                 dot.classList.add('completed');
             } else if (index === this.completedPomodoros && this.currentMode === 'focus') {
-                // Sessione attualmente in corso (solo durante focus) - pallino evidenziato
                 dot.classList.add('current');
             }
-            // Tutte le altre rimangono vuote (solo il background di default)
         });
 
-        // Se ci sono più sessioni completate di quelle visibili, mostra l'indicatore di overflow
         if (this.completedPomodoros > this.totalSessions) {
             const overflowCount = this.completedPomodoros - this.totalSessions;
             const overflowIndicator = document.createElement('div');

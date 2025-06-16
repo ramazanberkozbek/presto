@@ -1,9 +1,45 @@
+/* Default body background - neutral for all pages */
+body {
+  background-color: #f6f6f6;
+  transition: background-color 0.3s ease;
+  margin: 0;
+  padding: 0;
+}
+
+/* Timer background states - applied to body when timer is active */
+/* These styles have higher specificity and will override the default background */
+body.focus {
+  background: var(--focus-bg) !important;
+  transition: background-color 0.3s ease;
+}
+
+body.break {
+  background: var(--break-bg) !important;
+  transition: background-color 0.3s ease;
+}
+
+body.longBreak {
+  background: var(--long-break-bg) !important;
+  transition: background-color 0.3s ease;
+}
+
 /* Views and Layout Styles */
+
+/* Main container for centering content */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  margin-left: 80px;
+  /* Account for sidebar width */
+  box-sizing: border-box;
+}
 
 .view-container {
   display: block;
   animation: fadeIn 0.3s ease;
-  max-width: 1200px;
   width: 100%;
 }
 
@@ -12,10 +48,6 @@
 }
 
 /* Specific styling for calendar view */
-#calendar-view {
-  max-width: 1000px;
-}
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -217,6 +249,13 @@
 
 /* Responsive Modal */
 @media (max-width: 480px) {
+
+  /* Remove container padding and margin-left on mobile */
+  .container {
+    padding: 0;
+    margin-left: 0;
+  }
+
   .session-modal {
     width: 95%;
     max-width: none;

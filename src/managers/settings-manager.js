@@ -1,6 +1,8 @@
 // Settings Manager for Global Shortcuts and Preferences
 const { invoke } = window.__TAURI__.core;
 import { NotificationUtils, KeyboardUtils, StorageUtils } from '../utils/common-utils.js';
+import { TIMER_THEMES, getThemeById, getAllThemes, getCompatibleThemes, isThemeCompatible, getDefaultTheme, registerTheme } from '../utils/timer-themes.js';
+import { initializeAutoThemeLoader } from '../utils/theme-loader.js';
 
 export class SettingsManager {
     constructor() {
@@ -16,12 +18,34 @@ export class SettingsManager {
         // Clean up any existing auto-save feedback elements
         this.cleanupOldNotificationElements();
 
+        // Initialize auto theme loader to discover and load all themes
+        await this.initializeAutoThemeLoader();
+
         await this.loadSettings();
         this.setupEventListeners();
         await this.registerGlobalShortcuts();
         this.setupGlobalShortcutHandlers();
         this.setupSettingsNavigation();
         await this.initializeTheme();
+        await this.initializeTimerTheme();
+    }
+
+    async initializeAutoThemeLoader() {
+        try {
+            console.log('🎨 Starting auto theme discovery...');
+            const loadedThemes = await initializeAutoThemeLoader();
+            console.log(`🎨 Auto-loaded ${loadedThemes.length} themes:`, loadedThemes);
+
+            // Refresh theme selector if it exists
+            if (document.getElementById('timer-theme-grid')) {
+                this.initializeTimerThemeSelector();
+            }
+
+            return loadedThemes;
+        } catch (error) {
+            console.error('❌ Failed to initialize auto theme loader:', error);
+            return [];
+        }
     }
 
     cleanupOldNotificationElements() {
@@ -83,7 +107,8 @@ export class SettingsManager {
                 smart_pause_timeout: 30 // default 30 seconds
             },
             appearance: {
-                theme: "auto" // auto, light, dark
+                theme: "auto", // auto, light, dark
+                timer_theme: "espresso" // Timer color theme
             },
             advanced: {
                 debug_mode: false // Debug mode with 3-second timers
@@ -119,6 +144,9 @@ export class SettingsManager {
 
         // Populate theme selector buttons
         this.initializeThemeSelector();
+
+        // Populate timer theme selector
+        this.initializeTimerThemeSelector();
 
         // Populate notification settings
         // Check current notification permission and adjust desktop notifications setting
@@ -394,6 +422,9 @@ export class SettingsManager {
                 await this.applyTheme(themeSelect.value);
             }
 
+            // Apply timer theme
+            await this.applyTimerTheme(this.settings.appearance.timer_theme);
+
             this.settings.notifications.desktop_notifications = document.getElementById('desktop-notifications').checked;
             this.settings.notifications.sound_notifications = document.getElementById('sound-notifications').checked;
             this.settings.notifications.auto_start_timer = document.getElementById('auto-start-timer').checked;
@@ -604,6 +635,8 @@ export class SettingsManager {
                 // Note: Don't call applyTheme here to avoid duplicate saves
             }
 
+            // Timer theme (will be saved but not applied in auto-save to avoid performance issues)
+
             this.settings.notifications.desktop_notifications = document.getElementById('desktop-notifications').checked;
             this.settings.notifications.sound_notifications = document.getElementById('sound-notifications').checked;
             this.settings.notifications.auto_start_timer = document.getElementById('auto-start-timer').checked;
@@ -777,6 +810,9 @@ export class SettingsManager {
         }
 
         console.log(`🎨 Theme applied: ${theme}`);
+
+        // Update timer theme compatibility when color mode changes
+        this.updateTimerThemeCompatibility();
     }
 
     setupSystemThemeListener() {
@@ -788,6 +824,8 @@ export class SettingsManager {
         this.systemThemeListener = (e) => {
             console.log(`🎨 System theme changed: ${e.matches ? 'dark' : 'light'}`);
             // Theme is automatically applied via CSS media queries when data-theme="auto"
+            // Update timer theme compatibility when system theme changes
+            this.updateTimerThemeCompatibility();
         };
 
         this.systemThemeMediaQuery.addEventListener('change', this.systemThemeListener);
@@ -888,5 +926,260 @@ export class SettingsManager {
         if (activeButton) {
             activeButton.classList.add('active');
         }
+    }
+
+    // Timer Theme Management Functions
+    getCurrentColorMode() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+
+        if (currentTheme === 'light') return 'light';
+        if (currentTheme === 'dark') return 'dark';
+        if (currentTheme === 'auto') {
+            // Check system preference
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        return 'light'; // default fallback
+    }
+
+    async initializeTimerTheme() {
+        // Check if timer theme was already initialized early
+        const currentTimerTheme = document.documentElement.getAttribute('data-timer-theme');
+        const storedTimerTheme = localStorage.getItem('timer-theme-preference');
+
+        // If early timer theme was set and matches localStorage, keep it
+        if (currentTimerTheme && storedTimerTheme && currentTimerTheme === storedTimerTheme) {
+            console.log(`🎨 Keeping early initialized timer theme: ${currentTimerTheme}`);
+
+            // Update settings to match current timer theme
+            if (this.settings && this.settings.appearance) {
+                this.settings.appearance.timer_theme = currentTimerTheme;
+                try {
+                    await invoke('save_settings', { settings: this.settings });
+                    console.log(`🎨 Settings updated to match current timer theme: ${currentTimerTheme}`);
+                } catch (error) {
+                    console.error('Failed to update timer theme in settings:', error);
+                }
+            }
+            return;
+        }
+
+        // Otherwise apply the timer theme from settings or default to espresso
+        const timerTheme = this.settings?.appearance?.timer_theme || 'espresso';
+        await this.applyTimerTheme(timerTheme);
+    }
+
+    async applyTimerTheme(themeId) {
+        const html = document.documentElement;
+
+        // Remove existing timer theme attribute
+        html.removeAttribute('data-timer-theme');
+
+        // Apply new timer theme
+        html.setAttribute('data-timer-theme', themeId);
+
+        // Store timer theme preference in localStorage for quick access
+        localStorage.setItem('timer-theme-preference', themeId);
+
+        // Update settings object
+        if (this.settings && this.settings.appearance) {
+            this.settings.appearance.timer_theme = themeId;
+        }
+
+        console.log(`🎨 Timer theme applied: ${themeId}`);
+        console.log(`🎨 DOM attribute check: data-timer-theme="${html.getAttribute('data-timer-theme')}"`);
+
+        // Debug: Check CSS variable values
+        const computedStyle = getComputedStyle(html);
+        console.log(`🎨 CSS Variables check:`, {
+            focusColor: computedStyle.getPropertyValue('--focus-color').trim(),
+            focusBg: computedStyle.getPropertyValue('--focus-bg').trim(),
+            focusTimerColor: computedStyle.getPropertyValue('--focus-timer-color').trim()
+        });
+
+        // Force CSS recalculation
+        html.style.display = 'none';
+        html.offsetHeight; // Trigger reflow
+        html.style.display = '';
+    }
+
+    initializeTimerThemeSelector() {
+        const timerThemeGrid = document.getElementById('timer-theme-grid');
+        if (!timerThemeGrid) return;
+
+        const currentColorMode = this.getCurrentColorMode();
+        const currentTimerTheme = this.settings.appearance?.timer_theme || 'espresso';
+
+        // Clear existing content
+        timerThemeGrid.innerHTML = '';
+
+        // Get all themes
+        const themes = getAllThemes();
+
+        themes.forEach(theme => {
+            const themeOption = this.createTimerThemeOption(theme, currentTimerTheme, currentColorMode);
+            timerThemeGrid.appendChild(themeOption);
+        });
+    }
+
+    createTimerThemeOption(theme, currentTimerTheme, currentColorMode) {
+        const option = document.createElement('div');
+        option.className = 'timer-theme-option';
+        option.setAttribute('data-timer-theme', theme.id);
+
+        const isCompatible = isThemeCompatible(theme.id, currentColorMode);
+        const isActive = theme.id === currentTimerTheme;
+
+        if (isActive) option.classList.add('active');
+        if (!isCompatible) option.classList.add('disabled');
+
+        option.innerHTML = `
+            <div class="timer-theme-header">
+                <h4 class="timer-theme-name">${theme.name}</h4>
+                <div class="timer-theme-compatibility">
+                    ${theme.supports.map(mode => `
+                        <span class="compatibility-badge ${mode}">
+                            <i class="ri-${mode === 'light' ? 'sun' : 'moon'}-line"></i>
+                        </span>
+                    `).join('')}
+                </div>
+            </div>
+            <p class="timer-theme-description">${theme.description}</p>
+            <div class="timer-theme-preview">
+                <div class="timer-preview-display" data-preview-theme="${theme.id}">
+                    <div class="timer-preview-time">25:00</div>
+                    <div class="timer-preview-status">Focus Session</div>
+                </div>
+                <div class="color-preview-strip">
+                    <div class="preview-color" style="background-color: ${theme.preview.focus}">
+                        <span class="preview-label">Focus</span>
+                    </div>
+                    <div class="preview-color" style="background-color: ${theme.preview.break}">
+                        <span class="preview-label">Break</span>
+                    </div>
+                    <div class="preview-color" style="background-color: ${theme.preview.longBreak}">
+                        <span class="preview-label">Long</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Apply theme preview styles
+        this.applyThemePreviewStyles(option, theme);
+
+        // Add click handler (only if compatible)
+        if (isCompatible) {
+            option.addEventListener('click', async () => {
+                await this.selectTimerTheme(theme.id);
+            });
+        }
+
+        return option;
+    }
+
+    applyThemePreviewStyles(optionElement, theme) {
+        const previewDisplay = optionElement.querySelector('.timer-preview-display');
+        const previewTime = optionElement.querySelector('.timer-preview-time');
+        const previewStatus = optionElement.querySelector('.timer-preview-status');
+
+        if (!previewDisplay || !previewTime || !previewStatus) return;
+
+        // Apply theme-specific styles to the preview
+        const themeId = theme.id;
+
+        // Set preview colors based on theme
+        previewTime.style.color = theme.preview.focus;
+        previewStatus.style.color = theme.preview.focus;
+
+        // Special handling for specific themes
+        if (themeId === 'matrix') {
+            previewDisplay.style.background = '#000011';
+            previewDisplay.style.border = `1px solid ${theme.preview.focus}`;
+            previewDisplay.style.fontFamily = '"Share Tech Mono", monospace';
+            previewTime.style.textShadow = `0 0 5px ${theme.preview.focus}`;
+            previewStatus.style.textShadow = `0 0 3px ${theme.preview.focus}`;
+        } else if (themeId === 'espresso') {
+            previewDisplay.style.background = '#3c2415';
+            previewDisplay.style.border = `1px solid ${theme.preview.focus}`;
+            previewDisplay.style.color = '#f4f1de';
+        } else if (themeId === 'pommodore64') {
+            previewDisplay.style.background = '#40318d';
+            previewDisplay.style.border = `1px solid ${theme.preview.focus}`;
+            previewDisplay.style.color = '#7b68ee';
+        } else {
+            // Default styling for other themes
+            previewDisplay.style.background = '#f8f9fa';
+            previewDisplay.style.border = `1px solid ${theme.preview.focus}`;
+        }
+    }
+
+    async selectTimerTheme(themeId) {
+        // Update visual state
+        this.updateTimerThemeSelector(themeId);
+
+        // Apply theme immediately
+        await this.applyTimerTheme(themeId);
+
+        // Save to settings
+        this.settings.appearance.timer_theme = themeId;
+
+        try {
+            await invoke('save_settings', { settings: this.settings });
+            console.log(`🎨 Timer theme saved: ${themeId}`);
+
+            // Show feedback
+            NotificationUtils.showNotificationPing(`✓ Timer theme changed to ${getThemeById(themeId).name}`, 'success');
+        } catch (error) {
+            console.error('Failed to save timer theme setting:', error);
+            NotificationUtils.showNotificationPing('❌ Failed to save timer theme', 'error');
+        }
+    }
+
+    updateTimerThemeSelector(themeId) {
+        const timerThemeGrid = document.getElementById('timer-theme-grid');
+        if (!timerThemeGrid) return;
+
+        // Remove active class from all options
+        const themeOptions = timerThemeGrid.querySelectorAll('.timer-theme-option');
+        themeOptions.forEach(option => {
+            option.classList.remove('active');
+        });
+
+        // Add active class to selected option
+        const activeOption = timerThemeGrid.querySelector(`[data-timer-theme="${themeId}"]`);
+        if (activeOption) {
+            activeOption.classList.add('active');
+        }
+    }
+
+    // Update timer theme selector when color mode changes
+    updateTimerThemeCompatibility() {
+        const timerThemeGrid = document.getElementById('timer-theme-grid');
+        if (!timerThemeGrid) return;
+
+        const currentColorMode = this.getCurrentColorMode();
+        const currentTimerTheme = this.settings.appearance?.timer_theme || 'espresso';
+
+        console.log(`🎨 Checking theme compatibility: ${currentTimerTheme} with mode ${currentColorMode}`);
+
+        // Check if current timer theme is still compatible
+        const isCompatible = isThemeCompatible(currentTimerTheme, currentColorMode);
+        console.log(`🎨 Theme ${currentTimerTheme} is compatible with ${currentColorMode}: ${isCompatible}`);
+
+        if (!isCompatible) {
+            console.log(`🎨 Theme ${currentTimerTheme} not compatible, switching to compatible theme...`);
+            // Switch to a compatible theme
+            const compatibleThemes = getCompatibleThemes(currentColorMode);
+            if (compatibleThemes.length > 0) {
+                const defaultCompatibleTheme = compatibleThemes.find(t => t.isDefault) || compatibleThemes[0];
+                console.log(`🎨 Switching to compatible theme: ${defaultCompatibleTheme.id}`);
+                this.selectTimerTheme(defaultCompatibleTheme.id);
+            }
+        } else {
+            console.log(`🎨 Theme ${currentTimerTheme} is compatible, keeping it`);
+        }
+
+        // Re-initialize the theme selector with new compatibility
+        this.initializeTimerThemeSelector();
     }
 }

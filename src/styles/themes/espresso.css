@@ -1,0 +1,258 @@
+/* Timer Theme: Espresso (Default)
+ * Author: Tempo Team
+ * Description: Warm, coffee-inspired colors with rich earth tones
+ * Supports: Light + Dark mode
+ */
+
+/* IMMEDIATE DEFAULT COLORS - Applied without any conditions */
+/* These provide instant fallbacks before any theme is applied */
+:root {
+    /* Timer Colors */
+    --focus-color: #e74c3c;
+    --break-color: #2ecc71;
+    --long-break-color: #3498db;
+
+    /* Background Colors */
+    --focus-bg: #FFF2F2;
+    --break-bg: #F0FAF0;
+    --long-break-bg: #E8F4FF;
+
+    /* Timer Text Colors */
+    --focus-timer-color: #471515;
+    --break-timer-color: #14401D;
+    --long-break-timer-color: #153047;
+
+    /* Button Colors */
+    --focus-primary-btn: #FF7c7c;
+    --break-primary-btn: #8CE8A1;
+    --long-break-primary-btn: #8BCAFF;
+
+    --focus-secondary-btn: #FFD9D9;
+    --break-secondary-btn: #DAFAE0;
+    --long-break-secondary-btn: #D9EEFF;
+
+    /* Shared Component Colors */
+    --shared-bg: #f6f6f6;
+    --shared-border: #e0e0e0;
+    --shared-text: #333333;
+
+    /* Additional theme colors */
+    --card-bg: white;
+    --card-border: #f0f0f0;
+    --stat-border: #e9ecef;
+    --day-stat-bg: #f8f9fa;
+    --hover-bg: #f8f9fa;
+    --row-bg: rgba(0, 0, 0, 0.02);
+    --row-hover-bg: rgba(0, 0, 0, 0.05);
+    --focus-bg-alpha: rgba(231, 76, 60, 0.1);
+    --text-on-focus: white;
+
+    /* Settings components */
+    --setting-item-bg: #f8f9fa;
+    --setting-item-hover-bg: #f5f5f5;
+    --setting-item-hover-border: rgba(155, 89, 182, 0.2);
+    --input-border: #e9ecef;
+    --input-focus-shadow: rgba(155, 89, 182, 0.1);
+}
+
+/* Default Fallback Colors for Dark Mode (before theme is applied) */
+[data-theme="dark"] {
+    /* Timer Colors - darker versions */
+    --focus-color: #ef4444;
+    --break-color: #22c55e;
+    --long-break-color: #3b82f6;
+
+    /* Background Colors - dark versions */
+    --focus-bg: #1e1b1b;
+    --break-bg: #0f1f13;
+    --long-break-bg: #0f1419;
+
+    /* Timer Text Colors - light for dark background */
+    --focus-timer-color: #fca5a5;
+    --break-timer-color: #86efac;
+    --long-break-timer-color: #93c5fd;
+
+    /* Button Colors - adjusted for dark theme */
+    --focus-primary-btn: #dc2626;
+    --break-primary-btn: #16a34a;
+    --long-break-primary-btn: #2563eb;
+
+    --focus-secondary-btn: #450a0a;
+    --break-secondary-btn: #052e16;
+    --long-break-secondary-btn: #1e3a8a;
+
+    /* Shared Component Colors for Dark Mode */
+    --shared-bg: #1e1b1b;
+    --shared-border: #334155;
+    --shared-text: #e2e8f0;
+
+    /* Additional dark theme colors */
+    --card-bg: #222;
+    --card-border: #334155;
+    --stat-border: #334155;
+    --day-stat-bg: #334155;
+    --day-stat-border: #475569;
+    --hover-bg: #3f4246;
+    --row-bg: rgba(255, 255, 255, 0.05);
+    --row-hover-bg: rgba(255, 255, 255, 0.1);
+    --focus-bg-alpha: rgba(239, 68, 68, 0.2);
+    --text-on-focus: white;
+
+    /* Settings components for dark mode */
+    --setting-item-bg: #262323;
+    --setting-item-hover-bg: #2e2b2b;
+    --setting-item-hover-border: rgba(239, 68, 68, 0.2);
+    --input-border: #334155;
+    --input-focus-shadow: rgba(239, 68, 68, 0.1);
+}
+
+/* === SHARED COMPONENTS STYLES === */
+/* Stili per statistiche e impostazioni nel tema Espresso */
+
+/* Light mode shared components */
+:root[data-timer-theme="espresso"] .view-section {
+    background-color: var(--shared-bg) !important;
+}
+
+:root[data-timer-theme="espresso"] .base-card,
+:root[data-timer-theme="espresso"] .base-card-compact,
+:root[data-timer-theme="espresso"] .base-section {
+    background: var(--card-bg);
+    border-color: var(--card-border);
+}
+
+:root[data-timer-theme="espresso"] .stat-card {
+    background: var(--card-bg);
+    border-color: var(--stat-border);
+}
+
+:root[data-timer-theme="espresso"] .setting-item {
+    background: var(--setting-item-bg);
+}
+
+:root[data-timer-theme="espresso"] .setting-item:hover {
+    background: var(--setting-item-hover-bg);
+    border-color: var(--setting-item-hover-border);
+}
+
+:root[data-timer-theme="espresso"] .setting-item input[type="number"] {
+    border-color: var(--input-border);
+}
+
+:root[data-timer-theme="espresso"] .setting-item input[type="number"]:focus {
+    border-color: var(--focus-color);
+    box-shadow: 0 0 0 3px var(--input-focus-shadow);
+}
+
+:root[data-timer-theme="espresso"] .day-stat-base {
+    background: var(--day-stat-bg);
+    border-color: transparent;
+}
+
+:root[data-timer-theme="espresso"] .day-stat-base.today {
+    border-color: var(--focus-color);
+    background: var(--focus-bg-alpha);
+}
+
+:root[data-timer-theme="espresso"] .day-stat-base.completed {
+    background: var(--focus-color);
+    color: var(--text-on-focus);
+}
+
+:root[data-timer-theme="espresso"] .nav-item-base:hover {
+    background: var(--hover-bg);
+}
+
+:root[data-timer-theme="espresso"] .nav-item-base.active:hover {
+    background: var(--focus-color) !important;
+    color: var(--text-on-focus) !important;
+}
+
+:root[data-timer-theme="espresso"] .sidebar-base {
+    background: var(--card-bg);
+    border-color: var(--stat-border);
+}
+
+:root[data-timer-theme="espresso"] .row-base {
+    background: var(--row-bg);
+}
+
+:root[data-timer-theme="espresso"] .row-base:hover {
+    background: var(--row-hover-bg);
+}
+
+/* Dark mode shared components per tema Espresso */
+:root[data-timer-theme="espresso"][data-theme="dark"] .view-section {
+    background-color: var(--shared-bg) !important;
+    color: var(--shared-text);
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .base-card,
+:root[data-timer-theme="espresso"][data-theme="dark"] .base-card-compact,
+:root[data-timer-theme="espresso"][data-theme="dark"] .base-section {
+    background: var(--shared-bg);
+    border-color: var(--shared-border);
+    color: var(--shared-text);
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .stat-card {
+    background: var(--card-bg);
+    border-color: var(--stat-border);
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .setting-item {
+    background: var(--setting-item-bg);
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .setting-item:hover {
+    background: var(--setting-item-hover-bg);
+    border-color: var(--setting-item-hover-border);
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .setting-item input[type="number"] {
+    border-color: var(--input-border);
+    background: var(--card-bg);
+    color: var(--shared-text);
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .setting-item input[type="number"]:focus {
+    border-color: var(--focus-color);
+    box-shadow: 0 0 0 3px var(--input-focus-shadow);
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .day-stat-base {
+    background: var(--day-stat-bg);
+    border-color: var(--day-stat-border);
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .day-stat-base.today {
+    border-color: var(--focus-color);
+    background: var(--focus-bg-alpha);
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .day-stat-base.completed {
+    background: var(--focus-color);
+    color: var(--text-on-focus);
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .nav-item-base:hover {
+    background: var(--hover-bg);
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .nav-item-base.active:hover {
+    background: var(--focus-color) !important;
+    color: var(--text-on-focus) !important;
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .sidebar-base {
+    background: var(--card-bg);
+    border-color: var(--stat-border);
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .row-base {
+    background: var(--row-bg);
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .row-base:hover {
+    background: var(--row-hover-bg);
+}

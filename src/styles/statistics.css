@@ -2,11 +2,6 @@
 
 /* Statistics uses base-card styling from shared-components.css */
 
-/* Weekly stats specific grid layout */
-.weekly-stats {
-  /* Uses weekly-grid from shared-components.css */
-}
-
 /* Day stat specific styling - extends day-stat-base */
 .day-label {
   font-size: 0.8rem;
@@ -22,4 +17,123 @@
 .day-time {
   font-size: 0.7rem;
   opacity: 0.8;
+}
+
+/* Dark theme styles for statistics */
+[data-theme="dark"] .stats-section {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .day-stat {
+  background: #334155;
+  border-color: #475569;
+}
+
+[data-theme="dark"] .day-stat.today {
+  border-color: var(--accent-color);
+  background: rgba(155, 89, 182, 0.2);
+}
+
+[data-theme="dark"] .day-stat.completed {
+  background: var(--focus-color);
+  color: white;
+}
+
+[data-theme="dark"] .stat-item {
+  background: #334155;
+  border-color: #475569;
+}
+
+/* Auto theme dark styles for statistics */
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] .stats-section {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  [data-theme="auto"] .day-stat {
+    background: #334155;
+    border-color: #475569;
+  }
+
+  [data-theme="auto"] .day-stat.today {
+    border-color: var(--accent-color);
+    background: rgba(155, 89, 182, 0.2);
+  }
+
+  [data-theme="auto"] .day-stat.completed {
+    background: var(--focus-color);
+    color: white;
+  }
+
+  [data-theme="auto"] .stat-item {
+    background: #334155;
+    border-color: #475569;
+  }
+}
+
+/* Statistics inherit user theme colors */
+.week-day-bar,
+.hour-bar-focus,
+.calendar-dot,
+.day-stat.completed,
+.day-stat-base.completed {
+  background: var(--focus-color) !important;
+}
+
+.hour-bar-break {
+  background: var(--break-color) !important;
+}
+
+.legend-color.focus {
+  background: var(--focus-color) !important;
+}
+
+.legend-color.break {
+  background: var(--break-color) !important;
+}
+
+/* Calendar day with sessions uses focus color */
+.calendar-day.has-sessions {
+  border-color: var(--focus-color) !important;
+}
+
+[data-theme="light"] .calendar-day.has-sessions {
+  background: color-mix(in srgb, var(--focus-color) 15%, white) !important;
+}
+
+[data-theme="dark"] .calendar-day.has-sessions {
+  background: color-mix(in srgb, var(--focus-color) 20%, #334155) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] .calendar-day.has-sessions {
+    background: color-mix(in srgb, var(--focus-color) 20%, #334155) !important;
+  }
+}
+
+/* Weekly stats colors inherit from timer theme */
+.week-bar {
+  background: var(--focus-color) !important;
+}
+
+.week-bar:hover {
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--focus-color) 30%, transparent) !important;
+}
+
+/* Metric values use timer colors */
+.metric-value {
+  color: var(--focus-timer-color) !important;
+}
+
+/* Focus metric active state */
+.focus-metric .metric-change.positive {
+  color: var(--break-color) !important;
+  background: color-mix(in srgb, var(--break-color) 10%, transparent) !important;
+}
+
+.focus-metric .metric-change.negative {
+  color: var(--focus-color) !important;
+  background: color-mix(in srgb, var(--focus-color) 10%, transparent) !important;
 }
