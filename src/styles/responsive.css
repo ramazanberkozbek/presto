@@ -38,6 +38,13 @@
 
 /* Mobile Sidebar Styles */
 @media (max-width: 768px) {
+  /* Adjust container for mobile layout */
+  .container {
+    margin-left: 0;
+    padding: 1rem;
+    padding-bottom: 90px; /* Account for bottom sidebar height + margin */
+  }
+
   .sidebar {
     position: fixed;
     left: 0;
@@ -176,6 +183,13 @@
 
 /* Extra small screens */
 @media (max-width: 480px) {
+  /* Remove all padding and margin from container on small screens */
+  .container {
+    padding: 0;
+    margin-left: 0;
+    padding-bottom: 75px; /* Account for smaller bottom sidebar */
+  }
+
   .sidebar {
     height: 65px;
     padding: 0.5rem 0.75rem;

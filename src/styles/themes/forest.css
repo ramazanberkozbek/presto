@@ -1,0 +1,88 @@
+/* Timer Theme: Forest
+ * Author: Tempo Team  
+ * Description: Earthy greens and browns inspired by deep forests
+ * Supports: Light + Dark mode
+ */
+
+/* Light Mode Colors */
+:root[data-timer-theme="forest"] {
+  /* Timer Colors */
+  --focus-color: #27ae60;
+  --break-color: #f39c12;
+  --long-break-color: #8e44ad;
+
+  /* Background Colors */
+  --focus-bg: #E8F8F5;
+  --break-bg: #FDF2E9;
+  --long-break-bg: #F4ECF7;
+
+  /* Timer Text Colors */
+  --focus-timer-color: #1E8449;
+  --break-timer-color: #B7950B;
+  --long-break-timer-color: #6C3483;
+
+  /* Button Colors */
+  --focus-primary-btn: #58D68D;
+  --break-primary-btn: #F8C471;
+  --long-break-primary-btn: #BB8FCE;
+
+  --focus-secondary-btn: #D5F4E6;
+  --break-secondary-btn: #FCF3CF;
+  --long-break-secondary-btn: #EBDEF0;
+}
+
+/* Dark Mode Colors */
+[data-theme="dark"]:root[data-timer-theme="forest"] {
+  /* Timer Colors - darker versions */
+  --focus-color: #2ecc71;
+  --break-color: #f39c12;
+  --long-break-color: #9b59b6;
+
+  /* Background Colors - dark versions */
+  --focus-bg: #0f2419;
+  --break-bg: #2d1b0b;
+  --long-break-bg: #1a0e2e;
+
+  /* Timer Text Colors - light for dark background */
+  --focus-timer-color: #82e0aa;
+  --break-timer-color: #f7dc6f;
+  --long-break-timer-color: #d2b4de;
+
+  /* Button Colors - adjusted for dark theme */
+  --focus-primary-btn: #27ae60;
+  --break-primary-btn: #d68910;
+  --long-break-primary-btn: #8e44ad;
+
+  --focus-secondary-btn: #196f3d;
+  --break-secondary-btn: #7d6608;
+  --long-break-secondary-btn: #512e5f;
+}
+
+/* Auto theme with dark system preference */
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"]:root[data-timer-theme="forest"] {
+    /* Timer Colors - darker versions */
+    --focus-color: #2ecc71;
+    --break-color: #f39c12;
+    --long-break-color: #9b59b6;
+
+    /* Background Colors - dark versions */
+    --focus-bg: #0f2419;
+    --break-bg: #2d1b0b;
+    --long-break-bg: #1a0e2e;
+
+    /* Timer Text Colors - light for dark background */
+    --focus-timer-color: #82e0aa;
+    --break-timer-color: #f7dc6f;
+    --long-break-timer-color: #d2b4de;
+
+    /* Button Colors - adjusted for dark theme */
+    --focus-primary-btn: #27ae60;
+    --break-primary-btn: #d68910;
+    --long-break-primary-btn: #8e44ad;
+
+    --focus-secondary-btn: #196f3d;
+    --break-secondary-btn: #7d6608;
+    --long-break-secondary-btn: #512e5f;
+  }
+}

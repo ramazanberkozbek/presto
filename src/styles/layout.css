@@ -1,5 +1,17 @@
 /* Views and Layout Styles */
 
+/* Main container for centering content */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  margin-left: 80px;
+  /* Account for sidebar width */
+  box-sizing: border-box;
+}
+
 .view-container {
   display: block;
   animation: fadeIn 0.3s ease;
@@ -217,6 +229,13 @@
 
 /* Responsive Modal */
 @media (max-width: 480px) {
+
+  /* Remove container padding and margin-left on mobile */
+  .container {
+    padding: 0;
+    margin-left: 0;
+  }
+
   .session-modal {
     width: 95%;
     max-width: none;

@@ -21,8 +21,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--current-secondary-btn, rgba(255, 255, 255, 0.8));
-  color: var(--current-timer-color, var(--focus-timer-color));
+  background-color: var(--focus-secondary-btn);
+  color: var(--focus-timer-color);
 }
 
 .control-btn:active {
@@ -30,8 +30,8 @@
 }
 
 .control-btn.primary {
-  background-color: var(--current-primary-btn, var(--focus-color));
-  color: var(--current-timer-color, var(--focus-timer-color));
+  background-color: var(--focus-primary-btn);
+  color: var(--focus-timer-color);
   width: 90px;
   height: 70px;
 }
@@ -50,9 +50,52 @@
   height: 30px;
 }
 
-/* Generic hover effects for all states */
-.control-btn.primary:hover:not(:disabled) {
+/* Timer state specific control styles */
+.controls.focus .control-btn {
+  background-color: var(--focus-secondary-btn);
+  color: var(--focus-timer-color);
+}
+
+.controls.focus .control-btn.primary {
+  background-color: var(--focus-primary-btn);
+  color: var(--focus-timer-color);
+}
+
+.controls.break .control-btn {
+  background-color: var(--break-secondary-btn);
+  color: var(--break-timer-color);
+}
+
+.controls.break .control-btn.primary {
+  background-color: var(--break-primary-btn);
+  color: var(--break-timer-color);
+}
+
+.controls.longBreak .control-btn {
+  background-color: var(--long-break-secondary-btn);
+  color: var(--long-break-timer-color);
+}
+
+.controls.longBreak .control-btn.primary {
+  background-color: var(--long-break-primary-btn);
+  color: var(--long-break-timer-color);
+}
+
+/* Hover effects for each timer state */
+.controls.focus .control-btn.primary:hover:not(:disabled) {
   opacity: 0.9;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px var(--current-shadow, rgba(231, 76, 60, 0.3));
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--focus-color) 30%, transparent);
+}
+
+.controls.break .control-btn.primary:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--break-color) 30%, transparent);
+}
+
+.controls.longBreak .control-btn.primary:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--long-break-color) 30%, transparent);
 }

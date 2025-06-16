@@ -3,6 +3,13 @@
 /* Base styles and CSS variables */
 @import 'variables.css';
 
+/* Timer themes */
+@import 'themes/espresso.css';
+@import 'themes/ocean.css';
+@import 'themes/forest.css';
+@import 'themes/sunset.css';
+@import 'themes/midnight.css';
+
 /* Shared components for common patterns */
 @import 'shared-components.css';
 

@@ -934,6 +934,12 @@ export class PomodoroTimer {
         const timerContainer = document.querySelector('.timer-container');
         timerContainer.className = `timer-container ${this.currentMode}`;
 
+        // Update controls class to match current timer state
+        const controls = document.querySelector('.controls');
+        if (controls) {
+            controls.className = `controls ${this.currentMode}`;
+        }
+
         // Add running class when timer is active
         if (this.isRunning) {
             timerContainer.classList.add('running');
