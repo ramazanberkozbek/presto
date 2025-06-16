@@ -79,7 +79,6 @@
   border-radius: 8px;
   font-size: 1rem;
   transition: all 0.2s ease;
-  background: white;
   max-width: 120px;
 }
 
@@ -409,5 +408,111 @@
     margin-right: 0;
     margin-bottom: 0;
     justify-content: center;
+  }
+}
+
+/* Theme Selector Styles */
+.theme-selector {
+  display: flex;
+  gap: 0.5rem;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 4px;
+  background: #f8f9fa;
+  transition: all 0.2s ease;
+}
+
+.theme-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.85rem;
+  font-weight: 500;
+  position: relative;
+}
+
+.theme-option:hover {
+  background: rgba(155, 89, 182, 0.1);
+  color: var(--accent-color);
+  transform: translateY(-1px);
+}
+
+.theme-option.active {
+  background: var(--accent-color);
+  color: white;
+  box-shadow: 0 2px 8px rgba(155, 89, 182, 0.3);
+}
+
+.theme-option.active:hover {
+  background: var(--accent-color);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.theme-option i {
+  font-size: 1.2rem;
+  margin-bottom: 0.25rem;
+}
+
+.theme-option span {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Theme specific icons and colors */
+.theme-option[data-theme="auto"] i {
+  background: linear-gradient(45deg, #f39c12, #3498db);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.theme-option[data-theme="light"] i {
+  color: #f39c12;
+}
+
+.theme-option[data-theme="dark"] i {
+  color: #34495e;
+}
+
+.theme-option[data-theme="auto"].active i,
+.theme-option[data-theme="light"].active i,
+.theme-option[data-theme="dark"].active i {
+  color: white;
+  -webkit-text-fill-color: white;
+}
+
+/* Responsive theme selector */
+@media (max-width: 480px) {
+  .theme-selector {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .theme-option {
+    flex-direction: row;
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+  
+  .theme-option i {
+    margin-bottom: 0;
+    font-size: 1rem;
+  }
+  
+  .theme-option span {
+    font-size: 0.85rem;
   }
 }

@@ -478,8 +478,23 @@
               <h3>Color Theme</h3>
 
               <div class="setting-item">
-                <label for="theme-select">Theme Mode:</label>
-                <select id="theme-select">
+                <label for="theme-selector">Theme Mode:</label>
+                <div class="theme-selector" id="theme-selector">
+                  <button class="theme-option" data-theme="auto" title="Auto (Follow System)">
+                    <i class="ri-contrast-2-line"></i>
+                    <span>Auto</span>
+                  </button>
+                  <button class="theme-option" data-theme="light" title="Light Mode">
+                    <i class="ri-sun-line"></i>
+                    <span>Light</span>
+                  </button>
+                  <button class="theme-option" data-theme="dark" title="Dark Mode">
+                    <i class="ri-moon-line"></i>
+                    <span>Dark</span>
+                  </button>
+                </div>
+                <!-- Hidden select for backwards compatibility -->
+                <select id="theme-select" style="display: none;">
                   <option value="auto">Auto (Follow System)</option>
                   <option value="light">Light</option>
                   <option value="dark">Dark</option>

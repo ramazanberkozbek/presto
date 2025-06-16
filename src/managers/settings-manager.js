@@ -115,6 +115,9 @@ export class SettingsManager {
         if (themeSelect) {
             themeSelect.value = this.settings.appearance?.theme || 'auto';
         }
+        
+        // Populate theme selector buttons
+        this.initializeThemeSelector();
 
         // Populate notification settings
         // Check current notification permission and adjust desktop notifications setting
@@ -800,11 +803,11 @@ export class SettingsManager {
         // Check if theme was already initialized early
         const currentTheme = document.documentElement.getAttribute('data-theme');
         const storedTheme = localStorage.getItem('theme-preference');
-        
+
         // If early theme was set and matches localStorage, keep it
         if (currentTheme && storedTheme && currentTheme === storedTheme) {
             console.log(`🎨 Keeping early initialized theme: ${currentTheme}`);
-            
+
             // Update settings to match current theme
             if (this.settings && this.settings.appearance) {
                 this.settings.appearance.theme = currentTheme;
@@ -815,16 +818,73 @@ export class SettingsManager {
                     console.error('Failed to update theme in settings:', error);
                 }
             }
-            
+
             // Setup listeners for auto theme if needed
             if (currentTheme === 'auto') {
                 this.setupSystemThemeListener();
             }
             return;
         }
-        
+
         // Otherwise apply the theme from settings or default to auto
         const theme = this.settings?.appearance?.theme || 'auto';
         await this.applyTheme(theme);
+    }
+
+    initializeThemeSelector() {
+        const themeSelector = document.getElementById('theme-selector');
+        const themeSelect = document.getElementById('theme-select');
+        
+        if (!themeSelector) return;
+
+        const currentTheme = this.settings.appearance?.theme || 'auto';
+        
+        // Set active theme button
+        this.updateThemeSelector(currentTheme);
+        
+        // Add event listeners to theme buttons
+        const themeButtons = themeSelector.querySelectorAll('.theme-option');
+        themeButtons.forEach(button => {
+            button.addEventListener('click', async (e) => {
+                const selectedTheme = button.getAttribute('data-theme');
+                
+                // Update visual state
+                this.updateThemeSelector(selectedTheme);
+                
+                // Update hidden select for compatibility
+                if (themeSelect) {
+                    themeSelect.value = selectedTheme;
+                }
+                
+                // Apply theme immediately
+                this.settings.appearance.theme = selectedTheme;
+                await this.applyTheme(selectedTheme);
+                
+                // Save settings
+                try {
+                    await this.saveSettings();
+                    console.log(`🎨 Theme changed to: ${selectedTheme}`);
+                } catch (error) {
+                    console.error('Failed to save theme setting:', error);
+                }
+            });
+        });
+    }
+
+    updateThemeSelector(theme) {
+        const themeSelector = document.getElementById('theme-selector');
+        if (!themeSelector) return;
+
+        // Remove active class from all buttons
+        const themeButtons = themeSelector.querySelectorAll('.theme-option');
+        themeButtons.forEach(button => {
+            button.classList.remove('active');
+        });
+
+        // Add active class to selected button
+        const activeButton = themeSelector.querySelector(`[data-theme="${theme}"]`);
+        if (activeButton) {
+            activeButton.classList.add('active');
+        }
     }
 }
