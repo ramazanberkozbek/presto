@@ -70,10 +70,10 @@
     --input-focus-shadow: rgba(108, 92, 231, 0.1);
 }
 
-/* Font pixelato pesante per il tema Pommodore64 */
+/* Font Orbitron per il tema Pommodore64 */
 :root[data-timer-theme="pommodore64"] .timer-minutes,
 :root[data-timer-theme="pommodore64"] .timer-seconds {
-    font-family: 'Orbitron', 'IBM Plex Mono', 'Courier Prime', monospace !important;
+    font-family: 'Orbitron', monospace !important;
     font-weight: 900 !important;
     letter-spacing: 0.1em;
     text-shadow:
@@ -83,7 +83,7 @@
 }
 
 :root[data-timer-theme="pommodore64"] .timer-status {
-    font-family: 'IBM Plex Mono', 'Courier Prime', monospace !important;
+    font-family: 'Orbitron', monospace !important;
     font-weight: 700 !important;
     font-size: 18px !important;
     letter-spacing: 0.15em;
@@ -184,7 +184,7 @@
     background: #e8e8e8;
     border: 2px solid transparent;
     border-radius: 4px;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Orbitron', monospace;
     font-weight: 500;
 }
 
@@ -201,7 +201,7 @@
 }
 
 :root[data-timer-theme="pommodore64"] .nav-item-base {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Orbitron', monospace;
     font-weight: 500;
     border-radius: 4px;
 }
@@ -243,19 +243,19 @@
 :root[data-timer-theme="pommodore64"] .page-header,
 :root[data-timer-theme="pommodore64"] .card-header {
     color: var(--focus-color);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Orbitron', monospace;
     font-weight: 600;
 }
 
 :root[data-timer-theme="pommodore64"] .stat-number {
     color: var(--focus-color);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Orbitron', monospace;
     font-weight: 600;
 }
 
 :root[data-timer-theme="pommodore64"] .stat-label {
     color: #666;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Orbitron', monospace;
     font-weight: 400;
 }
 
@@ -263,7 +263,7 @@
 :root[data-timer-theme="pommodore64"] .badge-focus {
     background: var(--focus-bg);
     color: var(--focus-color);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Orbitron', monospace;
     font-size: 0.6rem;
     font-weight: 500;
 }
@@ -271,7 +271,7 @@
 :root[data-timer-theme="pommodore64"] .badge-break {
     background: var(--break-bg);
     color: var(--break-color);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Orbitron', monospace;
     font-size: 0.6rem;
     font-weight: 500;
 }
@@ -279,7 +279,7 @@
 :root[data-timer-theme="pommodore64"] .badge-long-break {
     background: var(--long-break-bg);
     color: var(--long-break-color);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Orbitron', monospace;
     font-size: 0.6rem;
     font-weight: 500;
 }
