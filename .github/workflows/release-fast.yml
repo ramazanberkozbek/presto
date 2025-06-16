@@ -1,0 +1,58 @@
+name: Fast Release (macOS only)
+
+on:
+  push:
+    tags:
+      - 'v*.*.*-fast'
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    permissions:
+      contents: write
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        target: [aarch64-apple-darwin, x86_64-apple-darwin]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Rust setup
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+          cache-on-failure: true
+          shared-key: macos-${{ matrix.target }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build the app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Presto v__VERSION__ (macOS)'
+          releaseBody: |
+            ## Fast macOS Release
+            
+            **macOS**: Download the `.dmg` file for your architecture:
+            - `presto_*_aarch64.dmg` for Apple Silicon (M1/M2/M3 Macs)
+            - `presto_*_x64.dmg` for Intel Macs
+          releaseDraft: false
+          prerelease: false
+          args: --target ${{ matrix.target }}

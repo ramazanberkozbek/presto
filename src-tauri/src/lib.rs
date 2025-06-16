@@ -10,6 +10,9 @@ use tauri::{Emitter, Manager};
 use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 
+// Type alias for the app handle to avoid generic complexity
+type AppHandle = tauri::AppHandle<tauri::Wry>;
+
 // Global activity monitoring state
 static ACTIVITY_MONITOR: Mutex<Option<ActivityMonitor>> = Mutex::new(None);
 
@@ -20,7 +23,7 @@ static SHORTCUT_DEBOUNCE: LazyLock<Mutex<HashMap<String, Instant>>> =
 struct ActivityMonitor {
     last_activity: Arc<Mutex<Instant>>,
     is_monitoring: Arc<Mutex<bool>>,
-    app_handle: tauri::AppHandle,
+    app_handle: AppHandle,
     inactivity_threshold: Arc<Mutex<Duration>>,
 }
 
@@ -144,7 +147,7 @@ fn should_debounce_shortcut(action: &str) -> bool {
 }
 
 impl ActivityMonitor {
-    fn new(app_handle: tauri::AppHandle, timeout_seconds: u64) -> Self {
+    fn new(app_handle: AppHandle, timeout_seconds: u64) -> Self {
         Self {
             last_activity: Arc::new(Mutex::new(Instant::now())),
             is_monitoring: Arc::new(Mutex::new(false)),
@@ -273,7 +276,7 @@ impl ActivityMonitor {
 
 #[tauri::command]
 async fn start_activity_monitoring(
-    app: tauri::AppHandle,
+    app: AppHandle,
     timeout_seconds: u64,
 ) -> Result<(), String> {
     let mut monitor = ACTIVITY_MONITOR.lock().unwrap();
@@ -327,7 +330,7 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-async fn save_session_data(session: PomodoroSession, app: tauri::AppHandle) -> Result<(), String> {
+async fn save_session_data(session: PomodoroSession, app: AppHandle) -> Result<(), String> {
     let app_data_dir = app
         .path()
         .app_data_dir()
@@ -346,7 +349,7 @@ async fn save_session_data(session: PomodoroSession, app: tauri::AppHandle) -> R
 }
 
 #[tauri::command]
-async fn load_session_data(app: tauri::AppHandle) -> Result<Option<PomodoroSession>, String> {
+async fn load_session_data(app: AppHandle) -> Result<Option<PomodoroSession>, String> {
     let app_data_dir = app
         .path()
         .app_data_dir()
@@ -366,7 +369,7 @@ async fn load_session_data(app: tauri::AppHandle) -> Result<Option<PomodoroSessi
 }
 
 #[tauri::command]
-async fn save_tasks(tasks: Vec<Task>, app: tauri::AppHandle) -> Result<(), String> {
+async fn save_tasks(tasks: Vec<Task>, app: AppHandle) -> Result<(), String> {
     let app_data_dir = app
         .path()
         .app_data_dir()
@@ -385,7 +388,7 @@ async fn save_tasks(tasks: Vec<Task>, app: tauri::AppHandle) -> Result<(), Strin
 }
 
 #[tauri::command]
-async fn load_tasks(app: tauri::AppHandle) -> Result<Vec<Task>, String> {
+async fn load_tasks(app: AppHandle) -> Result<Vec<Task>, String> {
     let app_data_dir = app
         .path()
         .app_data_dir()
@@ -405,7 +408,7 @@ async fn load_tasks(app: tauri::AppHandle) -> Result<Vec<Task>, String> {
 }
 
 #[tauri::command]
-async fn get_stats_history(app: tauri::AppHandle) -> Result<Vec<PomodoroSession>, String> {
+async fn get_stats_history(app: AppHandle) -> Result<Vec<PomodoroSession>, String> {
     let app_data_dir = app
         .path()
         .app_data_dir()
@@ -425,7 +428,7 @@ async fn get_stats_history(app: tauri::AppHandle) -> Result<Vec<PomodoroSession>
 }
 
 #[tauri::command]
-async fn save_daily_stats(session: PomodoroSession, app: tauri::AppHandle) -> Result<(), String> {
+async fn save_daily_stats(session: PomodoroSession, app: AppHandle) -> Result<(), String> {
     let app_data_dir = app
         .path()
         .app_data_dir()
@@ -464,7 +467,7 @@ async fn save_daily_stats(session: PomodoroSession, app: tauri::AppHandle) -> Re
 
 #[tauri::command]
 async fn update_tray_icon(
-    app: tauri::AppHandle,
+    app: AppHandle,
     timer_text: String,
     is_running: bool,
     session_mode: String,
@@ -531,7 +534,7 @@ async fn update_tray_icon(
 }
 
 #[tauri::command]
-async fn show_window(app: tauri::AppHandle) -> Result<(), String> {
+async fn show_window(app: AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("main") {
         window
             .show()
@@ -544,7 +547,7 @@ async fn show_window(app: tauri::AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn save_settings(settings: AppSettings, app: tauri::AppHandle) -> Result<(), String> {
+async fn save_settings(settings: AppSettings, app: AppHandle) -> Result<(), String> {
     let app_data_dir = app
         .path()
         .app_data_dir()
@@ -562,7 +565,7 @@ async fn save_settings(settings: AppSettings, app: tauri::AppHandle) -> Result<(
 }
 
 #[tauri::command]
-async fn load_settings(app: tauri::AppHandle) -> Result<AppSettings, String> {
+async fn load_settings(app: AppHandle) -> Result<AppSettings, String> {
     let app_data_dir = app
         .path()
         .app_data_dir()
@@ -583,7 +586,7 @@ async fn load_settings(app: tauri::AppHandle) -> Result<AppSettings, String> {
 
 #[tauri::command]
 async fn register_global_shortcuts(
-    app: tauri::AppHandle,
+    app: AppHandle,
     shortcuts: ShortcutSettings,
 ) -> Result<(), String> {
     // Unregister all existing shortcuts first
@@ -647,7 +650,7 @@ async fn register_global_shortcuts(
 }
 
 #[tauri::command]
-async fn unregister_global_shortcuts(app: tauri::AppHandle) -> Result<(), String> {
+async fn unregister_global_shortcuts(app: AppHandle) -> Result<(), String> {
     app.global_shortcut()
         .unregister_all()
         .map_err(|e| format!("Failed to unregister shortcuts: {}", e))?;
@@ -655,7 +658,7 @@ async fn unregister_global_shortcuts(app: tauri::AppHandle) -> Result<(), String
 }
 
 #[tauri::command]
-async fn reset_all_data(app: tauri::AppHandle) -> Result<(), String> {
+async fn reset_all_data(app: AppHandle) -> Result<(), String> {
     let app_data_dir = app
         .path()
         .app_data_dir()
@@ -686,7 +689,7 @@ async fn reset_all_data(app: tauri::AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn enable_autostart(app: tauri::AppHandle) -> Result<(), String> {
+async fn enable_autostart(app: AppHandle) -> Result<(), String> {
     let autostart_manager = app.autolaunch();
     autostart_manager
         .enable()
@@ -695,7 +698,7 @@ async fn enable_autostart(app: tauri::AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn disable_autostart(app: tauri::AppHandle) -> Result<(), String> {
+async fn disable_autostart(app: AppHandle) -> Result<(), String> {
     let autostart_manager = app.autolaunch();
     autostart_manager
         .disable()
@@ -704,7 +707,7 @@ async fn disable_autostart(app: tauri::AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn is_autostart_enabled(app: tauri::AppHandle) -> Result<bool, String> {
+async fn is_autostart_enabled(app: AppHandle) -> Result<bool, String> {
     let autostart_manager = app.autolaunch();
     autostart_manager
         .is_enabled()
