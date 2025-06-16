@@ -276,7 +276,7 @@ export class TeamManager {
 
     createTeamSection(team, members) {
         const section = document.createElement('div');
-        section.className = 'team-section';
+        section.className = 'team-section base-card-compact';
         
         const header = document.createElement('div');
         header.className = 'team-header';
@@ -301,7 +301,7 @@ export class TeamManager {
 
     createMemberRow(member) {
         const row = document.createElement('div');
-        row.className = `member-row status-${member.status}`;
+        row.className = `member-row row-base row-three-col status-${member.status}`;
 
         const statusInfo = this.getStatusInfo(member.status);
         const onlineStatus = this.getOnlineStatus(member);
@@ -313,13 +313,13 @@ export class TeamManager {
                     <div class="online-indicator-small ${onlineStatus}"></div>
                 </div>
                 <div class="member-details">
-                    <span class="member-name">${member.name}</span>
-                    <span class="member-role-small">${member.role}</span>
+                    <span class="member-name text-ellipsis">${member.name}</span>
+                    <span class="member-role-small text-ellipsis">${member.role}</span>
                 </div>
             </div>
             
-            <div class="member-status-info">
-                <div class="status-badge-small ${member.status}">
+            <div class="member-status-info flex-center">
+                <div class="status-badge-small badge-base badge-${member.status}">
                     <i class="status-icon ${statusInfo.icon}"></i>
                     <span>${statusInfo.label}</span>
                 </div>
@@ -328,7 +328,7 @@ export class TeamManager {
                 </div>
             </div>
             
-            <div class="member-activity-small">
+            <div class="member-activity-small text-ellipsis">
                 ${member.activity}
             </div>
         `;

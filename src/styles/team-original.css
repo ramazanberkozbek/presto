@@ -1,11 +1,75 @@
 /* Team View Styles */
 
-/* Team specific subtitle */
+#team-view {
+  background-color: #f6f6f6 !important;
+  min-height: 100vh;
+  max-width: 1200px;
+  padding: 2rem !important;
+  box-sizing: border-box;
+}
+
 .team-subtitle {
   text-align: center;
   color: var(--text-light);
   margin-bottom: 2rem;
   font-size: 1rem;
+}
+
+/* Team Stats Container */
+.team-stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+
+.team-stat-card {
+  background: white;
+  border-radius: 6px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+  transition: transform 0.2s ease;
+}
+
+.team-stat-card:hover {
+  transform: translateY(-1px);
+}
+
+.team-stat-card .stat-icon {
+  font-size: 1.5rem;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: rgba(44, 62, 80, 0.1);
+}
+
+.team-stat-card .stat-icon i {
+  font-size: inherit;
+}
+
+.team-stat-card .stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.team-stat-card .stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent-color);
+  line-height: 1;
+}
+
+.team-stat-card .stat-label {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  margin-top: 0.25rem;
 }
 
 /* Team Members Section */
@@ -21,7 +85,15 @@
   gap: 2rem;
 }
 
-/* Team Section - extends base-card-compact */
+/* Team Section */
+.team-section {
+  background: white;
+  border-radius: 6px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+}
+
 .team-header h3 {
   margin: 0 0 0.25rem 0;
   color: var(--accent-color);
@@ -40,6 +112,44 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
+}
+
+.member-row {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 2fr;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.02);
+  transition: background-color 0.2s ease;
+  border-left: 2px solid transparent;
+}
+
+.member-row:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Status-specific row styling */
+.member-row.status-focus {
+  border-left-color: var(--focus-color);
+}
+
+.member-row.status-break {
+  border-left-color: var(--break-color);
+}
+
+.member-row.status-long-break {
+  border-left-color: var(--long-break-color);
+}
+
+.member-row.status-privacy {
+  border-left-color: #e67e22;
+}
+
+.member-row.status-offline {
+  border-left-color: #95a5a6;
+  background: rgba(149, 165, 166, 0.05);
+  opacity: 0.6;
 }
 
 /* Member Basic Info */
@@ -95,7 +205,45 @@
   gap: 0.15rem;
 }
 
-/* Timer styling - extends badge-base variants */
+.status-badge-small {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  font-weight: 500;
+}
+
+.status-badge-small .status-icon {
+  font-size: 0.75rem;
+}
+
+.status-badge-small.focus {
+  background: rgba(231, 76, 60, 0.1);
+  color: var(--focus-color);
+}
+
+.status-badge-small.break {
+  background: rgba(46, 204, 113, 0.1);
+  color: var(--break-color);
+}
+
+.status-badge-small.long-break {
+  background: rgba(52, 152, 219, 0.1);
+  color: var(--long-break-color);
+}
+
+.status-badge-small.offline {
+  background: rgba(149, 165, 166, 0.1);
+  color: #95a5a6;
+}
+
+.status-badge-small.privacy {
+  background: rgba(230, 126, 34, 0.1);
+  color: #e67e22;
+}
+
 .member-timer-small {
   font-size: 0.8rem;
   font-weight: 600;
@@ -158,30 +306,7 @@
   background: #e67e22;
 }
 
-/* Status-specific row styling - extends row-base */
-.member-row.status-focus {
-  border-left-color: var(--focus-color);
-}
-
-.member-row.status-break {
-  border-left-color: var(--break-color);
-}
-
-.member-row.status-long-break {
-  border-left-color: var(--long-break-color);
-}
-
-.member-row.status-privacy {
-  border-left-color: #e67e22;
-}
-
-.member-row.status-offline {
-  border-left-color: #95a5a6;
-  background: rgba(149, 165, 166, 0.05);
-  opacity: 0.6;
-}
-
-/* Team specific responsive overrides */
+/* Responsive Design */
 @media (max-width: 768px) {
   .member-row {
     grid-template-columns: 1fr;

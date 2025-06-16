@@ -3,6 +3,9 @@
 /* Base styles and CSS variables */
 @import 'variables.css';
 
+/* Shared components for common patterns */
+@import 'shared-components.css';
+
 /* Core component styles */
 @import 'timer.css';
 @import 'controls.css';

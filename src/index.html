@@ -259,13 +259,13 @@
     </div>
 
     <!-- Team View -->
-    <div class="view-container hidden" id="team-view">
-      <h1>Team Dashboard</h1>
-      <p class="team-subtitle">Monitor your team's focus status in real-time</p>
+    <div class="view-container hidden view-section" id="team-view">
+      <h1 class="page-header">Team Dashboard</h1>
+      <p class="team-subtitle page-subtitle">Monitor your team's focus status in real-time</p>
 
       <!-- Team Stats Summary -->
-      <div class="team-stats-container">
-        <div class="team-stat-card">
+      <div class="team-stats-container stats-grid">
+        <div class="team-stat-card stat-card">
           <div class="stat-icon">
             <i class="ri-brain-line"></i>
           </div>
@@ -274,7 +274,7 @@
             <span class="stat-label">Focusing</span>
           </div>
         </div>
-        <div class="team-stat-card">
+        <div class="team-stat-card stat-card">
           <div class="stat-icon">
             <i class="ri-cup-line"></i>
           </div>
@@ -283,7 +283,7 @@
             <span class="stat-label">On Break</span>
           </div>
         </div>
-        <div class="team-stat-card">
+        <div class="team-stat-card stat-card">
           <div class="stat-icon">
             <i class="ri-lock-line"></i>
           </div>
@@ -292,7 +292,7 @@
             <span class="stat-label">Privacy Mode</span>
           </div>
         </div>
-        <div class="team-stat-card">
+        <div class="team-stat-card stat-card">
           <div class="stat-icon">
             <i class="ri-checkbox-blank-circle-fill"></i>
           </div>
@@ -313,34 +313,34 @@
     </div>
 
     <!-- Settings View -->
-    <div class="view-container hidden" id="settings-view">
+    <div class="view-container hidden view-section" id="settings-view">
       <div class="settings-layout">
 
         <!-- Settings Sidebar -->
-        <div class="settings-sidebar">
+        <div class="settings-sidebar sidebar-base">
           <h2>Settings</h2>
-          <nav class="settings-nav">
-            <button class="settings-nav-item active" data-category="general">
+          <nav class="settings-nav sidebar-nav">
+            <button class="settings-nav-item nav-item-base active" data-category="general">
               <i class="ri-timer-line"></i>
               <span>General</span>
             </button>
-            <button class="settings-nav-item" data-category="shortcuts">
+            <button class="settings-nav-item nav-item-base" data-category="shortcuts">
               <i class="ri-keyboard-line"></i>
               <span>Shortcuts</span>
             </button>
-            <button class="settings-nav-item" data-category="notifications">
+            <button class="settings-nav-item nav-item-base" data-category="notifications">
               <i class="ri-notification-line"></i>
               <span>Notifications</span>
             </button>
-            <button class="settings-nav-item" data-category="automation">
+            <button class="settings-nav-item nav-item-base" data-category="automation">
               <i class="ri-magic-line"></i>
               <span>Automation</span>
             </button>
-            <button class="settings-nav-item" data-category="goals">
+            <button class="settings-nav-item nav-item-base" data-category="goals">
               <i class="ri-trophy-line"></i>
               <span>Goals</span>
             </button>
-            <button class="settings-nav-item" data-category="advanced">
+            <button class="settings-nav-item nav-item-base" data-category="advanced">
               <i class="ri-settings-3-line"></i>
               <span>Advanced</span>
             </button>
@@ -348,7 +348,7 @@
         </div>
 
         <!-- Settings Content -->
-        <div class="settings-content">
+        <div class="settings-content content-main">
 
           <!-- General Settings (Timer) -->
           <div class="settings-category active" id="category-general">
@@ -357,8 +357,8 @@
               <p class="category-description">Configure timer durations and basic behavior</p>
             </div>
 
-            <div class="settings-section">
-              <h3>Timer Durations</h3>
+            <div class="settings-section base-section">
+              <h3 class="section-header">Timer Durations</h3>
 
               <div class="setting-item">
                 <label for="focus-duration">Focus Duration (minutes):</label>
