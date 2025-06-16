@@ -52,112 +52,112 @@
 
 /* Dark theme styles for shared components */
 [data-theme="dark"] .view-section {
-  background-color: #0f172a !important;
+    background-color: #0f172a !important;
 }
 
 [data-theme="dark"] .base-card,
 [data-theme="dark"] .base-card-compact,
 [data-theme="dark"] .base-section {
-  background: #1e293b;
-  border-color: #334155;
+    background: #1e293b;
+    border-color: #334155;
 }
 
 [data-theme="dark"] .stat-card {
-  background: #1e293b;
-  border-color: #334155;
+    background: #1e293b;
+    border-color: #334155;
 }
 
 [data-theme="dark"] .day-stat-base {
-  background: #334155;
-  border-color: #475569;
+    background: #334155;
+    border-color: #475569;
 }
 
 [data-theme="dark"] .day-stat-base.today {
-  border-color: var(--accent-color);
-  background: rgba(155, 89, 182, 0.2);
+    border-color: var(--accent-color);
+    background: rgba(155, 89, 182, 0.2);
 }
 
 [data-theme="dark"] .day-stat-base.completed {
-  background: var(--focus-color);
-  color: white;
+    background: var(--focus-color);
+    color: white;
 }
 
 [data-theme="dark"] .nav-item-base:hover {
-  background: #334155;
+    background: #334155;
 }
 
 [data-theme="dark"] .nav-item-base.active:hover {
-  background: var(--accent-color) !important;
-  color: white !important;
+    background: var(--accent-color) !important;
+    color: white !important;
 }
 
 [data-theme="dark"] .sidebar-base {
-  background: #1e293b;
-  border-color: #334155;
+    background: #1e293b;
+    border-color: #334155;
 }
 
 [data-theme="dark"] .row-base {
-  background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.05);
 }
 
 [data-theme="dark"] .row-base:hover {
-  background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 /* Auto theme dark styles for shared components */
 @media (prefers-color-scheme: dark) {
-  [data-theme="auto"] .view-section {
-    background-color: #0f172a !important;
-  }
+    [data-theme="auto"] .view-section {
+        background-color: #0f172a !important;
+    }
 
-  [data-theme="auto"] .base-card,
-  [data-theme="auto"] .base-card-compact,
-  [data-theme="auto"] .base-section {
-    background: #1e293b;
-    border-color: #334155;
-  }
+    [data-theme="auto"] .base-card,
+    [data-theme="auto"] .base-card-compact,
+    [data-theme="auto"] .base-section {
+        background: #1e293b;
+        border-color: #334155;
+    }
 
-  [data-theme="auto"] .stat-card {
-    background: #1e293b;
-    border-color: #334155;
-  }
+    [data-theme="auto"] .stat-card {
+        background: #1e293b;
+        border-color: #334155;
+    }
 
-  [data-theme="auto"] .day-stat-base {
-    background: #334155;
-    border-color: #475569;
-  }
+    [data-theme="auto"] .day-stat-base {
+        background: #334155;
+        border-color: #475569;
+    }
 
-  [data-theme="auto"] .day-stat-base.today {
-    border-color: var(--accent-color);
-    background: rgba(155, 89, 182, 0.2);
-  }
+    [data-theme="auto"] .day-stat-base.today {
+        border-color: var(--accent-color);
+        background: rgba(155, 89, 182, 0.2);
+    }
 
-  [data-theme="auto"] .day-stat-base.completed {
-    background: var(--focus-color);
-    color: white;
-  }
+    [data-theme="auto"] .day-stat-base.completed {
+        background: var(--focus-color);
+        color: white;
+    }
 
-  [data-theme="auto"] .nav-item-base:hover {
-    background: #334155;
-  }
+    [data-theme="auto"] .nav-item-base:hover {
+        background: #334155;
+    }
 
-  [data-theme="auto"] .nav-item-base.active:hover {
-    background: var(--accent-color) !important;
-    color: white !important;
-  }
+    [data-theme="auto"] .nav-item-base.active:hover {
+        background: var(--accent-color) !important;
+        color: white !important;
+    }
 
-  [data-theme="auto"] .sidebar-base {
-    background: #1e293b;
-    border-color: #334155;
-  }
+    [data-theme="auto"] .sidebar-base {
+        background: #1e293b;
+        border-color: #334155;
+    }
 
-  [data-theme="auto"] .row-base {
-    background: rgba(255, 255, 255, 0.05);
-  }
+    [data-theme="auto"] .row-base {
+        background: rgba(255, 255, 255, 0.05);
+    }
 
-  [data-theme="auto"] .row-base:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
+    [data-theme="auto"] .row-base:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
 }
 
 /* === HEADER STYLES === */

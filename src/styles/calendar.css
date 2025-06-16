@@ -636,6 +636,7 @@
 
 /* Auto theme dark styles for calendar and statistics */
 @media (prefers-color-scheme: dark) {
+
   [data-theme="auto"] .calendar-container,
   [data-theme="auto"] .daily-details,
   [data-theme="auto"] .weekly-summary,

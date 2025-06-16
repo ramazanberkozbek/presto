@@ -400,6 +400,7 @@
 
 /* Auto theme dark styles for settings */
 @media (prefers-color-scheme: dark) {
+
   [data-theme="auto"] .setting-item,
   [data-theme="auto"] .shortcut-item {
     background: #334155;
