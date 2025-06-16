@@ -29,7 +29,7 @@ export class PomodoroTimer {
         this.sessionStartTime = null; // When the current session was started
         this.currentSessionElapsedTime = 0; // Actual elapsed time for current session (in seconds)
         this.lastCompletedSessionTime = 0; // Time of the last completed session for undo functionality
-        
+
         // Timer accuracy tracking (for background throttling fix)
         this.timerStartTime = null; // When the timer was started (Date.now())
         this.timerDuration = null; // Original duration when timer was started
@@ -513,7 +513,7 @@ export class PomodoroTimer {
         const now = Date.now();
         const elapsedSinceStart = Math.floor((now - this.timerStartTime) / 1000);
         const newTimeRemaining = this.timerDuration - elapsedSinceStart;
-        
+
         // Only update if the time has actually changed (to avoid unnecessary updates)
         if (newTimeRemaining !== this.timeRemaining) {
             const oldTimeRemaining = this.timeRemaining;
@@ -599,7 +599,7 @@ export class PomodoroTimer {
         // Reset session tracking
         this.sessionStartTime = null;
         this.currentSessionElapsedTime = 0;
-        
+
         // Reset timer accuracy tracking
         this.timerStartTime = null;
         this.timerDuration = null;
@@ -739,7 +739,7 @@ export class PomodoroTimer {
         // Reset session tracking for next session
         this.sessionStartTime = null;
         this.currentSessionElapsedTime = 0;
-        
+
         // Reset timer accuracy tracking
         this.timerStartTime = null;
         this.timerDuration = null;
@@ -1237,7 +1237,7 @@ export class PomodoroTimer {
         this.sessionStartTime = null;
         this.currentSessionElapsedTime = 0;
         this.lastCompletedSessionTime = 0;
-        
+
         // Reset timer accuracy tracking
         this.timerStartTime = null;
         this.timerDuration = null;
@@ -1792,7 +1792,7 @@ export class PomodoroTimer {
         this.sessionStartTime = null;
         this.currentSessionElapsedTime = 0;
         this.lastCompletedSessionTime = 0;
-        
+
         // Reset timer accuracy tracking
         this.timerStartTime = null;
         this.timerDuration = null;

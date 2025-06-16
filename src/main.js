@@ -285,6 +285,29 @@ window.performTotalReset = async function () {
   }
 };
 
+// Initialize theme early to prevent flash
+async function initializeEarlyTheme() {
+  try {
+    // Try to load theme from saved settings first
+    const savedSettings = await invoke('load_settings');
+    const themeFromSettings = savedSettings?.appearance?.theme;
+
+    if (themeFromSettings) {
+      document.documentElement.setAttribute('data-theme', themeFromSettings);
+      localStorage.setItem('theme-preference', themeFromSettings);
+      console.log(`🎨 Early theme loaded from settings: ${themeFromSettings}`);
+      return;
+    }
+  } catch (error) {
+    console.log('🎨 Could not load theme from settings, using localStorage fallback');
+  }
+
+  // Fallback to localStorage or default
+  const storedTheme = localStorage.getItem('theme-preference') || 'auto';
+  document.documentElement.setAttribute('data-theme', storedTheme);
+  console.log(`🎨 Early theme initialized from localStorage: ${storedTheme}`);
+}
+
 // Request notification permission using Tauri v2 API
 async function requestNotificationPermission() {
   try {
@@ -330,6 +353,9 @@ async function requestNotificationPermission() {
 async function initializeApplication() {
   try {
     console.log('🚀 Initializing Tempo application...');
+
+    // Initialize theme as early as possible
+    await initializeEarlyTheme();
 
     // Request notification permission using Tauri v2 API
     await requestNotificationPermission();

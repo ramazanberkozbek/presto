@@ -49,6 +49,494 @@
   --smart-indicator-bg-hover: rgba(255, 255, 255, 0.2);
 }
 
+/* Dark Theme Variables */
+[data-theme="dark"] {
+  color: #e2e8f0;
+  background-color: #0f172a;
+
+  /* Timer Colors - darker versions */
+  --focus-color: #ef4444;
+  --break-color: #22c55e;
+  --long-break-color: #3b82f6;
+  --accent-color: #f8fafc;
+  --text-light: #94a3b8;
+  --warning-color: #f59e0b;
+
+  /* Background Colors - dark versions */
+  --focus-bg: #1e1b1b;
+  --break-bg: #0f1f13;
+  --long-break-bg: #0f1419;
+
+  /* Timer Text Colors - light for dark background */
+  --focus-timer-color: #fca5a5;
+  --break-timer-color: #86efac;
+  --long-break-timer-color: #93c5fd;
+
+  /* Button Colors - adjusted for dark theme */
+  --focus-primary-btn: #dc2626;
+  --break-primary-btn: #16a34a;
+  --long-break-primary-btn: #2563eb;
+
+  --focus-secondary-btn: #450a0a;
+  --break-secondary-btn: #052e16;
+  --long-break-secondary-btn: #1e3a8a;
+
+  /* Smart indicator colors for dark theme */
+  --smart-indicator-active: #60a5fa;
+  --smart-indicator-inactive: #64748b;
+  --smart-indicator-bg: rgba(0, 0, 0, 0.2);
+  --smart-indicator-bg-hover: rgba(0, 0, 0, 0.3);
+}
+
+/* Auto Theme - follows system preference */
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] {
+    color: #e2e8f0;
+    background-color: #0f172a;
+
+    /* Timer Colors - darker versions */
+    --focus-color: #ef4444;
+    --break-color: #22c55e;
+    --long-break-color: #3b82f6;
+    --accent-color: #f8fafc;
+    --text-light: #94a3b8;
+    --warning-color: #f59e0b;
+
+    /* Background Colors - dark versions */
+    --focus-bg: #1e1b1b;
+    --break-bg: #0f1f13;
+    --long-break-bg: #0f1419;
+
+    /* Timer Text Colors - light for dark background */
+    --focus-timer-color: #fca5a5;
+    --break-timer-color: #86efac;
+    --long-break-timer-color: #93c5fd;
+
+    /* Button Colors - adjusted for dark theme */
+    --focus-primary-btn: #dc2626;
+    --break-primary-btn: #16a34a;
+    --long-break-primary-btn: #2563eb;
+
+    --focus-secondary-btn: #450a0a;
+    --break-secondary-btn: #052e16;
+    --long-break-secondary-btn: #1e3a8a;
+
+    /* Smart indicator colors for dark theme */
+    --smart-indicator-active: #60a5fa;
+    --smart-indicator-inactive: #64748b;
+    --smart-indicator-bg: rgba(0, 0, 0, 0.2);
+    --smart-indicator-bg-hover: rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Dark theme specific styles */
+[data-theme="dark"] {
+
+  /* Card backgrounds in dark theme */
+  .base-card,
+  .base-card-compact,
+  .base-section {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  /* Modal backgrounds */
+  .modal-overlay {
+    background: rgba(0, 0, 0, 0.8);
+  }
+
+  .session-modal {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  /* Input fields in dark theme */
+  input[type="number"],
+  input[type="text"],
+  select,
+  textarea {
+    background: #334155;
+    border-color: #475569;
+    color: #e2e8f0;
+  }
+
+  input[type="number"]:focus,
+  input[type="text"]:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--accent-color);
+    background: #475569;
+  }
+
+  /* Calendar and timeline adjustments */
+  .calendar-container,
+  .daily-details,
+  .weekly-summary,
+  .mini-calendar-container {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  /* Analytics cards */
+  .focus-summary-card,
+  .weekly-chart-card,
+  .daily-chart-card {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  /* Chart backgrounds */
+  .weekly-chart,
+  .daily-chart {
+    background: #334155;
+  }
+
+  /* Calendar days and stats */
+  .calendar-day {
+    background: #334155;
+    color: #e2e8f0;
+  }
+
+  .calendar-day:hover {
+    background: #475569;
+  }
+
+  .stat-item {
+    background: #334155;
+    border-color: #475569;
+  }
+
+  .day-stats .stat-item {
+    background: #334155;
+  }
+
+  /* Week selector */
+  .week-selector {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  /* Team view adjustments */
+  .team-stat-card {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  /* Settings adjustments */
+  .setting-item {
+    background: #334155;
+    border-color: #475569;
+  }
+
+  .setting-item:hover {
+    background: #475569;
+    border-color: var(--accent-color);
+  }
+
+  .shortcut-item {
+    background: #334155;
+    border-color: #475569;
+  }
+
+  .shortcut-item:hover {
+    background: #475569;
+    border-color: var(--accent-color);
+  }
+
+  /* Settings sidebar and actions */
+  .sidebar-base {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  .settings-actions {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  /* View section background */
+  .view-section {
+    background-color: #0f172a !important;
+  }
+
+  /* Navigation items */
+  .nav-item-base.active {
+    background: var(--accent-color);
+    color: white;
+  }
+
+  .nav-item-base.active:hover {
+    background: rgba(248, 250, 252, 0.1);
+    transform: translateX(6px);
+  }
+
+  /* View containers */
+  .view-container {
+    background: transparent;
+  }
+
+  /* Task and progress sections */
+  .task-section,
+  .stats-section,
+  .pomodoro-counter {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  .task-item {
+    background: #334155;
+  }
+
+  .day-stat {
+    background: #334155;
+  }
+
+  /* Calendar elements for dark theme */
+  .calendar-container,
+  .daily-details,
+  .weekly-summary {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+  }
+
+  .calendar-day {
+    background: var(--input-bg);
+    color: var(--text-color);
+  }
+
+  .calendar-day:hover {
+    background: var(--input-border);
+  }
+
+  .calendar-day.has-sessions {
+    background: rgba(231, 76, 60, 0.3);
+    color: var(--text-color);
+  }
+
+  .calendar-day.selected .calendar-dot {
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .stat-item {
+    background: var(--input-bg);
+    color: var(--text-color);
+    border-left-color: var(--accent-color);
+  }
+
+  .nav-btn:hover {
+    background: var(--input-border);
+  }
+
+  /* Sidebar adjustments for dark theme */
+  .sidebar {
+    background: rgba(15, 23, 42, 0.95);
+  }
+
+  .sidebar.focus {
+    background: rgba(30, 27, 27, 0.95);
+  }
+
+  .sidebar.break {
+    background: rgba(15, 31, 19, 0.95);
+  }
+
+  .sidebar.longBreak {
+    background: rgba(15, 20, 25, 0.95);
+  }
+}
+
+/* Auto theme dark mode styles */
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] {
+
+    /* Card backgrounds in dark theme */
+    .base-card,
+    .base-card-compact,
+    .base-section {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    /* Modal backgrounds */
+    .modal-overlay {
+      background: rgba(0, 0, 0, 0.8);
+    }
+
+    .session-modal {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    /* Input fields in dark theme */
+    input[type="number"],
+    input[type="text"],
+    select,
+    textarea {
+      background: #334155;
+      border-color: #475569;
+      color: #e2e8f0;
+    }
+
+    input[type="number"]:focus,
+    input[type="text"]:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--accent-color);
+      background: #475569;
+    }
+
+    /* Calendar and timeline adjustments */
+    .calendar-container,
+    .daily-details,
+    .weekly-summary,
+    .mini-calendar-container {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    /* Analytics cards */
+    .focus-summary-card,
+    .weekly-chart-card,
+    .daily-chart-card {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    /* Chart backgrounds */
+    .weekly-chart,
+    .daily-chart {
+      background: #334155;
+    }
+
+    /* Calendar days and stats */
+    .calendar-day {
+      background: #334155;
+      color: #e2e8f0;
+    }
+
+    .calendar-day:hover {
+      background: #475569;
+    }
+
+    .calendar-day.has-sessions {
+      background: rgba(231, 76, 60, 0.3);
+      color: #e2e8f0;
+    }
+
+    .calendar-day.selected .calendar-dot {
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .stat-item {
+      background: #334155;
+      border-color: #475569;
+    }
+
+    .day-stats .stat-item {
+      background: #334155;
+    }
+
+    /* Navigation buttons */
+    .nav-btn:hover {
+      background: #475569;
+    }
+
+    /* Week selector */
+    .week-selector {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    /* Team view adjustments */
+    .team-stat-card {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    /* Settings adjustments */
+    .setting-item {
+      background: #334155;
+      border-color: #475569;
+    }
+
+    .setting-item:hover {
+      background: #475569;
+      border-color: var(--accent-color);
+    }
+
+    .shortcut-item {
+      background: #334155;
+      border-color: #475569;
+    }
+
+    .shortcut-item:hover {
+      background: #475569;
+      border-color: var(--accent-color);
+    }
+
+    /* Settings sidebar and actions */
+    .sidebar-base {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    .settings-actions {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    /* View section background */
+    .view-section {
+      background-color: #0f172a !important;
+    }
+
+    /* Navigation items */
+    .nav-item-base.active:hover {
+      background: rgba(248, 250, 252, 0.1);
+      transform: translateX(6px);
+    }
+
+    /* Task and progress sections */
+    .task-section,
+    .stats-section,
+    .pomodoro-counter {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    .task-item {
+      background: #334155;
+    }
+
+    .day-stat {
+      background: #334155;
+    }
+
+    /* Sidebar adjustments for dark theme */
+    .sidebar {
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    .sidebar.focus {
+      background: rgba(30, 27, 27, 0.95);
+    }
+
+    .sidebar.break {
+      background: rgba(15, 31, 19, 0.95);
+    }
+
+    .sidebar.longBreak {
+      background: rgba(15, 20, 25, 0.95);
+    }
+  }
+}
+
+/* Force light theme specific styles */
+[data-theme="light"] {
+  color: #0f0f0f;
+  background-color: #f6f6f6;
+}
+
 body {
   margin: 0;
   padding: 0;

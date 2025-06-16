@@ -21,6 +21,7 @@ export class SettingsManager {
         await this.registerGlobalShortcuts();
         this.setupGlobalShortcutHandlers();
         this.setupSettingsNavigation();
+        await this.initializeTheme();
     }
 
     cleanupOldNotificationElements() {
@@ -53,6 +54,7 @@ export class SettingsManager {
             shortcuts: { ...defaultSettings.shortcuts, ...loadedSettings.shortcuts },
             timer: { ...defaultSettings.timer, ...loadedSettings.timer },
             notifications: { ...defaultSettings.notifications, ...loadedSettings.notifications },
+            appearance: { ...defaultSettings.appearance, ...loadedSettings.appearance },
             advanced: { ...defaultSettings.advanced, ...loadedSettings.advanced },
             autostart: loadedSettings.autostart !== undefined ? loadedSettings.autostart : defaultSettings.autostart
         };
@@ -80,6 +82,9 @@ export class SettingsManager {
                 smart_pause: false,
                 smart_pause_timeout: 30 // default 30 seconds
             },
+            appearance: {
+                theme: "auto" // auto, light, dark
+            },
             advanced: {
                 debug_mode: false // Debug mode with 3-second timers
             },
@@ -103,6 +108,12 @@ export class SettingsManager {
         const weeklyGoalField = document.getElementById('weekly-goal-minutes');
         if (weeklyGoalField) {
             weeklyGoalField.value = this.settings.timer.weekly_goal_minutes || 125;
+        }
+
+        // Populate appearance settings
+        const themeSelect = document.getElementById('theme-select');
+        if (themeSelect) {
+            themeSelect.value = this.settings.appearance?.theme || 'auto';
         }
 
         // Populate notification settings
@@ -372,6 +383,13 @@ export class SettingsManager {
             this.settings.timer.long_break_duration = parseInt(document.getElementById('long-break-duration').value);
             this.settings.timer.total_sessions = parseInt(document.getElementById('total-sessions').value);
 
+            // Appearance settings
+            const themeSelect = document.getElementById('theme-select');
+            if (themeSelect) {
+                this.settings.appearance.theme = themeSelect.value;
+                await this.applyTheme(themeSelect.value);
+            }
+
             this.settings.notifications.desktop_notifications = document.getElementById('desktop-notifications').checked;
             this.settings.notifications.sound_notifications = document.getElementById('sound-notifications').checked;
             this.settings.notifications.auto_start_timer = document.getElementById('auto-start-timer').checked;
@@ -469,11 +487,31 @@ export class SettingsManager {
             'weekly-goal-minutes'
         ];
 
+        // Appearance settings
+        const appearanceFields = [
+            'theme-select'
+        ];
+
         timerFields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
             if (field) {
                 field.addEventListener('change', () => this.scheduleAutoSave());
                 field.addEventListener('input', () => this.scheduleAutoSave());
+            }
+        });
+
+        appearanceFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                if (fieldId === 'theme-select') {
+                    // Handle theme changes specially to apply theme immediately
+                    // applyTheme() already saves settings, so no need to scheduleAutoSave
+                    field.addEventListener('change', async () => {
+                        await this.applyTheme(field.value);
+                    });
+                } else {
+                    field.addEventListener('change', () => this.scheduleAutoSave());
+                }
             }
         });
 
@@ -552,6 +590,13 @@ export class SettingsManager {
             const weeklyGoalField = document.getElementById('weekly-goal-minutes');
             if (weeklyGoalField) {
                 this.settings.timer.weekly_goal_minutes = parseInt(weeklyGoalField.value) || 125;
+            }
+
+            // Appearance settings
+            const themeSelect = document.getElementById('theme-select');
+            if (themeSelect) {
+                this.settings.appearance.theme = themeSelect.value;
+                // Note: Don't call applyTheme here to avoid duplicate saves
             }
 
             this.settings.notifications.desktop_notifications = document.getElementById('desktop-notifications').checked;
@@ -692,5 +737,94 @@ export class SettingsManager {
                 checkbox.checked = !enabled;
             }
         }
+    }
+
+    // Theme management functions
+    async applyTheme(theme) {
+        const html = document.documentElement;
+
+        // Remove existing theme attributes
+        html.removeAttribute('data-theme');
+
+        // Apply new theme
+        html.setAttribute('data-theme', theme);
+
+        // Store theme preference in localStorage for quick access
+        localStorage.setItem('theme-preference', theme);
+
+        // Update settings object and save immediately to prevent loss on app close
+        if (this.settings && this.settings.appearance) {
+            this.settings.appearance.theme = theme;
+            try {
+                // Save immediately to file
+                await invoke('save_settings', { settings: this.settings });
+                console.log(`🎨 Theme saved: ${theme}`);
+            } catch (error) {
+                console.error('Failed to save theme setting:', error);
+            }
+        }
+
+        // Setup system theme listener for auto mode
+        if (theme === 'auto') {
+            this.setupSystemThemeListener();
+        } else {
+            this.removeSystemThemeListener();
+        }
+
+        console.log(`🎨 Theme applied: ${theme}`);
+    }
+
+    setupSystemThemeListener() {
+        // Remove existing listener if any
+        this.removeSystemThemeListener();
+
+        // Create new listener
+        this.systemThemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        this.systemThemeListener = (e) => {
+            console.log(`🎨 System theme changed: ${e.matches ? 'dark' : 'light'}`);
+            // Theme is automatically applied via CSS media queries when data-theme="auto"
+        };
+
+        this.systemThemeMediaQuery.addEventListener('change', this.systemThemeListener);
+    }
+
+    removeSystemThemeListener() {
+        if (this.systemThemeMediaQuery && this.systemThemeListener) {
+            this.systemThemeMediaQuery.removeEventListener('change', this.systemThemeListener);
+            this.systemThemeMediaQuery = null;
+            this.systemThemeListener = null;
+        }
+    }
+
+    async initializeTheme() {
+        // Check if theme was already initialized early
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const storedTheme = localStorage.getItem('theme-preference');
+        
+        // If early theme was set and matches localStorage, keep it
+        if (currentTheme && storedTheme && currentTheme === storedTheme) {
+            console.log(`🎨 Keeping early initialized theme: ${currentTheme}`);
+            
+            // Update settings to match current theme
+            if (this.settings && this.settings.appearance) {
+                this.settings.appearance.theme = currentTheme;
+                try {
+                    await invoke('save_settings', { settings: this.settings });
+                    console.log(`🎨 Settings updated to match current theme: ${currentTheme}`);
+                } catch (error) {
+                    console.error('Failed to update theme in settings:', error);
+                }
+            }
+            
+            // Setup listeners for auto theme if needed
+            if (currentTheme === 'auto') {
+                this.setupSystemThemeListener();
+            }
+            return;
+        }
+        
+        // Otherwise apply the theme from settings or default to auto
+        const theme = this.settings?.appearance?.theme || 'auto';
+        await this.applyTheme(theme);
     }
 }

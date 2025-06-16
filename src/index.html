@@ -332,6 +332,10 @@
               <i class="ri-notification-line"></i>
               <span>Notifications</span>
             </button>
+            <button class="settings-nav-item nav-item-base" data-category="theme">
+              <i class="ri-palette-line"></i>
+              <span>Theme</span>
+            </button>
             <button class="settings-nav-item nav-item-base" data-category="automation">
               <i class="ri-magic-line"></i>
               <span>Automation</span>
@@ -356,6 +360,8 @@
               <h1>General Settings</h1>
               <p class="category-description">Configure timer durations and basic behavior</p>
             </div>
+
+
 
             <div class="settings-section base-section">
               <h3 class="section-header">Timer Durations</h3>
@@ -457,6 +463,29 @@
                   Sound Notifications
                 </label>
                 <p class="setting-description">Play a sound when timer phases complete</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Theme Settings -->
+          <div class="settings-category" id="category-theme">
+            <div class="category-header">
+              <h1>Theme</h1>
+              <p class="category-description">Customize the appearance and visual style of the application</p>
+            </div>
+
+            <div class="settings-section">
+              <h3>Color Theme</h3>
+
+              <div class="setting-item">
+                <label for="theme-select">Theme Mode:</label>
+                <select id="theme-select">
+                  <option value="auto">Auto (Follow System)</option>
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                </select>
+                <p class="setting-description">Choose your preferred color theme. Auto will automatically switch between
+                  light and dark mode based on your system preferences.</p>
               </div>
             </div>
           </div>
