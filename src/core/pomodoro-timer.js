@@ -969,7 +969,7 @@ export class PomodoroTimer {
         // Update page title
         const statusIcon = this.currentMode === 'focus' ? '🍅' : (this.currentMode === 'break' ? '😌' : '🎉');
         const overtimePrefix = isOvertime ? '+' : '';
-        document.title = `${statusIcon} ${overtimePrefix}${displayMinutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')} - Tempo`;
+        document.title = `${statusIcon} ${overtimePrefix}${displayMinutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')} - Presto`;
 
         // Update stop/undo button icon based on current mode
         this.updateStopUndoButton();
@@ -1613,7 +1613,7 @@ export class PomodoroTimer {
                     };
 
                     await sendNotification({
-                        title: 'Tempo - Pomodoro Timer',
+                        title: 'Presto - Pomodoro Timer',
                         body: messages[this.currentMode],
                         icon: '/assets/tauri.svg'
                     });
@@ -1627,7 +1627,7 @@ export class PomodoroTimer {
                         longBreak: 'Long break over! Ready for more focus? 🚀'
                     };
 
-                    NotificationUtils.showDesktopNotification('Tempo - Pomodoro Timer', messages[this.currentMode]);
+                    NotificationUtils.showDesktopNotification('Presto - Pomodoro Timer', messages[this.currentMode]);
                 }
             }
         } catch (error) {

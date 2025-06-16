@@ -18,10 +18,12 @@ export class SettingsManager {
         // Clean up any existing auto-save feedback elements
         this.cleanupOldNotificationElements();
 
+        // Load settings first
+        await this.loadSettings();
+
         // Initialize auto theme loader to discover and load all themes
         await this.initializeAutoThemeLoader();
 
-        await this.loadSettings();
         this.setupEventListeners();
         await this.registerGlobalShortcuts();
         this.setupGlobalShortcutHandlers();
@@ -36,8 +38,8 @@ export class SettingsManager {
             const loadedThemes = await initializeAutoThemeLoader();
             console.log(`🎨 Auto-loaded ${loadedThemes.length} themes:`, loadedThemes);
 
-            // Refresh theme selector if it exists
-            if (document.getElementById('timer-theme-grid')) {
+            // Refresh theme selector if it exists and settings are loaded
+            if (document.getElementById('timer-theme-grid') && this.settings) {
                 this.initializeTimerThemeSelector();
             }
 
@@ -752,7 +754,7 @@ export class SettingsManager {
             if (enabled) {
                 await invoke('enable_autostart');
                 console.log('Autostart enabled');
-                NotificationUtils.showNotificationPing('✓ Autostart enabled - Tempo will start with your system', 'success');
+                NotificationUtils.showNotificationPing('✓ Autostart enabled - Presto will start with your system', 'success');
             } else {
                 await invoke('disable_autostart');
                 console.log('Autostart disabled');
@@ -1005,7 +1007,9 @@ export class SettingsManager {
 
     initializeTimerThemeSelector() {
         const timerThemeGrid = document.getElementById('timer-theme-grid');
-        if (!timerThemeGrid) return;
+        if (!timerThemeGrid || !this.settings || !this.settings.appearance) {
+            return; // Exit early if elements or settings not ready
+        }
 
         const currentColorMode = this.getCurrentColorMode();
         const currentTimerTheme = this.settings.appearance?.timer_theme || 'espresso';

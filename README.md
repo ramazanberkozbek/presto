@@ -2,7 +2,7 @@
 
 # Presto - Pomodoro Timer
 
-A modern, cross-platform Pomodoro timer application built with Tauri (Rust + HTML/CSS/JavaScript). Tempo helps you boost productivity using the proven Pomodoro Technique with a beautiful, intuitive interface.
+A modern, cross-platform Pomodoro timer application built with Tauri (Rust + HTML/CSS/JavaScript). Presto helps you boost productivity using the proven Pomodoro Technique with a beautiful, intuitive interface.
 
 ## ✨ Features
 
@@ -51,8 +51,8 @@ A modern, cross-platform Pomodoro timer application built with Tauri (Rust + HTM
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/tempo.git
-   cd tempo
+   git clone https://github.com/murdercode/presto.git
+   cd presto
    ```
 
 2. **Install dependencies**
@@ -166,3 +166,45 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Start your productive journey with Presto!** 🍅✨
+
+## 🔄 Automatic Updates
+
+Presto includes an automatic update system that allows you to receive new versions directly from the app interface.
+
+### Features
+
+- **Automatic checking**: The app checks every hour for available updates
+- **Non-invasive notifications**: Elegant notification that appears when an update is available
+- **Progressive download**: Progress bar during download
+- **Automatic installation**: Update is applied on restart
+- **Security**: All updates are digitally signed
+
+### Developer Configuration
+
+If you want to configure the update system for your fork:
+
+1. **Automatic setup**:
+   ```bash
+   ./setup-updates.sh
+   ```
+
+2. **Manual setup**:
+   - Generate keys: `./generate-keys.sh`
+   - Configure `src-tauri/tauri.conf.json` with your public key
+   - Add GitHub secrets for the private key
+   - Update repository references in the code
+
+3. **Publishing**:
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
+For more details see [UPDATES.md](UPDATES.md).
+
+### For Users
+
+- Updates are checked automatically
+- You can disable automatic checking in settings
+- You can manually check in the "Updates" section of settings
+- Downloads happen in background without interrupting work

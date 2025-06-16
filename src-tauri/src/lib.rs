@@ -497,15 +497,20 @@ async fn update_tray_icon(
 
                 let status = if is_running { "Running" } else { "Paused" };
 
-                let title = format!("{} {}", icon, timer_text);
-                tray.set_title(Some(title))
-                    .map_err(|e| format!("Failed to set title: {}", e))?;
+        let title = format!("{} {}", icon, timer_text);
+        tray.set_title(Some(title))
+            .map_err(|e| format!("Failed to set title: {}", e))?;
 
-                let tooltip = if session_mode == "focus" {
-                    format!(
-                        "Tempo - Session {}/{} ({})",
-                        current_session, total_sessions, status
-                    )
+        let tooltip = if session_mode == "focus" {
+            format!(
+                "Presto - Session {}/{} ({})",
+                current_session, total_sessions, status
+            )
+        } else {
+            format!(
+                "Presto - {} ({})",
+                if session_mode == "longBreak" {
+                    "Long Break"
                 } else {
                     format!(
                         "Tempo - {} ({})",
@@ -723,6 +728,7 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             None,
         ))
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             greet,
             save_session_data,
@@ -746,7 +752,7 @@ pub fn run() {
             is_autostart_enabled
         ])
         .setup(|app| {
-            let show_item = MenuItem::with_id(app, "show", "Mostra Tempo", true, None::<&str>)?;
+            let show_item = MenuItem::with_id(app, "show", "Mostra Presto", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "Esci", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
 

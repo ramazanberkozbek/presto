@@ -1,10 +1,12 @@
-// Main Application Entry Point - Tempo Pomodoro Timer
+// Main Application Entry Point - Presto Pomodoro Timer
 import { NavigationManager } from './managers/navigation-manager.js';
 import { SettingsManager } from './managers/settings-manager.js';
 import { SessionManager } from './managers/session-manager.js';
 import { TeamManager } from './managers/team-manager.js';
 import { PomodoroTimer } from './core/pomodoro-timer.js';
 import { NotificationUtils } from './utils/common-utils.js';
+import { updateManager } from './managers/update-manager.js';
+import { updateNotification } from './components/update-notification.js';
 
 // Global application state
 let timer = null;
@@ -373,7 +375,7 @@ async function requestNotificationPermission() {
 // Initialize the application
 async function initializeApplication() {
   try {
-    console.log('🚀 Initializing Tempo application...');
+    console.log('🚀 Initializing Presto application...');
 
     // Initialize theme as early as possible
     await initializeEarlyTheme();
@@ -413,13 +415,21 @@ async function initializeApplication() {
     teamManager = new TeamManager();
     window.teamManager = teamManager;
 
+    // Initialize Update Manager
+    console.log('🔄 Initializing Update Manager...');
+    window.updateManager = updateManager;
+    updateManager.loadPreferences(); // Carica le preferenze salvate
+
     // Setup global event listeners
     setupGlobalEventListeners();
+
+    // Setup update management
+    setupUpdateManagement();
 
     console.log('✅ Application initialized successfully!');
 
     // Show welcome notification
-    NotificationUtils.showNotificationPing('Welcome to Tempo! 🍅', null, 'focus');
+    NotificationUtils.showNotificationPing('Welcome to Presto! 🍅', null, 'focus');
 
   } catch (error) {
     console.error('❌ Failed to initialize application:', error);
@@ -476,6 +486,206 @@ function setupGlobalEventListeners() {
       }
     }
   });
+}
+
+// Setup update management
+function setupUpdateManagement() {
+  console.log('🔄 Setting up update management...');
+
+  // Update status elements
+  const updateStatus = document.getElementById('update-status');
+  const currentVersionElement = document.getElementById('current-version');
+  const currentVersionDisplay = document.getElementById('current-version-display');
+  const checkUpdatesBtn = document.getElementById('check-updates-btn');
+  const autoCheckUpdates = document.getElementById('auto-check-updates');
+  const viewChangelogBtn = document.getElementById('view-changelog-btn');
+  const viewReleasesLink = document.getElementById('view-releases-link');
+  const updateSourceUrl = document.getElementById('update-source-url');
+
+  // Progress elements
+  const updateProgress = document.getElementById('update-progress');
+  const progressTitle = document.getElementById('progress-title');
+  const progressDescription = document.getElementById('progress-description');
+  const progressFill = document.getElementById('progress-fill');
+  const progressText = document.getElementById('progress-text');
+
+  // Update info elements
+  const updateInfo = document.getElementById('update-info');
+  const latestVersionDisplay = document.getElementById('latest-version-display');
+  const downloadUpdateBtn = document.getElementById('download-update-btn');
+  const skipUpdateBtn = document.getElementById('skip-update-btn');
+
+  // Set current version
+  if (currentVersionElement) {
+    currentVersionElement.textContent = '0.1.0'; // You should get this from tauri.conf.json
+  }
+  if (currentVersionDisplay) {
+    currentVersionDisplay.textContent = '0.1.0';
+  }
+
+  // Setup repository link
+  if (viewReleasesLink) {
+    viewReleasesLink.href = 'https://github.com/murdercode/presto/releases';
+    viewReleasesLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (window.__TAURI__?.shell) {
+        window.__TAURI__.shell.open('https://github.com/murdercode/presto/releases');
+      }
+    });
+  }
+
+  // Setup source URL
+  if (updateSourceUrl) {
+    updateSourceUrl.textContent = 'GitHub Releases API';
+  }
+
+  // Check for updates button
+  if (checkUpdatesBtn) {
+    checkUpdatesBtn.addEventListener('click', async () => {
+      checkUpdatesBtn.disabled = true;
+      showUpdateProgress('Checking for updates...', 'Please wait while we check for the latest version.');
+
+      try {
+        const hasUpdate = await updateManager.checkForUpdates(false);
+        hideUpdateProgress();
+
+        if (hasUpdate) {
+          showUpdateInfo(updateManager.currentUpdate);
+          updateStatus.innerHTML = '<span class="status-text update-available">Update available!</span>';
+        } else {
+          updateStatus.innerHTML = '<span class="status-text up-to-date">You\'re up to date!</span>';
+        }
+      } catch (error) {
+        hideUpdateProgress();
+        updateStatus.innerHTML = '<span class="status-text error">Check failed</span>';
+        console.error('Update check failed:', error);
+      } finally {
+        checkUpdatesBtn.disabled = false;
+      }
+    });
+  }
+
+  // Auto-check updates checkbox
+  if (autoCheckUpdates) {
+    autoCheckUpdates.checked = updateManager.autoCheck;
+    autoCheckUpdates.addEventListener('change', (e) => {
+      updateManager.setAutoCheck(e.target.checked);
+    });
+  }
+
+  // View changelog button
+  if (viewChangelogBtn) {
+    viewChangelogBtn.addEventListener('click', () => {
+      if (window.__TAURI__?.shell) {
+        window.__TAURI__.shell.open('https://github.com/murdercode/presto/releases');
+      }
+    });
+  }
+
+  // Download update button
+  if (downloadUpdateBtn) {
+    downloadUpdateBtn.addEventListener('click', async () => {
+      downloadUpdateBtn.disabled = true;
+      hideUpdateInfo();
+      showUpdateProgress('Downloading update...', 'Please wait while the update is downloaded and installed.');
+
+      await updateManager.downloadAndInstall();
+    });
+  }
+
+  // Skip update button
+  if (skipUpdateBtn) {
+    skipUpdateBtn.addEventListener('click', () => {
+      hideUpdateInfo();
+      updateStatus.innerHTML = '<span class="status-text">Update skipped</span>';
+    });
+  }
+
+  // Update manager event handlers
+  updateManager.on('checkStarted', () => {
+    if (updateStatus) {
+      updateStatus.innerHTML = '<span class="status-text checking">Checking for updates...</span>';
+    }
+  });
+
+  updateManager.on('updateAvailable', (event) => {
+    const update = event.detail;
+    if (updateStatus) {
+      updateStatus.innerHTML = '<span class="status-text update-available">Update available!</span>';
+    }
+    showUpdateInfo(update);
+  });
+
+  updateManager.on('updateNotAvailable', () => {
+    if (updateStatus) {
+      updateStatus.innerHTML = '<span class="status-text up-to-date">You\'re up to date!</span>';
+    }
+  });
+
+  updateManager.on('checkError', () => {
+    if (updateStatus) {
+      updateStatus.innerHTML = '<span class="status-text error">Check failed</span>';
+    }
+  });
+
+  updateManager.on('downloadProgress', (event) => {
+    const { progress } = event.detail;
+    updateProgressBar(progress);
+  });
+
+  updateManager.on('downloadFinished', () => {
+    showUpdateProgress('Installing...', 'The update will be applied when the app restarts.');
+    updateProgressBar(100);
+  });
+
+  // Helper functions
+  function showUpdateProgress(title, description) {
+    if (updateProgress) {
+      updateProgress.style.display = 'block';
+    }
+    if (progressTitle) {
+      progressTitle.textContent = title;
+    }
+    if (progressDescription) {
+      progressDescription.textContent = description;
+    }
+    updateProgressBar(0);
+  }
+
+  function hideUpdateProgress() {
+    if (updateProgress) {
+      updateProgress.style.display = 'none';
+    }
+  }
+
+  function updateProgressBar(progress) {
+    if (progressFill) {
+      progressFill.style.width = `${progress}%`;
+    }
+    if (progressText) {
+      progressText.textContent = `${progress}%`;
+    }
+  }
+
+  function showUpdateInfo(update) {
+    if (updateInfo && latestVersionDisplay) {
+      latestVersionDisplay.textContent = update.version;
+      updateInfo.style.display = 'block';
+    }
+  }
+
+  function hideUpdateInfo() {
+    if (updateInfo) {
+      updateInfo.style.display = 'none';
+    }
+  }
+
+  // Initial status
+  if (updateStatus) {
+    updateStatus.innerHTML = '<span class="status-text">Ready to check for updates</span>';
+  }
+
+  console.log('✅ Update management setup complete');
 }
 
 // Application lifecycle management

@@ -9,7 +9,7 @@
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet" />
   <link rel="stylesheet" href="styles/main.css" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tauri App</title>
+  <title>Presto</title>
   <script type="module" src="/main.js" defer></script>
 </head>
 
@@ -349,6 +349,10 @@
               <i class="ri-settings-3-line"></i>
               <span>Advanced</span>
             </button>
+            <button class="settings-nav-item nav-item-base" data-category="updates">
+              <i class="ri-download-line"></i>
+              <span>Updates</span>
+            </button>
           </nav>
         </div>
 
@@ -640,7 +644,8 @@
                   <span class="checkmark"></span>
                   Start with System
                 </label>
-                <p class="setting-description">Automatically start Tempo when your computer boots up. The app will start
+                <p class="setting-description">Automatically start Presto when your computer boots up. The app will
+                  start
                   minimized to the system tray.</p>
               </div>
             </div>
@@ -671,6 +676,123 @@
                   This will permanently delete all your Pomodoro sessions, tasks, statistics, and reset all settings to
                   default. This action cannot be undone.
                 </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Updates Settings -->
+          <div class="settings-category" id="category-updates">
+            <div class="category-header">
+              <h1>App Updates</h1>
+              <p class="category-description">Manage application updates and version information</p>
+            </div>
+
+            <div class="settings-section">
+              <h3>Current Version</h3>
+              <div class="setting-item">
+                <div class="version-info">
+                  <div class="current-version">
+                    <span class="version-label">Installed Version:</span>
+                    <span class="version-number" id="current-version">0.1.0</span>
+                  </div>
+                  <div class="update-status" id="update-status">
+                    <span class="status-text">Checking for updates...</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h3>Update Settings</h3>
+
+              <div class="setting-item">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="auto-check-updates" checked>
+                  <span class="checkmark"></span>
+                  Automatically check for updates
+                </label>
+                <p class="setting-description">Check for new versions automatically when the app starts and every hour.
+                  You'll be notified when updates are available.</p>
+              </div>
+
+              <div class="setting-item">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="include-prerelease">
+                  <span class="checkmark"></span>
+                  Include pre-release versions
+                </label>
+                <p class="setting-description">Also check for beta and pre-release versions. These may contain new
+                  features but could be less stable.</p>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h3>Update Actions</h3>
+
+              <div class="update-actions">
+                <button class="btn btn-primary" id="check-updates-btn">
+                  <i class="ri-refresh-line"></i>
+                  Check for Updates
+                </button>
+                <button class="btn btn-secondary" id="view-changelog-btn">
+                  <i class="ri-file-text-line"></i>
+                  View Changelog
+                </button>
+              </div>
+
+              <div class="update-progress" id="update-progress" style="display: none;">
+                <div class="progress-info">
+                  <h4 id="progress-title">Checking for updates...</h4>
+                  <p id="progress-description">Please wait while we check for the latest version.</p>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                  <span class="progress-text" id="progress-text">0%</span>
+                </div>
+              </div>
+
+              <div class="update-info" id="update-info" style="display: none;">
+                <div class="update-details">
+                  <h4>Update Available</h4>
+                  <div class="version-comparison">
+                    <div class="version-item">
+                      <span class="version-label">Current:</span>
+                      <span class="version-value" id="current-version-display">0.1.0</span>
+                    </div>
+                    <div class="version-arrow">→</div>
+                    <div class="version-item">
+                      <span class="version-label">Latest:</span>
+                      <span class="version-value" id="latest-version-display">0.2.0</span>
+                    </div>
+                  </div>
+                  <div class="update-actions">
+                    <button class="btn btn-primary" id="download-update-btn">
+                      <i class="ri-download-line"></i>
+                      Download & Install
+                    </button>
+                    <button class="btn btn-secondary" id="skip-update-btn">
+                      <i class="ri-close-line"></i>
+                      Skip This Version
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h3>Release Information</h3>
+              <div class="release-info">
+                <p class="setting-description">
+                  Updates are distributed through GitHub releases.
+                  <a href="#" id="view-releases-link" class="external-link">
+                    <i class="ri-external-link-line"></i>
+                    View all releases on GitHub
+                  </a>
+                </p>
+                <div class="update-source">
+                  <span class="source-label">Update Source:</span>
+                  <code class="source-url" id="update-source-url">GitHub Releases</code>
+                </div>
               </div>
             </div>
           </div>

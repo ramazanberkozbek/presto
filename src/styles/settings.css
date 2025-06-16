@@ -381,6 +381,262 @@
   line-height: 1.4;
 }
 
+/* Update Settings Styles */
+
+/* Version Information */
+.version-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--background-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.current-version {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.version-label {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.version-number {
+  font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--background-primary);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.update-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.status-text.checking {
+  color: var(--accent-color);
+}
+
+.status-text.up-to-date {
+  color: var(--success-color);
+}
+
+.status-text.update-available {
+  color: var(--warning-color);
+}
+
+.status-text.error {
+  color: var(--error-color);
+}
+
+/* Update Actions */
+.update-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.update-actions .btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.update-actions .btn-primary {
+  background: var(--accent-color);
+  color: white;
+}
+
+.update-actions .btn-primary:hover {
+  background: var(--accent-color-hover);
+  transform: translateY(-1px);
+}
+
+.update-actions .btn-secondary {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.update-actions .btn-secondary:hover {
+  background: var(--background-secondary);
+  border-color: var(--border-color-hover);
+}
+
+/* Update Progress */
+.update-progress {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--background-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.progress-info {
+  margin-bottom: 12px;
+}
+
+.progress-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.progress-info p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.progress-bar {
+  position: relative;
+  height: 8px;
+  background: var(--background-primary);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent-color);
+  transition: width 0.3s ease;
+  border-radius: 3px;
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+}
+
+/* Update Info */
+.update-info {
+  margin-top: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, var(--accent-color-light) 0%, var(--accent-color-lighter) 100%);
+  border-radius: 12px;
+  border: 1px solid var(--accent-color-border);
+}
+
+.update-details h4 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.version-comparison {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.version-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.version-item .version-label {
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-tertiary);
+}
+
+.version-item .version-value {
+  font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text-primary);
+  background: var(--background-primary);
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.version-arrow {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--accent-color);
+  margin: 0 8px;
+}
+
+/* Release Information */
+.release-info {
+  padding: 16px;
+  background: var(--background-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.external-link {
+  color: var(--accent-color);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.external-link:hover {
+  color: var(--accent-color-hover);
+  text-decoration: underline;
+}
+
+.update-source {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.source-label {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.source-url {
+  font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+  font-size: 12px;
+  background: var(--background-primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
 /* Settings specific responsive overrides */
 @media (max-width: 768px) {
 
