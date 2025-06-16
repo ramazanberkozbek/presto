@@ -64,15 +64,23 @@ struct TimerSettings {
     break_duration: u32,
     long_break_duration: u32,
     total_sessions: u32,
+    #[serde(default = "default_weekly_goal")]
+    weekly_goal_minutes: u32,
+}
+
+fn default_weekly_goal() -> u32 {
+    125
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 struct NotificationSettings {
     desktop_notifications: bool,
     sound_notifications: bool,
-    auto_start_breaks: bool,
+    auto_start_timer: bool,
     #[serde(default)]
     auto_start_focus: bool,
+    #[serde(default)]
+    allow_continuous_sessions: bool,
     smart_pause: bool,
     smart_pause_timeout: u32, // timeout in seconds
 }
@@ -102,12 +110,14 @@ impl Default for AppSettings {
                 break_duration: 5,
                 long_break_duration: 20,
                 total_sessions: 10,
+                weekly_goal_minutes: 125,
             },
             notifications: NotificationSettings {
                 desktop_notifications: true,
                 sound_notifications: true,
-                auto_start_breaks: true,
+                auto_start_timer: true,
                 auto_start_focus: false, // default to disabled
+                allow_continuous_sessions: false, // default to disabled
                 smart_pause: false,
                 smart_pause_timeout: 30, // default 30 seconds
             },
