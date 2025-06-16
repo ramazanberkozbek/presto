@@ -92,6 +92,8 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+          includeDebug: false
+          includeRelease: true
 
   publish-release:
     needs: build-and-release

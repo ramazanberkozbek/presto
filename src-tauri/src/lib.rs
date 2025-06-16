@@ -473,14 +473,14 @@ async fn update_tray_icon(
     mode_icon: Option<String>,
 ) -> Result<(), String> {
     use std::sync::{Arc, Mutex};
-    
+
     // Use Arc<Mutex<Result<(), String>>> to capture the result from the main thread
     let result = Arc::new(Mutex::new(Ok(())));
     let result_clone = Arc::clone(&result);
-    
+
     // Clone the app handle to move into the closure
     let app_clone = app.clone();
-    
+
     // Move the operation to the main thread using Tauri's app handle
     // This ensures macOS tray operations run on the main thread
     app.run_on_main_thread(move || {
@@ -495,7 +495,8 @@ async fn update_tray_icon(
                     _ => "⏱️".to_string(),
                 });
 
-                let status = if is_running { "Running" } else { "Paused" };                let title = format!("{} {}", icon, timer_text);
+                let status = if is_running { "Running" } else { "Paused" };
+                let title = format!("{} {}", icon, timer_text);
                 tray.set_title(Some(title))
                     .map_err(|e| format!("Failed to set title: {}", e))?;
 
@@ -523,7 +524,7 @@ async fn update_tray_icon(
         })();
     })
     .map_err(|e| format!("Failed to run on main thread: {}", e))?;
-    
+
     // Extract the result from the mutex
     let final_result = result.lock().unwrap().clone();
     final_result
