@@ -387,6 +387,7 @@
 
 /* Settings specific responsive overrides */
 @media (max-width: 768px) {
+
   /* Settings Layout Mobile */
   .settings-layout {
     flex-direction: column;
@@ -414,12 +415,15 @@
     overflow-x: auto;
     padding: 0 1rem;
     gap: 0.25rem;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
   }
 
   .settings-nav::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
+    display: none;
+    /* Chrome/Safari */
   }
 
   .settings-nav-item {
@@ -733,6 +737,7 @@
 
 /* Accessibility improvements */
 @media (prefers-reduced-motion: reduce) {
+
   .settings-category,
   .theme-option,
   .shortcut-input,
