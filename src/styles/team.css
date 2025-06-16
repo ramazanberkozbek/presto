@@ -1,5 +1,13 @@
 /* Team View Styles */
 
+#team-view {
+  background-color: #f6f6f6 !important;
+  min-height: 100vh;
+  max-width: 1200px;
+  padding: 2rem !important;
+  box-sizing: border-box;
+}
+
 /* Team specific subtitle */
 .team-subtitle {
   text-align: center;
@@ -179,6 +187,54 @@
   border-left-color: #95a5a6;
   background: rgba(149, 165, 166, 0.05);
   opacity: 0.6;
+}
+
+/* Dark theme styles for team */
+[data-theme="dark"] #team-view {
+  background-color: #0f172a !important;
+}
+
+[data-theme="dark"] .team-stat-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .team-member-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .member-row {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .member-row:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Auto theme dark styles for team */
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] #team-view {
+    background-color: #0f172a !important;
+  }
+
+  [data-theme="auto"] .team-stat-card {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  [data-theme="auto"] .team-member-card {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  [data-theme="auto"] .member-row {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  [data-theme="auto"] .member-row:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
 }
 
 /* Team specific responsive overrides */

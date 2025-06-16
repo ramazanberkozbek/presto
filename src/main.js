@@ -316,7 +316,7 @@ async function initializeEarlyTheme() {
     }
   } catch (error) {
     console.log('🎨 Could not load theme from settings, using localStorage fallback');
-    
+
     // Still initialize timer theme with fallback
     const storedTimerTheme = localStorage.getItem('timer-theme-preference') || 'espresso';
     document.documentElement.setAttribute('data-timer-theme', storedTimerTheme);

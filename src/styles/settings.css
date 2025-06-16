@@ -345,6 +345,114 @@
   border: 1px solid #f0f0f0;
 }
 
+/* Dark theme styles for settings */
+[data-theme="dark"] .setting-item,
+[data-theme="dark"] .shortcut-item {
+  background: #334155;
+  border-color: #475569;
+}
+
+[data-theme="dark"] .setting-item:hover,
+[data-theme="dark"] .shortcut-item:hover {
+  border-color: rgba(155, 89, 182, 0.4);
+  background: #475569;
+}
+
+[data-theme="dark"] .settings-actions {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .theme-selector {
+  background: #334155;
+  border-color: #475569;
+}
+
+[data-theme="dark"] .timer-theme-option {
+  background: #334155;
+  border-color: #475569;
+}
+
+[data-theme="dark"] .timer-theme-option:hover {
+  border-color: rgba(155, 89, 182, 0.4);
+  background: #475569;
+}
+
+[data-theme="dark"] .timer-theme-option.active {
+  background: rgba(155, 89, 182, 0.15);
+  border-color: var(--accent-color);
+}
+
+[data-theme="dark"] .theme-option.active:hover {
+  background: var(--accent-color) !important;
+  color: white !important;
+}
+
+[data-theme="dark"] .danger-zone {
+  background: #1a0f0f !important;
+  border-color: #dc3545 !important;
+}
+
+[data-theme="dark"] .settings-section:has(input#debug-mode) {
+  background: #0c1a1f !important;
+  border-color: rgba(23, 162, 184, 0.4) !important;
+}
+
+/* Auto theme dark styles for settings */
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] .setting-item,
+  [data-theme="auto"] .shortcut-item {
+    background: #334155;
+    border-color: #475569;
+  }
+
+  [data-theme="auto"] .setting-item:hover,
+  [data-theme="auto"] .shortcut-item:hover {
+    border-color: rgba(155, 89, 182, 0.4);
+    background: #475569;
+  }
+
+  [data-theme="auto"] .settings-actions {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  [data-theme="auto"] .theme-selector {
+    background: #334155;
+    border-color: #475569;
+  }
+
+  [data-theme="auto"] .timer-theme-option {
+    background: #334155;
+    border-color: #475569;
+  }
+
+  [data-theme="auto"] .timer-theme-option:hover {
+    border-color: rgba(155, 89, 182, 0.4);
+    background: #475569;
+  }
+
+  [data-theme="auto"] .timer-theme-option.active {
+    background: rgba(155, 89, 182, 0.15);
+    border-color: var(--accent-color);
+  }
+
+  [data-theme="auto"] .theme-option.active:hover {
+    background: var(--accent-color) !important;
+    color: white !important;
+  }
+
+  [data-theme="auto"] .danger-zone {
+    background: #1a0f0f !important;
+    border-color: #dc3545 !important;
+  }
+
+  [data-theme="auto"] .settings-section:has(input#debug-mode) {
+    background: #0c1a1f !important;
+    border-color: rgba(23, 162, 184, 0.4) !important;
+  }
+}
+
 .auto-save-info {
   display: flex;
   align-items: center;

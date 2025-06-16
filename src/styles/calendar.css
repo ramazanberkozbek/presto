@@ -571,3 +571,129 @@
   font-size: 0.95rem;
   font-weight: 600;
 }
+
+/* Dark theme styles for calendar and statistics cards */
+[data-theme="dark"] .calendar-container,
+[data-theme="dark"] .daily-details,
+[data-theme="dark"] .weekly-summary,
+[data-theme="dark"] .focus-summary-card,
+[data-theme="dark"] .weekly-chart-card,
+[data-theme="dark"] .daily-chart-card,
+[data-theme="dark"] .mini-calendar-container {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .week-selector {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .calendar-day {
+  background: #334155;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .calendar-day:hover {
+  background: #475569;
+}
+
+[data-theme="dark"] .calendar-day.today {
+  background: var(--accent-color);
+  color: white;
+}
+
+[data-theme="dark"] .calendar-day.has-sessions {
+  border-color: var(--focus-color);
+  background: rgba(231, 76, 60, 0.2);
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .calendar-day.selected {
+  background: var(--accent-color);
+  color: white;
+}
+
+[data-theme="dark"] .weekly-chart {
+  background: #334155;
+  border-color: #475569;
+}
+
+[data-theme="dark"] .stat-item {
+  background: #334155;
+  border-color: #475569;
+  border-left-color: var(--accent-color);
+}
+
+[data-theme="dark"] .hour-bar-empty {
+  background: #475569;
+}
+
+[data-theme="dark"] .focus-metric {
+  color: #e2e8f0;
+}
+
+/* Auto theme dark styles for calendar and statistics */
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] .calendar-container,
+  [data-theme="auto"] .daily-details,
+  [data-theme="auto"] .weekly-summary,
+  [data-theme="auto"] .focus-summary-card,
+  [data-theme="auto"] .weekly-chart-card,
+  [data-theme="auto"] .daily-chart-card,
+  [data-theme="auto"] .mini-calendar-container {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  [data-theme="auto"] .week-selector {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  [data-theme="auto"] .calendar-day {
+    background: #334155;
+    border-color: #475569;
+    color: #e2e8f0;
+  }
+
+  [data-theme="auto"] .calendar-day:hover {
+    background: #475569;
+  }
+
+  [data-theme="auto"] .calendar-day.today {
+    background: var(--accent-color);
+    color: white;
+  }
+
+  [data-theme="auto"] .calendar-day.has-sessions {
+    border-color: var(--focus-color);
+    background: rgba(231, 76, 60, 0.2);
+    color: #fca5a5;
+  }
+
+  [data-theme="auto"] .calendar-day.selected {
+    background: var(--accent-color);
+    color: white;
+  }
+
+  [data-theme="auto"] .weekly-chart {
+    background: #334155;
+    border-color: #475569;
+  }
+
+  [data-theme="auto"] .stat-item {
+    background: #334155;
+    border-color: #475569;
+    border-left-color: var(--accent-color);
+  }
+
+  [data-theme="auto"] .hour-bar-empty {
+    background: #475569;
+  }
+
+  [data-theme="auto"] .focus-metric {
+    color: #e2e8f0;
+  }
+}
