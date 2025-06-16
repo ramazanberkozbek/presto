@@ -62,8 +62,8 @@
 ## 🔑 Key Information
 
 ### Your Generated Keys
-- **Private Key**: `~/.tauri/tempo_signing_key`
-- **Public Key**: `~/.tauri/tempo_signing_key.pub` 
+- **Private Key**: `~/.tauri/presto_signing_key`
+- **Public Key**: `~/.tauri/presto_signing_key.pub` 
 - **Password**: `Be5"Rud3-Ji3`
 
 ### Repository Configuration
@@ -76,7 +76,7 @@
 ### For Immediate Testing
 1. **Add GitHub Secrets**:
    ```
-   TAURI_SIGNING_PRIVATE_KEY: (content of ~/.tauri/tempo_signing_key)
+   TAURI_SIGNING_PRIVATE_KEY: (content of ~/.tauri/presto_signing_key)
    TAURI_SIGNING_PRIVATE_KEY_PASSWORD: Be5"Rud3-Ji3
    ```
 

@@ -489,12 +489,12 @@ async fn update_tray_icon(
 
         let tooltip = if session_mode == "focus" {
             format!(
-                "Tempo - Session {}/{} ({})",
+                "Presto - Session {}/{} ({})",
                 current_session, total_sessions, status
             )
         } else {
             format!(
-                "Tempo - {} ({})",
+                "Presto - {} ({})",
                 if session_mode == "longBreak" {
                     "Long Break"
                 } else {
@@ -726,7 +726,7 @@ pub fn run() {
             is_autostart_enabled
         ])
         .setup(|app| {
-            let show_item = MenuItem::with_id(app, "show", "Mostra Tempo", true, None::<&str>)?;
+            let show_item = MenuItem::with_id(app, "show", "Mostra Presto", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "Esci", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
 

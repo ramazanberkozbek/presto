@@ -65,7 +65,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: 'Tempo v__VERSION__'
+          releaseName: 'Presto v__VERSION__'
           releaseBody: |
             ## What's Changed
             
@@ -74,15 +74,15 @@ jobs:
             ### Installation Notes
             
             **macOS**: Download the `.dmg` file for your architecture:
-            - `tempo_x.x.x_aarch64.dmg` for Apple Silicon (M1/M2/M3 Macs)
-            - `tempo_x.x.x_x64.dmg` for Intel Macs
+            - `presto_x.x.x_aarch64.dmg` for Apple Silicon (M1/M2/M3 Macs)
+            - `presto_x.x.x_x64.dmg` for Intel Macs
             
             **Windows**: Download the `.msi` file:
-            - `tempo_x.x.x_x64_en-US.msi` for 64-bit Windows
+            - `presto_x.x.x_x64_en-US.msi` for 64-bit Windows
             
             **Linux**: Download the `.AppImage` or `.deb` file:
-            - `tempo_x.x.x_amd64.AppImage` for portable installation
-            - `tempo_x.x.x_amd64.deb` for Debian/Ubuntu systems
+            - `presto_x.x.x_amd64.AppImage` for portable installation
+            - `presto_x.x.x_amd64.deb` for Debian/Ubuntu systems
             
             ### Auto-Updates
             

@@ -754,7 +754,7 @@ export class SettingsManager {
             if (enabled) {
                 await invoke('enable_autostart');
                 console.log('Autostart enabled');
-                NotificationUtils.showNotificationPing('✓ Autostart enabled - Tempo will start with your system', 'success');
+                NotificationUtils.showNotificationPing('✓ Autostart enabled - Presto will start with your system', 'success');
             } else {
                 await invoke('disable_autostart');
                 console.log('Autostart disabled');

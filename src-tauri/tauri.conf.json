@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "tempo",
+  "productName": "presto",
   "version": "0.1.0",
-  "identifier": "com.tempo.app",
+  "identifier": "com.presto.app",
   "build": {
     "frontendDist": "../src"
   },
@@ -10,11 +10,11 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "tempo",
+        "title": "presto",
         "width": 800,
         "height": 600,
         "closable": true,
-        "hiddenTitle": false,
+        "hiddenTitle": true,
         "minimizable": true,
         "resizable": true
       }

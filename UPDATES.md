@@ -1,6 +1,6 @@
 # Automatic Updates Configuration
 
-This guide will help you configure the automatic update system for your Tempo application.
+This guide will help you configure the automatic update system for your Presto application.
 
 ## 🔐 Step 1: Generate Signing Keys
 
@@ -45,7 +45,7 @@ Replace:
 
 In your GitHub repository, go to **Settings** → **Secrets and variables** → **Actions** and add:
 
-1. **TAURI_SIGNING_PRIVATE_KEY**: The generated private key (content of `~/.tauri/tempo_signing_key` file)
+1. **TAURI_SIGNING_PRIVATE_KEY**: The generated private key (content of `~/.tauri/presto_signing_key` file)
 2. **TAURI_SIGNING_PRIVATE_KEY_PASSWORD**: The key password (leave empty if you didn't set one)
 
 ### Verify the Workflow

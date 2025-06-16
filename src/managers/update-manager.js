@@ -389,7 +389,7 @@ export class UpdateManager {
 
         // Salva la preferenza nell'storage locale
         try {
-            localStorage.setItem('tempo_auto_check_updates', enabled.toString());
+            localStorage.setItem('presto_auto_check_updates', enabled.toString());
         } catch (error) {
             console.warn('Non riesco a salvare la preferenza auto-check:', error);
         }
@@ -400,7 +400,7 @@ export class UpdateManager {
      */
     loadPreferences() {
         try {
-            const autoCheck = localStorage.getItem('tempo_auto_check_updates');
+            const autoCheck = localStorage.getItem('presto_auto_check_updates');
             if (autoCheck !== null) {
                 this.setAutoCheck(autoCheck === 'true');
             }

@@ -1,12 +1,12 @@
 # Quick Setup Guide for Automatic Updates
 
-This is a condensed guide for developers who want to quickly set up automatic updates for their Tempo fork.
+This is a condensed guide for developers who want to quickly set up automatic updates for their Presto fork.
 
 ## ⚡ Quick Setup (5 minutes)
 
 ### 1. Generate Keys
 ```bash
-npx tauri signer generate -w ~/.tauri/tempo_signing_key --password "your_secure_password"
+npx tauri signer generate -w ~/.tauri/presto_signing_key --password "your_secure_password"
 ```
 
 ### 2. Get Public Key

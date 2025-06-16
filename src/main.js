@@ -1,4 +1,4 @@
-// Main Application Entry Point - Tempo Pomodoro Timer
+// Main Application Entry Point - Presto Pomodoro Timer
 import { NavigationManager } from './managers/navigation-manager.js';
 import { SettingsManager } from './managers/settings-manager.js';
 import { SessionManager } from './managers/session-manager.js';
@@ -375,7 +375,7 @@ async function requestNotificationPermission() {
 // Initialize the application
 async function initializeApplication() {
   try {
-    console.log('🚀 Initializing Tempo application...');
+    console.log('🚀 Initializing Presto application...');
 
     // Initialize theme as early as possible
     await initializeEarlyTheme();
@@ -429,7 +429,7 @@ async function initializeApplication() {
     console.log('✅ Application initialized successfully!');
 
     // Show welcome notification
-    NotificationUtils.showNotificationPing('Welcome to Tempo! 🍅', null, 'focus');
+    NotificationUtils.showNotificationPing('Welcome to Presto! 🍅', null, 'focus');
 
   } catch (error) {
     console.error('❌ Failed to initialize application:', error);
