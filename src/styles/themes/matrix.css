@@ -39,6 +39,29 @@
     --break-secondary-btn: rgba(57, 255, 20, 0.1);
     --long-break-secondary-btn: rgba(0, 204, 51, 0.1);
 
+    /* Shared Component Colors */
+    --shared-bg: #000011;
+    --shared-border: #003300;
+    --shared-text: #00ff41;
+
+    /* Additional theme colors */
+    --card-bg: #000011;
+    --card-border: #003300;
+    --stat-border: #003300;
+    --day-stat-bg: #001100;
+    --hover-bg: #001a00;
+    --row-bg: rgba(0, 255, 65, 0.05);
+    --row-hover-bg: rgba(0, 255, 65, 0.1);
+    --focus-bg-alpha: rgba(0, 255, 65, 0.2);
+    --text-on-focus: #000000;
+
+    /* Settings components */
+    --setting-item-bg: #001100;
+    --setting-item-hover-bg: #002200;
+    --setting-item-hover-border: rgba(0, 255, 65, 0.3);
+    --input-border: #003300;
+    --input-focus-shadow: rgba(0, 255, 65, 0.2);
+
     /* Colori aggiuntivi per effetti Matrix */
     --matrix-bg: #000000;
     --matrix-text: #00ff41;
@@ -406,4 +429,46 @@
 :root[data-timer-theme="matrix"] body {
     background: rgba(0, 16, 0, 1);
     border-radius: 0;
+}
+
+/* === SHARED COMPONENTS STYLES === */
+/* Stili per statistiche e impostazioni nel tema Matrix */
+
+:root[data-timer-theme="matrix"] .view-section {
+    background-color: var(--shared-bg) !important;
+}
+
+:root[data-timer-theme="matrix"] .base-card,
+:root[data-timer-theme="matrix"] .base-card-compact,
+:root[data-timer-theme="matrix"] .base-section {
+    background: var(--card-bg);
+    border-color: var(--card-border);
+}
+
+:root[data-timer-theme="matrix"] .stat-card {
+    background: var(--card-bg);
+    border-color: var(--stat-border);
+}
+
+:root[data-timer-theme="matrix"] .setting-item {
+    background: var(--setting-item-bg);
+}
+
+:root[data-timer-theme="matrix"] .setting-item:hover {
+    background: var(--setting-item-hover-bg);
+    border-color: var(--setting-item-hover-border);
+}
+
+:root[data-timer-theme="matrix"] .setting-item input[type="number"] {
+    border-color: var(--input-border);
+}
+
+:root[data-timer-theme="matrix"] .setting-item input[type="number"]:focus {
+    border-color: var(--focus-color);
+    box-shadow: 0 0 0 3px var(--input-focus-shadow);
+}
+
+:root[data-timer-theme="matrix"] .day-stat-base {
+    background: var(--day-stat-bg);
+    border-color: transparent;
 }

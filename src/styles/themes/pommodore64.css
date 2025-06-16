@@ -45,6 +45,29 @@
     /* Blu molto chiaro */
     --long-break-secondary-btn: #e8fff5;
     /* Verde molto chiaro */
+
+    /* Shared Component Colors */
+    --shared-bg: #f5f6fa;
+    --shared-border: #ddd;
+    --shared-text: #2d3436;
+
+    /* Additional theme colors */
+    --card-bg: #ffffff;
+    --card-border: #e1e5e9;
+    --stat-border: #e1e5e9;
+    --day-stat-bg: #f1f2f6;
+    --hover-bg: #f1f2f6;
+    --row-bg: rgba(108, 92, 231, 0.02);
+    --row-hover-bg: rgba(108, 92, 231, 0.05);
+    --focus-bg-alpha: rgba(108, 92, 231, 0.1);
+    --text-on-focus: white;
+
+    /* Settings components */
+    --setting-item-bg: #f1f2f6;
+    --setting-item-hover-bg: #e9ecef;
+    --setting-item-hover-border: rgba(108, 92, 231, 0.2);
+    --input-border: #ddd;
+    --input-focus-shadow: rgba(108, 92, 231, 0.1);
 }
 
 /* Font moderno override per il tema Pommodore64 */
@@ -255,4 +278,46 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.6rem;
     font-weight: 500;
+}
+
+/* === SHARED COMPONENTS STYLES === */
+/* Stili per statistiche e impostazioni nel tema Pommodore64 */
+
+:root[data-timer-theme="pommodore64"] .view-section {
+    background-color: var(--shared-bg) !important;
+}
+
+:root[data-timer-theme="pommodore64"] .base-card,
+:root[data-timer-theme="pommodore64"] .base-card-compact,
+:root[data-timer-theme="pommodore64"] .base-section {
+    background: var(--card-bg);
+    border-color: var(--card-border);
+}
+
+:root[data-timer-theme="pommodore64"] .stat-card {
+    background: var(--card-bg);
+    border-color: var(--stat-border);
+}
+
+:root[data-timer-theme="pommodore64"] .setting-item {
+    background: var(--setting-item-bg);
+}
+
+:root[data-timer-theme="pommodore64"] .setting-item:hover {
+    background: var(--setting-item-hover-bg);
+    border-color: var(--setting-item-hover-border);
+}
+
+:root[data-timer-theme="pommodore64"] .setting-item input[type="number"] {
+    border-color: var(--input-border);
+}
+
+:root[data-timer-theme="pommodore64"] .setting-item input[type="number"]:focus {
+    border-color: var(--focus-color);
+    box-shadow: 0 0 0 3px var(--input-focus-shadow);
+}
+
+:root[data-timer-theme="pommodore64"] .day-stat-base {
+    background: var(--day-stat-bg);
+    border-color: transparent;
 }

@@ -4,11 +4,11 @@
 
 /* Calendar specific containers - extend base-card styling */
 .calendar-container {
-  background: white;
+  background: var(--card-bg);
   border-radius: 20px;
   padding: 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px var(--shared-border);
 }
 
 .calendar-header {
@@ -30,7 +30,7 @@
   border: none;
   border-radius: 50%;
   background: var(--accent-color);
-  color: white;
+  color: var(--text-on-focus);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -40,7 +40,7 @@
 }
 
 .nav-btn:hover {
-  background: #1a252f;
+  background: var(--focus-timer-color);
   transform: scale(1.1);
 }
 
@@ -60,37 +60,37 @@
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
-  background: #f8f9fa;
+  background: var(--setting-item-bg);
   border: 2px solid transparent;
 }
 
 .calendar-day:hover {
-  background: #e9ecef;
+  background: var(--setting-item-hover-bg);
   transform: scale(1.05);
 }
 
 .calendar-day.today {
   background: var(--accent-color);
-  color: white;
+  color: var(--text-on-focus);
   font-weight: 600;
 }
 
 .calendar-day.has-sessions {
   border-color: var(--focus-color);
-  background: rgba(231, 76, 60, 0.15);
-  color: #2c3e50;
+  background: var(--focus-bg-alpha);
+  color: var(--shared-text);
   font-weight: 600;
 }
 
 .calendar-day.selected {
   background: var(--accent-color);
-  color: white;
+  color: var(--text-on-focus);
   font-weight: 600;
-  border-color: #1a252f;
+  border-color: var(--focus-timer-color);
 }
 
 .calendar-day.selected .calendar-dot {
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--text-on-focus);
 }
 
 .calendar-day-number {
@@ -126,11 +126,11 @@
 
 /* Daily Details Styles */
 .daily-details {
-  background: white;
+  background: var(--card-bg);
   border-radius: 20px;
   padding: 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px var(--shared-border);
 }
 
 .day-stats {
@@ -145,7 +145,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background: #f8f9fa;
+  background: var(--setting-item-bg);
   border-radius: 12px;
   border-left: 4px solid var(--accent-color);
 }
@@ -163,10 +163,10 @@
 
 /* Weekly Summary Styles */
 .weekly-summary {
-  background: white;
+  background: var(--card-bg);
   border-radius: 20px;
   padding: 2rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px var(--shared-border);
 }
 
 .week-chart {
@@ -179,7 +179,7 @@
 
 .week-bar {
   flex: 1;
-  background: linear-gradient(180deg, var(--focus-color), #c0392b);
+  background: linear-gradient(180deg, var(--focus-color), var(--focus-timer-color));
   border-radius: 8px 8px 0 0;
   min-height: 20px;
   position: relative;
@@ -189,7 +189,7 @@
 
 .week-bar:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+  box-shadow: 0 4px 12px var(--focus-bg-alpha);
 }
 
 .week-bar-label {
@@ -220,9 +220,9 @@
   margin-bottom: 1rem;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  background: white;
+  background: var(--card-bg);
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px var(--shared-border);
 }
 
 .week-display {
@@ -257,10 +257,10 @@
 
 /* Focus Summary Card */
 .focus-summary-card {
-  background: white;
+  background: var(--card-bg);
   border-radius: 15px;
   padding: 1.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px var(--shared-border);
 }
 
 .focus-summary-card h3 {
@@ -309,18 +309,18 @@
 }
 
 .metric-change.positive {
-  color: #27ae60;
-  background: rgba(39, 174, 96, 0.1);
+  color: var(--break-color);
+  background: var(--break-bg);
 }
 
 .metric-change.negative {
-  color: #e74c3c;
-  background: rgba(231, 76, 60, 0.1);
+  color: var(--focus-color);
+  background: var(--focus-bg);
 }
 
 .metric-change.neutral {
-  color: #95a5a6;
-  background: rgba(149, 165, 166, 0.1);
+  color: var(--shared-text);
+  background: var(--setting-item-bg);
 }
 
 .metric-label {
@@ -332,10 +332,10 @@
 
 /* Weekly Chart Card */
 .weekly-chart-card {
-  background: white;
+  background: var(--card-bg);
   border-radius: 15px;
   padding: 1.25rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px var(--shared-border);
 }
 
 .weekly-chart-card h3 {
@@ -353,7 +353,7 @@
   gap: 8px;
   margin-bottom: 0.5rem;
   padding: 0.5rem;
-  background: #f8f9fa;
+  background: var(--setting-item-bg);
   border-radius: 8px;
 }
 
@@ -370,7 +370,7 @@
 
 .week-day-bar:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+  box-shadow: 0 4px 12px var(--focus-bg-alpha);
 }
 
 .week-day-bar-value {
@@ -396,10 +396,10 @@
 
 /* Daily Chart Card */
 .daily-chart-card {
-  background: white;
+  background: var(--card-bg);
   border-radius: 15px;
   padding: 1.25rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px var(--shared-border);
   flex: 1;
   overflow: visible;
   /* Allow tooltips to show outside the card */
@@ -424,7 +424,7 @@
   /* Increased margin for hour labels */
   padding: 1rem 0.5rem 2rem 0.5rem;
   /* Added top padding for tooltips and bottom for labels */
-  background: #f8f9fa;
+  background: var(--setting-item-bg);
   border-radius: 8px;
   overflow-x: auto;
   overflow-y: visible;
@@ -437,7 +437,7 @@
   /* Reduced minimum width */
   max-width: 18px;
   /* Added max width to prevent bars from being too wide */
-  background: #e9ecef;
+  background: var(--input-border);
   /* Light background for empty hours */
   border-radius: 3px;
   position: relative;
@@ -450,13 +450,13 @@
 
 .hour-bar:hover {
   transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 16px var(--shared-border);
   z-index: 10;
 }
 
 /* Empty hour styling */
 .hour-bar-empty {
-  background: #e9ecef;
+  background: var(--input-border);
   opacity: 0.6;
 }
 
@@ -498,8 +498,8 @@
 /* Custom tooltip will be handled by JavaScript - no CSS needed */
 .custom-tooltip {
   position: absolute;
-  background: rgba(0, 0, 0, 0.9);
-  color: white;
+  background: var(--shared-text);
+  color: var(--card-bg);
   padding: 8px 12px;
   border-radius: 6px;
   font-size: 0.75rem;
@@ -507,7 +507,7 @@
   white-space: nowrap;
   z-index: 10000;
   pointer-events: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px var(--shared-border);
   min-width: 120px;
   text-align: center;
   opacity: 0;
@@ -544,10 +544,10 @@
 
 /* Mini Calendar Container */
 .mini-calendar-container {
-  background: white;
+  background: var(--card-bg);
   border-radius: 15px;
   padding: 1.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px var(--shared-border);
   height: fit-content;
 }
 
@@ -562,7 +562,7 @@
 .selected-day-details {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--shared-border);
 }
 
 .selected-day-details h4 {
@@ -572,130 +572,4 @@
   font-weight: 600;
 }
 
-/* Dark theme styles for calendar and statistics cards */
-[data-theme="dark"] .calendar-container,
-[data-theme="dark"] .daily-details,
-[data-theme="dark"] .weekly-summary,
-[data-theme="dark"] .focus-summary-card,
-[data-theme="dark"] .weekly-chart-card,
-[data-theme="dark"] .daily-chart-card,
-[data-theme="dark"] .mini-calendar-container {
-  background: var(--setting-item-hover-bg);
-  border-color: var(--setting-item-hover-border);
-}
-
-[data-theme="dark"] .week-selector {
-  background: var(--setting-item-hover-bg);
-  border-color: var(--setting-item-hover-border);
-  color: var(--text-light);
-}
-
-[data-theme="dark"] .calendar-day {
-  background: #334155;
-  border-color: #475569;
-  color: #e2e8f0;
-}
-
-[data-theme="dark"] .calendar-day:hover {
-  background: #475569;
-}
-
-[data-theme="dark"] .calendar-day.today {
-  background: var(--accent-color);
-  color: white;
-}
-
-[data-theme="dark"] .calendar-day.has-sessions {
-  border-color: var(--focus-color);
-  background: rgba(231, 76, 60, 0.2);
-  color: #fca5a5;
-}
-
-[data-theme="dark"] .calendar-day.selected {
-  background: var(--accent-color);
-  color: white;
-}
-
-[data-theme="dark"] .weekly-chart {
-  background: #334155;
-  border-color: #475569;
-}
-
-[data-theme="dark"] .stat-item {
-  background: #334155;
-  border-color: #475569;
-  border-left-color: var(--accent-color);
-}
-
-[data-theme="dark"] .hour-bar-empty {
-  background: #475569;
-}
-
-[data-theme="dark"] .focus-metric {
-  color: #e2e8f0;
-}
-
-/* Auto theme dark styles for calendar and statistics */
-@media (prefers-color-scheme: dark) {
-
-  [data-theme="auto"] .calendar-container,
-  [data-theme="auto"] .daily-details,
-  [data-theme="auto"] .weekly-summary,
-  [data-theme="auto"] .focus-summary-card,
-  [data-theme="auto"] .weekly-chart-card,
-  [data-theme="auto"] .daily-chart-card,
-  [data-theme="auto"] .mini-calendar-container {
-    background: #1e293b;
-    border-color: #334155;
-  }
-
-  [data-theme="auto"] .week-selector {
-    background: #1e293b;
-    border-color: #334155;
-  }
-
-  [data-theme="auto"] .calendar-day {
-    background: #334155;
-    border-color: #475569;
-    color: #e2e8f0;
-  }
-
-  [data-theme="auto"] .calendar-day:hover {
-    background: #475569;
-  }
-
-  [data-theme="auto"] .calendar-day.today {
-    background: var(--accent-color);
-    color: white;
-  }
-
-  [data-theme="auto"] .calendar-day.has-sessions {
-    border-color: var(--focus-color);
-    background: rgba(231, 76, 60, 0.2);
-    color: #fca5a5;
-  }
-
-  [data-theme="auto"] .calendar-day.selected {
-    background: var(--accent-color);
-    color: white;
-  }
-
-  [data-theme="auto"] .weekly-chart {
-    background: #334155;
-    border-color: #475569;
-  }
-
-  [data-theme="auto"] .stat-item {
-    background: #334155;
-    border-color: #475569;
-    border-left-color: var(--accent-color);
-  }
-
-  [data-theme="auto"] .hour-bar-empty {
-    background: #475569;
-  }
-
-  [data-theme="auto"] .focus-metric {
-    color: #e2e8f0;
-  }
-}
+/* Theme support is now handled through CSS variables in individual theme files */
