@@ -16,12 +16,34 @@
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   border: none;
-  animation: slideIn 0.3s ease-out;
   max-width: 280px;
   pointer-events: auto;
   font-weight: 500;
   font-size: 0.9rem;
   text-align: left;
+  /* Default state - visible and positioned */
+  opacity: 1;
+  transform: translateX(0);
+  transition: all 0.3s ease-out;
+}
+
+/* Initial hidden state for new notifications */
+.notification-ping.entering {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+/* Trigger animation by removing entering class */
+.notification-ping:not(.entering) {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Exit animation */
+.notification-ping.dismissing {
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.3s ease-in;
 }
 
 /* Timer state notifications */
@@ -123,19 +145,32 @@
     text-align: left;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     border: none;
-    animation: slideInMobile 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     cursor: pointer;
     transform: translateZ(0);
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05);
+    /* Mobile-specific transition for smoother performance */
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .notification-ping.entering {
+    opacity: 0;
+    transform: translateY(-100%) scale(0.95);
+  }
+
+  .notification-ping:not(.entering) {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .notification-ping.dismissing {
+    opacity: 0;
+    transform: translateY(-120%) scale(0.95);
+    transition: all 0.3s cubic-bezier(0.55, 0.055, 0.675, 0.19);
   }
 
   .notification-ping:active {
     transform: scale(0.98);
     transition: transform 0.1s ease;
-  }
-
-  .notification-ping.dismissing {
-    animation: slideOutMobile 0.3s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
   }
 }
 

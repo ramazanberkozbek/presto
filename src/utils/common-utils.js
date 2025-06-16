@@ -95,19 +95,19 @@ export class NotificationUtils {
         notification.setAttribute('data-notification-id', notificationId);
         this.activeNotifications.add(notificationId);
 
-        // Initially hide the notification for smooth animation start
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateX(100%)';
+        // Start with entering class for initial hidden state
+        notification.classList.add('entering');
 
         container.appendChild(notification);
 
         // Force a reflow to ensure the initial styles are applied
         notification.offsetHeight;
 
-        // Start the animation by removing initial styles and letting CSS take over
+        // Start the animation by removing the entering class
         requestAnimationFrame(() => {
-            notification.style.opacity = '';
-            notification.style.transform = '';
+            if (notification.parentNode) {
+                notification.classList.remove('entering');
+            }
         });
 
         // Vibrazione su mobile per notifiche importanti
