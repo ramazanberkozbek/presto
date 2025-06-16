@@ -920,6 +920,17 @@ export class PomodoroTimer {
         }
         mainContainer.className = containerClass;
 
+        // Update body class to match current timer state for background (only in timer view)
+        const body = document.body;
+        const navigationManager = window.navigationManager;
+        if (body && navigationManager && navigationManager.currentView === 'timer') {
+            let bodyClass = `${this.currentMode}`;
+            if (isOvertime) {
+                bodyClass += ' overtime';
+            }
+            body.className = bodyClass;
+        }
+
         // Update sidebar class to match current timer state
         const sidebar = document.querySelector('.sidebar');
         if (sidebar) {

@@ -55,6 +55,18 @@ export class NavigationManager {
         document.getElementById(`${view}-view`).classList.remove('hidden');
         this.currentView = view;
 
+        // Handle background based on view
+        const body = document.body;
+        if (view === 'timer') {
+            // Timer view - reapply timer background by triggering display update
+            if (window.pomodoroTimer) {
+                window.pomodoroTimer.updateDisplay();
+            }
+        } else {
+            // Non-timer views - remove timer background classes and apply default background
+            body.classList.remove('focus', 'break', 'longBreak');
+        }
+
         // Initialize view-specific content
         if (view === 'calendar') {
             await this.updateCalendar();

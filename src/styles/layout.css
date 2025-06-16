@@ -1,3 +1,19 @@
+/* Timer background states - applied to body */
+body.focus {
+  background: var(--focus-bg);
+  transition: background-color 0.3s ease;
+}
+
+body.break {
+  background: var(--break-bg);
+  transition: background-color 0.3s ease;
+}
+
+body.longBreak {
+  background: var(--long-break-bg);
+  transition: background-color 0.3s ease;
+}
+
 /* Views and Layout Styles */
 
 /* Main container for centering content */
