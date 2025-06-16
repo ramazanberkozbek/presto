@@ -12,6 +12,17 @@ export const TIMER_THEMES = {
             break: '#2ecc71',
             longBreak: '#3498db'
         }
+    },
+    pommodore64: {
+        name: 'Pommodore64',
+        description: 'Un tema retrò ispirato al Commodore 64 con colori nostalgici e font pixelato',
+        supports: ['light'],
+        isDefault: false,
+        preview: {
+            focus: '#6c5ce7',
+            break: '#0984e3',
+            longBreak: '#00b894'
+        }
     }
 };
 
