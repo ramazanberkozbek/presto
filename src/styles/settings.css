@@ -269,6 +269,8 @@
 .settings-section:has(input#debug-mode) {
   border: 2px solid #17a2b8 !important;
   background: #f0fdff !important;
+  border-radius: 20px !important;
+  padding: 2.5rem !important;
 }
 
 .settings-section:has(input#debug-mode) .setting-item {
@@ -289,6 +291,9 @@
 .danger-zone {
   border: 2px solid #dc3545 !important;
   background: #fff5f5 !important;
+  border-radius: 20px !important;
+  padding: 2.5rem !important;
+  margin-top: 3rem !important; /* Spazio extra sopra la Danger Zone */
 }
 
 .danger-zone h3 {

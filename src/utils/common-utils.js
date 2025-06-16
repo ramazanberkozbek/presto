@@ -11,11 +11,11 @@ export class NotificationUtils {
         const now = Date.now();
         const lastTime = this.lastNotificationTimes.get(message);
         const cooldownTime = type === 'success' && message.includes('Settings saved') ? 1000 : 500;
-        
+
         if (lastTime && (now - lastTime) < cooldownTime) {
             return; // Skip if shown too recently
         }
-        
+
         this.lastNotificationTimes.set(message, now);
 
         // Clean up old entries from notification times cache (keep only last 10 minutes)
@@ -258,7 +258,7 @@ export class NotificationUtils {
 
         // Add dismissing class for animation
         notification.classList.add('dismissing');
-        
+
         // Wait for animation to complete before removing from DOM
         setTimeout(() => {
             if (notification.parentNode) {
