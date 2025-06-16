@@ -94,6 +94,7 @@ export class SettingsManager {
 
     populateSettingsUI() {
         // Populate shortcuts
+        console.log('🔧 Populating shortcuts UI with:', this.settings.shortcuts);
         document.getElementById('start-stop-shortcut').value = this.settings.shortcuts.start_stop || '';
         document.getElementById('reset-shortcut').value = this.settings.shortcuts.reset || '';
         document.getElementById('skip-shortcut').value = this.settings.shortcuts.skip || '';
@@ -115,7 +116,7 @@ export class SettingsManager {
         if (themeSelect) {
             themeSelect.value = this.settings.appearance?.theme || 'auto';
         }
-        
+
         // Populate theme selector buttons
         this.initializeThemeSelector();
 
@@ -437,6 +438,7 @@ export class SettingsManager {
 
     async registerGlobalShortcuts() {
         try {
+            console.log('🔧 Registering global shortcuts:', this.settings.shortcuts);
             await invoke('register_global_shortcuts', { shortcuts: this.settings.shortcuts });
         } catch (error) {
             console.error('Failed to register global shortcuts:', error);
@@ -834,32 +836,32 @@ export class SettingsManager {
     initializeThemeSelector() {
         const themeSelector = document.getElementById('theme-selector');
         const themeSelect = document.getElementById('theme-select');
-        
+
         if (!themeSelector) return;
 
         const currentTheme = this.settings.appearance?.theme || 'auto';
-        
+
         // Set active theme button
         this.updateThemeSelector(currentTheme);
-        
+
         // Add event listeners to theme buttons
         const themeButtons = themeSelector.querySelectorAll('.theme-option');
         themeButtons.forEach(button => {
             button.addEventListener('click', async (e) => {
                 const selectedTheme = button.getAttribute('data-theme');
-                
+
                 // Update visual state
                 this.updateThemeSelector(selectedTheme);
-                
+
                 // Update hidden select for compatibility
                 if (themeSelect) {
                     themeSelect.value = selectedTheme;
                 }
-                
+
                 // Apply theme immediately
                 this.settings.appearance.theme = selectedTheme;
                 await this.applyTheme(selectedTheme);
-                
+
                 // Save settings
                 try {
                     await this.saveSettings();
