@@ -164,7 +164,60 @@ export class SettingsManager {
         if (smartPauseCheckbox) {
             smartPauseCheckbox.addEventListener('change', (e) => {
                 this.toggleTimeoutSetting(e.target.checked);
-                this.scheduleAutoSave();
+                
+                // Call the timer's enableSmartPause method directly to ensure consistency
+                if (window.pomodoroTimer) {
+                    // Use enableSmartPause instead of toggleSmartPause to avoid toggling twice
+                    window.pomodoroTimer.enableSmartPause(e.target.checked).then(() => {
+                        // Update the indicator to reflect the new state
+                        window.pomodoroTimer.updateSettingIndicators();
+                        // Schedule auto-save after the smart pause state is updated
+                        this.scheduleAutoSave();
+                    });
+                } else {
+                    // If timer is not available, just save the setting
+                    this.scheduleAutoSave();
+                }
+            });
+        }
+
+        // Continuous sessions checkbox event listener
+        const continuousSessionsCheckbox = document.getElementById('allow-continuous-sessions');
+        if (continuousSessionsCheckbox) {
+            continuousSessionsCheckbox.addEventListener('change', (e) => {
+                // Call the timer's enableContinuousSessions method directly to ensure consistency
+                if (window.pomodoroTimer) {
+                    // Use enableContinuousSessions instead of toggleContinuousSessions to avoid toggling twice
+                    window.pomodoroTimer.enableContinuousSessions(e.target.checked).then(() => {
+                        // Update the indicator to reflect the new state
+                        window.pomodoroTimer.updateSettingIndicators();
+                        // Schedule auto-save after the continuous sessions state is updated
+                        this.scheduleAutoSave();
+                    });
+                } else {
+                    // If timer is not available, just save the setting
+                    this.scheduleAutoSave();
+                }
+            });
+        }
+
+        // Auto-start timer checkbox event listener
+        const autoStartCheckbox = document.getElementById('auto-start-timer');
+        if (autoStartCheckbox) {
+            autoStartCheckbox.addEventListener('change', (e) => {
+                // Call the timer's enableAutoStart method directly to ensure consistency
+                if (window.pomodoroTimer) {
+                    // Use enableAutoStart instead of toggleAutoStart to avoid toggling twice
+                    window.pomodoroTimer.enableAutoStart(e.target.checked).then(() => {
+                        // Update the indicator to reflect the new state
+                        window.pomodoroTimer.updateSettingIndicators();
+                        // Schedule auto-save after the auto-start state is updated
+                        this.scheduleAutoSave();
+                    });
+                } else {
+                    // If timer is not available, just save the setting
+                    this.scheduleAutoSave();
+                }
             });
         }
 
@@ -454,10 +507,7 @@ export class SettingsManager {
 
         // Other notification checkboxes
         const checkboxFields = [
-            'desktop-notifications',
             'sound-notifications',
-            'auto-start-timer',
-            'allow-continuous-sessions',
             'debug-mode'
         ];
 

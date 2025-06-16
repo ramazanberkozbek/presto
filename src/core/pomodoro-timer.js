@@ -1048,39 +1048,56 @@ export class PomodoroTimer {
         NotificationUtils.showNotificationPing(message, 'info');
     }
 
+    // Enable/disable auto-start timer
+    async enableAutoStart(enabled) {
+        this.autoStartTimer = enabled;
+        console.log('📍 enableAutoStart called with:', enabled);
+
+        // Update the indicator to reflect the new state
+        this.updateSettingIndicators();
+    }
+
     // Toggle auto-start on/off
     async toggleAutoStart() {
-        this.autoStartTimer = !this.autoStartTimer;
+        const newState = !this.autoStartTimer;
+        await this.enableAutoStart(newState);
 
         // Save the setting by updating checkbox and triggering auto-save
         if (window.settingsManager) {
             const autoStartCheckbox = document.getElementById('auto-start-timer');
             if (autoStartCheckbox) {
-                autoStartCheckbox.checked = this.autoStartTimer;
+                autoStartCheckbox.checked = newState;
                 window.settingsManager.scheduleAutoSave();
             }
         }
 
-        // Update the indicator
-        this.updateSettingIndicators();
-
         // Show notification
-        const message = this.autoStartTimer
+        const message = newState
             ? 'Auto-start enabled! Sessions will start automatically ⚡'
             : 'Auto-start disabled 🛑';
         NotificationUtils.showNotificationPing(message, 'info');
     }
 
+    // Enable/disable continuous sessions
+    async enableContinuousSessions(enabled) {
+        this.allowContinuousSessions = enabled;
+        console.log('📍 enableContinuousSessions called with:', enabled);
+
+        // Update the indicator to reflect the new state
+        this.updateSettingIndicators();
+    }
+
     // Toggle continuous sessions on/off
     async toggleContinuousSessions() {
-        this.allowContinuousSessions = !this.allowContinuousSessions;
+        const newState = !this.allowContinuousSessions;
+        await this.enableContinuousSessions(newState);
 
         // Save the setting by updating checkbox and triggering auto-save
         if (window.settingsManager) {
             const continuousCheckbox = document.getElementById('allow-continuous-sessions');
             if (continuousCheckbox) {
-                continuousCheckbox.checked = this.allowContinuousSessions;
-                console.log('🔄 Toggle - Set checkbox to:', this.allowContinuousSessions);
+                continuousCheckbox.checked = newState;
+                console.log('🔄 Toggle - Set checkbox to:', newState);
                 console.log('🔄 Toggle - Checkbox actual value:', continuousCheckbox.checked);
                 window.settingsManager.scheduleAutoSave();
             } else {
@@ -1088,11 +1105,8 @@ export class PomodoroTimer {
             }
         }
 
-        // Update the indicator
-        this.updateSettingIndicators();
-
         // Show notification
-        const message = this.allowContinuousSessions
+        const message = newState
             ? 'Continuous Sessions enabled! Sessions will continue beyond timer ♾️'
             : 'Continuous Sessions disabled ⏹️';
         NotificationUtils.showNotificationPing(message, 'info');
@@ -1679,8 +1693,12 @@ export class PomodoroTimer {
         // Update notification preferences
         this.enableDesktopNotifications = settings.notifications.desktop_notifications;
         this.enableSoundNotifications = settings.notifications.sound_notifications;
-        this.autoStartTimer = settings.notifications.auto_start_timer;
-        this.allowContinuousSessions = settings.notifications.allow_continuous_sessions || false;
+        
+        // Enable auto-start using the dedicated method
+        await this.enableAutoStart(settings.notifications.auto_start_timer);
+
+        // Enable continuous sessions using the dedicated method
+        await this.enableContinuousSessions(settings.notifications.allow_continuous_sessions || false);
 
         // Update debug mode state
         this.debugMode = settings.advanced?.debug_mode || false;
@@ -1708,7 +1726,8 @@ export class PomodoroTimer {
             }
         }
 
-        this.enableSmartPause(settings.notifications.smart_pause);
+        // Enable smart pause using the dedicated method
+        await this.enableSmartPause(settings.notifications.smart_pause);
 
         // Update all setting indicators to reflect current state
         console.log('🔄 Calling updateSettingIndicators from applySettings...');
