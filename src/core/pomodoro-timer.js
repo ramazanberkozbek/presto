@@ -381,7 +381,6 @@ export class PomodoroTimer {
     updateSmartPauseCountdownDisplay() {
         if (!this.smartPauseCountdown) return;
 
-        // Mostra il countdown solo quando mancano 10 secondi o meno
         if (this.smartPauseSecondsRemaining > 0 && this.smartPauseSecondsRemaining <= 10) {
             this.smartPauseCountdown.textContent = this.smartPauseSecondsRemaining;
             this.smartPauseCountdown.style.display = 'flex';
@@ -1156,7 +1155,6 @@ export class PomodoroTimer {
     }
 
     updateButtons() {
-        // Metodo disabilitato per la versione semplificata - i controlli sono ora gestiti in updateDisplay()
         /*
         if (this.isRunning) {
           this.startBtn.disabled = true;
@@ -1304,16 +1302,12 @@ export class PomodoroTimer {
             dot.classList.remove('completed', 'current');
 
             if (index < this.completedPomodoros) {
-                // Sessioni completate - pallino pieno
                 dot.classList.add('completed');
             } else if (index === this.completedPomodoros && this.currentMode === 'focus') {
-                // Sessione attualmente in corso (solo durante focus) - pallino evidenziato
                 dot.classList.add('current');
             }
-            // Tutte le altre rimangono vuote (solo il background di default)
         });
 
-        // Se ci sono più sessioni completate di quelle visibili, mostra l'indicatore di overflow
         if (this.completedPomodoros > this.totalSessions) {
             const overflowCount = this.completedPomodoros - this.totalSessions;
             const overflowIndicator = document.createElement('div');

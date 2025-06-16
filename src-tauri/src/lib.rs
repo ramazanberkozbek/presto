@@ -472,7 +472,6 @@ async fn update_tray_icon(
     total_sessions: u32,
     mode_icon: Option<String>,
 ) -> Result<(), String> {
-    // Aggiorna il titolo dell'icona della tray con il timer
     if let Some(tray) = app.tray_by_id("main") {
         // Use the provided mode_icon or fallback to default icons
         let icon = mode_icon.unwrap_or_else(|| match session_mode.as_str() {
@@ -484,12 +483,10 @@ async fn update_tray_icon(
 
         let status = if is_running { "Running" } else { "Paused" };
 
-        // Su macOS, mostra il timer nel titolo dell'icona della menu bar
         let title = format!("{} {}", icon, timer_text);
         tray.set_title(Some(title))
             .map_err(|e| format!("Failed to set title: {}", e))?;
 
-        // Tooltip con informazioni dettagliate
         let tooltip = if session_mode == "focus" {
             format!(
                 "Tempo - Session {}/{} ({})",
@@ -644,7 +641,6 @@ async fn reset_all_data(app: tauri::AppHandle) -> Result<(), String> {
         .app_data_dir()
         .map_err(|e| format!("Failed to get app data directory: {}", e))?;
 
-    // Lista di tutti i file da eliminare
     let files_to_delete = vec![
         "session.json",
         "tasks.json",
@@ -652,7 +648,6 @@ async fn reset_all_data(app: tauri::AppHandle) -> Result<(), String> {
         "settings.json",
     ];
 
-    // Elimina tutti i file di dati
     for file_name in files_to_delete {
         let file_path = app_data_dir.join(file_name);
         if file_path.exists() {
@@ -661,8 +656,6 @@ async fn reset_all_data(app: tauri::AppHandle) -> Result<(), String> {
         }
     }
 
-    // Opzionalmente, elimina l'intera directory se è vuota
-    // (lasciamo questa parte commentata per sicurezza)
     /*
     if app_data_dir.exists() {
         let _ = fs::remove_dir(&app_data_dir);
@@ -732,12 +725,10 @@ pub fn run() {
             is_autostart_enabled
         ])
         .setup(|app| {
-            // Crea il menu della tray
             let show_item = MenuItem::with_id(app, "show", "Mostra Tempo", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "Esci", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
 
-            // Crea l'icona della tray
             let app_handle = app.handle().clone();
             let app_handle_for_click = app_handle.clone();
 
@@ -767,11 +758,9 @@ pub fn run() {
                 })
                 .build(app)?;
 
-            // Gestisci il close event per nascondere invece di chiudere
             if let Some(window) = app.get_webview_window("main") {
                 window.on_window_event(move |event| {
                     if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                        // Nascondi la finestra invece di chiuderla
                         api.prevent_close();
                     }
                 });

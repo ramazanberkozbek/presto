@@ -9,13 +9,9 @@
 
 /* Matrix Colors - Verde digitale su nero */
 :root[data-timer-theme="matrix"] {
-    /* Timer Colors - Verde Matrix in diverse tonalità */
     --focus-color: #00ff41;
-    /* Verde Matrix classico */
     --break-color: #39ff14;
-    /* Verde lime brillante */
     --long-break-color: #00cc33;
-    /* Verde più scuro */
 
     /* Background Colors - Nero profondo con sfumature verdi */
     --focus-bg: #0d1117;

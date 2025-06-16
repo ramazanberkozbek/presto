@@ -1,6 +1,8 @@
 /* Timer Theme: Pommodore64
  * Author: Tempo Team
- * Description: Un tema retrò ispirato al Commodore 64 con colori nostalgici e font pixelato
+ * Description: Un tema retrò ispirato al Commodore 64 con color:root[data-timer-theme="pommodore64"] .progress-indicator {
+    border-radius: 2px !important;
+    border: 1px solid rgba(45, 52, 54, 0.3) !important;stalgici e font pixelato
  * Supports: Light mode only
  */
 
@@ -27,11 +29,9 @@
 
     /* Timer Text Colors - Contrastanti su sfondo chiaro */
     --focus-timer-color: #2d3436;
-    /* Grigio scuro per buona leggibilità */
     --break-timer-color: #2d3436;
     --long-break-timer-color: #2d3436;
 
-    /* Button Colors - Stile retrò */
     --focus-primary-btn: #a29bfe;
     /* Viola chiaro */
     --break-primary-btn: #74b9ff;
@@ -91,11 +91,9 @@
     text-shadow: 1px 1px 0px rgba(108, 92, 231, 0.4);
 }
 
-/* Effetti retrò per i pulsanti nel tema Pommodore64 */
 :root[data-timer-theme="pommodore64"] .control-btn {
     border: 2px solid currentColor !important;
     border-radius: 4px !important;
-    /* Bordi più squadrati stile retro */
     box-shadow: 3px 3px 0px rgba(45, 52, 54, 0.3) !important;
     transition: all 0.1s ease !important;
 }
@@ -118,11 +116,9 @@
 /* Progress dots stile pixel art */
 :root[data-timer-theme="pommodore64"] .progress-dot {
     border-radius: 2px !important;
-    /* Più squadrati */
     border: 1px solid rgba(45, 52, 54, 0.3) !important;
 }
 
-/* Effetto scanline retrò per il container del timer */
 :root[data-timer-theme="pommodore64"] .timer-container::before {
     content: '';
     position: absolute;
@@ -238,7 +234,6 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* Headers e testo in stile retrò */
 :root[data-timer-theme="pommodore64"] .section-header,
 :root[data-timer-theme="pommodore64"] .page-header,
 :root[data-timer-theme="pommodore64"] .card-header {
@@ -259,7 +254,6 @@
     font-weight: 400;
 }
 
-/* Badge retrò */
 :root[data-timer-theme="pommodore64"] .badge-focus {
     background: var(--focus-bg);
     color: var(--focus-color);
