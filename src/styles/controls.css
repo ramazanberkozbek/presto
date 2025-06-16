@@ -21,8 +21,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(255, 255, 255, 0.8);
-  color: var(--focus-timer-color)
+  background-color: var(--current-secondary-btn, rgba(255, 255, 255, 0.8));
+  color: var(--current-timer-color, var(--focus-timer-color));
 }
 
 .control-btn:hover {
@@ -34,8 +34,8 @@
 }
 
 .control-btn.primary {
-  background-color: var(--focus-color);
-  color: var(--focus-timer-color);
+  background-color: var(--current-primary-btn, var(--focus-color));
+  color: var(--current-timer-color, var(--focus-timer-color));
   width: 90px;
   height: 70px;
 }
@@ -54,50 +54,9 @@
   height: 30px;
 }
 
+/* Generic hover effects for all states */
 .control-btn.primary:hover:not(:disabled) {
-  background-color: #c0392b;
+  opacity: 0.9;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
-}
-
-/* Button color variations for different states */
-.container.break .control-btn.primary:hover:not(:disabled) {
-  box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
-}
-
-.container.longBreak .control-btn.primary:hover:not(:disabled) {
-  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
-}
-
-/* Focus state buttons */
-.container.focus .control-btn.primary {
-  background-color: var(--focus-primary-btn);
-  color: var(--focus-timer-color);
-}
-
-.container.focus .control-btn:not(.primary) {
-  background-color: var(--focus-secondary-btn);
-  color: var(--focus-timer-color);
-}
-
-/* Break state buttons */
-.container.break .control-btn.primary {
-  background-color: var(--break-primary-btn);
-  color: var(--break-timer-color);
-}
-
-.container.break .control-btn:not(.primary) {
-  background-color: var(--break-secondary-btn);
-  color: var(--break-timer-color);
-}
-
-/* Long break state buttons */
-.container.longBreak .control-btn.primary {
-  background-color: var(--long-break-primary-btn);
-  color: var(--long-break-timer-color);
-}
-
-.container.longBreak .control-btn:not(.primary) {
-  background-color: var(--long-break-secondary-btn);
-  color: var(--long-break-timer-color);
+  box-shadow: 0 6px 20px var(--current-shadow, rgba(231, 76, 60, 0.3));
 }

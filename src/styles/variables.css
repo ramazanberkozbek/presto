@@ -21,6 +21,7 @@
   --long-break-color: #3498db;
   --accent-color: #2c3e50;
   --text-light: #7f8c8d;
+  --warning-color: #e67e22;
 
   /* Background Colors */
   --focus-bg: #FFF2F2;
@@ -76,14 +77,26 @@ body {
 /* Background states */
 .container.focus {
   background-color: var(--focus-bg);
+  --current-timer-color: var(--focus-timer-color);
+  --current-primary-btn: var(--focus-primary-btn);
+  --current-secondary-btn: var(--focus-secondary-btn);
+  --current-shadow: rgba(231, 76, 60, 0.3);
 }
 
 .container.break {
   background-color: var(--break-bg);
+  --current-timer-color: var(--break-timer-color);
+  --current-primary-btn: var(--break-primary-btn);
+  --current-secondary-btn: var(--break-secondary-btn);
+  --current-shadow: rgba(46, 204, 113, 0.3);
 }
 
 .container.longBreak {
   background-color: var(--long-break-bg);
+  --current-timer-color: var(--long-break-timer-color);
+  --current-primary-btn: var(--long-break-primary-btn);
+  --current-secondary-btn: var(--long-break-secondary-btn);
+  --current-shadow: rgba(52, 152, 219, 0.3);
 }
 
 /* Force light gray background for specific views */
