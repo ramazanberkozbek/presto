@@ -149,7 +149,13 @@ export class UpdateManager {
                 
                 // Simula controllo con GitHub API (usando fetch diretto)
                 try {
+                    // Verifica se il repository presto è accessibile
                     const response = await fetch('https://api.github.com/repos/murdercode/presto/releases/latest');
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
                     const latestRelease = await response.json();
                     
                     console.log('📦 Release più recente da GitHub:', latestRelease.tag_name);
@@ -350,8 +356,11 @@ export class UpdateManager {
         try {
             console.log('🔄 Controllo aggiornamenti...');
 
-            // Verifica se siamo in un ambiente Tauri
-            if (this.isDevelopmentMode()) {
+            // Verifica se siamo in un ambiente Tauri con controllo intelligente
+            const isDevMode = this.isDevelopmentMode();
+            const hasTestMode = localStorage.getItem('presto_force_update_test') === 'true';
+            
+            if (isDevMode && !hasTestMode) {
                 console.warn('⚠️  Controllo aggiornamenti non disponibile in modalità sviluppo');
                 this.emit('updateNotAvailable');
                 if (showDialog) {
@@ -365,10 +374,12 @@ export class UpdateManager {
                 hasTauri: !!window.__TAURI__,
                 hasUpdater: !!window.__TAURI__?.updater,
                 hasCore: !!window.__TAURI__?.core,
-                hasInvoke: !!window.__TAURI__?.core?.invoke
+                hasInvoke: !!window.__TAURI__?.core?.invoke,
+                isDevMode,
+                hasTestMode
             });
 
-            // Usa l'API updater di Tauri
+            // Usa l'API updater di Tauri (o simulata se in test mode)
             const updater = await this.getTauriUpdater();
             
             console.log('🔍 Effettuando richiesta controllo aggiornamenti...');
@@ -550,6 +561,13 @@ export class UpdateManager {
      */
     async getCurrentVersion() {
         try {
+            // Se siamo in modalità test, usa la versione test se impostata
+            const testVersion = localStorage.getItem('presto_test_current_version');
+            if (testVersion && localStorage.getItem('presto_force_update_test') === 'true') {
+                console.log('🧪 Usando versione di test:', testVersion);
+                return testVersion;
+            }
+            
             if (window.__TAURI__?.app?.getVersion) {
                 return await window.__TAURI__.app.getVersion();
             }
@@ -719,14 +737,122 @@ if (typeof window !== 'undefined') {
             localStorage.setItem('presto_force_update_test', 'true');
             console.warn('⚠️ FORZATA MODALITÀ TEST - Ricarica la pagina');
             return 'Test mode forzato nel localStorage. Ricarica la pagina.';
+        },
+        
+        // Funzioni di test avanzate
+        testSimulatedUpdate: async () => {
+            console.log('🧪 Test simulazione aggiornamenti...');
+            updateManager.enableTestMode();
+            const result = await updateManager.checkForUpdates(true);
+            console.log('🔍 Risultato test:', result);
+            return result;
+        },
+        
+        setTestVersion: (version) => {
+            localStorage.setItem('presto_test_current_version', version);
+            console.log(`🔢 Versione di test impostata a: ${version}`);
+            return `Versione di test: ${version}. Ora checkForUpdates() userà questa versione.`;
+        },
+        
+        clearTestData: () => {
+            localStorage.removeItem('presto_force_update_test');
+            localStorage.removeItem('presto_test_current_version');
+            console.log('🧹 Dati di test cancellati');
+            return 'Dati di test cancellati. Ricarica la pagina per tornare alla modalità normale.';
+        },
+        
+        // Test diretto dell'API GitHub
+        testGitHubAPI: async () => {
+            console.log('🌐 Test diretto API GitHub...');
+            
+            // Test entrambi i possibili repository
+            const repos = [
+                { name: 'presto', url: 'https://api.github.com/repos/murdercode/presto/releases/latest' },
+                { name: 'tempo', url: 'https://api.github.com/repos/murdercode/tempo/releases/latest' }
+            ];
+            
+            for (const repo of repos) {
+                console.log(`\n🔍 Testing repository: ${repo.name}`);
+                try {
+                    const response = await fetch(repo.url);
+                    console.log(`📊 Response status for ${repo.name}:`, response.status);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log(`✅ API GitHub funziona per ${repo.name}:`, data.tag_name);
+                        console.log(`📦 Versione più recente:`, data.tag_name.replace(/^app-v/, ''));
+                        console.log(`🔗 URL corretto trovato: ${repo.url}`);
+                        return {
+                            success: true,
+                            repository: repo.name,
+                            correctUrl: repo.url,
+                            version: data.tag_name.replace(/^app-v/, ''),
+                            data: data
+                        };
+                    } else {
+                        console.log(`❌ Repository ${repo.name} non trovato (${response.status})`);
+                    }
+                } catch (error) {
+                    console.error(`❌ Errore API GitHub per ${repo.name}:`, error);
+                }
+            }
+            
+            return {
+                success: false,
+                error: 'Nessun repository valido trovato'
+            };
+        },
+        
+        // Test delle capability di fetch del browser
+        testFetchCapabilities: async () => {
+            console.log('🔍 Test capacità fetch del browser...');
+            const tests = {
+                basic: false,
+                cors: false,
+                github: false
+            };
+            
+            // Test fetch basic
+            try {
+                const response = await fetch('data:application/json,{"test":true}');
+                tests.basic = response.ok;
+                console.log('✅ Fetch basic:', tests.basic);
+            } catch (error) {
+                console.error('❌ Fetch basic fallito:', error);
+            }
+            
+            // Test CORS con un endpoint pubblico
+            try {
+                const response = await fetch('https://httpbin.org/get');
+                tests.cors = response.ok;
+                console.log('✅ CORS test:', tests.cors);
+            } catch (error) {
+                console.error('❌ CORS test fallito:', error);
+            }
+            
+            // Test GitHub API
+            try {
+                const response = await fetch('https://api.github.com/repos/murdercode/presto/releases/latest');
+                tests.github = response.ok;
+                console.log('✅ GitHub API test:', tests.github);
+            } catch (error) {
+                console.error('❌ GitHub API test fallito:', error);
+            }
+            
+            console.table(tests);
+            return tests;
         }
     };
     
     console.log('🔧 UpdateManager Debug disponibile: window.updateManagerDebug');
     console.log('📋 Comandi disponibili:');
     console.log('  - window.updateManagerDebug.enableTestMode()');
+    console.log('  - window.updateManagerDebug.testSimulatedUpdate()');
+    console.log('  - window.updateManagerDebug.testGitHubAPI()');
+    console.log('  - window.updateManagerDebug.testFetchCapabilities()');
+    console.log('  - window.updateManagerDebug.setTestVersion("0.1.0")');
     console.log('  - window.updateManagerDebug.checkForUpdates()');
     console.log('  - window.updateManagerDebug.getStatus()');
     console.log('  - window.updateManagerDebug.checkEnvironment()');
-    console.log('  - window.updateManagerDebug.forceTestMode()');
+    console.log('  - window.updateManagerDebug.clearTestData()');
 }
