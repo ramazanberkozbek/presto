@@ -19,9 +19,9 @@ jobs:
       matrix:
         include:
           - platform: 'macos-latest'
-            args: '--target aarch64-apple-darwin'
+            args: '--target aarch64-apple-darwin --bundles dmg'
           - platform: 'macos-latest' 
-            args: '--target x86_64-apple-darwin'
+            args: '--target x86_64-apple-darwin --bundles dmg'
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -51,8 +51,8 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          # TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: app-v__VERSION__ # the action automatically replaces __VERSION__ with the app version.
           releaseName: 'Presto v__VERSION__'
@@ -74,9 +74,31 @@ jobs:
             **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ github.event.before }}...${{ github.ref_name }}
           releaseDraft: false
           prerelease: false
-          includeUpdaterJson: true
-          updaterJsonPreferNsis: false
           args: ${{ matrix.args }}
 
       - name: List generated files
         run: ls -R src-tauri/target/ || true
+
+      - name: Upload DMG (debug)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Presto-DMG
+          path: src-tauri/target/**/bundle/**/*.dmg
+
+      - name: Upload app bundle (debug)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Presto-app-bundle
+          path: src-tauri/target/**/bundle/**/*.app
+
+      - name: Upload tar.gz (debug)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Presto-tarball
+          path: src-tauri/target/**/bundle/**/*.tar.gz
+
+      - name: Upload signatures (debug)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Presto-signatures
+          path: src-tauri/target/**/bundle/**/*.sig
