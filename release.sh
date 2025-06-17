@@ -140,6 +140,34 @@ push_changes() {
     print_success "Push completato"
 }
 
+# Funzione per aggiornare il tap Homebrew
+update_homebrew_tap() {
+    local version=$1
+    local tap_repo_path="../homebrew-presto"
+    
+    print_step "Aggiornamento del tap Homebrew..."
+    
+    if [ ! -d "$tap_repo_path" ]; then
+        print_warning "Repository del tap Homebrew non trovato: $tap_repo_path"
+        print_warning "Saltando l'aggiornamento del tap Homebrew"
+        return 0
+    fi
+    
+    # Vai nella directory del tap
+    cd "$tap_repo_path"
+    
+    # Esegui lo script di aggiornamento
+    if [ -x "./update-homebrew-tap.sh" ]; then
+        ./update-homebrew-tap.sh "$version"
+        print_success "Tap Homebrew aggiornato alla versione $version"
+    else
+        print_warning "Script di aggiornamento del tap non trovato o non eseguibile"
+    fi
+    
+    # Torna alla directory originale
+    cd - > /dev/null
+}
+
 # Funzione per fare la build
 build_app() {
     print_step "Avvio build dell'applicazione..."
@@ -257,6 +285,9 @@ main() {
     # Build
     build_app
     
+    # Aggiorna tap Homebrew
+    update_homebrew_tap $new_version
+    
     # Apri GitHub releases
     print_step "Vuoi aprire la pagina GitHub releases per completare il rilascio? (Y/n)"
     read -r open_github
@@ -307,6 +338,7 @@ if [[ $# -gt 0 ]]; then
             commit_and_tag $new_version
             push_changes $new_version
             build_app
+            update_homebrew_tap $new_version
             print_success "Rilascio patch v$new_version completato!"
             ;;
         "--minor")
@@ -316,6 +348,7 @@ if [[ $# -gt 0 ]]; then
             commit_and_tag $new_version
             push_changes $new_version
             build_app
+            update_homebrew_tap $new_version
             print_success "Rilascio minor v$new_version completato!"
             ;;
         "--major")
@@ -325,6 +358,7 @@ if [[ $# -gt 0 ]]; then
             commit_and_tag $new_version
             push_changes $new_version
             build_app
+            update_homebrew_tap $new_version
             print_success "Rilascio major v$new_version completato!"
             ;;
         "--version")
@@ -338,6 +372,7 @@ if [[ $# -gt 0 ]]; then
             commit_and_tag $new_version
             push_changes $new_version
             build_app
+            update_homebrew_tap $new_version
             print_success "Rilascio v$new_version completato!"
             ;;
         "--build-only")
