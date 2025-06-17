@@ -28,7 +28,67 @@ export class UpdateManager {
      * Verifica se siamo in modalità sviluppo
      */
     isDevelopmentMode() {
-        return !window.__TAURI__ || window.location.hostname === 'localhost';
+        // Permetti override per test degli aggiornamenti
+        if (localStorage.getItem('presto_force_update_test') === 'true') {
+            console.log('🧪 Modalità test aggiornamenti attiva - bypass controllo sviluppo');
+            return false;
+        }
+        
+        // Verifica se siamo in un ambiente Tauri
+        if (!window.__TAURI__) {
+            console.log('🔍 Non è un ambiente Tauri - modalità sviluppo');
+            return true;
+        }
+        
+        // Verifica se stiamo running da tauri dev (protocollo tauri: indica app compilata)
+        if (window.location.protocol === 'tauri:') {
+            console.log('🔍 Protocollo tauri: - app compilata');
+            return false;
+        }
+        
+        // Se stiamo usando localhost, siamo probabilmente in modalità dev
+        if (window.location.hostname === 'localhost' || 
+            window.location.href.includes('localhost') || 
+            window.location.href.includes('127.0.0.1')) {
+            console.log('🔍 Localhost rilevato - modalità sviluppo');
+            return true;
+        }
+        
+        // Default: se arriviamo qui probabilmente siamo in un'app compilata
+        console.log('🔍 Ambiente sconosciuto - assumo app compilata');
+        return false;
+    }
+
+    /**
+     * Attiva la modalità test per gli aggiornamenti (solo per sviluppo)
+     * ATTENZIONE: Questo permette di testare gli aggiornamenti in modalità dev
+     */
+    enableTestMode() {
+        localStorage.setItem('presto_force_update_test', 'true');
+        console.warn('⚠️ MODALITÀ TEST AGGIORNAMENTI ATTIVATA - Solo per sviluppo!');
+        console.log('🔄 Ricarica la pagina o riavvia l\'app per attivare la modalità test');
+        
+        // Riaggiorna il controllo automatico se necessario
+        if (!this.isDevelopmentMode() && this.autoCheck && !this.checkInterval) {
+            this.startAutoCheck();
+        }
+        
+        return 'Modalità test attivata! Ora puoi testare gli aggiornamenti con checkForUpdates()';
+    }
+
+    /**
+     * Disattiva la modalità test per gli aggiornamenti
+     */
+    disableTestMode() {
+        localStorage.removeItem('presto_force_update_test');
+        console.log('✅ Modalità test aggiornamenti disattivata');
+        
+        // Ferma il controllo automatico se siamo in modalità dev
+        if (this.isDevelopmentMode()) {
+            this.stopAutoCheck();
+        }
+        
+        return 'Modalità test disattivata';
     }
 
     /**
@@ -39,19 +99,159 @@ export class UpdateManager {
             throw new Error('API Tauri non disponibili');
         }
 
+        // Se siamo in modalità test in ambiente sviluppo, simula l'API
+        if (this.isDevelopmentMode() && localStorage.getItem('presto_force_update_test') === 'true') {
+            console.log('🧪 Usando API updater simulata per test');
+            return await this.getSimulatedUpdater();
+        }
+
         try {
-            // Prova prima con l'API globale
+            // Per Tauri v2, usa l'API globale direttamente
             if (window.__TAURI__.updater) {
+                console.log('✅ Usando API updater globale');
                 return window.__TAURI__.updater;
             }
-
-            // Altrimenti prova l'import dinamico
-            const updater = await import('@tauri-apps/plugin-updater');
-            return updater;
+            
+            // Se non disponibile globalmente, usa l'invoke
+            if (window.__TAURI__.core && window.__TAURI__.core.invoke) {
+                console.log('✅ Usando API updater via invoke');
+                return {
+                    check: async () => {
+                        return await window.__TAURI__.core.invoke('plugin:updater|check');
+                    },
+                    relaunch: async () => {
+                        return await window.__TAURI__.core.invoke('plugin:updater|relaunch');
+                    }
+                };
+            }
+            
+            throw new Error('API updater non trovata');
         } catch (error) {
             console.error('Errore caricamento API updater:', error);
             throw new Error('Plugin updater non disponibile');
         }
+    }
+
+    /**
+     * Crea un'API updater simulata per test
+     */
+    async getSimulatedUpdater() {
+        return {
+            check: async () => {
+                console.log('🧪 Simulazione: Controllo aggiornamenti...');
+                
+                // Simula una richiesta di rete con delay
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Ottieni la versione corrente dell'app
+                const currentVersion = await this.getCurrentVersion();
+                console.log('🔍 Versione corrente simulata:', currentVersion);
+                
+                // Simula controllo con GitHub API (usando fetch diretto)
+                try {
+                    const response = await fetch('https://api.github.com/repos/murdercode/presto/releases/latest');
+                    const latestRelease = await response.json();
+                    
+                    console.log('📦 Release più recente da GitHub:', latestRelease.tag_name);
+                    
+                    // Rimuovi il prefisso "app-v" se presente
+                    const latestVersion = latestRelease.tag_name.replace(/^app-v/, '');
+                    const isNewer = this.compareVersions(latestVersion, currentVersion) > 0;
+                    
+                    if (isNewer) {
+                        console.log('✅ Simulazione: Aggiornamento disponibile!');
+                        return {
+                            available: true,
+                            version: latestVersion,
+                            date: latestRelease.published_at,
+                            body: latestRelease.body,
+                            downloadAndInstall: this.simulateDownloadAndInstall.bind(this)
+                        };
+                    } else {
+                        console.log('✅ Simulazione: Nessun aggiornamento disponibile');
+                        return {
+                            available: false,
+                            version: currentVersion
+                        };
+                    }
+                } catch (error) {
+                    console.error('❌ Errore simulazione GitHub API:', error);
+                    throw new Error(`Errore simulazione: ${error.message}`);
+                }
+            },
+            relaunch: async () => {
+                console.log('🧪 Simulazione: Riavvio app...');
+                await this.showMessage('🧪 MODALITÀ TEST: In una vera app, ora verrebbe riavviata.', {
+                    title: 'Simulazione Riavvio',
+                    kind: 'info'
+                });
+            }
+        };
+    }
+
+    /**
+     * Simula il download e installazione dell'aggiornamento
+     */
+    async simulateDownloadAndInstall(progressCallback) {
+        console.log('🧪 Simulazione: Download e installazione...');
+        
+        const totalSize = 5 * 1024 * 1024; // 5MB simulati
+        let downloaded = 0;
+        
+        // Simula l'evento di inizio
+        if (progressCallback) {
+            progressCallback({
+                event: 'Started',
+                data: { contentLength: totalSize }
+            });
+        }
+        
+        // Simula il download con progresso
+        const chunks = 20;
+        const chunkSize = totalSize / chunks;
+        
+        for (let i = 0; i < chunks; i++) {
+            await new Promise(resolve => setTimeout(resolve, 200)); // 200ms per chunk
+            downloaded += chunkSize;
+            
+            if (progressCallback) {
+                progressCallback({
+                    event: 'Progress',
+                    data: {
+                        chunkLength: downloaded,
+                        contentLength: totalSize
+                    }
+                });
+            }
+        }
+        
+        // Simula completamento
+        if (progressCallback) {
+            progressCallback({
+                event: 'Finished',
+                data: {}
+            });
+        }
+        
+        console.log('🧪 Simulazione: Download completato!');
+    }
+
+    /**
+     * Confronta due versioni (formato semver)
+     */
+    compareVersions(a, b) {
+        const aParts = a.split('.').map(Number);
+        const bParts = b.split('.').map(Number);
+        
+        for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+            const aPart = aParts[i] || 0;
+            const bPart = bParts[i] || 0;
+            
+            if (aPart > bPart) return 1;
+            if (aPart < bPart) return -1;
+        }
+        
+        return 0;
     }
 
     /**
@@ -160,9 +360,20 @@ export class UpdateManager {
                 return false;
             }
 
+            // Debug: stampa informazioni sull'ambiente
+            console.log('🔍 Debug API Tauri:', {
+                hasTauri: !!window.__TAURI__,
+                hasUpdater: !!window.__TAURI__?.updater,
+                hasCore: !!window.__TAURI__?.core,
+                hasInvoke: !!window.__TAURI__?.core?.invoke
+            });
+
             // Usa l'API updater di Tauri
             const updater = await this.getTauriUpdater();
+            
+            console.log('🔍 Effettuando richiesta controllo aggiornamenti...');
             const update = await updater.check();
+            console.log('📦 Risposta controllo aggiornamenti:', update);
 
             if (update?.available) {
                 console.log('✅ Aggiornamento disponibile:', update.version);
@@ -192,11 +403,34 @@ export class UpdateManager {
             }
         } catch (error) {
             console.error('❌ Errore durante il controllo aggiornamenti:', error);
+            console.error('❌ Stack trace:', error?.stack);
+            console.error('❌ Tipo errore:', typeof error);
+            console.error('❌ Errore stringificato:', JSON.stringify(error, null, 2));
             this.emit('checkError', error);
 
+            let errorMessage = 'Errore durante il controllo degli aggiornamenti.';
+            
+            // Fornisci messaggi di errore più specifici
+            if (error && typeof error === 'string') {
+                if (error.includes('network') || error.includes('request')) {
+                    errorMessage = 'Errore di rete durante il controllo degli aggiornamenti. Verifica la connessione a Internet.';
+                } else if (error === 'error sending request') {
+                    errorMessage = 'Errore di connessione al server degli aggiornamenti. Verifica la connessione a Internet e riprova più tardi.';
+                }
+            } else if (error && error.message) {
+                if (error.message.includes('network') || error.message.includes('request')) {
+                    errorMessage = 'Errore di rete durante il controllo degli aggiornamenti. Verifica la connessione a Internet.';
+                } else if (error.message.includes('permission')) {
+                    errorMessage = 'Permessi insufficienti per controllare gli aggiornamenti.';
+                } else if (error.message.includes('not available')) {
+                    errorMessage = 'Sistema di aggiornamenti non disponibile in questa versione.';
+                }
+            }
+
             if (showDialog) {
-                await this.showMessage(`Errore durante il controllo degli aggiornamenti: ${error.message}`, {
-                    title: 'Errore',
+                const errorDetail = error && error.message ? error.message : (typeof error === 'string' ? error : 'Errore sconosciuto');
+                await this.showMessage(`${errorMessage}\n\nDettagli: ${errorDetail}`, {
+                    title: 'Errore Aggiornamenti',
                     kind: 'error'
                 });
             }
@@ -295,30 +529,12 @@ export class UpdateManager {
      */
     async relaunchApplication() {
         try {
-            // Prova prima con l'API di processo di Tauri
-            if (window.__TAURI__?.process?.relaunch) {
-                await window.__TAURI__.process.relaunch();
-                return;
-            }
-
-            // Fallback: prova a importare dinamicamente
-            try {
-                const { relaunch } = await import('@tauri-apps/api/process');
-                await relaunch();
-                return;
-            } catch (importError) {
-                console.warn('Non riesco a importare relaunch:', importError);
-            }
-
-            // Ultimo fallback: esci dall'applicazione
-            if (window.__TAURI__?.process?.exit) {
-                await window.__TAURI__.process.exit(0);
+            // Usa l'API updater per il riavvio
+            const updater = await this.getTauriUpdater();
+            if (updater.relaunch) {
+                await updater.relaunch();
             } else {
-                console.error('Impossibile riavviare l\'applicazione automaticamente');
-                await this.showMessage('L\'aggiornamento è stato installato.\n\nRiavvia manualmente l\'applicazione per applicare le modifiche.', {
-                    title: 'Riavvio richiesto',
-                    kind: 'info'
-                });
+                throw new Error('Metodo relaunch non disponibile');
             }
         } catch (error) {
             console.error('Errore durante il riavvio:', error);
@@ -349,7 +565,7 @@ export class UpdateManager {
      */
     async openReleasePage() {
         try {
-            const url = 'https://github.com/YOUR_USERNAME/YOUR_REPO/releases';
+            const url = 'https://github.com/murdercode/presto/releases';
             if (window.__TAURI__?.shell?.open) {
                 await window.__TAURI__.shell.open(url);
             } else {
@@ -446,3 +662,71 @@ export class UpdateManager {
 
 // Esporta un'istanza singleton
 export const updateManager = new UpdateManager();
+
+// Per debug: aggiungi funzioni globali per testare gli aggiornamenti
+if (typeof window !== 'undefined') {
+    window.updateManagerDebug = {
+        enableTestMode: () => {
+            const result = updateManager.enableTestMode();
+            console.log('🧪 Test mode result:', result);
+            console.log('🔍 Current status:', updateManager.getStatus());
+            return result;
+        },
+        disableTestMode: () => {
+            const result = updateManager.disableTestMode();
+            console.log('✅ Test mode disabled:', result);
+            console.log('🔍 Current status:', updateManager.getStatus());
+            return result;
+        },
+        checkForUpdates: () => {
+            console.log('🔄 Avvio controllo aggiornamenti manuale...');
+            console.log('🔍 Environment info:', {
+                protocol: window.location.protocol,
+                hostname: window.location.hostname,
+                href: window.location.href,
+                hasTauri: !!window.__TAURI__,
+                testMode: localStorage.getItem('presto_force_update_test'),
+                isDev: updateManager.isDevelopmentMode()
+            });
+            return updateManager.checkForUpdates(true);
+        },
+        getStatus: () => {
+            const status = updateManager.getStatus();
+            console.table(status);
+            return status;
+        },
+        getCurrentVersion: () => updateManager.getCurrentVersion(),
+        openReleasePage: () => updateManager.openReleasePage(),
+        
+        // Funzioni di debug aggiuntive
+        checkEnvironment: () => {
+            const env = {
+                protocol: window.location.protocol,
+                hostname: window.location.hostname,
+                href: window.location.href,
+                hasTauri: !!window.__TAURI__,
+                hasUpdater: !!window.__TAURI__?.updater,
+                hasCore: !!window.__TAURI__?.core,
+                hasInvoke: !!window.__TAURI__?.core?.invoke,
+                testMode: localStorage.getItem('presto_force_update_test'),
+                isDevelopmentMode: updateManager.isDevelopmentMode()
+            };
+            console.table(env);
+            return env;
+        },
+        
+        forceTestMode: () => {
+            localStorage.setItem('presto_force_update_test', 'true');
+            console.warn('⚠️ FORZATA MODALITÀ TEST - Ricarica la pagina');
+            return 'Test mode forzato nel localStorage. Ricarica la pagina.';
+        }
+    };
+    
+    console.log('🔧 UpdateManager Debug disponibile: window.updateManagerDebug');
+    console.log('📋 Comandi disponibili:');
+    console.log('  - window.updateManagerDebug.enableTestMode()');
+    console.log('  - window.updateManagerDebug.checkForUpdates()');
+    console.log('  - window.updateManagerDebug.getStatus()');
+    console.log('  - window.updateManagerDebug.checkEnvironment()');
+    console.log('  - window.updateManagerDebug.forceTestMode()');
+}

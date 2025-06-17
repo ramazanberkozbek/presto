@@ -7,6 +7,8 @@
   ],
   "permissions": [
     "core:default",
+    "core:path:default",
+    "core:event:default",
     "opener:default",
     "notification:default",
     "notification:allow-is-permission-granted",
@@ -29,6 +31,8 @@
     "core:app:default",
     "core:app:allow-version",
     "opener:default",
-    "opener:allow-open-url"
+    "opener:allow-open-url",
+    "core:webview:default",
+    "core:webview:allow-internal-toggle-devtools"
   ]
 }
