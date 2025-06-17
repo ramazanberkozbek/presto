@@ -20,8 +20,10 @@ jobs:
         include:
           - platform: 'macos-latest'
             args: '--target aarch64-apple-darwin --bundles dmg'
+            arch: 'aarch64'
           - platform: 'macos-latest' 
             args: '--target x86_64-apple-darwin --bundles dmg'
+            arch: 'x86_64'
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -51,8 +53,8 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          # TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: app-v__VERSION__ # the action automatically replaces __VERSION__ with the app version.
           releaseName: 'Presto v__VERSION__'
@@ -82,23 +84,23 @@ jobs:
       - name: Upload DMG (debug)
         uses: actions/upload-artifact@v4
         with:
-          name: Presto-DMG
+          name: Presto-DMG-${{ matrix.arch }}
           path: src-tauri/target/**/bundle/**/*.dmg
 
       - name: Upload app bundle (debug)
         uses: actions/upload-artifact@v4
         with:
-          name: Presto-app-bundle
+          name: Presto-app-bundle-${{ matrix.arch }}
           path: src-tauri/target/**/bundle/**/*.app
 
       - name: Upload tar.gz (debug)
         uses: actions/upload-artifact@v4
         with:
-          name: Presto-tarball
+          name: Presto-tarball-${{ matrix.arch }}
           path: src-tauri/target/**/bundle/**/*.tar.gz
 
       - name: Upload signatures (debug)
         uses: actions/upload-artifact@v4
         with:
-          name: Presto-signatures
+          name: Presto-signatures-${{ matrix.arch }}
           path: src-tauri/target/**/bundle/**/*.sig
