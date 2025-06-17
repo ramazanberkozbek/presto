@@ -42,12 +42,38 @@ A modern, cross-platform Pomodoro timer application built with Tauri (Rust + HTM
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### Installation via Homebrew (Recommended)
+
+The easiest way to install Presto on macOS is through Homebrew:
+
+```bash
+# Add the Presto tap
+brew tap murdercode/presto
+
+# Install Presto
+brew install --cask presto
+```
+
+#### Troubleshooting: "Presto is damaged and can't be opened"
+
+If you see this error when launching Presto for the first time, it's due to macOS Gatekeeper. Run this command to fix it:
+
+```bash
+xattr -d com.apple.quarantine /Applications/Presto.app
+```
+
+Then you can launch Presto normally from your Applications folder or Spotlight.
+
+### Installation from Source
+
+If you prefer to build from source, you'll need:
+
+#### Prerequisites
 - [Node.js](https://nodejs.org/) (v16 or higher)
 - [Rust](https://rustup.rs/) (latest stable)
 - [Tauri CLI](https://tauri.app/v1/guides/getting-started/prerequisites)
 
-### Installation
+#### Steps
 
 1. **Clone the repository**
    ```bash
