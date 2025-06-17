@@ -107,10 +107,10 @@ commit_and_tag() {
     local message="$2"
     
     print_step "Aggiunta file modificati a git..."
-    git add package.json src-tauri/Cargo.toml src-tauri/tauri.conf.json
+    git add package.json src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/tauri.conf.json
     
     # Se ci sono altri file modificati, chiedi se aggiungerli
-    if [[ -n $(git status --porcelain | grep -v "package.json\|Cargo.toml\|tauri.conf.json") ]]; then
+    if [[ -n $(git status --porcelain | grep -v "package.json\|Cargo.toml\|Cargo.lock\|tauri.conf.json") ]]; then
         print_warning "Ci sono altri file modificati. Vuoi aggiungerli al commit? (y/N)"
         read -r response
         if [[ "$response" =~ ^[Yy]$ ]]; then
