@@ -80,27 +80,3 @@ jobs:
 
       - name: List generated files
         run: ls -R src-tauri/target/ || true
-
-      - name: Upload DMG (debug)
-        uses: actions/upload-artifact@v4
-        with:
-          name: Presto-DMG-${{ matrix.arch }}
-          path: src-tauri/target/**/bundle/**/*.dmg
-
-      - name: Upload app bundle (debug)
-        uses: actions/upload-artifact@v4
-        with:
-          name: Presto-app-bundle-${{ matrix.arch }}
-          path: src-tauri/target/**/bundle/**/*.app
-
-      - name: Upload tar.gz (debug)
-        uses: actions/upload-artifact@v4
-        with:
-          name: Presto-tarball-${{ matrix.arch }}
-          path: src-tauri/target/**/bundle/**/*.tar.gz
-
-      - name: Upload signatures (debug)
-        uses: actions/upload-artifact@v4
-        with:
-          name: Presto-signatures-${{ matrix.arch }}
-          path: src-tauri/target/**/bundle/**/*.sig
