@@ -275,10 +275,7 @@ impl ActivityMonitor {
 }
 
 #[tauri::command]
-async fn start_activity_monitoring(
-    app: AppHandle,
-    timeout_seconds: u64,
-) -> Result<(), String> {
+async fn start_activity_monitoring(app: AppHandle, timeout_seconds: u64) -> Result<(), String> {
     let mut monitor = ACTIVITY_MONITOR.lock().unwrap();
 
     if monitor.is_none() {
