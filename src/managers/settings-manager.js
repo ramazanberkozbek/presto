@@ -847,19 +847,27 @@ export class SettingsManager {
         // Remove existing theme attributes
         html.removeAttribute('data-theme');
 
-        // Apply new theme
-        html.setAttribute('data-theme', theme);
+        // Determine the actual theme to apply
+        let actualTheme = theme;
+        if (theme === 'auto') {
+            // For auto mode, detect system preference and apply the actual theme
+            actualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            console.log(`🎨 Auto theme detected system preference: ${actualTheme}`);
+        }
+
+        // Apply the actual theme (never "auto")
+        html.setAttribute('data-theme', actualTheme);
 
         // Store theme preference in localStorage for quick access
-        localStorage.setItem('theme-preference', theme);
+        localStorage.setItem('theme-preference', theme); // Store user preference (could be "auto")
 
         // Update settings object and save immediately to prevent loss on app close
         if (this.settings && this.settings.appearance) {
-            this.settings.appearance.theme = theme;
+            this.settings.appearance.theme = theme; // Store user preference (could be "auto")
             try {
                 // Save immediately to file
                 await invoke('save_settings', { settings: this.settings });
-                console.log(`🎨 Theme saved: ${theme}`);
+                console.log(`🎨 Theme preference saved: ${theme}, actual theme applied: ${actualTheme}`);
             } catch (error) {
                 console.error('Failed to save theme setting:', error);
             }
@@ -872,7 +880,7 @@ export class SettingsManager {
             this.removeSystemThemeListener();
         }
 
-        console.log(`🎨 Theme applied: ${theme}`);
+        console.log(`🎨 Theme preference: ${theme}, actual theme applied: ${actualTheme}`);
 
         // Update timer theme compatibility when color mode changes
         this.updateTimerThemeCompatibility();
@@ -885,10 +893,19 @@ export class SettingsManager {
         // Create new listener
         this.systemThemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
         this.systemThemeListener = (e) => {
-            console.log(`🎨 System theme changed: ${e.matches ? 'dark' : 'light'}`);
-            // Theme is automatically applied via CSS media queries when data-theme="auto"
-            // Update timer theme compatibility when system theme changes
-            this.updateTimerThemeCompatibility();
+            const newSystemTheme = e.matches ? 'dark' : 'light';
+            console.log(`🎨 System theme changed: ${newSystemTheme}`);
+            
+            // Only apply if current preference is "auto"
+            const currentPreference = this.settings?.appearance?.theme || 'auto';
+            if (currentPreference === 'auto') {
+                const html = document.documentElement;
+                html.setAttribute('data-theme', newSystemTheme);
+                console.log(`🎨 Auto theme updated to: ${newSystemTheme}`);
+                
+                // Update timer theme compatibility when system theme changes
+                this.updateTimerThemeCompatibility();
+            }
         };
 
         this.systemThemeMediaQuery.addEventListener('change', this.systemThemeListener);
@@ -907,10 +924,21 @@ export class SettingsManager {
         const currentTheme = document.documentElement.getAttribute('data-theme');
         const storedTheme = localStorage.getItem('theme-preference');
 
-        // If early theme was set and matches localStorage, keep it
+        // If early theme was set and matches localStorage, check if we need to process it
         if (currentTheme && storedTheme && currentTheme === storedTheme) {
-            console.log(`🎨 Keeping early initialized theme: ${currentTheme}`);
+            console.log(`🎨 Early initialized theme found: ${currentTheme}`);
 
+            // If the stored theme is "auto", we need to apply the correct auto logic
+            // because data-theme should never be "auto" - it should be "light" or "dark"
+            if (storedTheme === 'auto') {
+                console.log(`🎨 Converting auto theme to actual theme`);
+                await this.applyTheme('auto'); // This will set data-theme to light/dark
+                return;
+            }
+
+            // For non-auto themes, keep the early initialization
+            console.log(`🎨 Keeping early initialized theme: ${currentTheme}`);
+            
             // Update settings to match current theme
             if (this.settings && this.settings.appearance) {
                 this.settings.appearance.theme = currentTheme;
@@ -920,11 +948,6 @@ export class SettingsManager {
                 } catch (error) {
                     console.error('Failed to update theme in settings:', error);
                 }
-            }
-
-            // Setup listeners for auto theme if needed
-            if (currentTheme === 'auto') {
-                this.setupSystemThemeListener();
             }
             return;
         }
@@ -994,15 +1017,9 @@ export class SettingsManager {
     // Timer Theme Management Functions
     getCurrentColorMode() {
         const currentTheme = document.documentElement.getAttribute('data-theme');
-
-        if (currentTheme === 'light') return 'light';
-        if (currentTheme === 'dark') return 'dark';
-        if (currentTheme === 'auto') {
-            // Check system preference
-            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
-
-        return 'light'; // default fallback
+        
+        // Since data-theme is now always 'light' or 'dark' (never 'auto'), this is simpler
+        return currentTheme === 'dark' ? 'dark' : 'light';
     }
 
     async initializeTimerTheme() {
