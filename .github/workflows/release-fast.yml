@@ -46,7 +46,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: 'Presto v__VERSION__ (macOS)'
+          releaseName: 'v__VERSION__ (macOS)'
           releaseBody: |
             ## Fast macOS Release
             

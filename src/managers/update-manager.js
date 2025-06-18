@@ -160,8 +160,8 @@ export class UpdateManager {
 
                     console.log('📦 Release più recente da GitHub:', latestRelease.tag_name);
 
-                    // Rimuovi il prefisso "app-v" se presente
-                    const latestVersion = latestRelease.tag_name.replace(/^app-v/, '');
+                    // Pulisci la versione usando la stessa logica robusta
+                    const latestVersion = this.cleanVersionString(latestRelease.tag_name);
                     const isNewer = this.compareVersions(latestVersion, currentVersion) > 0;
 
                     if (isNewer) {
@@ -246,18 +246,65 @@ export class UpdateManager {
      * Confronta due versioni (formato semver)
      */
     compareVersions(a, b) {
-        const aParts = a.split('.').map(Number);
-        const bParts = b.split('.').map(Number);
+        try {
+            console.log('🔍 Confronto versioni:', { a, b });
+            
+            // Pulisci le versioni da prefissi e suffissi non numerici
+            const cleanA = this.cleanVersionString(a);
+            const cleanB = this.cleanVersionString(b);
 
-        for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
-            const aPart = aParts[i] || 0;
-            const bPart = bParts[i] || 0;
+            console.log('🧹 Versioni pulite:', { cleanA, cleanB });
 
-            if (aPart > bPart) return 1;
-            if (aPart < bPart) return -1;
+            const aParts = cleanA.split('.').map(part => {
+                const num = parseInt(part, 10);
+                return isNaN(num) ? 0 : num;
+            });
+            const bParts = cleanB.split('.').map(part => {
+                const num = parseInt(part, 10);
+                return isNaN(num) ? 0 : num;
+            });
+
+            for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+                const aPart = aParts[i] || 0;
+                const bPart = bParts[i] || 0;
+
+                if (aPart > bPart) return 1;
+                if (aPart < bPart) return -1;
+            }
+
+            return 0;
+        } catch (error) {
+            console.error('❌ Errore nel confronto versioni:', error);
+            console.error('❌ Parametri:', { a, b });
+            // In caso di errore, assumiamo che non ci siano aggiornamenti
+            return 0;
+        }
+    }
+
+    /**
+     * Pulisce una stringa di versione da prefissi e caratteri non numerici
+     */
+    cleanVersionString(version) {
+        if (!version || typeof version !== 'string') {
+            return '0.0.0';
         }
 
-        return 0;
+        // Rimuovi prefissi comuni come "v", "app-v", etc.
+        let cleaned = version
+            .replace(/^(app-)?v/i, '')           // Rimuovi "v" o "app-v"
+            .replace(/^presto\s+v?/i, '')        // Rimuovi "Presto v" o "Presto"
+            .replace(/^release\s+v?/i, '')       // Rimuovi "Release v" o "Release"
+            .trim();
+
+        // Estrai solo la parte numerica con punti (x.y.z)
+        const versionMatch = cleaned.match(/^(\d+(?:\.\d+)*)/);
+        if (versionMatch) {
+            return versionMatch[1];
+        }
+
+        // Se non riusciamo a estrarre una versione valida, ritorna 0.0.0
+        console.warn('⚠️ Versione non valida:', version, '- usando 0.0.0');
+        return '0.0.0';
     }
 
     /**
@@ -427,6 +474,8 @@ export class UpdateManager {
                     errorMessage = 'Errore di rete durante il controllo degli aggiornamenti. Verifica la connessione a Internet.';
                 } else if (error === 'error sending request') {
                     errorMessage = 'Errore di connessione al server degli aggiornamenti. Verifica la connessione a Internet e riprova più tardi.';
+                } else if (error.includes('parsing') && error.includes('version')) {
+                    errorMessage = 'Errore nel formato delle informazioni di versione. Questo verrà risolto nel prossimo aggiornamento.';
                 }
             } else if (error && error.message) {
                 if (error.message.includes('network') || error.message.includes('request')) {

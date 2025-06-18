@@ -301,7 +301,8 @@ main() {
     echo "Prossimi passi:"
     echo "1. Verifica che la build sia completata correttamente"
     echo "2. Se hai aperto GitHub, crea la release con i file compilati"
-    echo "3. Testa l'aggiornamento automatico dell'app"
+    echo "3. Il tag v$new_version è stato creato per il sistema di aggiornamenti automatici"
+    echo "4. Testa l'aggiornamento automatico dell'app"
     echo ""
     
     # Mostra informazioni sui file generati
