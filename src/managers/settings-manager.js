@@ -1117,13 +1117,10 @@ export class SettingsManager {
                 </div>
                 <div class="color-preview-strip">
                     <div class="preview-color" style="background-color: ${theme.preview.focus}">
-                        <span class="preview-label">Focus</span>
                     </div>
                     <div class="preview-color" style="background-color: ${theme.preview.break}">
-                        <span class="preview-label">Break</span>
                     </div>
                     <div class="preview-color" style="background-color: ${theme.preview.longBreak}">
-                        <span class="preview-label">Long</span>
                     </div>
                 </div>
             </div>
