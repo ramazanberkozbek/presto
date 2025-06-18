@@ -184,8 +184,8 @@ body.longBreak {
 }
 
 .btn-primary {
-  background: var(--focus-timer-color);
-  color: white;
+  background: var(--shared-border);
+  color: var(--shared-text);
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
@@ -196,13 +196,13 @@ body.longBreak {
 }
 
 .btn-primary:hover {
-  background: var(--focus-timer-color-dark);
+  background: var(--hover-bg);
   transform: translateY(-1px);
 }
 
 .btn-secondary {
   background: #6c757d;
-  color: white;
+  color: var(--shared-text);
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;

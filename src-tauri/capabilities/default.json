@@ -9,7 +9,12 @@
     "core:default",
     "core:path:default",
     "core:event:default",
+    "core:app:default",
+    "core:app:allow-version",
+    "core:webview:default",
+    "core:webview:allow-internal-toggle-devtools",
     "opener:default",
+    "opener:allow-open-url",
     "notification:default",
     "notification:allow-is-permission-granted",
     "notification:allow-request-permission",
@@ -27,12 +32,6 @@
     "autostart:allow-is-enabled",
     "updater:default",
     "updater:allow-check",
-    "updater:allow-download-and-install",
-    "core:app:default",
-    "core:app:allow-version",
-    "opener:default",
-    "opener:allow-open-url",
-    "core:webview:default",
-    "core:webview:allow-internal-toggle-devtools"
+    "updater:allow-download-and-install"
   ]
 }
