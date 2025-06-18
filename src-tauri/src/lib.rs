@@ -770,6 +770,7 @@ pub fn run() {
                 get_stats_history,
                 save_daily_stats,
                 update_tray_icon,
+                update_tray_menu,
                 show_window,
                 save_settings,
                 load_settings,
@@ -794,19 +795,54 @@ pub fn run() {
 
                 let show_item =
                     MenuItem::with_id(app, "show", "Mostra Presto", true, None::<&str>)?;
+                let start_session_item =
+                    MenuItem::with_id(app, "start_session", "Inizia sessione", false, None::<&str>)?;
+                let pause_item =
+                    MenuItem::with_id(app, "pause", "Pausa", false, None::<&str>)?;
+                let skip_item =
+                    MenuItem::with_id(app, "skip", "Salta sessione", false, None::<&str>)?;
+                let cancel_item =
+                    MenuItem::with_id(app, "cancel", "Annulla", false, None::<&str>)?;
                 let quit_item = MenuItem::with_id(app, "quit", "Esci", true, None::<&str>)?;
-                let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
+                let menu = Menu::with_items(app, &[&show_item, &start_session_item, &pause_item, &skip_item, &cancel_item, &quit_item])?;
 
                 let app_handle = app.handle().clone();
                 let app_handle_for_click = app_handle.clone();
 
                 let _tray = TrayIconBuilder::with_id("main")
-                    .icon(app.default_window_icon().unwrap().clone())
                     .menu(&menu)
-                    .show_menu_on_left_click(false)
+                    .show_menu_on_left_click(true)
                     .on_menu_event(move |_tray, event| match event.id.as_ref() {
                         "show" => {
                             if let Some(window) = app_handle.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        }
+                        "start_session" => {
+                            if let Some(window) = app_handle.get_webview_window("main") {
+                                let _ = window.emit("tray-start-session", ());
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        }
+                        "pause" => {
+                            if let Some(window) = app_handle.get_webview_window("main") {
+                                let _ = window.emit("tray-pause", ());
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        }
+                        "skip" => {
+                            if let Some(window) = app_handle.get_webview_window("main") {
+                                let _ = window.emit("tray-skip", ());
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        }
+                        "cancel" => {
+                            if let Some(window) = app_handle.get_webview_window("main") {
+                                let _ = window.emit("tray-cancel", ());
                                 let _ = window.show();
                                 let _ = window.set_focus();
                             }
@@ -878,4 +914,73 @@ pub fn run() {
                 _ => {}
             });
     })
+}
+
+#[tauri::command]
+async fn update_tray_menu(
+    app: AppHandle,
+    is_running: bool,
+    is_paused: bool,
+    current_mode: String,
+) -> Result<(), String> {
+    let tray = app.tray_by_id("main");
+    
+    if let Some(tray) = tray {
+        let show_item = MenuItem::with_id(&app, "show", "Mostra Presto", true, None::<&str>)
+            .map_err(|e| format!("Failed to create show item: {}", e))?;
+        
+        // Inizia sessione: abilitato solo se non è in esecuzione
+        let start_session_item = MenuItem::with_id(
+            &app,
+            "start_session",
+            "Inizia sessione",
+            !is_running,
+            None::<&str>,
+        ).map_err(|e| format!("Failed to create start session item: {}", e))?;
+        
+        // Pausa: abilitata solo se è in esecuzione e non in pausa
+        let pause_item = MenuItem::with_id(
+            &app,
+            "pause",
+            "Pausa",
+            is_running && !is_paused,
+            None::<&str>,
+        ).map_err(|e| format!("Failed to create pause item: {}", e))?;
+        
+        // Skip: abilitato solo se è in esecuzione
+        let skip_item = MenuItem::with_id(
+            &app,
+            "skip",
+            "Salta sessione",
+            is_running,
+            None::<&str>,
+        ).map_err(|e| format!("Failed to create skip item: {}", e))?;
+        
+        // Annulla: abilitato se è in modalità focus, disabilitato in break/longBreak (undo)
+        let cancel_text = if current_mode == "focus" {
+            "Annulla"
+        } else {
+            "Annulla ultima"
+        };
+        let cancel_item = MenuItem::with_id(
+            &app,
+            "cancel",
+            cancel_text,
+            true,
+            None::<&str>,
+        ).map_err(|e| format!("Failed to create cancel item: {}", e))?;
+        
+        let quit_item = MenuItem::with_id(&app, "quit", "Esci", true, None::<&str>)
+            .map_err(|e| format!("Failed to create quit item: {}", e))?;
+        
+        let new_menu = Menu::with_items(
+            &app,
+            &[&show_item, &start_session_item, &pause_item, &skip_item, &cancel_item, &quit_item],
+        ).map_err(|e| format!("Failed to create menu: {}", e))?;
+        
+        tray.set_menu(Some(new_menu))
+            .map_err(|e| format!("Failed to set tray menu: {}", e))?;
+    }
+    
+    Ok(())
 }
