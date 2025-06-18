@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="styles/main.css" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Presto</title>
+  <script src="/managers/update-manager-global.js" defer></script>
   <script type="module" src="/main.js" defer></script>
 </head>
 
@@ -747,55 +748,6 @@
             </div>
 
             <div class="settings-section">
-              <h3>Update Actions</h3>
-
-              <div class="update-actions">
-                <button class="btn btn-secondary" id="view-changelog-btn">
-                  <i class="ri-file-text-line"></i>
-                  View Changelog
-                </button>
-              </div>
-
-              <div class="update-progress" id="update-progress" style="display: none;">
-                <div class="progress-info">
-                  <h4 id="progress-title">Checking for updates...</h4>
-                  <p id="progress-description">Please wait while we check for the latest version.</p>
-                </div>
-                <div class="progress-bar">
-                  <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
-                  <span class="progress-text" id="progress-text">0%</span>
-                </div>
-              </div>
-
-              <div class="update-info" id="update-info" style="display: none;">
-                <div class="update-details">
-                  <h4>Update Available</h4>
-                  <div class="version-comparison">
-                    <div class="version-item">
-                      <span class="version-label">Current:</span>
-                      <span class="version-value" id="current-version-display">0.1.0</span>
-                    </div>
-                    <div class="version-arrow">→</div>
-                    <div class="version-item">
-                      <span class="version-label">Latest:</span>
-                      <span class="version-value" id="latest-version-display">0.2.0</span>
-                    </div>
-                  </div>
-                  <div class="update-actions">
-                    <button class="btn btn-primary" id="download-update-btn">
-                      <i class="ri-download-line"></i>
-                      Download & Install
-                    </button>
-                    <button class="btn btn-secondary" id="skip-update-btn">
-                      <i class="ri-close-line"></i>
-                      Skip This Version
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="settings-section">
               <h3>Release Information</h3>
               <div class="release-info">
                 <p class="setting-description">
@@ -808,6 +760,44 @@
                 <div class="update-source">
                   <span class="source-label">Update Source:</span>
                   <code class="source-url" id="update-source-url">GitHub Releases</code>
+                </div>
+
+                <div class="update-progress" id="update-progress" style="display: none;">
+                  <div class="progress-info">
+                    <h4 id="progress-title">Checking for updates...</h4>
+                    <p id="progress-description">Please wait while we check for the latest version.</p>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                    <span class="progress-text" id="progress-text">0%</span>
+                  </div>
+                </div>
+
+                <div class="update-info" id="update-info" style="display: none;">
+                  <div class="update-details">
+                    <h4>Update Available</h4>
+                    <div class="version-comparison">
+                      <div class="version-item">
+                        <span class="version-label">Current:</span>
+                        <span class="version-value" id="current-version-display">0.1.0</span>
+                      </div>
+                      <div class="version-arrow">→</div>
+                      <div class="version-item">
+                        <span class="version-label">Latest:</span>
+                        <span class="version-value" id="latest-version-display">0.2.0</span>
+                      </div>
+                    </div>
+                    <div class="update-actions">
+                      <button class="btn btn-primary" id="download-update-btn">
+                        <i class="ri-download-line"></i>
+                        Download & Install
+                      </button>
+                      <button class="btn btn-secondary" id="skip-update-btn">
+                        <i class="ri-close-line"></i>
+                        Skip This Version
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

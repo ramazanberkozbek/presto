@@ -3040,7 +3040,7 @@ checksum = "925383efa346730478fb4838dbe9137d2a47675ad789c546d150a6e1dd4ab31c"
 
 [[package]]
 name = "presto"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "core-foundation 0.9.4",
  "core-graphics 0.23.2",
@@ -3055,6 +3055,7 @@ dependencies = [
  "tauri-plugin-global-shortcut",
  "tauri-plugin-notification",
  "tauri-plugin-opener",
+ "tauri-plugin-process",
  "tauri-plugin-updater",
 ]
 
@@ -4343,6 +4344,16 @@ dependencies = [
  "url",
  "windows",
  "zbus",
+]
+
+[[package]]
+name = "tauri-plugin-process"
+version = "2.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d870adae9408be585abd56eade2b5def2660339512b7c8de5ddf21238b67a34"
+dependencies = [
+ "tauri",
+ "tauri-plugin",
 ]
 
 [[package]]

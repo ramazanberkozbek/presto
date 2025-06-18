@@ -760,6 +760,7 @@ pub fn run() {
                 None,
             ))
             .plugin(tauri_plugin_updater::Builder::new().build())
+            .plugin(tauri_plugin_process::init())
             .plugin(tauri_plugin_aptabase::Builder::new("A-EU-9457123106").build())
             .invoke_handler(tauri::generate_handler![
                 greet,

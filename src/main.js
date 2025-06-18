@@ -5,7 +5,6 @@ import { SessionManager } from './managers/session-manager.js';
 import { TeamManager } from './managers/team-manager.js';
 import { PomodoroTimer } from './core/pomodoro-timer.js';
 import { NotificationUtils } from './utils/common-utils.js';
-import { updateManager } from './managers/update-manager.js';
 import { updateNotification } from './components/update-notification.js';
 
 // Global application state
@@ -427,8 +426,10 @@ async function initializeApplication() {
 
     // Initialize Update Manager
     console.log('🔄 Initializing Update Manager...');
-    window.updateManager = updateManager;
-    updateManager.loadPreferences(); // Carica le preferenze salvate
+    window.updateManager = new window.UpdateManagerV2();
+    if (window.updateManager.loadPreferences) {
+        window.updateManager.loadPreferences(); // Carica le preferenze salvate se supportato
+    }
 
     // Setup global event listeners
     setupGlobalEventListeners();
@@ -508,7 +509,6 @@ function setupUpdateManagement() {
   const currentVersionDisplay = document.getElementById('current-version-display');
   const checkUpdatesBtn = document.getElementById('check-updates-btn');
   const autoCheckUpdates = document.getElementById('auto-check-updates');
-  const viewChangelogBtn = document.getElementById('view-changelog-btn');
   const viewReleasesLink = document.getElementById('view-releases-link');
   const updateSourceUrl = document.getElementById('update-source-url');
 
@@ -598,15 +598,6 @@ function setupUpdateManagement() {
     autoCheckUpdates.checked = updateManager.autoCheck;
     autoCheckUpdates.addEventListener('change', (e) => {
       updateManager.setAutoCheck(e.target.checked);
-    });
-  }
-
-  // View changelog button
-  if (viewChangelogBtn) {
-    viewChangelogBtn.addEventListener('click', () => {
-      if (window.__TAURI__?.shell) {
-        window.__TAURI__.shell.open('https://github.com/murdercode/presto/releases');
-      }
     });
   }
 
