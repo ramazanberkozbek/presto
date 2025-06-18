@@ -537,7 +537,7 @@ function setupUpdateManagement() {
       }
     }
   }
-  
+
   // Imposta la versione corrente
   setCurrentVersion();
 

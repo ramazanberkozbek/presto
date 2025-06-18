@@ -250,7 +250,7 @@ export class UpdateManager {
     compareVersions(a, b) {
         try {
             console.log('🔍 Confronto versioni:', { a, b });
-            
+
             // Pulisci le versioni da prefissi e suffissi non numerici
             const cleanA = this.cleanVersionString(a);
             const cleanB = this.cleanVersionString(b);
