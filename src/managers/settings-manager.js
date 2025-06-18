@@ -188,7 +188,7 @@ export class SettingsManager {
 
         // Populate autostart setting and check current system status
         this.loadAutostartSetting();
-        
+
         // Populate analytics setting
         this.loadAnalyticsSetting();
     }
@@ -788,7 +788,7 @@ export class SettingsManager {
         try {
             // Get current analytics setting from our stored settings
             const analyticsEnabled = this.settings.analytics_enabled;
-            
+
             const checkbox = document.getElementById('analytics-enabled');
             if (checkbox) {
                 checkbox.checked = analyticsEnabled;

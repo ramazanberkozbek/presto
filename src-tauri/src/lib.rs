@@ -7,9 +7,9 @@ use std::time::{Duration, Instant};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager};
+use tauri_plugin_aptabase::EventTracker;
 use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
-use tauri_plugin_aptabase::EventTracker;
 
 // Type alias for the app handle to avoid generic complexity
 type AppHandle = tauri::AppHandle<tauri::Wry>;
@@ -140,7 +140,7 @@ impl Default for AppSettings {
                 smart_pause_timeout: 30, // default 30 seconds
             },
             advanced: AdvancedSettings::default(),
-            autostart: false, // default to disabled
+            autostart: false,        // default to disabled
             analytics_enabled: true, // default to enabled
         }
     }
@@ -761,118 +761,121 @@ pub fn run() {
             ))
             .plugin(tauri_plugin_updater::Builder::new().build())
             .plugin(tauri_plugin_aptabase::Builder::new("A-EU-9457123106").build())
-        .invoke_handler(tauri::generate_handler![
-            greet,
-            save_session_data,
-            load_session_data,
-            save_tasks,
-            load_tasks,
-            get_stats_history,
-            save_daily_stats,
-            update_tray_icon,
-            show_window,
-            save_settings,
-            load_settings,
-            register_global_shortcuts,
-            unregister_global_shortcuts,
-            reset_all_data,
-            start_activity_monitoring,
-            stop_activity_monitoring,
-            update_activity_timeout,
-            enable_autostart,
-            disable_autostart,
-            is_autostart_enabled
-        ])
-        .setup(|app| {
-            // Track app started event (if enabled)
-            let app_handle_analytics = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                if are_analytics_enabled(&app_handle_analytics).await {
-                    let _ = app_handle_analytics.track_event("app_started", None);
-                }
-            });
-
-            let show_item = MenuItem::with_id(app, "show", "Mostra Presto", true, None::<&str>)?;
-            let quit_item = MenuItem::with_id(app, "quit", "Esci", true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
-
-            let app_handle = app.handle().clone();
-            let app_handle_for_click = app_handle.clone();
-
-            let _tray = TrayIconBuilder::with_id("main")
-                .icon(app.default_window_icon().unwrap().clone())
-                .menu(&menu)
-                .show_menu_on_left_click(false)
-                .on_menu_event(move |_tray, event| match event.id.as_ref() {
-                    "show" => {
-                        if let Some(window) = app_handle.get_webview_window("main") {
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                        }
-                    }
-                    "quit" => {
-                        app_handle.exit(0);
-                    }
-                    _ => {}
-                })
-                .on_tray_icon_event(move |_tray, event| {
-                    if let TrayIconEvent::Click { .. } = event {
-                        if let Some(window) = app_handle_for_click.get_webview_window("main") {
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                        }
-                    }
-                })
-                .build(app)?;
-
-            if let Some(window) = app.get_webview_window("main") {
-                window.on_window_event(move |event| {
-                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                        api.prevent_close();
+            .invoke_handler(tauri::generate_handler![
+                greet,
+                save_session_data,
+                load_session_data,
+                save_tasks,
+                load_tasks,
+                get_stats_history,
+                save_daily_stats,
+                update_tray_icon,
+                show_window,
+                save_settings,
+                load_settings,
+                register_global_shortcuts,
+                unregister_global_shortcuts,
+                reset_all_data,
+                start_activity_monitoring,
+                stop_activity_monitoring,
+                update_activity_timeout,
+                enable_autostart,
+                disable_autostart,
+                is_autostart_enabled
+            ])
+            .setup(|app| {
+                // Track app started event (if enabled)
+                let app_handle_analytics = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    if are_analytics_enabled(&app_handle_analytics).await {
+                        let _ = app_handle_analytics.track_event("app_started", None);
                     }
                 });
-            }
 
-            // Load and register global shortcuts
-            let app_handle_for_shortcuts = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                match load_settings(app_handle_for_shortcuts.clone()).await {
-                    Ok(settings) => {
-                        if let Err(e) =
-                            register_global_shortcuts(app_handle_for_shortcuts, settings.shortcuts)
-                                .await
-                        {
-                            eprintln!("Failed to register global shortcuts on startup: {}", e);
+                let show_item =
+                    MenuItem::with_id(app, "show", "Mostra Presto", true, None::<&str>)?;
+                let quit_item = MenuItem::with_id(app, "quit", "Esci", true, None::<&str>)?;
+                let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
+
+                let app_handle = app.handle().clone();
+                let app_handle_for_click = app_handle.clone();
+
+                let _tray = TrayIconBuilder::with_id("main")
+                    .icon(app.default_window_icon().unwrap().clone())
+                    .menu(&menu)
+                    .show_menu_on_left_click(false)
+                    .on_menu_event(move |_tray, event| match event.id.as_ref() {
+                        "show" => {
+                            if let Some(window) = app_handle.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
                         }
-                    }
-                    Err(e) => {
-                        eprintln!("Failed to load settings on startup: {}", e);
-                        // Try to register default shortcuts
-                        let default_settings = AppSettings::default();
-                        if let Err(e) = register_global_shortcuts(
-                            app_handle_for_shortcuts,
-                            default_settings.shortcuts,
-                        )
-                        .await
-                        {
-                            eprintln!("Failed to register default global shortcuts: {}", e);
+                        "quit" => {
+                            app_handle.exit(0);
                         }
-                    }
+                        _ => {}
+                    })
+                    .on_tray_icon_event(move |_tray, event| {
+                        if let TrayIconEvent::Click { .. } = event {
+                            if let Some(window) = app_handle_for_click.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        }
+                    })
+                    .build(app)?;
+
+                if let Some(window) = app.get_webview_window("main") {
+                    window.on_window_event(move |event| {
+                        if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                            api.prevent_close();
+                        }
+                    });
                 }
-            });
 
-            Ok(())
-        })
-        .build(tauri::generate_context!())
-        .expect("error while running tauri application")
-        .run(|app_handle, event| match event {
-            tauri::RunEvent::Exit { .. } => {
-                // Always track app exit event regardless of analytics settings
-                // since this is the final event and useful for crash detection
-                let _ = app_handle.track_event("app_exited", None);
-                app_handle.flush_events_blocking();
-            }
-            _ => {}
-        });
+                // Load and register global shortcuts
+                let app_handle_for_shortcuts = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    match load_settings(app_handle_for_shortcuts.clone()).await {
+                        Ok(settings) => {
+                            if let Err(e) = register_global_shortcuts(
+                                app_handle_for_shortcuts,
+                                settings.shortcuts,
+                            )
+                            .await
+                            {
+                                eprintln!("Failed to register global shortcuts on startup: {}", e);
+                            }
+                        }
+                        Err(e) => {
+                            eprintln!("Failed to load settings on startup: {}", e);
+                            // Try to register default shortcuts
+                            let default_settings = AppSettings::default();
+                            if let Err(e) = register_global_shortcuts(
+                                app_handle_for_shortcuts,
+                                default_settings.shortcuts,
+                            )
+                            .await
+                            {
+                                eprintln!("Failed to register default global shortcuts: {}", e);
+                            }
+                        }
+                    }
+                });
+
+                Ok(())
+            })
+            .build(tauri::generate_context!())
+            .expect("error while running tauri application")
+            .run(|app_handle, event| match event {
+                tauri::RunEvent::Exit { .. } => {
+                    // Always track app exit event regardless of analytics settings
+                    // since this is the final event and useful for crash detection
+                    let _ = app_handle.track_event("app_exited", None);
+                    app_handle.flush_events_blocking();
+                }
+                _ => {}
+            });
     })
 }
