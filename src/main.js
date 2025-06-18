@@ -289,6 +289,14 @@ window.performTotalReset = async function () {
 
 // Initialize theme early to prevent flash
 async function initializeEarlyTheme() {
+  // Helper function to convert theme preference to actual theme
+  function getActualTheme(themePreference) {
+    if (themePreference === 'auto') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return themePreference;
+  }
+
   try {
     // Try to load theme from saved settings first
     const savedSettings = await invoke('load_settings');
@@ -296,9 +304,10 @@ async function initializeEarlyTheme() {
     const timerThemeFromSettings = savedSettings?.appearance?.timer_theme;
 
     if (themeFromSettings) {
-      document.documentElement.setAttribute('data-theme', themeFromSettings);
-      localStorage.setItem('theme-preference', themeFromSettings);
-      console.log(`🎨 Early theme loaded from settings: ${themeFromSettings}`);
+      const actualTheme = getActualTheme(themeFromSettings);
+      document.documentElement.setAttribute('data-theme', actualTheme);
+      localStorage.setItem('theme-preference', themeFromSettings); // Store preference (could be "auto")
+      console.log(`🎨 Early theme loaded from settings: ${themeFromSettings} -> actual: ${actualTheme}`);
     }
 
     // Also initialize timer theme early
@@ -327,8 +336,9 @@ async function initializeEarlyTheme() {
 
   // Fallback to localStorage or default for main theme
   const storedTheme = localStorage.getItem('theme-preference') || 'auto';
-  document.documentElement.setAttribute('data-theme', storedTheme);
-  console.log(`🎨 Early theme initialized from localStorage: ${storedTheme}`);
+  const actualTheme = getActualTheme(storedTheme);
+  document.documentElement.setAttribute('data-theme', actualTheme);
+  console.log(`🎨 Early theme initialized from localStorage: ${storedTheme} -> actual: ${actualTheme}`);
 }
 
 // Request notification permission using Tauri v2 API
@@ -537,7 +547,7 @@ function setupUpdateManagement() {
       }
     }
   }
-  
+
   // Imposta la versione corrente
   setCurrentVersion();
 
