@@ -53,8 +53,8 @@
 [data-theme="dark"] .base-card,
 [data-theme="dark"] .base-card-compact,
 [data-theme="dark"] .base-section {
-    background: #1e293b;
-    border-color: #334155;
+    background: #212121;
+    border-color: #313233;
 }
 
 [data-theme="dark"] .stat-card {
@@ -87,8 +87,8 @@
 }
 
 [data-theme="dark"] .sidebar-base {
-    background: #1e293b;
-    border-color: #334155;
+    background: #212121;
+    border-color: #313233;
 }
 
 [data-theme="dark"] .row-base {

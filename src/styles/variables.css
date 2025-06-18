@@ -31,7 +31,7 @@
 /* Dark Theme Variables */
 [data-theme="dark"] {
   color: #e2e8f0;
-  background-color: #0f172a;
+  background-color: #1b1b1b;
 
   /* Base Application Colors - dark versions */
   --accent-color: #f8fafc;

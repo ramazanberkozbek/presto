@@ -1,6 +1,5 @@
 /* Default body background - neutral for all pages */
 body {
-  background-color: #f6f6f6;
   transition: background-color 0.3s ease;
   margin: 0;
   padding: 0;
