@@ -174,6 +174,9 @@ export class PomodoroTimer {
         if (sidebar) {
             sidebar.className = `sidebar ${this.currentMode}`;
         }
+
+        // Initialize tray menu state
+        this.updateTrayMenu();
     }
 
     setupEventListeners() {
@@ -253,6 +256,52 @@ export class PomodoroTimer {
                 return e.returnValue;
             }
         });
+
+        // Listen for tray icon events
+        this.setupTrayEventListeners();
+    }
+
+    async setupTrayEventListeners() {
+        const { listen } = window.__TAURI__.event;
+
+        // Listen for start session from tray
+        await listen('tray-start-session', () => {
+            this.startTimer();
+        });
+
+        // Listen for pause from tray
+        await listen('tray-pause', () => {
+            this.pauseTimer();
+        });
+
+        // Listen for skip from tray
+        await listen('tray-skip', () => {
+            this.skipSession();
+        });
+
+        // Listen for cancel from tray
+        await listen('tray-cancel', () => {
+            if (this.currentMode === 'focus') {
+                // Delete/reset the current session
+                this.resetTimer();
+            } else {
+                // In break/longBreak mode: undo last session
+                this.undoLastSession();
+            }
+        });
+    }
+
+    // Update tray menu based on current timer state
+    async updateTrayMenu() {
+        try {
+            await invoke('update_tray_menu', {
+                isRunning: this.isRunning,
+                isPaused: this.isPaused,
+                currentMode: this.currentMode
+            });
+        } catch (error) {
+            console.error('Failed to update tray menu:', error);
+        }
     }
 
     // Update keyboard shortcuts from settings
@@ -504,6 +553,9 @@ export class PomodoroTimer {
             if (this.smartPauseEnabled && this.currentMode === 'focus') {
                 this.handleUserActivity();
             }
+
+            // Update tray menu
+            this.updateTrayMenu();
         }
     }
 
@@ -579,6 +631,9 @@ export class PomodoroTimer {
             this.updateButtons();
             this.updateDisplay();
             NotificationUtils.showNotificationPing('Timer paused ⏸️');
+
+            // Update tray menu
+            this.updateTrayMenu();
         }
     }
 
@@ -608,6 +663,9 @@ export class PomodoroTimer {
         this.updateDisplay();
         this.updateButtons();
         NotificationUtils.showNotificationPing('Session deleted ❌', 'warning');
+
+        // Update tray menu
+        this.updateTrayMenu();
     }
 
     skipSession() {
@@ -672,6 +730,9 @@ export class PomodoroTimer {
                 this.startTimer();
             }, 1500); // 1.5 second delay
         }
+
+        // Update tray menu
+        this.updateTrayMenu();
     }
 
     async completeSession() {
@@ -802,6 +863,9 @@ export class PomodoroTimer {
                 this.startTimer();
             }, 1500); // 1.5 second delay
         }
+
+        // Update tray menu
+        this.updateTrayMenu();
     }
 
     // Show completion notification for continuous sessions without stopping the timer
@@ -1269,6 +1333,9 @@ export class PomodoroTimer {
 
         // Show undo notification
         NotificationUtils.showNotificationPing('Last session undone! Back to focus mode 🔄', 'info', this.currentMode);
+
+        // Update tray menu
+        this.updateTrayMenu();
     }
 
     // Progress dots generation
