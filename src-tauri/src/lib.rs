@@ -53,6 +53,8 @@ struct AppSettings {
     #[serde(default)]
     advanced: AdvancedSettings,
     autostart: bool,
+    #[serde(default = "default_analytics_enabled")]
+    analytics_enabled: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -74,6 +76,18 @@ struct TimerSettings {
 
 fn default_weekly_goal() -> u32 {
     125
+}
+
+fn default_analytics_enabled() -> bool {
+    true // Analytics enabled by default
+}
+
+// Helper function to check if analytics are enabled
+async fn are_analytics_enabled(app: &AppHandle) -> bool {
+    match load_settings(app.clone()).await {
+        Ok(settings) => settings.analytics_enabled,
+        Err(_) => true, // Default to enabled if we can't load settings
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -127,6 +141,7 @@ impl Default for AppSettings {
             },
             advanced: AdvancedSettings::default(),
             autostart: false, // default to disabled
+            analytics_enabled: true, // default to enabled
         }
     }
 }
@@ -343,13 +358,15 @@ async fn save_session_data(session: PomodoroSession, app: AppHandle) -> Result<(
 
     fs::write(file_path, json).map_err(|e| format!("Failed to write session file: {}", e))?;
 
-    // Track session completion analytics
-    let properties = Some(serde_json::json!({
-        "completed_pomodoros": session.completed_pomodoros,
-        "total_focus_time": session.total_focus_time,
-        "current_session": session.current_session
-    }));
-    let _ = app.track_event("session_saved", properties);
+    // Track session saved analytics (if enabled)
+    if are_analytics_enabled(&app).await {
+        let properties = Some(serde_json::json!({
+            "completed_pomodoros": session.completed_pomodoros,
+            "total_focus_time": session.total_focus_time,
+            "current_session": session.current_session
+        }));
+        let _ = app.track_event("session_saved", properties);
+    }
 
     Ok(())
 }
@@ -390,14 +407,10 @@ async fn save_tasks(tasks: Vec<Task>, app: AppHandle) -> Result<(), String> {
 
     fs::write(file_path, json).map_err(|e| format!("Failed to write tasks file: {}", e))?;
 
-    // Track task management analytics
-    let completed_tasks = tasks.iter().filter(|task| task.completed).count();
-    let total_tasks = tasks.len();
-    let properties = Some(serde_json::json!({
-        "total_tasks": total_tasks,
-        "completed_tasks": completed_tasks
-    }));
-    let _ = app.track_event("tasks_saved", properties);
+    // Track tasks saved analytics (if enabled)
+    if are_analytics_enabled(&app).await {
+        let _ = app.track_event("tasks_saved", None);
+    }
 
     Ok(())
 }
@@ -576,15 +589,10 @@ async fn save_settings(settings: AppSettings, app: AppHandle) -> Result<(), Stri
 
     fs::write(file_path, json).map_err(|e| format!("Failed to write settings file: {}", e))?;
 
-    // Track settings changes analytics
-    let properties = Some(serde_json::json!({
-        "focus_duration": settings.timer.focus_duration,
-        "break_duration": settings.timer.break_duration,
-        "auto_start_timer": settings.notifications.auto_start_timer,
-        "smart_pause": settings.notifications.smart_pause,
-        "autostart": settings.autostart
-    }));
-    let _ = app.track_event("settings_saved", properties);
+    // Track settings changes analytics (if enabled)
+    if settings.analytics_enabled {
+        let _ = app.track_event("settings_saved", None);
+    }
 
     Ok(())
 }
@@ -776,8 +784,13 @@ pub fn run() {
             is_autostart_enabled
         ])
         .setup(|app| {
-            // Track app started event
-            let _ = app.track_event("app_started", None);
+            // Track app started event (if enabled)
+            let app_handle_analytics = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                if are_analytics_enabled(&app_handle_analytics).await {
+                    let _ = app_handle_analytics.track_event("app_started", None);
+                }
+            });
 
             let show_item = MenuItem::with_id(app, "show", "Mostra Presto", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "Esci", true, None::<&str>)?;
@@ -854,6 +867,8 @@ pub fn run() {
         .expect("error while running tauri application")
         .run(|app_handle, event| match event {
             tauri::RunEvent::Exit { .. } => {
+                // Always track app exit event regardless of analytics settings
+                // since this is the final event and useful for crash detection
                 let _ = app_handle.track_event("app_exited", None);
                 app_handle.flush_events_blocking();
             }

@@ -82,7 +82,8 @@ export class SettingsManager {
             notifications: { ...defaultSettings.notifications, ...loadedSettings.notifications },
             appearance: { ...defaultSettings.appearance, ...loadedSettings.appearance },
             advanced: { ...defaultSettings.advanced, ...loadedSettings.advanced },
-            autostart: loadedSettings.autostart !== undefined ? loadedSettings.autostart : defaultSettings.autostart
+            autostart: loadedSettings.autostart !== undefined ? loadedSettings.autostart : defaultSettings.autostart,
+            analytics_enabled: loadedSettings.analytics_enabled !== undefined ? loadedSettings.analytics_enabled : defaultSettings.analytics_enabled
         };
     }
 
@@ -115,7 +116,8 @@ export class SettingsManager {
             advanced: {
                 debug_mode: false // Debug mode with 3-second timers
             },
-            autostart: false // default to disabled
+            autostart: false, // default to disabled
+            analytics_enabled: true // Analytics enabled by default
         };
     }
 
@@ -186,6 +188,9 @@ export class SettingsManager {
 
         // Populate autostart setting and check current system status
         this.loadAutostartSetting();
+        
+        // Populate analytics setting
+        this.loadAnalyticsSetting();
     }
 
     setupEventListeners() {
@@ -773,6 +778,62 @@ export class SettingsManager {
 
             // Revert the checkbox state on error
             const checkbox = document.getElementById('autostart-enabled');
+            if (checkbox) {
+                checkbox.checked = !enabled;
+            }
+        }
+    }
+
+    async loadAnalyticsSetting() {
+        try {
+            // Get current analytics setting from our stored settings
+            const analyticsEnabled = this.settings.analytics_enabled;
+            
+            const checkbox = document.getElementById('analytics-enabled');
+            if (checkbox) {
+                checkbox.checked = analyticsEnabled;
+
+                // Setup event listener for the analytics checkbox
+                checkbox.addEventListener('change', async (e) => {
+                    await this.toggleAnalytics(e.target.checked);
+                });
+            }
+        } catch (error) {
+            console.error('Failed to load analytics setting:', error);
+            // Default to enabled if we can't check the status
+            const checkbox = document.getElementById('analytics-enabled');
+            if (checkbox) {
+                checkbox.checked = true;
+                checkbox.addEventListener('change', async (e) => {
+                    await this.toggleAnalytics(e.target.checked);
+                });
+            }
+        }
+    }
+
+    async toggleAnalytics(enabled) {
+        try {
+            // Update our settings
+            this.settings.analytics_enabled = enabled;
+
+            // Show user feedback
+            if (enabled) {
+                console.log('Analytics enabled');
+                NotificationUtils.showNotificationPing('✓ Analytics enabled - Help improve Presto!', 'success');
+            } else {
+                console.log('Analytics disabled');
+                NotificationUtils.showNotificationPing('✓ Analytics disabled - No data will be collected', 'success');
+            }
+
+            // Schedule auto-save to persist the setting
+            this.scheduleAutoSave();
+
+        } catch (error) {
+            console.error('Failed to toggle analytics:', error);
+            NotificationUtils.showNotificationPing('❌ Failed to toggle analytics: ' + error, 'error');
+
+            // Revert the checkbox state on error
+            const checkbox = document.getElementById('analytics-enabled');
             if (checkbox) {
                 checkbox.checked = !enabled;
             }
