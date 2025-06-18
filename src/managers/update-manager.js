@@ -5,6 +5,8 @@
  * tramite GitHub releases utilizzando il plugin updater di Tauri.
  */
 
+import { APP_VERSION } from '../version.js';
+
 export class UpdateManager {
     constructor() {
         this.updateAvailable = false;
@@ -617,13 +619,49 @@ export class UpdateManager {
                 return testVersion;
             }
 
+            // Prova prima l'API Tauri
             if (window.__TAURI__?.app?.getVersion) {
-                return await window.__TAURI__.app.getVersion();
+                const version = await window.__TAURI__.app.getVersion();
+                console.log('📋 Versione da Tauri API:', version);
+                return version;
             }
-            return '0.1.0'; // fallback
+
+            // Prova l'API core di Tauri se disponibile
+            if (window.__TAURI__?.core?.invoke) {
+                try {
+                    const version = await window.__TAURI__.core.invoke('plugin:app|version');
+                    console.log('📋 Versione da Tauri core:', version);
+                    return version;
+                } catch (coreError) {
+                    console.warn('⚠️ Tauri core invoke non disponibile:', coreError);
+                }
+            }
+
+            // Usa la versione importata dal file version.js
+            if (APP_VERSION && APP_VERSION !== '0.1.18') {
+                console.log('📋 Versione da version.js:', APP_VERSION);
+                return APP_VERSION;
+            }
+
+            // Fallback: leggi dal package.json se possibile
+            try {
+                const response = await fetch('./package.json');
+                if (response.ok) {
+                    const packageData = await response.json();
+                    if (packageData.version) {
+                        console.log('📋 Versione da package.json:', packageData.version);
+                        return packageData.version;
+                    }
+                }
+            } catch (fetchError) {
+                console.warn('⚠️ Non riesco a leggere package.json:', fetchError);
+            }
+
+            console.warn('⚠️ Nessun metodo per ottenere la versione funziona, uso APP_VERSION');
+            return APP_VERSION; // fallback alla versione importata
         } catch (error) {
-            console.warn('Non riesco a ottenere la versione corrente:', error);
-            return '0.1.0';
+            console.warn('❌ Errore nel recupero versione corrente:', error);
+            return APP_VERSION; // fallback alla versione importata
         }
     }
 

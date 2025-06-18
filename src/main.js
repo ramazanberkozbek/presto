@@ -515,13 +515,31 @@ function setupUpdateManagement() {
   const downloadUpdateBtn = document.getElementById('download-update-btn');
   const skipUpdateBtn = document.getElementById('skip-update-btn');
 
-  // Set current version
-  if (currentVersionElement) {
-    currentVersionElement.textContent = '0.1.0'; // You should get this from tauri.conf.json
+  // Set current version - get it from update manager
+  async function setCurrentVersion() {
+    try {
+      const currentVersion = await updateManager.getCurrentVersion();
+      if (currentVersionElement) {
+        currentVersionElement.textContent = currentVersion;
+      }
+      if (currentVersionDisplay) {
+        currentVersionDisplay.textContent = currentVersion;
+      }
+      console.log('📋 Versione corrente impostata:', currentVersion);
+    } catch (error) {
+      console.error('❌ Errore nel recupero versione corrente:', error);
+      // Fallback ai valori di default
+      if (currentVersionElement) {
+        currentVersionElement.textContent = '0.1.0';
+      }
+      if (currentVersionDisplay) {
+        currentVersionDisplay.textContent = '0.1.0';
+      }
+    }
   }
-  if (currentVersionDisplay) {
-    currentVersionDisplay.textContent = '0.1.0';
-  }
+  
+  // Imposta la versione corrente
+  setCurrentVersion();
 
   // Setup repository link
   if (viewReleasesLink) {

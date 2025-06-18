@@ -74,11 +74,15 @@ update_version_in_files() {
         sed -i '' "s/\"version\": \"$old_version\"/\"version\": \"$new_version\"/" package.json
         sed -i '' "s/version = \"$old_version\"/version = \"$new_version\"/" src-tauri/Cargo.toml
         sed -i '' "s/\"version\": \"$old_version\"/\"version\": \"$new_version\"/" src-tauri/tauri.conf.json
+        # Aggiorna version.js
+        sed -i '' "s/APP_VERSION = '$old_version'/APP_VERSION = '$new_version'/" src/version.js
     else
         # Linux
         sed -i "s/\"version\": \"$old_version\"/\"version\": \"$new_version\"/" package.json
         sed -i "s/version = \"$old_version\"/version = \"$new_version\"/" src-tauri/Cargo.toml
         sed -i "s/\"version\": \"$old_version\"/\"version\": \"$new_version\"/" src-tauri/tauri.conf.json
+        # Aggiorna version.js
+        sed -i "s/APP_VERSION = '$old_version'/APP_VERSION = '$new_version'/" src/version.js
     fi
     
     print_success "Versione aggiornata nei file di configurazione"
@@ -107,10 +111,10 @@ commit_and_tag() {
     local message="$2"
     
     print_step "Aggiunta file modificati a git..."
-    git add package.json src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/tauri.conf.json
+    git add package.json src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/tauri.conf.json src/version.js
     
     # Se ci sono altri file modificati, chiedi se aggiungerli
-    if [[ -n $(git status --porcelain | grep -v "package.json\|Cargo.toml\|Cargo.lock\|tauri.conf.json") ]]; then
+    if [[ -n $(git status --porcelain | grep -v "package.json\|Cargo.toml\|Cargo.lock\|tauri.conf.json\|version.js") ]]; then
         print_warning "Ci sono altri file modificati. Vuoi aggiungerli al commit? (y/N)"
         read -r response
         if [[ "$response" =~ ^[Yy]$ ]]; then

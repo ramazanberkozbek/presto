@@ -442,6 +442,18 @@
   color: var(--error-color);
 }
 
+/* Version Actions */
+.version-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.version-actions .btn {
+  font-size: 14px;
+  padding: 8px 16px;
+}
+
 /* Update Actions */
 .update-actions {
   display: flex;
