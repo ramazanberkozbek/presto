@@ -801,7 +801,6 @@ pub fn run() {
                 let app_handle_for_click = app_handle.clone();
 
                 let _tray = TrayIconBuilder::with_id("main")
-                    .icon(app.default_window_icon().unwrap().clone())
                     .menu(&menu)
                     .show_menu_on_left_click(false)
                     .on_menu_event(move |_tray, event| match event.id.as_ref() {
