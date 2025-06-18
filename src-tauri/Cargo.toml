@@ -38,6 +38,7 @@ tauri-plugin-dialog = { version = "2", default-features = false }
 tauri-plugin-notification = { version = "2", default-features = false }
 tauri-plugin-autostart = { version = "2", default-features = false }
 tauri-plugin-updater = { version = "2", default-features = false }
+tauri-plugin-aptabase = "1.0.0"
 serde = { version = "1", features = ["derive"], default-features = false }
 serde_json = { version = "1", default-features = false }
 

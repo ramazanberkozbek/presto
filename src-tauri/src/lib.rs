@@ -9,6 +9,7 @@ use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager};
 use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
+use tauri_plugin_aptabase::EventTracker;
 
 // Type alias for the app handle to avoid generic complexity
 type AppHandle = tauri::AppHandle<tauri::Wry>;
@@ -342,6 +343,14 @@ async fn save_session_data(session: PomodoroSession, app: AppHandle) -> Result<(
 
     fs::write(file_path, json).map_err(|e| format!("Failed to write session file: {}", e))?;
 
+    // Track session completion analytics
+    let properties = Some(serde_json::json!({
+        "completed_pomodoros": session.completed_pomodoros,
+        "total_focus_time": session.total_focus_time,
+        "current_session": session.current_session
+    }));
+    let _ = app.track_event("session_saved", properties);
+
     Ok(())
 }
 
@@ -380,6 +389,15 @@ async fn save_tasks(tasks: Vec<Task>, app: AppHandle) -> Result<(), String> {
         .map_err(|e| format!("Failed to serialize tasks: {}", e))?;
 
     fs::write(file_path, json).map_err(|e| format!("Failed to write tasks file: {}", e))?;
+
+    // Track task management analytics
+    let completed_tasks = tasks.iter().filter(|task| task.completed).count();
+    let total_tasks = tasks.len();
+    let properties = Some(serde_json::json!({
+        "total_tasks": total_tasks,
+        "completed_tasks": completed_tasks
+    }));
+    let _ = app.track_event("tasks_saved", properties);
 
     Ok(())
 }
@@ -558,6 +576,16 @@ async fn save_settings(settings: AppSettings, app: AppHandle) -> Result<(), Stri
 
     fs::write(file_path, json).map_err(|e| format!("Failed to write settings file: {}", e))?;
 
+    // Track settings changes analytics
+    let properties = Some(serde_json::json!({
+        "focus_duration": settings.timer.focus_duration,
+        "break_duration": settings.timer.break_duration,
+        "auto_start_timer": settings.notifications.auto_start_timer,
+        "smart_pause": settings.notifications.smart_pause,
+        "autostart": settings.autostart
+    }));
+    let _ = app.track_event("settings_saved", properties);
+
     Ok(())
 }
 
@@ -713,16 +741,18 @@ async fn is_autostart_enabled(app: AppHandle) -> Result<bool, String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
-        .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
-        .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_notification::init())
-        .plugin(tauri_plugin_autostart::init(
-            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
-            None,
-        ))
-        .plugin(tauri_plugin_updater::Builder::new().build())
+    tauri::async_runtime::block_on(async {
+        tauri::Builder::default()
+            .plugin(tauri_plugin_opener::init())
+            .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+            .plugin(tauri_plugin_dialog::init())
+            .plugin(tauri_plugin_notification::init())
+            .plugin(tauri_plugin_autostart::init(
+                tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+                None,
+            ))
+            .plugin(tauri_plugin_updater::Builder::new().build())
+            .plugin(tauri_plugin_aptabase::Builder::new("A-EU-9457123106").build())
         .invoke_handler(tauri::generate_handler![
             greet,
             save_session_data,
@@ -746,6 +776,9 @@ pub fn run() {
             is_autostart_enabled
         ])
         .setup(|app| {
+            // Track app started event
+            let _ = app.track_event("app_started", None);
+
             let show_item = MenuItem::with_id(app, "show", "Mostra Presto", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "Esci", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
@@ -817,6 +850,14 @@ pub fn run() {
 
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while running tauri application")
+        .run(|app_handle, event| match event {
+            tauri::RunEvent::Exit { .. } => {
+                let _ = app_handle.track_event("app_exited", None);
+                app_handle.flush_events_blocking();
+            }
+            _ => {}
+        });
+    })
 }
