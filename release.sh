@@ -175,7 +175,8 @@ update_homebrew_tap() {
 # Funzione per fare la build
 build_app() {
     print_step "Avvio build dell'applicazione..."
-    npm run build
+    # Modifica per utilizzare bundles app invece di dmg
+    npm run tauri build -- --bundles app
     print_success "Build completata"
 }
 
@@ -312,7 +313,7 @@ main() {
     # Mostra informazioni sui file generati
     if [[ -d "src-tauri/target" ]]; then
         echo "File di build generati:"
-        find src-tauri/target -name "*.dmg" -o -name "*.app" -o -name "*.deb" -o -name "*.AppImage" 2>/dev/null | head -5
+        find src-tauri/target -name "*.app.tar.gz" -o -name "*.app" -o -name "*.deb" -o -name "*.AppImage" 2>/dev/null | head -5
     fi
 }
 
