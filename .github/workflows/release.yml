@@ -19,10 +19,10 @@ jobs:
       matrix:
         include:
           - platform: 'macos-latest'
-            args: '--target aarch64-apple-darwin --bundles dmg'
+            args: '--target aarch64-apple-darwin --bundles app'
             arch: 'aarch64'
           - platform: 'macos-latest' 
-            args: '--target x86_64-apple-darwin --bundles dmg'
+            args: '--target x86_64-apple-darwin --bundles app'
             arch: 'x86_64'
 
     runs-on: ${{ matrix.platform }}
@@ -65,9 +65,9 @@ jobs:
 
             ### Installation Notes
 
-            **macOS**: Download the `.dmg` file for your architecture:
-            - `presto_x.x.x_aarch64.dmg` for Apple Silicon (M1/M2/M3 Macs)
-            - `presto_x.x.x_x64.dmg` for Intel Macs
+            **macOS**: Download the `.app` file for your architecture:
+            - `presto_x.x.x_aarch64.app.tar.gz` for Apple Silicon (M1/M2/M3 Macs)
+            - `presto_x.x.x_x64.app.tar.gz` for Intel Macs
 
             ### Auto-Updates
 
