@@ -279,15 +279,15 @@ main() {
     
     # Aggiorna versione nei file
     update_version_in_files $current_version $new_version
+
+    # Build
+    build_app
     
     # Commit e tag
     commit_and_tag $new_version "$release_message"
     
     # Push
     push_changes $new_version
-    
-    # Build
-    build_app
     
     # Aggiorna tap Homebrew
     update_homebrew_tap $new_version
