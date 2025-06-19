@@ -29,6 +29,7 @@ export class PomodoroTimer {
         this.sessionStartTime = null; // When the current session was started
         this.currentSessionElapsedTime = 0; // Actual elapsed time for current session (in seconds)
         this.lastCompletedSessionTime = 0; // Time of the last completed session for undo functionality
+        this.sessionCompletedButNotSaved = false; // Flag to track if session completed but not saved yet
 
         // Timer accuracy tracking (for background throttling fix)
         this.timerStartTime = null; // When the timer was started (Date.now())
@@ -533,6 +534,7 @@ export class PomodoroTimer {
             if (!this.sessionStartTime) {
                 this.sessionStartTime = Date.now();
                 this.currentSessionElapsedTime = 0;
+                this.sessionCompletedButNotSaved = false; // Reset flag for new session
             }
 
             // Initialize timer accuracy tracking
@@ -653,6 +655,7 @@ export class PomodoroTimer {
         // Reset session tracking
         this.sessionStartTime = null;
         this.currentSessionElapsedTime = 0;
+        this.sessionCompletedButNotSaved = false; // Reset flag
 
         // Reset timer accuracy tracking
         this.timerStartTime = null;
@@ -681,18 +684,28 @@ export class PomodoroTimer {
         }
         this.stopSmartPauseCountdown();
 
+        // Track if we need to save session data
+        let shouldSaveSession = false;
+
         // Skip to next mode
         if (this.currentMode === 'focus') {
             // Skip focus session - count as completed and go to break
-            this.completedPomodoros++;
-            this.updateProgressDots();
+            if (!this.sessionCompletedButNotSaved) {
+                // If session wasn't completed yet (not in overtime), count it as completed
+                this.completedPomodoros++;
+                this.updateProgressDots();
 
-            // Calculate elapsed time for skipped focus session (partial or full duration)
-            const actualElapsedTime = this.currentSessionElapsedTime || (this.durations.focus - this.timeRemaining);
-            this.totalFocusTime += actualElapsedTime;
+                // Calculate elapsed time for skipped focus session (partial or full duration)
+                const actualElapsedTime = this.currentSessionElapsedTime || (this.durations.focus - this.timeRemaining);
+                this.totalFocusTime += actualElapsedTime;
 
-            // Store the actual elapsed time for undo functionality
-            this.lastCompletedSessionTime = actualElapsedTime;
+                // Store the actual elapsed time for undo functionality
+                this.lastCompletedSessionTime = actualElapsedTime;
+            }
+
+            // We need to save session data when skipping a focus session
+            shouldSaveSession = true;
+            this.sessionCompletedButNotSaved = false;
 
             // Determine next mode
             if (this.completedPomodoros % 4 === 0) {
@@ -712,6 +725,12 @@ export class PomodoroTimer {
         this.timeRemaining = this.durations[this.currentMode];
         this.updateDisplay();
         this.updateButtons();
+
+        // Save session data if needed
+        if (shouldSaveSession) {
+            this.saveSessionData();
+            this.updateWeeklyStats();
+        }
 
         // Show skip notification
         const messages = {
@@ -799,6 +818,7 @@ export class PomodoroTimer {
         // Reset session tracking for next session
         this.sessionStartTime = null;
         this.currentSessionElapsedTime = 0;
+        this.sessionCompletedButNotSaved = false; // Reset flag
 
         // Reset timer accuracy tracking
         this.timerStartTime = null;
@@ -890,11 +910,18 @@ export class PomodoroTimer {
                 }
                 this.currentTask = '';
             }
+
+            // Mark session as completed but not saved yet (will be saved when user skips)
+            this.sessionCompletedButNotSaved = true;
         }
 
-        // Save session data
-        await this.saveSessionData();
-        await this.updateWeeklyStats();
+        // For continuous sessions, don't save the session data here
+        // It will be saved when the user skips the session
+        if (!this.allowContinuousSessions) {
+            // Save session data only for traditional mode
+            await this.saveSessionData();
+            await this.updateWeeklyStats();
+        }
 
         // Show notification
         this.showNotification();
@@ -1317,6 +1344,7 @@ export class PomodoroTimer {
         this.sessionStartTime = null;
         this.currentSessionElapsedTime = 0;
         this.lastCompletedSessionTime = 0;
+        this.sessionCompletedButNotSaved = false; // Reset flag
 
         // Reset timer accuracy tracking
         this.timerStartTime = null;
