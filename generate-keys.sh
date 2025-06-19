@@ -5,22 +5,28 @@
 
 echo "🔐 Generating update signing keys for Tauri..."
 
-# Verifica se tauri CLI è disponibile
-if ! command -v tauri &> /dev/null; then
-    echo "❌ Tauri CLI not found. Please install it first:"
-    echo "npm install --save-dev @tauri-apps/cli@latest"
+# Verifica se npm è disponibile
+if ! command -v npm &> /dev/null; then
+    echo "❌ npm not found. Please install Node.js first."
     exit 1
+fi
+
+# Controlla se è stata passata l'opzione --force
+FORCE_OPTION=""
+if [[ "$@" == *"--force"* ]]; then
+    FORCE_OPTION="--force"
+    echo "⚠️ Force option detected. Will overwrite existing keys."
 fi
 
 # Genera le chiavi di firma
 echo "📝 Generating signing keypair..."
-tauri signer generate -w ~/.tauri/tempo_signing_key
+npx tauri signer generate -w ~/.tauri/tempo_signing_key $FORCE_OPTION
 
 if [ $? -eq 0 ]; then
     echo "✅ Keys generated successfully!"
     echo ""
     echo "🔑 Your public key is:"
-    tauri signer sign -k ~/.tauri/tempo_signing_key --password "" | head -1
+    npx tauri signer sign -k ~/.tauri/tempo_signing_key --password "" | head -1
     echo ""
     echo "📋 Next steps:"
     echo "1. Copy the public key above"
