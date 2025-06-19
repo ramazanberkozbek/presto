@@ -92,29 +92,109 @@
     --shared-hover-bg: rgba(156, 39, 176, 0.1);
 }
 
-/* Animated Background for Pride Theme */
+/* Artistic Pride Background with Abstract Shapes */
 :root[data-timer-theme="pride"] body,
 :root[data-timer-theme="pride"] .app-container,
 :root[data-timer-theme="pride"] .main-content {
-    background: var(--focus-bg) !important;
-    background-size: 400% 400% !important;
-    animation: gradient-move 8s ease infinite !important;
+    background: 
+        /* Base animated gradient */
+        linear-gradient(135deg, #ff9aa2, #ffc9a3, #fff4a3, #a3f7ba, #a3ccff, #d4a3ff, #ff9aa2, #ffc9a3),
+        /* Floating circles */
+        radial-gradient(circle at 20% 20%, rgba(255, 154, 162, 0.6) 0%, transparent 50%),
+        radial-gradient(circle at 80% 30%, rgba(255, 201, 163, 0.5) 0%, transparent 40%),
+        radial-gradient(circle at 40% 70%, rgba(255, 244, 163, 0.4) 0%, transparent 60%),
+        radial-gradient(circle at 90% 80%, rgba(163, 247, 186, 0.6) 0%, transparent 45%),
+        radial-gradient(circle at 10% 90%, rgba(163, 204, 255, 0.5) 0%, transparent 55%),
+        radial-gradient(circle at 70% 10%, rgba(212, 163, 255, 0.4) 0%, transparent 50%),
+        /* Geometric triangles */
+        linear-gradient(45deg, transparent 40%, rgba(255, 107, 157, 0.3) 45%, rgba(255, 107, 157, 0.3) 55%, transparent 60%),
+        linear-gradient(-45deg, transparent 30%, rgba(156, 39, 176, 0.2) 35%, rgba(156, 39, 176, 0.2) 65%, transparent 70%),
+        /* Abstract waves */
+        linear-gradient(90deg, rgba(255, 154, 162, 0.1) 0%, rgba(255, 201, 163, 0.2) 25%, rgba(255, 244, 163, 0.1) 50%, rgba(163, 247, 186, 0.2) 75%, rgba(163, 204, 255, 0.1) 100%) !important;
+    
+    background-size: 
+        400% 400%,
+        150px 150px,
+        200px 200px,
+        120px 120px,
+        180px 180px,
+        160px 160px,
+        140px 140px,
+        100% 300px,
+        100% 200px,
+        100% 100px !important;
+    
+    background-position:
+        0% 0%,
+        0% 0%,
+        100% 0%,
+        0% 100%,
+        100% 100%,
+        50% 0%,
+        25% 50%,
+        0% 25%,
+        0% 75%,
+        0% 0% !important;
+    
+    animation: 
+        gradient-move 12s ease infinite,
+        float-shapes 20s ease-in-out infinite !important;
 }
 
 :root[data-timer-theme="pride"][data-mode="break"] body,
 :root[data-timer-theme="pride"][data-mode="break"] .app-container,
 :root[data-timer-theme="pride"][data-mode="break"] .main-content {
-    background: var(--break-bg) !important;
-    background-size: 400% 400% !important;
-    animation: gradient-move 8s ease infinite !important;
+    background: 
+        /* Break mode gradient */
+        linear-gradient(45deg, #ffc9a3, #fff4a3, #a3f7ba, #a3ccff, #d4a3ff, #ff9aa2, #ffc9a3, #fff4a3),
+        /* Different positioned shapes for break */
+        radial-gradient(circle at 30% 40%, rgba(255, 152, 0, 0.5) 0%, transparent 45%),
+        radial-gradient(circle at 70% 20%, rgba(255, 244, 163, 0.6) 0%, transparent 50%),
+        radial-gradient(circle at 20% 80%, rgba(163, 247, 186, 0.4) 0%, transparent 60%),
+        radial-gradient(circle at 85% 60%, rgba(163, 204, 255, 0.5) 0%, transparent 40%),
+        linear-gradient(30deg, transparent 35%, rgba(255, 152, 0, 0.3) 40%, rgba(255, 152, 0, 0.3) 60%, transparent 65%),
+        linear-gradient(-60deg, transparent 25%, rgba(76, 175, 80, 0.2) 30%, rgba(76, 175, 80, 0.2) 70%, transparent 75%) !important;
+    
+    background-size: 
+        400% 400%,
+        130px 130px,
+        170px 170px,
+        110px 110px,
+        190px 190px,
+        100% 250px,
+        100% 180px !important;
+    
+    animation: 
+        gradient-move 10s ease infinite,
+        float-shapes-alt 18s ease-in-out infinite !important;
 }
 
 :root[data-timer-theme="pride"][data-mode="long-break"] body,
 :root[data-timer-theme="pride"][data-mode="long-break"] .app-container,
 :root[data-timer-theme="pride"][data-mode="long-break"] .main-content {
-    background: var(--long-break-bg) !important;
-    background-size: 400% 400% !important;
-    animation: gradient-move 8s ease infinite !important;
+    background: 
+        /* Long break gradient */
+        linear-gradient(225deg, #d4a3ff, #ff9aa2, #ffc9a3, #fff4a3, #a3f7ba, #a3ccff, #d4a3ff, #ff9aa2),
+        /* Dreamy purple shapes */
+        radial-gradient(circle at 50% 30%, rgba(156, 39, 176, 0.4) 0%, transparent 55%),
+        radial-gradient(circle at 15% 60%, rgba(212, 163, 255, 0.6) 0%, transparent 45%),
+        radial-gradient(circle at 85% 40%, rgba(255, 154, 162, 0.3) 0%, transparent 60%),
+        radial-gradient(circle at 40% 90%, rgba(163, 204, 255, 0.5) 0%, transparent 50%),
+        linear-gradient(60deg, transparent 30%, rgba(156, 39, 176, 0.2) 35%, rgba(156, 39, 176, 0.2) 65%, transparent 70%),
+        linear-gradient(-30deg, transparent 40%, rgba(212, 163, 255, 0.3) 45%, rgba(212, 163, 255, 0.3) 55%, transparent 60%) !important;
+    
+    background-size: 
+        400% 400%,
+        160px 160px,
+        140px 140px,
+        120px 120px,
+        180px 180px,
+        100% 280px,
+        100% 220px !important;
+    
+    animation: 
+        gradient-move 14s ease infinite,
+        float-shapes-slow 25s ease-in-out infinite !important;
 }
 
 /* Pride Theme Specific Styling - Timer Only */
@@ -177,6 +257,117 @@
     }
     100% {
         background-position: 0% 50%;
+    }
+}
+
+@keyframes float-shapes {
+    0%, 100% {
+        background-position:
+            0% 0%,
+            0% 0%,
+            100% 0%,
+            0% 100%,
+            100% 100%,
+            50% 0%,
+            25% 50%,
+            0% 25%,
+            0% 75%,
+            0% 0%;
+    }
+    25% {
+        background-position:
+            25% 25%,
+            10% 10%,
+            90% 10%,
+            10% 90%,
+            90% 90%,
+            60% 10%,
+            35% 60%,
+            10% 35%,
+            10% 85%,
+            10% 10%;
+    }
+    50% {
+        background-position:
+            50% 50%,
+            20% 20%,
+            80% 20%,
+            20% 80%,
+            80% 80%,
+            70% 20%,
+            45% 70%,
+            20% 45%,
+            20% 95%,
+            20% 20%;
+    }
+    75% {
+        background-position:
+            75% 25%,
+            30% 10%,
+            70% 30%,
+            30% 70%,
+            70% 70%,
+            40% 30%,
+            55% 40%,
+            30% 55%,
+            30% 65%,
+            30% 30%;
+    }
+}
+
+@keyframes float-shapes-alt {
+    0%, 100% {
+        background-position:
+            0% 0%,
+            30% 40%,
+            70% 20%,
+            20% 80%,
+            85% 60%,
+            0% 25%,
+            0% 75%;
+    }
+    33% {
+        background-position:
+            33% 33%,
+            40% 50%,
+            60% 30%,
+            30% 70%,
+            75% 70%,
+            10% 35%,
+            10% 85%;
+    }
+    66% {
+        background-position:
+            66% 66%,
+            50% 30%,
+            80% 40%,
+            40% 60%,
+            95% 50%,
+            20% 45%,
+            20% 65%;
+    }
+}
+
+@keyframes float-shapes-slow {
+    0%, 100% {
+        background-position:
+            0% 0%,
+            50% 30%,
+            15% 60%,
+            85% 40%,
+            40% 90%,
+            0% 30%,
+            0% 40%;
+    }
+    50% {
+        background-position:
+            50% 50%,
+            40% 40%,
+            25% 50%,
+            75% 50%,
+            30% 80%,
+            10% 40%,
+            10% 50%;
     }
 }
 
