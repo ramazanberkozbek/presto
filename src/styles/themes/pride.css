@@ -10,24 +10,29 @@
 /* Pride Theme - Light Mode */
 :root[data-timer-theme="pride"] {
     /* Timer Colors - Pride Rainbow Colors */
-    --focus-color: #e91e63; /* Pink */
-    --break-color: #ff9800; /* Orange */
-    --long-break-color: #9c27b0; /* Purple */
+    --focus-color: #e91e63;
+    /* Pink */
+    --break-color: #ff9800;
+    /* Orange */
+    --long-break-color: #9c27b0;
+    /* Purple */
 
-    /* Background Colors - More Saturated Rainbow Gradients */
-    --focus-bg: linear-gradient(135deg, #ff9aa2, #ffc9a3, #fff4a3, #a3f7ba, #a3ccff, #d4a3ff);
-    --break-bg: linear-gradient(45deg, #ffc9a3, #fff4a3, #a3f7ba, #a3ccff, #d4a3ff, #ff9aa2);
-    --long-break-bg: linear-gradient(225deg, #d4a3ff, #ff9aa2, #ffc9a3, #fff4a3, #a3f7ba, #a3ccff);
+    /* Background Colors - Animated Rainbow Gradients */
+    --focus-bg: linear-gradient(135deg, #ff9aa2, #ffc9a3, #fff4a3, #a3f7ba, #a3ccff, #d4a3ff, #ff9aa2, #ffc9a3);
+    --break-bg: linear-gradient(45deg, #ffc9a3, #fff4a3, #a3f7ba, #a3ccff, #d4a3ff, #ff9aa2, #ffc9a3, #fff4a3);
+    --long-break-bg: linear-gradient(225deg, #d4a3ff, #ff9aa2, #ffc9a3, #fff4a3, #a3f7ba, #a3ccff, #d4a3ff, #ff9aa2);
 
     /* Timer Text Colors - White with dark shadow */
-    --focus-timer-color: #ffffff;
+    --focus-timer-color: #2c3e50;
     --break-timer-color: #ffffff;
     --long-break-timer-color: #ffffff;
 
     /* Button Colors - Dark buttons except play */
-    --focus-primary-btn: #ff6b9d; /* Keep play button colored */
+    --focus-primary-btn: #ff6b9d;
+    /* Keep play button colored */
     --focus-primary-btn-hover: #ff5a8a;
-    --break-primary-btn: #2c3e50; /* Dark buttons for others */
+    --break-primary-btn: #2c3e50;
+    /* Dark buttons for others */
     --break-primary-btn-hover: #34495e;
     --long-break-primary-btn: #2c3e50;
     --long-break-primary-btn-hover: #34495e;
@@ -50,27 +55,29 @@
     --shared-hover-bg: rgba(156, 39, 176, 0.05);
 
     /* Pride-specific more saturated rainbow accent */
-    --pride-rainbow: linear-gradient(90deg, 
-        #ff9aa2 0%, 
-        #ffc9a3 16.66%, 
-        #fff4a3 33.33%, 
-        #a3f7ba 50%, 
-        #a3ccff 66.66%, 
-        #d4a3ff 83.33%, 
-        #ff9aa2 100%);
+    --pride-rainbow: linear-gradient(90deg,
+            #ff9aa2 0%,
+            #ffc9a3 16.66%,
+            #fff4a3 33.33%,
+            #a3f7ba 50%,
+            #a3ccff 66.66%,
+            #d4a3ff 83.33%,
+            #ff9aa2 100%);
 }
 
 /* Pride Theme - Dark Mode */
 :root[data-timer-theme="pride"][data-theme="dark"] {
-    /* Background Colors - Softer Rainbow for Dark Mode */
-    --focus-bg: linear-gradient(135deg, #ff8a95, #ffc4a3, #fff2a3, #a3f5b5, #a3d9ff, #d4a3ff);
-    --break-bg: linear-gradient(45deg, #ffc4a3, #fff2a3, #a3f5b5, #a3d9ff, #d4a3ff, #ff8a95);
-    --long-break-bg: linear-gradient(225deg, #d4a3ff, #ff8a95, #ffc4a3, #fff2a3, #a3f5b5, #a3d9ff);
+    /* Background Colors - Animated Softer Rainbow for Dark Mode */
+    --focus-bg: linear-gradient(135deg, #ff8a95, #ffc4a3, #fff2a3, #a3f5b5, #a3d9ff, #d4a3ff, #ff8a95, #ffc4a3);
+    --break-bg: linear-gradient(45deg, #ffc4a3, #fff2a3, #a3f5b5, #a3d9ff, #d4a3ff, #ff8a95, #ffc4a3, #fff2a3);
+    --long-break-bg: linear-gradient(225deg, #d4a3ff, #ff8a95, #ffc4a3, #fff2a3, #a3f5b5, #a3d9ff, #d4a3ff, #ff8a95);
 
     /* Button Colors - Dark mode: dark buttons except play */
-    --focus-primary-btn: #ff8fb3; /* Keep play button colored */
+    --focus-primary-btn: #ff8fb3;
+    /* Keep play button colored */
     --focus-primary-btn-hover: #ff6b9d;
-    --break-primary-btn: #2c3e50; /* Dark buttons for others */
+    --break-primary-btn: #2c3e50;
+    /* Dark buttons for others */
     --break-primary-btn-hover: #34495e;
     --long-break-primary-btn: #2c3e50;
     --long-break-primary-btn-hover: #34495e;
@@ -85,11 +92,36 @@
     --shared-hover-bg: rgba(156, 39, 176, 0.1);
 }
 
+/* Animated Background for Pride Theme */
+:root[data-timer-theme="pride"] body,
+:root[data-timer-theme="pride"] .app-container,
+:root[data-timer-theme="pride"] .main-content {
+    background: var(--focus-bg) !important;
+    background-size: 400% 400% !important;
+    animation: gradient-move 8s ease infinite !important;
+}
+
+:root[data-timer-theme="pride"][data-mode="break"] body,
+:root[data-timer-theme="pride"][data-mode="break"] .app-container,
+:root[data-timer-theme="pride"][data-mode="break"] .main-content {
+    background: var(--break-bg) !important;
+    background-size: 400% 400% !important;
+    animation: gradient-move 8s ease infinite !important;
+}
+
+:root[data-timer-theme="pride"][data-mode="long-break"] body,
+:root[data-timer-theme="pride"][data-mode="long-break"] .app-container,
+:root[data-timer-theme="pride"][data-mode="long-break"] .main-content {
+    background: var(--long-break-bg) !important;
+    background-size: 400% 400% !important;
+    animation: gradient-move 8s ease infinite !important;
+}
+
 /* Pride Theme Specific Styling - Timer Only */
 :root[data-timer-theme="pride"] .timer-display {
     font-family: 'Fredoka One', cursive !important;
     color: #ffffff !important;
-    text-shadow: 
+    text-shadow:
         4px 4px 0px #2c3e50,
         5px 5px 0px #1a252f,
         6px 6px 0px #0f1419;
@@ -103,7 +135,7 @@
 :root[data-timer-theme="pride"] .timer-colon {
     font-family: 'Fredoka One', cursive !important;
     color: #ffffff !important;
-    text-shadow: 
+    text-shadow:
         4px 4px 0px #2c3e50,
         5px 5px 0px #1a252f,
         6px 6px 0px #0f1419;
@@ -125,8 +157,27 @@
 }
 
 @keyframes rainbow-pulse {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 1; }
+
+    0%,
+    100% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes gradient-move {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
 /* Pride-themed button gradients */
@@ -162,10 +213,10 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, 
-        transparent, 
-        rgba(255, 255, 255, 0.1), 
-        transparent);
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.1),
+            transparent);
     transition: left 0.5s ease;
 }
 
@@ -213,15 +264,40 @@
     color: #2c3e50 !important;
 }
 
-/* Keep primary play button colored */
+/* Keep primary play button translucent like sidebar */
 :root[data-timer-theme="pride"] .control-btn.primary {
-    background-color: var(--focus-primary-btn) !important;
-    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+    color: #2c3e50 !important;
 }
 
 :root[data-timer-theme="pride"] .control-btn.primary:hover {
-    background-color: var(--focus-primary-btn-hover) !important;
+    background: rgba(255, 255, 255, 0.35) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    color: #2c3e50 !important;
+    transform: translateY(-2px);
+}
+
+/* Dark mode translucent play button */
+:root[data-timer-theme="pride"][data-theme="dark"] .control-btn.primary {
+    background: rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
     color: #ffffff !important;
+}
+
+:root[data-timer-theme="pride"][data-theme="dark"] .control-btn.primary:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    color: #ffffff !important;
+    transform: translateY(-2px);
 }
 
 /* Sidebar Buttons - Dark icons, transparent background */

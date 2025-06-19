@@ -45,6 +45,17 @@ export const TIMER_THEMES = {
             break: '#ff9800',
             longBreak: '#9c27b0'
         }
+    },
+    'liquid-glass': {
+        name: 'Liquid Glass',
+        description: 'Tema trasparente ispirato al design macOS con effetti di vetro liquido e blur',
+        supports: ['light', 'dark'],
+        isDefault: false,
+        preview: {
+            focus: '#007aff',
+            break: '#34c759',
+            longBreak: '#af52de'
+        }
     }
 };
 
