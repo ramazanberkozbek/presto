@@ -589,11 +589,6 @@ async fn save_settings(settings: AppSettings, app: AppHandle) -> Result<(), Stri
 
     fs::write(file_path, json).map_err(|e| format!("Failed to write settings file: {}", e))?;
 
-    // Track settings changes analytics (if enabled)
-    if settings.analytics_enabled {
-        let _ = app.track_event("settings_saved", None);
-    }
-
     Ok(())
 }
 

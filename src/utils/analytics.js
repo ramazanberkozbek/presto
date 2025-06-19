@@ -183,33 +183,6 @@ class Analytics {
     };
 
     /**
-     * Track settings changes
-     */
-    static settings = {
-        /**
-         * Track when settings are changed
-         * @param {string} category - Settings category
-         * @param {string} setting - Setting name
-         * @param {any} value - New value
-         */
-        async changed(category, setting, value) {
-            await Analytics.track("setting_changed", {
-                category,
-                setting,
-                value: String(value)
-            });
-        },
-
-        /**
-         * Track when theme is changed
-         * @param {string} theme - Theme name
-         */
-        async themeChanged(theme) {
-            await Analytics.track("theme_changed", { theme });
-        }
-    };
-
-    /**
      * Track session-related events
      */
     static sessions = {
