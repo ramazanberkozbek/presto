@@ -687,70 +687,85 @@ export class PomodoroTimer {
         // Track if we need to save session data
         let shouldSaveSession = false;
 
-        // Skip to next mode
-        if (this.currentMode === 'focus') {
-            // Skip focus session - count as completed and go to break
-            if (!this.sessionCompletedButNotSaved) {
-                // If session wasn't completed yet (not in overtime), count it as completed
-                this.completedPomodoros++;
-                this.updateProgressDots();
-
-                // Calculate elapsed time for skipped focus session (partial or full duration)
-                const actualElapsedTime = this.currentSessionElapsedTime || (this.durations.focus - this.timeRemaining);
-                this.totalFocusTime += actualElapsedTime;
-
-                // Store the actual elapsed time for undo functionality
-                this.lastCompletedSessionTime = actualElapsedTime;
-            }
-
-            // We need to save session data when skipping a focus session
+        // OVERTIME: If in overtime and continuous sessions, save session and skip double-counting
+        if (this.timeRemaining < 0 && this.allowContinuousSessions) {
             shouldSaveSession = true;
             this.sessionCompletedButNotSaved = false;
+            // Move to next mode as usual
+            if (this.currentMode === 'focus') {
+                if (this.completedPomodoros % 4 === 0) {
+                    this.currentMode = 'longBreak';
+                } else {
+                    this.currentMode = 'break';
+                }
+            } else {
+                this.currentMode = 'focus';
+                if (this.completedPomodoros < this.totalSessions) {
+                    this.currentSession = this.completedPomodoros + 1;
+                }
+            }
+            this.timeRemaining = this.durations[this.currentMode];
+            this.updateDisplay();
+            this.updateButtons();
+            if (shouldSaveSession) {
+                this.saveSessionData();
+                this.updateWeeklyStats();
+            }
+            const messages = {
+                focus: 'Focus session skipped. Time for a break! 😌',
+                break: 'Break skipped. Ready to focus? 🍅',
+                longBreak: 'Long break skipped. Time to get back to work! 🚀'
+            };
+            NotificationUtils.showNotificationPing(messages[this.currentMode] || 'Session skipped 📤', 'info', this.currentMode);
+            if (this.autoStartTimer) {
+                setTimeout(() => {
+                    this.startTimer();
+                }, 1500);
+            }
+            this.updateTrayMenu();
+            return; // Prevent double-counting
+        }
 
-            // Determine next mode
+        // NORMAL SKIP LOGIC
+        if (this.currentMode === 'focus') {
+            if (!this.sessionCompletedButNotSaved) {
+                this.completedPomodoros++;
+                this.updateProgressDots();
+                const actualElapsedTime = this.currentSessionElapsedTime || (this.durations.focus - this.timeRemaining);
+                this.totalFocusTime += actualElapsedTime;
+                this.lastCompletedSessionTime = actualElapsedTime;
+            }
+            shouldSaveSession = true;
+            this.sessionCompletedButNotSaved = false;
             if (this.completedPomodoros % 4 === 0) {
                 this.currentMode = 'longBreak';
             } else {
                 this.currentMode = 'break';
             }
         } else {
-            // Skip break - go back to focus
             this.currentMode = 'focus';
-            // Only increment session if we haven't reached total sessions
             if (this.completedPomodoros < this.totalSessions) {
                 this.currentSession = this.completedPomodoros + 1;
             }
         }
-
         this.timeRemaining = this.durations[this.currentMode];
         this.updateDisplay();
         this.updateButtons();
-
-        // Save session data if needed
         if (shouldSaveSession) {
             this.saveSessionData();
             this.updateWeeklyStats();
         }
-
-        // Show skip notification
         const messages = {
             focus: 'Focus session skipped. Time for a break! 😌',
             break: 'Break skipped. Ready to focus? 🍅',
             longBreak: 'Long break skipped. Time to get back to work! 🚀'
         };
-
         NotificationUtils.showNotificationPing(messages[this.currentMode] || 'Session skipped 📤', 'info', this.currentMode);
-
-        // Auto-start new session if enabled
         if (this.autoStartTimer) {
-            console.log('Auto-starting new session after skip in 1.5 seconds...');
-            // Add a small delay to let the user see the skip message
             setTimeout(() => {
                 this.startTimer();
-            }, 1500); // 1.5 second delay
+            }, 1500);
         }
-
-        // Update tray menu
         this.updateTrayMenu();
     }
 
