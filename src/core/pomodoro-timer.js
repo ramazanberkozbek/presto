@@ -548,7 +548,9 @@ export class PomodoroTimer {
 
             this.updateButtons();
             this.updateDisplay();
-            NotificationUtils.playNotificationSound();
+            if (this.enableSoundNotifications) {
+                NotificationUtils.playNotificationSound();
+            }
             NotificationUtils.showNotificationPing('Timer started! 🍅', 'info', this.currentMode);
 
             // Start smart pause monitoring if enabled
@@ -846,7 +848,9 @@ export class PomodoroTimer {
         await this.saveSessionData();
         await this.updateWeeklyStats();
         this.showNotification();
-        NotificationUtils.playNotificationSound();
+        if (this.enableSoundNotifications) {
+            NotificationUtils.playNotificationSound();
+        }
 
         // Show completion message
         let completionMessage;
@@ -940,7 +944,9 @@ export class PomodoroTimer {
 
         // Show notification
         this.showNotification();
-        NotificationUtils.playNotificationSound();
+        if (this.enableSoundNotifications) {
+            NotificationUtils.playNotificationSound();
+        }
 
         // Show completion message for continuous sessions
         const continuousMessages = {
