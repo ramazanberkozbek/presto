@@ -50,14 +50,6 @@ The easiest way to install Presto on macOS is through Homebrew:
 brew install --cask murdercode/presto/presto
 ```
 
-### Manual Installation
-
-Alternatively, you can download the latest DMG file directly from the [GitHub Releases page](https://github.com/murdercode/presto/releases). Simply:
-
-1. Download the `.dmg` file for the latest version
-2. Open the DMG file and drag Presto to your Applications folder
-3. Launch Presto from Applications or Spotlight
-
 #### ⚠️ Troubleshooting: "Presto is damaged and can't be opened"
 
 If you see this error when launching Presto for the first time, it's a temporary issue that occurs because the app lacks an Apple Developer signature (which requires paying $99 to Apple). This is a common situation for open-source applications. To resolve it, run this command in Terminal:

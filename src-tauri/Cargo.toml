@@ -1,6 +1,6 @@
 [package]
 name = "presto"
-version = "0.2.11"
+version = "0.2.12"
 description = "A Tauri App"
 authors = ["Stefano Novelli"]
 edition = "2021"
