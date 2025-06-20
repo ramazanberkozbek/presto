@@ -312,16 +312,16 @@ export class NavigationManager {
                 breakMinutes: 0
             }));
 
-            // Process today's sessions
+            // Process today's sessions (excluding break sessions)
             todaysSessions.forEach(session => {
                 const [startHour] = session.start_time.split(':').map(Number);
                 const duration = session.duration || 0;
 
-                if (session.session_type === 'focus') {
+                // Only include focus and custom sessions, exclude break sessions
+                if (session.session_type === 'focus' || session.session_type === 'custom') {
                     hourlyData[startHour].focusMinutes += duration;
-                } else if (session.session_type === 'break' || session.session_type === 'longBreak') {
-                    hourlyData[startHour].breakMinutes += duration;
                 }
+                // Skip break and longBreak sessions from chart display
             });
 
             // If we have timer session data but no manual sessions, distribute timer sessions across the current hour
@@ -335,41 +335,32 @@ export class NavigationManager {
                 }
             }
 
-            // Find max total minutes for scaling
+            // Find max total minutes for scaling (only focus minutes now)
             const maxTotalMinutes = Math.max(
-                ...hourlyData.map(data => data.focusMinutes + data.breakMinutes),
+                ...hourlyData.map(data => data.focusMinutes),
                 60 // Minimum scale of 1 hour
             );
 
             hours.forEach(hour => {
                 const data = hourlyData[hour];
-                const totalMinutes = data.focusMinutes + data.breakMinutes;
+                const totalMinutes = data.focusMinutes; // Only focus minutes now
 
                 const hourBar = document.createElement('div');
                 hourBar.className = 'hour-bar';
 
-                // Calculate height based on total activity in this hour
+                // Calculate height based on focus activity in this hour
                 const height = totalMinutes > 0
                     ? Math.max((totalMinutes / maxTotalMinutes) * maxHeight, 8)
                     : 8; // Minimum height for visibility
 
                 hourBar.style.height = `${height}px`;
 
-                // Create segments for focus and break time if there's data
+                // Create focus segment if there's data
                 if (totalMinutes > 0) {
-                    if (data.focusMinutes > 0) {
-                        const focusSegment = document.createElement('div');
-                        focusSegment.className = 'hour-bar-focus';
-                        focusSegment.style.height = `${(data.focusMinutes / totalMinutes) * 100}%`;
-                        hourBar.appendChild(focusSegment);
-                    }
-
-                    if (data.breakMinutes > 0) {
-                        const breakSegment = document.createElement('div');
-                        breakSegment.className = 'hour-bar-break';
-                        breakSegment.style.height = `${(data.breakMinutes / totalMinutes) * 100}%`;
-                        hourBar.appendChild(breakSegment);
-                    }
+                    const focusSegment = document.createElement('div');
+                    focusSegment.className = 'hour-bar-focus';
+                    focusSegment.style.height = '100%'; // Full height since only focus
+                    hourBar.appendChild(focusSegment);
                 } else {
                     // Empty hour - show subtle background
                     hourBar.classList.add('hour-bar-empty');
@@ -381,10 +372,9 @@ export class NavigationManager {
                 hourLabel.textContent = hour.toString().padStart(2, '0');
                 hourBar.appendChild(hourLabel);
 
-                // Enhanced tooltip with session details
+                // Enhanced tooltip with session details (focus only)
                 const focusText = data.focusMinutes > 0 ? `${data.focusMinutes}m focus` : '';
-                const breakText = data.breakMinutes > 0 ? `${data.breakMinutes}m break` : '';
-                const activityText = [focusText, breakText].filter(text => text).join(', ') || 'No activity';
+                const activityText = focusText || 'No activity';
 
                 // Use custom tooltip instead of native title
                 hourBar.dataset.tooltip = `${hour}:00 - ${activityText}`;
@@ -395,7 +385,6 @@ export class NavigationManager {
                 // Add data attributes for potential future interactions
                 hourBar.dataset.hour = hour;
                 hourBar.dataset.focusMinutes = data.focusMinutes;
-                hourBar.dataset.breakMinutes = data.breakMinutes;
 
                 dailyChart.appendChild(hourBar);
             });
@@ -682,13 +671,18 @@ export class NavigationManager {
                 return;
             }
 
-            // Create timeline session blocks
-            allSessions.forEach(session => {
-                this.createTimelineSession(session, date, timelineTrack, allSessions);
+            // Filter out break sessions from timeline display
+            const visibleSessions = allSessions.filter(session => 
+                session.session_type !== 'break' && session.session_type !== 'longBreak'
+            );
+
+            // Create timeline session blocks (excluding break sessions)
+            visibleSessions.forEach(session => {
+                this.createTimelineSession(session, date, timelineTrack, visibleSessions);
             });
 
             // Calculate and set timeline height after all sessions are added
-            this.updateTimelineHeight(timelineTrack, allSessions.length);
+            this.updateTimelineHeight(timelineTrack, visibleSessions.length);
 
             // Initialize timeline interactions
             this.initializeTimelineInteractions();
@@ -847,12 +841,22 @@ export class NavigationManager {
     }
 
     updateTimelineHeight(timelineTrack, totalSessions) {
-        const rowHeight = 20; // 15px session height + 5px spacing
-        const baseHeight = 25; // Base padding
+        const rowHeight = 20; // Spacing between rows
+        const sessionHeight = 15; // Height of each session
+        const topPadding = 10; // Top padding
+        const bottomPadding = 10; // Bottom padding
         const minHeight = 60; // Minimum height even with no sessions
-        const requiredHeight = Math.max(minHeight, baseHeight + (totalSessions * rowHeight));
         
-        timelineTrack.style.height = `${requiredHeight}px`;
+        if (totalSessions === 0) {
+            timelineTrack.style.height = `${minHeight}px`;
+        } else {
+            // Calculate: top padding + (all session heights) + (spacing between sessions) + bottom padding
+            const totalSessionHeights = totalSessions * sessionHeight;
+            const totalSpacing = (totalSessions - 1) * rowHeight;
+            const requiredHeight = topPadding + totalSessionHeights + totalSpacing + bottomPadding;
+            console.log(`Timeline height calculation: ${topPadding} + ${totalSessionHeights} + ${totalSpacing} + ${bottomPadding} = ${requiredHeight}px for ${totalSessions} sessions`);
+            timelineTrack.style.height = `${requiredHeight}px`;
+        }
         
         // Add vertical grid lines
         this.addTimelineGridLines(timelineTrack);
