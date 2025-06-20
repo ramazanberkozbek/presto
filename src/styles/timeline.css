@@ -11,10 +11,8 @@
 }
 
 .timeline-hours {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.2rem;
   position: relative;
+  margin-bottom: 0.2rem;
   height: 12px;
   padding: 0 5px;
 }
@@ -22,7 +20,7 @@
 .timeline-hour {
   font-size: 9px;
   color: #9ca3af;
-  position: relative;
+  position: absolute;
   text-align: center;
   display: flex;
   align-items: center;
@@ -30,35 +28,17 @@
   height: 12px;
   font-weight: 400;
   letter-spacing: 0.5px;
+  transform: translateX(-50%);
 }
 
 .timeline-hour::after {
-  content: '';
-  position: absolute;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 1px;
-  height: 45px;
-  background: #e5e7eb;
-  z-index: 1;
-}
-
-.timeline-hour:first-child::after {
-  left: 0;
-  transform: none;
-}
-
-.timeline-hour:last-child::after {
-  right: 0;
-  left: auto;
-  transform: none;
+  display: none;
 }
 
 .timeline-track {
   position: relative;
-  height: 50px;
-  min-height: 50px;
+  height: 40px;
+  min-height: 40px;
   background: white;
   border-radius: 4px;
   border: 1px solid #e0e0e0;
@@ -66,23 +46,47 @@
   transition: height 0.3s ease;
 }
 
+.timeline-grid-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #e5e7eb;
+  z-index: 1;
+  pointer-events: none;
+}
+
 .timeline-session {
   position: absolute;
-  height: 35px;
+  height: 15px;
   border-radius: 4px;
   cursor: move;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   font-weight: 500;
   color: white;
-  top: 7px;
   min-width: 30px;
   user-select: none;
   transition: all 0.2s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  z-index: 5;
+  z-index: 10;
+}
+
+.timeline-session-content {
+  cursor: move;
+  pointer-events: none;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.timeline-session-content-minimal {
+  cursor: move;
+  pointer-events: none;
 }
 
 .timeline-session:hover {
@@ -109,8 +113,7 @@
 .timeline-session.historical {
   opacity: 0.6;
   cursor: default;
-  height: 20px;
-  top: 15px;
+  height: 15px;
   min-width: 20px;
   border-radius: 2px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -124,8 +127,7 @@
 
 /* Today's Sessions - Minimal Display */
 .timeline-session.today-session {
-  height: 30px;
-  top: 10px;
+  height: 15px;
   z-index: 10;
 }
 
@@ -144,6 +146,19 @@
   opacity: 0;
   transition: opacity 0.2s ease;
   z-index: 15;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: ew-resize;
+}
+
+.timeline-session.today-session .session-handle.left {
+  left: -4px;
+}
+
+.timeline-session.today-session .session-handle.right {
+  right: -4px;
 }
 
 .timeline-session.today-session:hover .session-handle {
@@ -178,6 +193,29 @@
 }
 
 /* Session Handle Visual Indicators */
+.session-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: ew-resize;
+  z-index: 20;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.session-handle.left {
+  left: -4px;
+}
+
+.session-handle.right {
+  right: -4px;
+}
+
+.timeline-session:hover .session-handle {
+  opacity: 1;
+}
+
 .session-handle::before {
   content: '';
   position: absolute;
@@ -309,4 +347,45 @@
 .timeline-session.session-stacked:hover {
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
   border-color: rgba(255, 255, 255, 0.8);
+}
+
+/* Session Hover Tooltip */
+.session-hover-tooltip {
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-width: 250px;
+}
+
+.session-hover-tooltip .tooltip-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.session-hover-tooltip .tooltip-type {
+  font-weight: 600;
+  color: #fff;
+}
+
+.session-hover-tooltip .tooltip-time {
+  font-weight: 500;
+  color: #e0e0e0;
+}
+
+.session-hover-tooltip .tooltip-duration {
+  color: #b0b0b0;
+  font-size: 11px;
+}
+
+.session-hover-tooltip .tooltip-notes {
+  color: #d0d0d0;
+  font-style: italic;
+  margin-top: 2px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }

@@ -312,16 +312,16 @@ export class NavigationManager {
                 breakMinutes: 0
             }));
 
-            // Process today's sessions
+            // Process today's sessions (excluding break sessions)
             todaysSessions.forEach(session => {
                 const [startHour] = session.start_time.split(':').map(Number);
                 const duration = session.duration || 0;
 
-                if (session.session_type === 'focus') {
+                // Only include focus and custom sessions, exclude break sessions
+                if (session.session_type === 'focus' || session.session_type === 'custom') {
                     hourlyData[startHour].focusMinutes += duration;
-                } else if (session.session_type === 'break' || session.session_type === 'longBreak') {
-                    hourlyData[startHour].breakMinutes += duration;
                 }
+                // Skip break and longBreak sessions from chart display
             });
 
             // If we have timer session data but no manual sessions, distribute timer sessions across the current hour
@@ -335,41 +335,32 @@ export class NavigationManager {
                 }
             }
 
-            // Find max total minutes for scaling
+            // Find max total minutes for scaling (only focus minutes now)
             const maxTotalMinutes = Math.max(
-                ...hourlyData.map(data => data.focusMinutes + data.breakMinutes),
+                ...hourlyData.map(data => data.focusMinutes),
                 60 // Minimum scale of 1 hour
             );
 
             hours.forEach(hour => {
                 const data = hourlyData[hour];
-                const totalMinutes = data.focusMinutes + data.breakMinutes;
+                const totalMinutes = data.focusMinutes; // Only focus minutes now
 
                 const hourBar = document.createElement('div');
                 hourBar.className = 'hour-bar';
 
-                // Calculate height based on total activity in this hour
+                // Calculate height based on focus activity in this hour
                 const height = totalMinutes > 0
                     ? Math.max((totalMinutes / maxTotalMinutes) * maxHeight, 8)
                     : 8; // Minimum height for visibility
 
                 hourBar.style.height = `${height}px`;
 
-                // Create segments for focus and break time if there's data
+                // Create focus segment if there's data
                 if (totalMinutes > 0) {
-                    if (data.focusMinutes > 0) {
-                        const focusSegment = document.createElement('div');
-                        focusSegment.className = 'hour-bar-focus';
-                        focusSegment.style.height = `${(data.focusMinutes / totalMinutes) * 100}%`;
-                        hourBar.appendChild(focusSegment);
-                    }
-
-                    if (data.breakMinutes > 0) {
-                        const breakSegment = document.createElement('div');
-                        breakSegment.className = 'hour-bar-break';
-                        breakSegment.style.height = `${(data.breakMinutes / totalMinutes) * 100}%`;
-                        hourBar.appendChild(breakSegment);
-                    }
+                    const focusSegment = document.createElement('div');
+                    focusSegment.className = 'hour-bar-focus';
+                    focusSegment.style.height = '100%'; // Full height since only focus
+                    hourBar.appendChild(focusSegment);
                 } else {
                     // Empty hour - show subtle background
                     hourBar.classList.add('hour-bar-empty');
@@ -381,10 +372,9 @@ export class NavigationManager {
                 hourLabel.textContent = hour.toString().padStart(2, '0');
                 hourBar.appendChild(hourLabel);
 
-                // Enhanced tooltip with session details
+                // Enhanced tooltip with session details (focus only)
                 const focusText = data.focusMinutes > 0 ? `${data.focusMinutes}m focus` : '';
-                const breakText = data.breakMinutes > 0 ? `${data.breakMinutes}m break` : '';
-                const activityText = [focusText, breakText].filter(text => text).join(', ') || 'No activity';
+                const activityText = focusText || 'No activity';
 
                 // Use custom tooltip instead of native title
                 hourBar.dataset.tooltip = `${hour}:00 - ${activityText}`;
@@ -395,7 +385,6 @@ export class NavigationManager {
                 // Add data attributes for potential future interactions
                 hourBar.dataset.hour = hour;
                 hourBar.dataset.focusMinutes = data.focusMinutes;
-                hourBar.dataset.breakMinutes = data.breakMinutes;
 
                 dailyChart.appendChild(hourBar);
             });
@@ -682,10 +671,18 @@ export class NavigationManager {
                 return;
             }
 
-            // Create timeline session blocks
-            allSessions.forEach(session => {
-                this.createTimelineSession(session, date, timelineTrack, allSessions);
+            // Filter out break sessions from timeline display
+            const visibleSessions = allSessions.filter(session => 
+                session.session_type !== 'break' && session.session_type !== 'longBreak'
+            );
+
+            // Create timeline session blocks (excluding break sessions)
+            visibleSessions.forEach(session => {
+                this.createTimelineSession(session, date, timelineTrack, visibleSessions);
             });
+
+            // Calculate and set timeline height after all sessions are added
+            this.updateTimelineHeight(timelineTrack, visibleSessions.length);
 
             // Initialize timeline interactions
             this.initializeTimelineInteractions();
@@ -843,16 +840,69 @@ export class NavigationManager {
         return TimeUtils.formatTime(seconds);
     }
 
+    updateTimelineHeight(timelineTrack, totalSessions) {
+        const rowHeight = 20; // Spacing between rows
+        const sessionHeight = 15; // Height of each session
+        const topPadding = 10; // Top padding
+        const bottomPadding = 10; // Bottom padding
+        const minHeight = 60; // Minimum height even with no sessions
+        
+        if (totalSessions === 0) {
+            timelineTrack.style.height = `${minHeight}px`;
+        } else {
+            // Calculate: top padding + (all session heights) + (spacing between sessions) + bottom padding
+            const totalSessionHeights = totalSessions * sessionHeight;
+            const totalSpacing = (totalSessions - 1) * rowHeight;
+            const requiredHeight = topPadding + totalSessionHeights + totalSpacing + bottomPadding;
+            console.log(`Timeline height calculation: ${topPadding} + ${totalSessionHeights} + ${totalSpacing} + ${bottomPadding} = ${requiredHeight}px for ${totalSessions} sessions`);
+            timelineTrack.style.height = `${requiredHeight}px`;
+        }
+        
+        // Add vertical grid lines
+        this.addTimelineGridLines(timelineTrack);
+    }
+
+    addTimelineGridLines(timelineTrack) {
+        // Remove existing grid lines
+        const existingLines = timelineTrack.querySelectorAll('.timeline-grid-line');
+        existingLines.forEach(line => line.remove());
+
+        // Add grid lines for major hours: 0, 4, 8, 12, 16, 20
+        const majorHours = [0, 4, 8, 12, 16, 20];
+        const timelineStartHour = 0;
+        const timelineRangeHours = 24;
+
+        majorHours.forEach(hour => {
+            const line = document.createElement('div');
+            line.className = 'timeline-grid-line';
+            
+            // Calculate position percentage
+            const hoursFromStart = hour - timelineStartHour;
+            const percentage = (hoursFromStart / timelineRangeHours) * 100;
+            line.style.left = `${percentage}%`;
+            
+            timelineTrack.appendChild(line);
+        });
+    }
+
     setupTimelineHours(timelineHours) {
         timelineHours.innerHTML = '';
 
-        // Show only major hours every 3 hours: 6, 9, 12, 15, 18
-        const majorHours = [6, 9, 12, 15, 18];
+        // Show major hours every 4 hours: 0, 4, 8, 12, 16, 20
+        const majorHours = [0, 4, 8, 12, 16, 20];
+        const timelineStartHour = 0; // 12 AM (midnight)
+        const timelineRangeHours = 24; // Full day = 24 hours
 
         majorHours.forEach(hour => {
             const hourElement = document.createElement('div');
             hourElement.className = 'timeline-hour';
-            hourElement.textContent = `${hour}:00`;
+            hourElement.textContent = `${hour.toString().padStart(2, '0')}:00`;
+            
+            // Calculate correct position percentage
+            const hoursFromStart = hour - timelineStartHour;
+            const percentage = (hoursFromStart / timelineRangeHours) * 100;
+            hourElement.style.left = `${percentage}%`;
+            
             timelineHours.appendChild(hourElement);
         });
     }
@@ -870,11 +920,11 @@ export class NavigationManager {
         const [startHour, startMinute] = session.start_time.split(':').map(Number);
         const [endHour, endMinute] = session.end_time.split(':').map(Number);
 
-        // Calculate position and width (6 AM = 0%, 10 PM = 100%)
+        // Calculate position and width (00:00 = 0%, 23:59 = 100%)
         const startTimeInMinutes = startHour * 60 + startMinute;
         const endTimeInMinutes = endHour * 60 + endMinute;
-        const timelineStartMinutes = 6 * 60; // 6 AM
-        const timelineEndMinutes = 22 * 60; // 10 PM
+        const timelineStartMinutes = 0; // 00:00 (midnight)
+        const timelineEndMinutes = 24 * 60; // 24:00 (next midnight)
         const timelineRangeMinutes = timelineEndMinutes - timelineStartMinutes;
 
         const leftPercent = Math.max(0, ((startTimeInMinutes - timelineStartMinutes) / timelineRangeMinutes) * 100);
@@ -918,23 +968,14 @@ export class NavigationManager {
       `;
         }
 
-        // Add event listeners for non-historical sessions
-        if (!session.isHistorical) {
-            this.addTimelineSessionEventListeners(sessionElement, session, date);
-        }
+        // Add event listeners for all sessions (including historical ones)
+        this.addTimelineSessionEventListeners(sessionElement, session, date);
 
-        // Handle overlapping sessions by stacking them vertically
+        // Place sessions in their own rows
         const offset = this.calculateSessionOffset(session, allSessions);
+        sessionElement.style.transform = `translateY(${offset}px)`;
         if (offset > 0) {
-            sessionElement.style.transform = `translateY(${offset}px)`;
             sessionElement.classList.add('session-stacked');
-
-            // Expand timeline track height if needed
-            const currentHeight = parseInt(timelineTrack.style.height) || 50;
-            const requiredHeight = 50 + offset + 35; // base height + offset + session height
-            if (requiredHeight > currentHeight) {
-                timelineTrack.style.height = `${requiredHeight}px`;
-            }
         }
 
         timelineTrack.appendChild(sessionElement);
@@ -957,7 +998,9 @@ export class NavigationManager {
 
         // Drag to move
         sessionElement.addEventListener('mousedown', (e) => {
-            if (e.target.classList.contains('session-handle')) return;
+            // Don't start drag if clicking on resize handles
+            if (e.target.classList.contains('session-handle') || 
+                e.target.closest('.session-handle')) return;
             this.startSessionDrag(e, sessionElement, session);
         });
 
@@ -978,6 +1021,31 @@ export class NavigationManager {
                 this.startSessionResize(e, sessionElement, session, 'right');
             });
         }
+
+        // Hover tooltip
+        let hoverTooltip = null;
+        
+        sessionElement.addEventListener('mouseenter', (e) => {
+            // Don't show hover tooltip if dragging or resizing (they have their own tooltips)
+            if (sessionElement.classList.contains('dragging') || sessionElement.classList.contains('resizing')) return;
+            
+            hoverTooltip = this.createSessionHoverTooltip(session);
+            document.body.appendChild(hoverTooltip);
+            this.updateHoverTooltip(hoverTooltip, e);
+        });
+
+        sessionElement.addEventListener('mousemove', (e) => {
+            if (hoverTooltip && !sessionElement.classList.contains('dragging') && !sessionElement.classList.contains('resizing')) {
+                this.updateHoverTooltip(hoverTooltip, e);
+            }
+        });
+
+        sessionElement.addEventListener('mouseleave', () => {
+            if (hoverTooltip && hoverTooltip.parentNode) {
+                hoverTooltip.parentNode.removeChild(hoverTooltip);
+                hoverTooltip = null;
+            }
+        });
     }
 
     initializeTimelineInteractions() {
@@ -1003,34 +1071,56 @@ export class NavigationManager {
         contextMenu.style.top = `${e.pageY}px`;
         contextMenu.style.display = 'block';
 
+        const isHistorical = session.isHistorical;
+        
         contextMenu.innerHTML = `
-      <div class="context-menu-item edit-item">Edit Session</div>
-      <div class="context-menu-item duplicate-item">Duplicate</div>
-      <div class="context-menu-item danger delete-item">Delete</div>
+      <div class="context-menu-item edit-item">${isHistorical ? 'Convert to Manual & Edit' : 'Edit Session'}</div>
+      ${isHistorical ? '' : '<div class="context-menu-item danger delete-item">Delete</div>'}
     `;
 
         // Add event listeners
         contextMenu.querySelector('.edit-item').addEventListener('click', () => {
             if (window.sessionManager) {
-                window.sessionManager.openEditSessionModal(session, date);
+                if (isHistorical) {
+                    // Convert historical session to manual session first
+                    const manualSession = {
+                        id: this.generateSessionId(),
+                        session_type: session.session_type,
+                        duration: session.duration,
+                        start_time: session.start_time,
+                        end_time: session.end_time,
+                        notes: session.notes || '',
+                        created_at: new Date().toISOString()
+                    };
+                    
+                    // Set the selected date for SessionManager
+                    window.sessionManager.selectedDate = new Date(date);
+                    
+                    // Add as new manual session
+                    window.sessionManager.addSession(manualSession);
+                    
+                    // Open edit modal with the new manual session
+                    window.sessionManager.openEditSessionModal(manualSession, date);
+                    
+                    console.log('Converted historical session to manual for editing:', manualSession);
+                } else {
+                    window.sessionManager.openEditSessionModal(session, date);
+                }
             }
             contextMenu.remove();
         });
 
-        contextMenu.querySelector('.delete-item').addEventListener('click', () => {
-            if (window.sessionManager && confirm('Are you sure you want to delete this session?')) {
-                window.sessionManager.currentEditingSession = session;
-                window.sessionManager.selectedDate = date;
-                window.sessionManager.deleteCurrentSession();
-            }
-            contextMenu.remove();
-        });
-
-        contextMenu.querySelector('.duplicate-item').addEventListener('click', () => {
-            // TODO: Implement session duplication
-            console.log('Duplicate session:', session);
-            contextMenu.remove();
-        });
+        const deleteItem = contextMenu.querySelector('.delete-item');
+        if (deleteItem) {
+            deleteItem.addEventListener('click', () => {
+                if (window.sessionManager) {
+                    window.sessionManager.currentEditingSession = session;
+                    window.sessionManager.selectedDate = date;
+                    window.sessionManager.deleteCurrentSession();
+                }
+                contextMenu.remove();
+            });
+        }
 
         document.body.appendChild(contextMenu);
     }
@@ -1038,23 +1128,37 @@ export class NavigationManager {
     startSessionDrag(e, sessionElement, session) {
         e.preventDefault();
         sessionElement.classList.add('dragging');
+        
+        // Remove any existing hover tooltip
+        const existingHoverTooltip = document.querySelector('.session-hover-tooltip');
+        if (existingHoverTooltip && existingHoverTooltip.parentNode) {
+            existingHoverTooltip.parentNode.removeChild(existingHoverTooltip);
+        }
 
         const timeline = document.getElementById('timeline-track');
         const timelineRect = timeline.getBoundingClientRect();
-        const sessionRect = sessionElement.getBoundingClientRect();
-
-        const offsetX = e.clientX - sessionRect.left;
+        
+        // Calculate initial mouse position relative to timeline
+        const initialMouseX = e.clientX - timelineRect.left;
+        const currentLeft = parseFloat(sessionElement.style.left) || 0;
+        const currentLeftPx = (currentLeft / 100) * timelineRect.width;
+        
+        // Calculate offset within the session element
+        const offsetX = initialMouseX - currentLeftPx;
 
         // Create drag time tooltip
         const dragTooltip = this.createDragTimeTooltip();
         document.body.appendChild(dragTooltip);
 
         const handleMouseMove = (e) => {
+            // Calculate the new position maintaining the original click offset
             const x = e.clientX - timelineRect.left - offsetX;
-            const percentage = Math.max(0, Math.min(100, (x / timelineRect.width) * 100));
+            const sessionWidth = parseFloat(sessionElement.style.width) || 0;
+            const maxLeft = 100 - sessionWidth; // Prevent session from going beyond timeline
+            const percentage = Math.max(0, Math.min(maxLeft, (x / timelineRect.width) * 100));
             sessionElement.style.left = `${percentage}%`;
             
-            // Update tooltip with current time
+            // Update drag tooltip with current time
             this.updateDragTooltip(dragTooltip, e, percentage, session);
         };
 
@@ -1063,7 +1167,7 @@ export class NavigationManager {
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
             
-            // Remove tooltip
+            // Remove drag tooltip
             if (dragTooltip && dragTooltip.parentNode) {
                 dragTooltip.parentNode.removeChild(dragTooltip);
             }
@@ -1079,6 +1183,12 @@ export class NavigationManager {
     startSessionResize(e, sessionElement, session, side) {
         e.preventDefault();
         sessionElement.classList.add('resizing');
+        
+        // Remove any existing hover tooltip
+        const existingHoverTooltip = document.querySelector('.session-hover-tooltip');
+        if (existingHoverTooltip && existingHoverTooltip.parentNode) {
+            existingHoverTooltip.parentNode.removeChild(existingHoverTooltip);
+        }
 
         const timeline = document.getElementById('timeline-track');
         const timelineRect = timeline.getBoundingClientRect();
@@ -1132,9 +1242,9 @@ export class NavigationManager {
         const widthPercent = parseFloat(sessionElement.style.width);
         const rightPercent = leftPercent + widthPercent;
 
-        // Convert percentages back to time (6 AM to 10 PM range)
-        const timelineStartMinutes = 6 * 60; // 6 AM
-        const timelineRangeMinutes = 16 * 60; // 16 hours (6 AM to 10 PM)
+        // Convert percentages back to time (00:00 to 23:59 range)
+        const timelineStartMinutes = 0; // 00:00 (midnight)
+        const timelineRangeMinutes = 24 * 60; // 24 hours (full day)
 
         const startMinutes = timelineStartMinutes + (leftPercent / 100) * timelineRangeMinutes;
         const endMinutes = timelineStartMinutes + (rightPercent / 100) * timelineRangeMinutes;
@@ -1166,13 +1276,44 @@ export class NavigationManager {
             sessionElement.title = `${sessionType}: ${newStartTime} - ${newEndTime} (${newDuration}m)${notes}`;
         }
 
-        // Save changes if using SessionManager
-        if (window.sessionManager && !session.isHistorical) {
+        // Save changes using SessionManager
+        if (window.sessionManager) {
             // Set the selected date for SessionManager
             window.sessionManager.selectedDate = this.currentDate;
-            // Use the proper updateSession method to ensure persistence
-            window.sessionManager.updateSession(session);
+            
+            if (session.isHistorical) {
+                // Convert historical session to manual session
+                const manualSession = {
+                    id: this.generateSessionId(), // Generate new ID for manual session
+                    session_type: session.session_type,
+                    duration: newDuration,
+                    start_time: newStartTime,
+                    end_time: newEndTime,
+                    notes: session.notes || null,
+                    created_at: new Date().toISOString()
+                };
+                
+                // Add as new manual session
+                window.sessionManager.addSession(manualSession);
+                
+                // Update the session object to reflect it's now manual
+                session.isHistorical = false;
+                session.id = manualSession.id;
+                session.created_at = manualSession.created_at;
+                
+                // Remove historical styling
+                sessionElement.classList.remove('historical');
+                
+                console.log('Converted historical session to manual session:', manualSession);
+            } else {
+                // Use the proper updateSession method to ensure persistence
+                window.sessionManager.updateSession(session);
+            }
         }
+    }
+
+    generateSessionId() {
+        return Date.now().toString() + Math.random().toString(36).substring(2, 11);
     }
 
     addTooltipEvents(element) {
@@ -1306,9 +1447,8 @@ export class NavigationManager {
 
     updateDragTooltip(tooltip, mouseEvent, percentage, session) {
         // Calculate time from percentage
-        const timelineStartMinutes = 6 * 60; // 6 AM
-        const timelineRangeMinutes = 16 * 60; // 16 hours (6 AM to 10 PM)
-        const widthPercent = parseFloat(session.duration) / timelineRangeMinutes * 100;
+        const timelineStartMinutes = 0; // 00:00 (midnight)
+        const timelineRangeMinutes = 24 * 60; // 24 hours (full day)
         
         const startMinutes = timelineStartMinutes + (percentage / 100) * timelineRangeMinutes;
         const endMinutes = startMinutes + (session.duration || 25); // Default 25 min if no duration
@@ -1334,9 +1474,9 @@ export class NavigationManager {
         const widthPercent = parseFloat(sessionElement.style.width);
         const rightPercent = leftPercent + widthPercent;
 
-        // Convert percentages to time (6 AM to 10 PM range)
-        const timelineStartMinutes = 6 * 60; // 6 AM
-        const timelineRangeMinutes = 16 * 60; // 16 hours
+        // Convert percentages to time (00:00 to 23:59 range)
+        const timelineStartMinutes = 0; // 00:00 (midnight)
+        const timelineRangeMinutes = 24 * 60; // 24 hours
 
         const startMinutes = timelineStartMinutes + (leftPercent / 100) * timelineRangeMinutes;
         const endMinutes = timelineStartMinutes + (rightPercent / 100) * timelineRangeMinutes;
@@ -1362,34 +1502,43 @@ export class NavigationManager {
     calculateSessionOffset(session, allSessions) {
         if (!allSessions || allSessions.length <= 1) return 0;
 
-        const [sessionStartHour, sessionStartMin] = session.start_time.split(':').map(Number);
-        const [sessionEndHour, sessionEndMin] = session.end_time.split(':').map(Number);
-        const sessionStartMinutes = sessionStartHour * 60 + sessionStartMin;
-        const sessionEndMinutes = sessionEndHour * 60 + sessionEndMin;
-
-        let offset = 0;
-        const stackHeight = 40; // Height for each stacked session
-
-        // Check all sessions that come before this one in the array
+        // Find the index of this session in the array
         const sessionIndex = allSessions.findIndex(s => s.id === session.id);
+        
+        // Each session gets its own row
+        const rowHeight = 20; // 15px session height + 5px spacing
+        return sessionIndex * rowHeight;
+    }
 
-        for (let i = 0; i < sessionIndex; i++) {
-            const otherSession = allSessions[i];
-            const [otherStartHour, otherStartMin] = otherSession.start_time.split(':').map(Number);
-            const [otherEndHour, otherEndMin] = otherSession.end_time.split(':').map(Number);
-            const otherStartMinutes = otherStartHour * 60 + otherStartMin;
-            const otherEndMinutes = otherEndHour * 60 + otherEndMin;
+    createSessionHoverTooltip(session) {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'session-hover-tooltip';
+        
+        const sessionType = this.getSessionTypeDisplay(session.session_type);
+        const notes = session.notes ? ` - ${session.notes}` : '';
+        const historicalText = session.isHistorical ? ' (From Timer)' : '';
+        
+        tooltip.innerHTML = `
+            <div class="tooltip-content">
+                <div class="tooltip-type">${sessionType}${historicalText}</div>
+                <div class="tooltip-time">${session.start_time} - ${session.end_time}</div>
+                <div class="tooltip-duration">${session.duration} minutes</div>
+                ${notes ? `<div class="tooltip-notes">${session.notes}</div>` : ''}
+            </div>
+        `;
+        
+        tooltip.style.position = 'fixed';
+        tooltip.style.zIndex = '1000';
+        tooltip.style.opacity = '0';
+        tooltip.style.transition = 'opacity 0.2s ease';
+        tooltip.style.pointerEvents = 'none';
+        
+        return tooltip;
+    }
 
-            // Check if sessions overlap
-            const isOverlapping = (
-                sessionStartMinutes < otherEndMinutes && sessionEndMinutes > otherStartMinutes
-            );
-
-            if (isOverlapping) {
-                offset += stackHeight;
-            }
-        }
-
-        return offset;
+    updateHoverTooltip(tooltip, mouseEvent) {
+        tooltip.style.left = `${mouseEvent.clientX + 10}px`;
+        tooltip.style.top = `${mouseEvent.clientY - 10}px`;
+        tooltip.style.opacity = '1';
     }
 }

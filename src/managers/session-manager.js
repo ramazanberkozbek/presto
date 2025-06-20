@@ -1,39 +1,77 @@
 // Session Management Functions
-import { NotificationUtils, TimeUtils, DOMUtils } from '../utils/common-utils.js';
+import { NotificationUtils } from '../utils/common-utils.js';
+
+// Get Tauri invoke function
+const { invoke } = window.__TAURI__ ? window.__TAURI__.core : { invoke: null };
 
 export class SessionManager {
     constructor(navigationManager) {
         this.navManager = navigationManager;
         this.currentEditingSession = null;
         this.selectedDate = null;
-        this.sessions = []; // Local session storage for now
+        this.sessions = []; // Local session storage for backward compatibility
+        this.isUsingTauri = !!invoke; // Check if Tauri is available
         this.init();
     }
 
-    init() {
-        this.loadSessionsFromStorage();
+    async init() {
+        await this.loadSessionsFromStorage();
         this.setupEventListeners();
     }
 
-    // Load sessions from localStorage
-    loadSessionsFromStorage() {
+    // Load sessions from storage (Tauri backend or localStorage fallback)
+    async loadSessionsFromStorage() {
         try {
-            const savedSessions = localStorage.getItem('presto_manual_sessions');
-            if (savedSessions) {
-                this.sessions = JSON.parse(savedSessions);
-                console.log('Loaded', this.sessions.length, 'manual sessions from storage');
+            if (this.isUsingTauri) {
+                // Use Tauri backend for persistent storage
+                const sessions = await invoke('load_manual_sessions');
+                
+                // Convert array to date-keyed object for backward compatibility
+                this.sessions = {};
+                sessions.forEach(session => {
+                    if (!this.sessions[session.date]) {
+                        this.sessions[session.date] = [];
+                    }
+                    this.sessions[session.date].push(session);
+                });
+                
+                console.log('Loaded', sessions.length, 'manual sessions from Tauri backend');
+            } else {
+                // Fallback to localStorage
+                const savedSessions = localStorage.getItem('presto_manual_sessions');
+                if (savedSessions) {
+                    this.sessions = JSON.parse(savedSessions);
+                    console.log('Loaded manual sessions from localStorage (fallback)');
+                }
             }
         } catch (error) {
             console.error('Error loading sessions from storage:', error);
-            this.sessions = [];
+            this.sessions = {};
         }
     }
 
-    // Save sessions to localStorage
-    saveSessionsToStorage() {
+    // Save sessions to storage (Tauri backend or localStorage fallback)
+    async saveSessionsToStorage() {
         try {
-            localStorage.setItem('presto_manual_sessions', JSON.stringify(this.sessions));
-            console.log('Saved', this.sessions.length, 'manual sessions to storage');
+            if (this.isUsingTauri) {
+                // Convert date-keyed object to array for Tauri backend
+                const sessionsArray = [];
+                Object.keys(this.sessions).forEach(date => {
+                    this.sessions[date].forEach(session => {
+                        sessionsArray.push({
+                            ...session,
+                            date: date // Ensure date is included
+                        });
+                    });
+                });
+                
+                await invoke('save_manual_sessions', { sessions: sessionsArray });
+                console.log('Saved', sessionsArray.length, 'manual sessions to Tauri backend');
+            } else {
+                // Fallback to localStorage
+                localStorage.setItem('presto_manual_sessions', JSON.stringify(this.sessions));
+                console.log('Saved manual sessions to localStorage (fallback)');
+            }
         } catch (error) {
             console.error('Error saving sessions to storage:', error);
         }
@@ -220,11 +258,13 @@ export class SessionManager {
                 NotificationUtils.showNotificationPing('Session added successfully', 'success');
             }
 
+            // Store the selected date before closing modal (as closeModal sets it to null)
+            const dateForRefresh = this.selectedDate;
             this.closeModal();
 
             // Refresh the session list
             if (this.navManager) {
-                await this.navManager.updateSelectedDayDetails(this.selectedDate);
+                await this.navManager.updateSelectedDayDetails(dateForRefresh);
                 await this.navManager.updateFocusSummary();
                 await this.navManager.updateWeeklySessionsChart();
                 await this.navManager.updateDailyChart();
@@ -239,18 +279,15 @@ export class SessionManager {
     async addSession(sessionData) {
         const dateString = this.selectedDate.toDateString();
 
-        // For now, store locally (later we'll integrate with backend)
+        // Add to local storage
         if (!this.sessions[dateString]) {
             this.sessions[dateString] = [];
         }
 
         this.sessions[dateString].push(sessionData);
         
-        // Save to localStorage
-        this.saveSessionsToStorage();
-
-        // TODO: Call backend when available
-        // await invoke('add_session', { date: dateString, session: sessionData });
+        // Save to storage (Tauri backend or localStorage)
+        await this.saveSessionsToStorage();
     }
 
     async updateSession(sessionData) {
@@ -264,17 +301,12 @@ export class SessionManager {
             }
         }
 
-        // Save to localStorage
-        this.saveSessionsToStorage();
-
-        // TODO: Call backend when available
-        // await invoke('update_session', { date: dateString, sessionId: sessionData.id, updatedSession: sessionData });
+        // Save to storage (Tauri backend or localStorage)
+        await this.saveSessionsToStorage();
     }
 
     async deleteCurrentSession() {
         if (!this.currentEditingSession) return;
-
-        if (!confirm('Are you sure you want to delete this session?')) return;
 
         try {
             const dateString = this.selectedDate.toDateString();
@@ -284,18 +316,17 @@ export class SessionManager {
                 this.sessions[dateString] = this.sessions[dateString].filter(s => s.id !== this.currentEditingSession.id);
             }
 
-            // Save to localStorage
-            this.saveSessionsToStorage();
+            // Save to storage (Tauri backend or localStorage)
+            await this.saveSessionsToStorage();
 
-            // TODO: Call backend when available
-            // await invoke('delete_session', { date: dateString, sessionId: this.currentEditingSession.id });
-
+            // Store the selected date before closing modal (as closeModal sets it to null)
+            const dateForRefresh = this.selectedDate;
             this.closeModal();
             NotificationUtils.showNotificationPing('Session deleted successfully', 'success');
 
             // Refresh the session list
             if (this.navManager) {
-                await this.navManager.updateSelectedDayDetails(this.selectedDate);
+                await this.navManager.updateSelectedDayDetails(dateForRefresh);
                 await this.navManager.updateFocusSummary();
                 await this.navManager.updateWeeklySessionsChart();
                 await this.navManager.updateDailyChart();
@@ -313,7 +344,7 @@ export class SessionManager {
     }
 
     generateSessionId() {
-        return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+        return Date.now().toString() + Math.random().toString(36).substring(2, 11);
     }
 
     calculateEndTime(startTime, durationMinutes) {
