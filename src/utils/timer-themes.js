@@ -35,17 +35,6 @@ export const TIMER_THEMES = {
             longBreak: '#00cc33'
         }
     },
-    pride: {
-        name: 'Pride',
-        description: 'Un tema colorato con i colori dell\'arcobaleno per celebrare la diversità e l\'inclusività',
-        supports: ['light', 'dark'],
-        isDefault: false,
-        preview: {
-            focus: '#e91e63',
-            break: '#ff9800',
-            longBreak: '#9c27b0'
-        }
-    },
 };
 
 // Function to dynamically register a new theme
