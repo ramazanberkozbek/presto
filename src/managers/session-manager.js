@@ -220,11 +220,13 @@ export class SessionManager {
                 NotificationUtils.showNotificationPing('Session added successfully', 'success');
             }
 
+            // Store the selected date before closing modal (as closeModal sets it to null)
+            const dateForRefresh = this.selectedDate;
             this.closeModal();
 
             // Refresh the session list
             if (this.navManager) {
-                await this.navManager.updateSelectedDayDetails(this.selectedDate);
+                await this.navManager.updateSelectedDayDetails(dateForRefresh);
                 await this.navManager.updateFocusSummary();
                 await this.navManager.updateWeeklySessionsChart();
                 await this.navManager.updateDailyChart();
@@ -290,12 +292,14 @@ export class SessionManager {
             // TODO: Call backend when available
             // await invoke('delete_session', { date: dateString, sessionId: this.currentEditingSession.id });
 
+            // Store the selected date before closing modal (as closeModal sets it to null)
+            const dateForRefresh = this.selectedDate;
             this.closeModal();
             NotificationUtils.showNotificationPing('Session deleted successfully', 'success');
 
             // Refresh the session list
             if (this.navManager) {
-                await this.navManager.updateSelectedDayDetails(this.selectedDate);
+                await this.navManager.updateSelectedDayDetails(dateForRefresh);
                 await this.navManager.updateFocusSummary();
                 await this.navManager.updateWeeklySessionsChart();
                 await this.navManager.updateDailyChart();
@@ -313,7 +317,7 @@ export class SessionManager {
     }
 
     generateSessionId() {
-        return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+        return Date.now().toString() + Math.random().toString(36).substring(2, 11);
     }
 
     calculateEndTime(startTime, durationMinutes) {

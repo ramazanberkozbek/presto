@@ -957,7 +957,9 @@ export class NavigationManager {
 
         // Drag to move
         sessionElement.addEventListener('mousedown', (e) => {
-            if (e.target.classList.contains('session-handle')) return;
+            // Don't start drag if clicking on resize handles
+            if (e.target.classList.contains('session-handle') || 
+                e.target.closest('.session-handle')) return;
             this.startSessionDrag(e, sessionElement, session);
         });
 
