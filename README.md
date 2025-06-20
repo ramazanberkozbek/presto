@@ -120,8 +120,8 @@ tempo/
 ### Backend (Rust/Tauri)
 - **Tauri framework**: Secure, fast native app wrapper
 - **File-based storage**: JSON files for data persistence
-- **Cross-platform**: Works on Windows, macOS, and Linux
 - **Small bundle size**: Efficient Rust backend
+<br /><strike>- **Cross-platform**: Works on Windows, macOS, and Linux</strike>
 
 ### Data Persistence
 The application stores data in the following locations:
@@ -163,9 +163,9 @@ The Pomodoro Technique is a time management method developed by Francesco Cirill
 
 ## 📱 Platform Support
 
-- **Windows** (7, 8, 10, 11)
 - **macOS** (10.13+)
-- **Linux** (Ubuntu 18.04+, and other distributions)
+- _**Windows** (coming soon TBA)_
+- _**Linux** (coming soon TBA)_
 
 ## 🤝 Contributing
 
