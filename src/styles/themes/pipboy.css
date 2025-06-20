@@ -10,30 +10,30 @@
 /* PipBoy Colors - Green digital on black */
 :root[data-timer-theme="pipboy"] {
     --focus-color: #00ff41;
-    --break-color: #39ff14;
-    --long-break-color: #00cc33;
+    --break-color: #ff8c00; /* Orange for break */
+    --long-break-color: #0080ff; /* Blue for long break */
 
-    /* Background Colors - Deep black with green tints */
+    /* Background Colors - Deep black with tints */
     --focus-bg: #0d1117;
     /* PipBoy Black */
-    --break-bg: #0a0f0a;
-    /* Black with green tint */
-    --long-break-bg: #0a120a;
-    /* Greenish black */
+    --break-bg: #1a0a00; /* Dark orange-tinted background */
+    /* Black with orange tint */
+    --long-break-bg: #001a2d; /* Dark blue-tinted background */
+    /* Blue-ish black */
 
-    /* Timer Text Colors - Bright green on black */
+    /* Timer Text Colors - Bright colors on black */
     --focus-timer-color: #00ff41;
-    --break-timer-color: #000;
-    --long-break-timer-color: #00cc33;
+    --break-timer-color: #ff8c00; /* Orange text for break timer */
+    --long-break-timer-color: #0080ff; /* Blue text for long break timer */
 
     /* Button Colors - Terminal effect */
     --focus-primary-btn: #00ff41;
-    --break-primary-btn: #39ff14;
-    --long-break-primary-btn: #00cc33;
+    --break-primary-btn: #ff8c00;
+    --long-break-primary-btn: #0080ff;
 
     --focus-secondary-btn: rgba(0, 255, 65, 0.1);
-    --break-secondary-btn: rgba(57, 255, 20, 0.1);
-    --long-break-secondary-btn: rgba(0, 204, 51, 0.1);
+    --break-secondary-btn: rgba(255, 140, 0, 0.1);
+    --long-break-secondary-btn: rgba(0, 128, 255, 0.1);
 
     /* Shared Component Colors */
     --shared-bg: #000011;
@@ -63,6 +63,11 @@
     --pipboy-text: #00ff41;
     --pipboy-glow: rgba(0, 255, 65, 0.5);
     --pipboy-dark-green: #003300;
+
+    /* Dynamic glow effects for different timer states */
+    --pipboy-focus-glow: rgba(0, 255, 65, 0.5);
+    --pipboy-break-glow: rgba(255, 140, 0, 0.5);
+    --pipboy-longbreak-glow: rgba(0, 128, 255, 0.5);
 }
 
 /* PipBoy font override */
@@ -142,6 +147,42 @@
     }
 }
 
+/* Break state glow animation (orange) */
+@keyframes pipboy-glow-break {
+    0% {
+        text-shadow:
+            0 0 5px var(--pipboy-break-glow),
+            0 0 10px var(--pipboy-break-glow),
+            0 0 15px var(--pipboy-break-glow);
+    }
+
+    100% {
+        text-shadow:
+            0 0 10px var(--pipboy-break-glow),
+            0 0 20px var(--pipboy-break-glow),
+            0 0 30px var(--pipboy-break-glow),
+            0 0 40px var(--pipboy-break-glow);
+    }
+}
+
+/* Long break state glow animation (blue) */
+@keyframes pipboy-glow-longbreak {
+    0% {
+        text-shadow:
+            0 0 5px var(--pipboy-longbreak-glow),
+            0 0 10px var(--pipboy-longbreak-glow),
+            0 0 15px var(--pipboy-longbreak-glow);
+    }
+
+    100% {
+        text-shadow:
+            0 0 10px var(--pipboy-longbreak-glow),
+            0 0 20px var(--pipboy-longbreak-glow),
+            0 0 30px var(--pipboy-longbreak-glow),
+            0 0 40px var(--pipboy-longbreak-glow);
+    }
+}
+
 /* PipBoy effects for buttons */
 :root[data-timer-theme="pipboy"] .control-btn {
     background: transparent !important;
@@ -188,10 +229,90 @@
     transform: scale(0.98) !important;
 }
 
-/* Status icons PipBoy effect */
+/* Timer state specific button effects */
+:root[data-timer-theme="pipboy"] .controls.break .control-btn {
+    box-shadow:
+        0 0 5px var(--pipboy-break-glow),
+        inset 0 0 5px rgba(255, 140, 0, 0.1) !important;
+}
+
+:root[data-timer-theme="pipboy"] .controls.break .control-btn:hover {
+    box-shadow:
+        0 0 10px var(--pipboy-break-glow),
+        0 0 20px var(--pipboy-break-glow),
+        inset 0 0 10px rgba(255, 140, 0, 0.2) !important;
+    text-shadow: 0 0 5px var(--pipboy-break-glow);
+}
+
+:root[data-timer-theme="pipboy"] .controls.longBreak .control-btn {
+    box-shadow:
+        0 0 5px var(--pipboy-longbreak-glow),
+        inset 0 0 5px rgba(0, 128, 255, 0.1) !important;
+}
+
+:root[data-timer-theme="pipboy"] .controls.longBreak .control-btn:hover {
+    box-shadow:
+        0 0 10px var(--pipboy-longbreak-glow),
+        0 0 20px var(--pipboy-longbreak-glow),
+        inset 0 0 10px rgba(0, 128, 255, 0.2) !important;
+    text-shadow: 0 0 5px var(--pipboy-longbreak-glow);
+}
+
+/* Timer state specific button ::before effects */
+:root[data-timer-theme="pipboy"] .controls.break .control-btn::before {
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 140, 0, 0.2),
+            transparent);
+}
+
+:root[data-timer-theme="pipboy"] .controls.longBreak .control-btn::before {
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(0, 128, 255, 0.2),
+            transparent);
+}
+
+/* Status icon effects for different timer states - now handled below */
+
+/* === STATUS ICON GLOW FIXES === */
+/* Override all status icon effects for correct timer state colors */
+
+/* General status icon - default green for focus */
 :root[data-timer-theme="pipboy"] #status-icon {
     filter:
-        drop-shadow(0 0 5px var(--pipboy-glow)) drop-shadow(0 0 10px var(--pipboy-glow));
+        drop-shadow(0 0 5px var(--pipboy-focus-glow)) 
+        drop-shadow(0 0 10px var(--pipboy-focus-glow));
+    animation: pipboy-glow 2s ease-in-out infinite alternate;
+}
+
+/* Break state - orange glow for all status icons */
+:root[data-timer-theme="pipboy"] .container.break #status-icon,
+:root[data-timer-theme="pipboy"] .timer-container.break #status-icon,
+:root[data-timer-theme="pipboy"] body.break #status-icon {
+    filter:
+        drop-shadow(0 0 5px var(--pipboy-break-glow)) 
+        drop-shadow(0 0 10px var(--pipboy-break-glow));
+    animation: pipboy-glow-break 2s ease-in-out infinite alternate;
+}
+
+/* Long break state - blue glow for all status icons */
+:root[data-timer-theme="pipboy"] .container.longBreak #status-icon,
+:root[data-timer-theme="pipboy"] .timer-container.longBreak #status-icon,
+:root[data-timer-theme="pipboy"] body.longBreak #status-icon {
+    filter:
+        drop-shadow(0 0 5px var(--pipboy-longbreak-glow)) 
+        drop-shadow(0 0 10px var(--pipboy-longbreak-glow));
+    animation: pipboy-glow-longbreak 2s ease-in-out infinite alternate;
+}
+
+/* Focus state - green glow for all status icons */
+:root[data-timer-theme="pipboy"] .container.focus #status-icon,
+:root[data-timer-theme="pipboy"] .timer-container.focus #status-icon,
+:root[data-timer-theme="pipboy"] body.focus #status-icon {
+    filter:
+        drop-shadow(0 0 5px var(--pipboy-focus-glow)) 
+        drop-shadow(0 0 10px var(--pipboy-focus-glow));
     animation: pipboy-glow 2s ease-in-out infinite alternate;
 }
 
@@ -209,6 +330,47 @@
     box-shadow:
         0 0 5px var(--pipboy-glow),
         0 0 10px var(--pipboy-glow);
+}
+
+/* Progress dots timer state specific styling */
+:root[data-timer-theme="pipboy"] .container.break .progress-dot.completed {
+    background: var(--break-color) !important;
+    border-color: var(--break-color) !important;
+    box-shadow:
+        0 0 5px var(--pipboy-break-glow),
+        0 0 10px var(--pipboy-break-glow);
+}
+
+:root[data-timer-theme="pipboy"] .container.longBreak .progress-dot.completed {
+    background: var(--long-break-color) !important;
+    border-color: var(--long-break-color) !important;
+    box-shadow:
+        0 0 5px var(--pipboy-longbreak-glow),
+        0 0 10px var(--pipboy-longbreak-glow);
+}
+
+:root[data-timer-theme="pipboy"] .container.focus .progress-dot.completed {
+    background: var(--focus-color) !important;
+    border-color: var(--focus-color) !important;
+    box-shadow:
+        0 0 5px var(--pipboy-focus-glow),
+        0 0 10px var(--pipboy-focus-glow);
+}
+
+/* Progress dots current state styling */
+:root[data-timer-theme="pipboy"] .container.break .progress-dot.current {
+    border-color: var(--break-color) !important;
+    box-shadow: 0 0 8px var(--pipboy-break-glow);
+}
+
+:root[data-timer-theme="pipboy"] .container.longBreak .progress-dot.current {
+    border-color: var(--long-break-color) !important;
+    box-shadow: 0 0 8px var(--pipboy-longbreak-glow);
+}
+
+:root[data-timer-theme="pipboy"] .container.focus .progress-dot.current {
+    border-color: var(--focus-color) !important;
+    box-shadow: 0 0 8px var(--pipboy-focus-glow);
 }
 
 /* "PipBoy Rain" effect for the entire screen */
@@ -268,19 +430,19 @@
 :root[data-timer-theme="pipboy"] .sidebar.break {
     background: linear-gradient(135deg,
             var(--pipboy-bg),
-            var(--pipboy-dark-green),
+            #1a0a00,
             var(--break-color)) !important;
     border-right: 1px solid var(--break-color);
-    box-shadow: 0 0 20px rgba(57, 255, 20, 0.3);
+    box-shadow: 0 0 20px rgba(255, 140, 0, 0.3);
 }
 
 :root[data-timer-theme="pipboy"] .sidebar.longBreak {
     background: linear-gradient(135deg,
             var(--pipboy-bg),
-            var(--pipboy-dark-green),
+            #001a2d,
             var(--long-break-color)) !important;
     border-right: 1px solid var(--long-break-color);
-    box-shadow: 0 0 20px rgba(0, 204, 51, 0.3);
+    box-shadow: 0 0 20px rgba(0, 128, 255, 0.3);
 }
 
 /* === SHARED COMPONENTS STYLES === */
@@ -473,4 +635,119 @@
 :root[data-timer-theme="pipboy"] .day-stat-base {
     background: var(--day-stat-bg);
     border-color: transparent;
+}
+
+/* === TIMER BODY STATE RULES === */
+/* Override default body timer states with Pipboy-specific styling */
+
+/* Focus timer state - keep the existing green theme */
+:root[data-timer-theme="pipboy"] body.focus {
+    background: var(--focus-bg) !important;
+    transition: background-color 0.3s ease;
+}
+
+/* Break timer state - use orange color like active timer */
+:root[data-timer-theme="pipboy"] body.break {
+    background: linear-gradient(135deg, 
+        var(--pipboy-bg), 
+        #1a0a00, 
+        #2d1a00) !important;
+    transition: background-color 0.3s ease;
+}
+
+/* Long break timer state - use blue color like active timer */
+:root[data-timer-theme="pipboy"] body.longBreak {
+    background: linear-gradient(135deg, 
+        var(--pipboy-bg), 
+        #001a2d, 
+        #002642) !important;
+    transition: background-color 0.3s ease;
+}
+
+/* Color variables updated above in main block */
+
+/* Timer state specific glow animations for numbers */
+:root[data-timer-theme="pipboy"] .timer-container.break .timer-minutes,
+:root[data-timer-theme="pipboy"] .timer-container.break .timer-seconds {
+    text-shadow:
+        0 0 5px var(--pipboy-break-glow),
+        0 0 10px var(--pipboy-break-glow),
+        0 0 15px var(--pipboy-break-glow),
+        0 0 20px var(--pipboy-break-glow);
+    animation: pipboy-glow-break 2s ease-in-out infinite alternate;
+}
+
+:root[data-timer-theme="pipboy"] .timer-container.longBreak .timer-minutes,
+:root[data-timer-theme="pipboy"] .timer-container.longBreak .timer-seconds {
+    text-shadow:
+        0 0 5px var(--pipboy-longbreak-glow),
+        0 0 10px var(--pipboy-longbreak-glow),
+        0 0 15px var(--pipboy-longbreak-glow),
+        0 0 20px var(--pipboy-longbreak-glow);
+    animation: pipboy-glow-longbreak 2s ease-in-out infinite alternate;
+}
+
+/* Timer status glow effects */
+:root[data-timer-theme="pipboy"] .timer-container.break .timer-status {
+    text-shadow: 0 0 10px var(--pipboy-break-glow);
+    animation: pipboy-flicker 3s infinite;
+}
+
+:root[data-timer-theme="pipboy"] .timer-container.longBreak .timer-status {
+    text-shadow: 0 0 10px var(--pipboy-longbreak-glow);
+    animation: pipboy-flicker 3s infinite;
+}
+
+/* === SIDEBAR ICONS PIPBOY OVERRIDES === */
+/* Override sidebar icon colors and effects for timer states */
+
+/* Break state sidebar icons - orange glow */
+:root[data-timer-theme="pipboy"] .sidebar.break .sidebar-icon:hover {
+    box-shadow: 0 4px 12px var(--pipboy-break-glow) !important;
+}
+
+:root[data-timer-theme="pipboy"] .sidebar.break .sidebar-icon.active {
+    box-shadow: 0 4px 16px var(--pipboy-break-glow) !important;
+}
+
+:root[data-timer-theme="pipboy"] .sidebar.break .sidebar-icon-large:hover {
+    box-shadow: 0 6px 16px var(--pipboy-break-glow) !important;
+}
+
+:root[data-timer-theme="pipboy"] .sidebar.break .sidebar-icon-large.active {
+    box-shadow: 0 6px 20px var(--pipboy-break-glow) !important;
+}
+
+/* Long break state sidebar icons - blue glow */
+:root[data-timer-theme="pipboy"] .sidebar.longBreak .sidebar-icon:hover {
+    box-shadow: 0 4px 12px var(--pipboy-longbreak-glow) !important;
+}
+
+:root[data-timer-theme="pipboy"] .sidebar.longBreak .sidebar-icon.active {
+    box-shadow: 0 4px 16px var(--pipboy-longbreak-glow) !important;
+}
+
+:root[data-timer-theme="pipboy"] .sidebar.longBreak .sidebar-icon-large:hover {
+    box-shadow: 0 6px 16px var(--pipboy-longbreak-glow) !important;
+}
+
+:root[data-timer-theme="pipboy"] .sidebar.longBreak .sidebar-icon-large.active {
+    box-shadow: 0 6px 20px var(--pipboy-longbreak-glow) !important;
+}
+
+/* Focus state sidebar icons - keep green glow */
+:root[data-timer-theme="pipboy"] .sidebar.focus .sidebar-icon:hover {
+    box-shadow: 0 4px 12px var(--pipboy-focus-glow) !important;
+}
+
+:root[data-timer-theme="pipboy"] .sidebar.focus .sidebar-icon.active {
+    box-shadow: 0 4px 16px var(--pipboy-focus-glow) !important;
+}
+
+:root[data-timer-theme="pipboy"] .sidebar.focus .sidebar-icon-large:hover {
+    box-shadow: 0 6px 16px var(--pipboy-focus-glow) !important;
+}
+
+:root[data-timer-theme="pipboy"] .sidebar.focus .sidebar-icon-large.active {
+    box-shadow: 0 6px 20px var(--pipboy-focus-glow) !important;
 }
