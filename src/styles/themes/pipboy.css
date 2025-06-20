@@ -10,21 +10,27 @@
 /* PipBoy Colors - Green digital on black */
 :root[data-timer-theme="pipboy"] {
     --focus-color: #00ff41;
-    --break-color: #ff8c00; /* Orange for break */
-    --long-break-color: #0080ff; /* Blue for long break */
+    --break-color: #ff8c00;
+    /* Orange for break */
+    --long-break-color: #0080ff;
+    /* Blue for long break */
 
     /* Background Colors - Deep black with tints */
     --focus-bg: #0d1117;
     /* PipBoy Black */
-    --break-bg: #1a0a00; /* Dark orange-tinted background */
+    --break-bg: #1a0a00;
+    /* Dark orange-tinted background */
     /* Black with orange tint */
-    --long-break-bg: #001a2d; /* Dark blue-tinted background */
+    --long-break-bg: #001a2d;
+    /* Dark blue-tinted background */
     /* Blue-ish black */
 
     /* Timer Text Colors - Bright colors on black */
     --focus-timer-color: #00ff41;
-    --break-timer-color: #ff8c00; /* Orange text for break timer */
-    --long-break-timer-color: #0080ff; /* Blue text for long break timer */
+    --break-timer-color: #ff8c00;
+    /* Orange text for break timer */
+    --long-break-timer-color: #0080ff;
+    /* Blue text for long break timer */
 
     /* Button Colors - Terminal effect */
     --focus-primary-btn: #00ff41;
@@ -281,8 +287,7 @@
 /* General status icon - default green for focus */
 :root[data-timer-theme="pipboy"] #status-icon {
     filter:
-        drop-shadow(0 0 5px var(--pipboy-focus-glow)) 
-        drop-shadow(0 0 10px var(--pipboy-focus-glow));
+        drop-shadow(0 0 5px var(--pipboy-focus-glow)) drop-shadow(0 0 10px var(--pipboy-focus-glow));
     animation: pipboy-glow 2s ease-in-out infinite alternate;
 }
 
@@ -291,8 +296,7 @@
 :root[data-timer-theme="pipboy"] .timer-container.break #status-icon,
 :root[data-timer-theme="pipboy"] body.break #status-icon {
     filter:
-        drop-shadow(0 0 5px var(--pipboy-break-glow)) 
-        drop-shadow(0 0 10px var(--pipboy-break-glow));
+        drop-shadow(0 0 5px var(--pipboy-break-glow)) drop-shadow(0 0 10px var(--pipboy-break-glow));
     animation: pipboy-glow-break 2s ease-in-out infinite alternate;
 }
 
@@ -301,8 +305,7 @@
 :root[data-timer-theme="pipboy"] .timer-container.longBreak #status-icon,
 :root[data-timer-theme="pipboy"] body.longBreak #status-icon {
     filter:
-        drop-shadow(0 0 5px var(--pipboy-longbreak-glow)) 
-        drop-shadow(0 0 10px var(--pipboy-longbreak-glow));
+        drop-shadow(0 0 5px var(--pipboy-longbreak-glow)) drop-shadow(0 0 10px var(--pipboy-longbreak-glow));
     animation: pipboy-glow-longbreak 2s ease-in-out infinite alternate;
 }
 
@@ -311,8 +314,7 @@
 :root[data-timer-theme="pipboy"] .timer-container.focus #status-icon,
 :root[data-timer-theme="pipboy"] body.focus #status-icon {
     filter:
-        drop-shadow(0 0 5px var(--pipboy-focus-glow)) 
-        drop-shadow(0 0 10px var(--pipboy-focus-glow));
+        drop-shadow(0 0 5px var(--pipboy-focus-glow)) drop-shadow(0 0 10px var(--pipboy-focus-glow));
     animation: pipboy-glow 2s ease-in-out infinite alternate;
 }
 
@@ -648,19 +650,19 @@
 
 /* Break timer state - use orange color like active timer */
 :root[data-timer-theme="pipboy"] body.break {
-    background: linear-gradient(135deg, 
-        var(--pipboy-bg), 
-        #1a0a00, 
-        #2d1a00) !important;
+    background: linear-gradient(135deg,
+            var(--pipboy-bg),
+            #1a0a00,
+            #2d1a00) !important;
     transition: background-color 0.3s ease;
 }
 
 /* Long break timer state - use blue color like active timer */
 :root[data-timer-theme="pipboy"] body.longBreak {
-    background: linear-gradient(135deg, 
-        var(--pipboy-bg), 
-        #001a2d, 
-        #002642) !important;
+    background: linear-gradient(135deg,
+            var(--pipboy-bg),
+            #001a2d,
+            #002642) !important;
     transition: background-color 0.3s ease;
 }
 
