@@ -1,6 +1,6 @@
 /* Timer Theme: Pride
  * Author: Claude AI
- * Description: Un tema colorato con i colori dell'arcobaleno per celebrare la diversità e l'inclusività
+ * Description: Un tema con 6 strisce orizzontali dell'arcobaleno come la bandiera Pride per celebrare la diversità e l'inclusività
  * Supports: Light + Dark mode
  */
 
@@ -54,15 +54,20 @@
     --shared-input-border: rgba(156, 39, 176, 0.3);
     --shared-hover-bg: rgba(156, 39, 176, 0.05);
 
-    /* Pride-specific more saturated rainbow accent */
+    /* Pride flag rainbow colors */
     --pride-rainbow: linear-gradient(90deg,
-            #ff9aa2 0%,
-            #ffc9a3 16.66%,
-            #fff4a3 33.33%,
-            #a3f7ba 50%,
-            #a3ccff 66.66%,
-            #d4a3ff 83.33%,
-            #ff9aa2 100%);
+            #e40303 0%,
+            #e40303 16.666%,
+            #ff8c00 16.666%,
+            #ff8c00 33.333%,
+            #ffed00 33.333%,
+            #ffed00 50%,
+            #008018 50%,
+            #008018 66.666%,
+            #0066ff 66.666%,
+            #0066ff 83.333%,
+            #732982 83.333%,
+            #732982 100%);
 }
 
 /* Pride Theme - Dark Mode */
@@ -92,109 +97,77 @@
     --shared-hover-bg: rgba(156, 39, 176, 0.1);
 }
 
-/* Artistic Pride Background with Abstract Shapes */
+/* Pride Flag Background with 6 Horizontal Rainbow Stripes - Vibrant Colors */
 :root[data-timer-theme="pride"] body,
 :root[data-timer-theme="pride"] .app-container,
 :root[data-timer-theme="pride"] .main-content {
-    background: 
-        /* Base animated gradient */
-        linear-gradient(135deg, #ff9aa2, #ffc9a3, #fff4a3, #a3f7ba, #a3ccff, #d4a3ff, #ff9aa2, #ffc9a3),
-        /* Floating circles */
-        radial-gradient(circle at 20% 20%, rgba(255, 154, 162, 0.6) 0%, transparent 50%),
-        radial-gradient(circle at 80% 30%, rgba(255, 201, 163, 0.5) 0%, transparent 40%),
-        radial-gradient(circle at 40% 70%, rgba(255, 244, 163, 0.4) 0%, transparent 60%),
-        radial-gradient(circle at 90% 80%, rgba(163, 247, 186, 0.6) 0%, transparent 45%),
-        radial-gradient(circle at 10% 90%, rgba(163, 204, 255, 0.5) 0%, transparent 55%),
-        radial-gradient(circle at 70% 10%, rgba(212, 163, 255, 0.4) 0%, transparent 50%),
-        /* Geometric triangles */
-        linear-gradient(45deg, transparent 40%, rgba(255, 107, 157, 0.3) 45%, rgba(255, 107, 157, 0.3) 55%, transparent 60%),
-        linear-gradient(-45deg, transparent 30%, rgba(156, 39, 176, 0.2) 35%, rgba(156, 39, 176, 0.2) 65%, transparent 70%),
-        /* Abstract waves */
-        linear-gradient(90deg, rgba(255, 154, 162, 0.1) 0%, rgba(255, 201, 163, 0.2) 25%, rgba(255, 244, 163, 0.1) 50%, rgba(163, 247, 186, 0.2) 75%, rgba(163, 204, 255, 0.1) 100%) !important;
+    background: linear-gradient(
+        to bottom,
+        #ff6b85 0%,           /* Vibrant Red */
+        #ff6b85 16.666%,
+        #ffb366 16.666%,      /* Vibrant Orange */
+        #ffb366 33.333%,
+        #ffeb3b 33.333%,      /* Vibrant Yellow */
+        #ffeb3b 50%,
+        #4caf50 50%,          /* Vibrant Green */
+        #4caf50 66.666%,
+        #2196f3 66.666%,      /* Vibrant Blue */
+        #2196f3 83.333%,
+        #9c27b0 83.333%,      /* Vibrant Purple */
+        #9c27b0 100%
+    ) !important;
     
-    background-size: 
-        400% 400%,
-        150px 150px,
-        200px 200px,
-        120px 120px,
-        180px 180px,
-        160px 160px,
-        140px 140px,
-        100% 300px,
-        100% 200px,
-        100% 100px !important;
-    
-    background-position:
-        0% 0%,
-        0% 0%,
-        100% 0%,
-        0% 100%,
-        100% 100%,
-        50% 0%,
-        25% 50%,
-        0% 25%,
-        0% 75%,
-        0% 0% !important;
-    
-    animation: 
-        gradient-move 12s ease infinite,
-        float-shapes 20s ease-in-out infinite !important;
+    background-attachment: fixed !important;
+    background-repeat: no-repeat !important;
+    background-size: 100% 100% !important;
 }
 
 :root[data-timer-theme="pride"][data-mode="break"] body,
 :root[data-timer-theme="pride"][data-mode="break"] .app-container,
 :root[data-timer-theme="pride"][data-mode="break"] .main-content {
-    background: 
-        /* Break mode gradient */
-        linear-gradient(45deg, #ffc9a3, #fff4a3, #a3f7ba, #a3ccff, #d4a3ff, #ff9aa2, #ffc9a3, #fff4a3),
-        /* Different positioned shapes for break */
-        radial-gradient(circle at 30% 40%, rgba(255, 152, 0, 0.5) 0%, transparent 45%),
-        radial-gradient(circle at 70% 20%, rgba(255, 244, 163, 0.6) 0%, transparent 50%),
-        radial-gradient(circle at 20% 80%, rgba(163, 247, 186, 0.4) 0%, transparent 60%),
-        radial-gradient(circle at 85% 60%, rgba(163, 204, 255, 0.5) 0%, transparent 40%),
-        linear-gradient(30deg, transparent 35%, rgba(255, 152, 0, 0.3) 40%, rgba(255, 152, 0, 0.3) 60%, transparent 65%),
-        linear-gradient(-60deg, transparent 25%, rgba(76, 175, 80, 0.2) 30%, rgba(76, 175, 80, 0.2) 70%, transparent 75%) !important;
+    background: linear-gradient(
+        to bottom,
+        #ff6b85 0%,           /* Vibrant Red */
+        #ff6b85 16.666%,
+        #ffb366 16.666%,      /* Vibrant Orange */
+        #ffb366 33.333%,
+        #ffeb3b 33.333%,      /* Vibrant Yellow */
+        #ffeb3b 50%,
+        #4caf50 50%,          /* Vibrant Green */
+        #4caf50 66.666%,
+        #2196f3 66.666%,      /* Vibrant Blue */
+        #2196f3 83.333%,
+        #9c27b0 83.333%,      /* Vibrant Purple */
+        #9c27b0 100%
+    ) !important;
     
-    background-size: 
-        400% 400%,
-        130px 130px,
-        170px 170px,
-        110px 110px,
-        190px 190px,
-        100% 250px,
-        100% 180px !important;
-    
-    animation: 
-        gradient-move 10s ease infinite,
-        float-shapes-alt 18s ease-in-out infinite !important;
+    background-attachment: fixed !important;
+    background-repeat: no-repeat !important;
+    background-size: 100% 100% !important;
 }
 
 :root[data-timer-theme="pride"][data-mode="long-break"] body,
 :root[data-timer-theme="pride"][data-mode="long-break"] .app-container,
 :root[data-timer-theme="pride"][data-mode="long-break"] .main-content {
-    background: 
-        /* Long break gradient */
-        linear-gradient(225deg, #d4a3ff, #ff9aa2, #ffc9a3, #fff4a3, #a3f7ba, #a3ccff, #d4a3ff, #ff9aa2),
-        /* Dreamy purple shapes */
-        radial-gradient(circle at 50% 30%, rgba(156, 39, 176, 0.4) 0%, transparent 55%),
-        radial-gradient(circle at 15% 60%, rgba(212, 163, 255, 0.6) 0%, transparent 45%),
-        radial-gradient(circle at 85% 40%, rgba(255, 154, 162, 0.3) 0%, transparent 60%),
-        radial-gradient(circle at 40% 90%, rgba(163, 204, 255, 0.5) 0%, transparent 50%),
-        linear-gradient(60deg, transparent 30%, rgba(156, 39, 176, 0.2) 35%, rgba(156, 39, 176, 0.2) 65%, transparent 70%),
-        linear-gradient(-30deg, transparent 40%, rgba(212, 163, 255, 0.3) 45%, rgba(212, 163, 255, 0.3) 55%, transparent 60%) !important;
+    background: linear-gradient(
+        to bottom,
+        #ff6b85 0%,           /* Vibrant Red */
+        #ff6b85 16.666%,
+        #ffb366 16.666%,      /* Vibrant Orange */
+        #ffb366 33.333%,
+        #ffeb3b 33.333%,      /* Vibrant Yellow */
+        #ffeb3b 50%,
+        #4caf50 50%,          /* Vibrant Green */
+        #4caf50 66.666%,
+        #2196f3 66.666%,      /* Vibrant Blue */
+        #2196f3 83.333%,
+        #9c27b0 83.333%,      /* Vibrant Purple */
+        #9c27b0 100%
+    ) !important;
     
-    background-size: 
-        400% 400%,
-        160px 160px,
-        140px 140px,
-        120px 120px,
-        180px 180px,
-        100% 280px,
-        100% 220px !important;
-    
-    animation: 
-        gradient-move 14s ease infinite,
-        float-shapes-slow 25s ease-in-out infinite !important;
+    background-attachment: fixed !important;
+    background-repeat: no-repeat !important;
+    background-size: 100% 100% !important;
 }
 
 /* Pride Theme Specific Styling - Timer Only */
@@ -248,128 +221,7 @@
     }
 }
 
-@keyframes gradient-move {
-    0% {
-        background-position: 0% 50%;
-    }
-    50% {
-        background-position: 100% 50%;
-    }
-    100% {
-        background-position: 0% 50%;
-    }
-}
-
-@keyframes float-shapes {
-    0%, 100% {
-        background-position:
-            0% 0%,
-            0% 0%,
-            100% 0%,
-            0% 100%,
-            100% 100%,
-            50% 0%,
-            25% 50%,
-            0% 25%,
-            0% 75%,
-            0% 0%;
-    }
-    25% {
-        background-position:
-            25% 25%,
-            10% 10%,
-            90% 10%,
-            10% 90%,
-            90% 90%,
-            60% 10%,
-            35% 60%,
-            10% 35%,
-            10% 85%,
-            10% 10%;
-    }
-    50% {
-        background-position:
-            50% 50%,
-            20% 20%,
-            80% 20%,
-            20% 80%,
-            80% 80%,
-            70% 20%,
-            45% 70%,
-            20% 45%,
-            20% 95%,
-            20% 20%;
-    }
-    75% {
-        background-position:
-            75% 25%,
-            30% 10%,
-            70% 30%,
-            30% 70%,
-            70% 70%,
-            40% 30%,
-            55% 40%,
-            30% 55%,
-            30% 65%,
-            30% 30%;
-    }
-}
-
-@keyframes float-shapes-alt {
-    0%, 100% {
-        background-position:
-            0% 0%,
-            30% 40%,
-            70% 20%,
-            20% 80%,
-            85% 60%,
-            0% 25%,
-            0% 75%;
-    }
-    33% {
-        background-position:
-            33% 33%,
-            40% 50%,
-            60% 30%,
-            30% 70%,
-            75% 70%,
-            10% 35%,
-            10% 85%;
-    }
-    66% {
-        background-position:
-            66% 66%,
-            50% 30%,
-            80% 40%,
-            40% 60%,
-            95% 50%,
-            20% 45%,
-            20% 65%;
-    }
-}
-
-@keyframes float-shapes-slow {
-    0%, 100% {
-        background-position:
-            0% 0%,
-            50% 30%,
-            15% 60%,
-            85% 40%,
-            40% 90%,
-            0% 30%,
-            0% 40%;
-    }
-    50% {
-        background-position:
-            50% 50%,
-            40% 40%,
-            25% 50%,
-            75% 50%,
-            30% 80%,
-            10% 40%,
-            10% 50%;
-    }
-}
+/* Removed complex animation keyframes as we now use simple horizontal rainbow stripes */
 
 /* Pride-themed button gradients */
 :root[data-timer-theme="pride"] .btn-primary {
@@ -537,5 +389,31 @@
 :root[data-timer-theme="pride"] .shortcut-clear:hover,
 :root[data-timer-theme="pride"] .close-btn:hover {
     background-color: rgba(44, 62, 80, 0.1) !important;
+    color: #2c3e50 !important;
+}
+
+/* Notifications - White Glass Effect */
+:root[data-timer-theme="pride"] .notification,
+:root[data-timer-theme="pride"] .toast,
+:root[data-timer-theme="pride"] .alert,
+:root[data-timer-theme="pride"] .notification-ping {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+    color: #2c3e50 !important;
+    border-radius: 12px !important;
+}
+
+:root[data-timer-theme="pride"][data-theme="dark"] .notification,
+:root[data-timer-theme="pride"][data-theme="dark"] .toast,
+:root[data-timer-theme="pride"][data-theme="dark"] .alert,
+:root[data-timer-theme="pride"][data-theme="dark"] .notification-ping {
+    background: rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(18px) !important;
+    -webkit-backdrop-filter: blur(18px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
     color: #2c3e50 !important;
 }
