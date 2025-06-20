@@ -1168,14 +1168,10 @@ export class NavigationManager {
 
         // Save changes if using SessionManager
         if (window.sessionManager && !session.isHistorical) {
-            // Update the session in SessionManager
-            const dateString = this.currentDate.toDateString();
-            if (window.sessionManager.sessions[dateString]) {
-                const sessionIndex = window.sessionManager.sessions[dateString].findIndex(s => s.id === session.id);
-                if (sessionIndex !== -1) {
-                    window.sessionManager.sessions[dateString][sessionIndex] = { ...session };
-                }
-            }
+            // Set the selected date for SessionManager
+            window.sessionManager.selectedDate = this.currentDate;
+            // Use the proper updateSession method to ensure persistence
+            window.sessionManager.updateSession(session);
         }
     }
 

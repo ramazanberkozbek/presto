@@ -11,7 +11,32 @@ export class SessionManager {
     }
 
     init() {
+        this.loadSessionsFromStorage();
         this.setupEventListeners();
+    }
+
+    // Load sessions from localStorage
+    loadSessionsFromStorage() {
+        try {
+            const savedSessions = localStorage.getItem('presto_manual_sessions');
+            if (savedSessions) {
+                this.sessions = JSON.parse(savedSessions);
+                console.log('Loaded', this.sessions.length, 'manual sessions from storage');
+            }
+        } catch (error) {
+            console.error('Error loading sessions from storage:', error);
+            this.sessions = [];
+        }
+    }
+
+    // Save sessions to localStorage
+    saveSessionsToStorage() {
+        try {
+            localStorage.setItem('presto_manual_sessions', JSON.stringify(this.sessions));
+            console.log('Saved', this.sessions.length, 'manual sessions to storage');
+        } catch (error) {
+            console.error('Error saving sessions to storage:', error);
+        }
     }
 
     setupEventListeners() {
@@ -220,6 +245,9 @@ export class SessionManager {
         }
 
         this.sessions[dateString].push(sessionData);
+        
+        // Save to localStorage
+        this.saveSessionsToStorage();
 
         // TODO: Call backend when available
         // await invoke('add_session', { date: dateString, session: sessionData });
@@ -235,6 +263,9 @@ export class SessionManager {
                 this.sessions[dateString][index] = sessionData;
             }
         }
+
+        // Save to localStorage
+        this.saveSessionsToStorage();
 
         // TODO: Call backend when available
         // await invoke('update_session', { date: dateString, sessionId: sessionData.id, updatedSession: sessionData });
@@ -252,6 +283,9 @@ export class SessionManager {
             if (this.sessions[dateString]) {
                 this.sessions[dateString] = this.sessions[dateString].filter(s => s.id !== this.currentEditingSession.id);
             }
+
+            // Save to localStorage
+            this.saveSessionsToStorage();
 
             // TODO: Call backend when available
             // await invoke('delete_session', { date: dateString, sessionId: this.currentEditingSession.id });
