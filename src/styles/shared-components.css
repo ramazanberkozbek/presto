@@ -81,11 +81,6 @@
     background: #334155;
 }
 
-[data-theme="dark"] .nav-item-base.active:hover {
-    background: var(--accent-color) !important;
-    color: white !important;
-}
-
 [data-theme="dark"] .sidebar-base {
     background: #212121;
     border-color: #313233;
@@ -131,11 +126,6 @@
 
     [data-theme="auto"] .nav-item-base:hover {
         background: #334155;
-    }
-
-    [data-theme="auto"] .nav-item-base.active:hover {
-        background: var(--accent-color) !important;
-        color: white !important;
     }
 
     [data-theme="auto"] .sidebar-base {
@@ -309,23 +299,13 @@
     color: var(--text-color);
     width: 100%;
     text-decoration: none;
+    opacity: 0.8;
 }
 
 .nav-item-base:hover {
-    background: #f8f9fa;
     transform: translateX(4px);
 }
 
-.nav-item-base.active {
-    background: var(--accent-color);
-    color: var(--text-light);
-    box-shadow: 0 4px 12px rgba(155, 89, 182, 0.3);
-}
-
-.nav-item-base.active:hover {
-    background: var(--accent-color);
-    transform: translateX(6px);
-}
 
 .nav-item-base i {
     font-size: 1.2rem;
@@ -333,6 +313,13 @@
     text-align: center;
     flex-shrink: 0;
 }
+
+.nav-item-base.active {
+    color: var(--text-color);
+    box-shadow: 0 4px 12px var(--text-light);
+    opacity: 1;
+}
+
 
 /* === BADGE COMPONENTS === */
 

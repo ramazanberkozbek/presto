@@ -1,0 +1,476 @@
+/* Timer Theme: PipBoy
+ * Author: (murdercode@gmail.com)
+ * Description: A retro-futuristic theme inspired by Fallout's PipBoy interface with green terminal colors and digital effects
+ * Supports: Dark mode only
+ */
+
+/* Import monospace font for terminal effect */
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;500;700;900&display=swap');
+
+/* PipBoy Colors - Green digital on black */
+:root[data-timer-theme="pipboy"] {
+    --focus-color: #00ff41;
+    --break-color: #39ff14;
+    --long-break-color: #00cc33;
+
+    /* Background Colors - Deep black with green tints */
+    --focus-bg: #0d1117;
+    /* PipBoy Black */
+    --break-bg: #0a0f0a;
+    /* Black with green tint */
+    --long-break-bg: #0a120a;
+    /* Greenish black */
+
+    /* Timer Text Colors - Bright green on black */
+    --focus-timer-color: #00ff41;
+    --break-timer-color: #000;
+    --long-break-timer-color: #00cc33;
+
+    /* Button Colors - Terminal effect */
+    --focus-primary-btn: #00ff41;
+    --break-primary-btn: #39ff14;
+    --long-break-primary-btn: #00cc33;
+
+    --focus-secondary-btn: rgba(0, 255, 65, 0.1);
+    --break-secondary-btn: rgba(57, 255, 20, 0.1);
+    --long-break-secondary-btn: rgba(0, 204, 51, 0.1);
+
+    /* Shared Component Colors */
+    --shared-bg: #000011;
+    --shared-border: #003300;
+    --shared-text: #00ff41;
+
+    /* Additional theme colors */
+    --card-bg: #000011;
+    --card-border: #003300;
+    --stat-border: #003300;
+    --day-stat-bg: #001100;
+    --hover-bg: #001a00;
+    --row-bg: rgba(0, 255, 65, 0.05);
+    --row-hover-bg: rgba(0, 255, 65, 0.1);
+    --focus-bg-alpha: rgba(0, 255, 65, 0.2);
+    --text-on-focus: #000000;
+
+    /* Settings components */
+    --setting-item-bg: #001100;
+    --setting-item-hover-bg: #002200;
+    --setting-item-hover-border: rgba(0, 255, 65, 0.3);
+    --input-border: #003300;
+    --input-focus-shadow: rgba(0, 255, 65, 0.2);
+
+    /* Additional colors for PipBoy effects */
+    --pipboy-bg: #000000;
+    --pipboy-text: #00ff41;
+    --pipboy-glow: rgba(0, 255, 65, 0.5);
+    --pipboy-dark-green: #003300;
+}
+
+/* PipBoy font override */
+:root[data-timer-theme="pipboy"] .timer-minutes,
+:root[data-timer-theme="pipboy"] .timer-seconds {
+    font-family: 'Orbitron', 'Share Tech Mono', monospace !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.1em;
+    text-shadow:
+        0 0 5px var(--pipboy-glow),
+        0 0 10px var(--pipboy-glow),
+        0 0 15px var(--pipboy-glow),
+        0 0 20px var(--pipboy-glow);
+    animation: pipboy-glow 2s ease-in-out infinite alternate;
+}
+
+:root[data-timer-theme="pipboy"] .timer-status {
+    font-family: 'Share Tech Mono', monospace !important;
+    font-weight: 400 !important;
+    font-size: 16px !important;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px var(--pipboy-glow);
+    animation: pipboy-flicker 3s infinite;
+}
+
+/* PipBoy Animations */
+@keyframes pipboy-glow {
+    0% {
+        text-shadow:
+            0 0 5px var(--pipboy-glow),
+            0 0 10px var(--pipboy-glow),
+            0 0 15px var(--pipboy-glow);
+    }
+
+    100% {
+        text-shadow:
+            0 0 10px var(--pipboy-glow),
+            0 0 20px var(--pipboy-glow),
+            0 0 30px var(--pipboy-glow),
+            0 0 40px var(--pipboy-glow);
+    }
+}
+
+@keyframes pipboy-flicker {
+
+    0%,
+    90%,
+    100% {
+        opacity: 1;
+    }
+
+    95% {
+        opacity: 0.8;
+    }
+}
+
+@keyframes pipboy-rain {
+    0% {
+        transform: translateY(-100vh);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(100vh);
+        opacity: 0;
+    }
+}
+
+@keyframes pipboy-scan {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* PipBoy effects for buttons */
+:root[data-timer-theme="pipboy"] .control-btn {
+    background: transparent !important;
+    border: 1px solid currentColor !important;
+    border-radius: 0 !important;
+    box-shadow:
+        0 0 5px var(--pipboy-glow),
+        inset 0 0 5px rgba(0, 255, 65, 0.1) !important;
+    font-family: 'Share Tech Mono', monospace !important;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.3s ease !important;
+    position: relative;
+    overflow: hidden;
+}
+
+:root[data-timer-theme="pipboy"] .control-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(0, 255, 65, 0.2),
+            transparent);
+    transition: left 0.5s;
+}
+
+:root[data-timer-theme="pipboy"] .control-btn:hover {
+    box-shadow:
+        0 0 10px var(--pipboy-glow),
+        0 0 20px var(--pipboy-glow),
+        inset 0 0 10px rgba(0, 255, 65, 0.2) !important;
+    text-shadow: 0 0 5px var(--pipboy-glow);
+}
+
+:root[data-timer-theme="pipboy"] .control-btn:hover::before {
+    left: 100%;
+}
+
+:root[data-timer-theme="pipboy"] .control-btn:active {
+    transform: scale(0.98) !important;
+}
+
+/* Status icons PipBoy effect */
+:root[data-timer-theme="pipboy"] #status-icon {
+    filter:
+        drop-shadow(0 0 5px var(--pipboy-glow)) drop-shadow(0 0 10px var(--pipboy-glow));
+    animation: pipboy-glow 2s ease-in-out infinite alternate;
+}
+
+/* Progress dots digital style */
+:root[data-timer-theme="pipboy"] .progress-dot {
+    border-radius: 0 !important;
+    border: 1px solid var(--pipboy-text) !important;
+    background: transparent !important;
+    box-shadow: 0 0 3px var(--pipboy-glow);
+    animation: pipboy-flicker 4s infinite;
+}
+
+:root[data-timer-theme="pipboy"] .progress-dot.completed {
+    background: var(--pipboy-text) !important;
+    box-shadow:
+        0 0 5px var(--pipboy-glow),
+        0 0 10px var(--pipboy-glow);
+}
+
+/* "PipBoy Rain" effect for the entire screen */
+:root[data-timer-theme="pipboy"] html::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        repeating-linear-gradient(90deg,
+            transparent,
+            transparent 15px,
+            rgba(0, 255, 65, 0.08) 15px,
+            rgba(0, 255, 65, 0.08) 17px);
+    pointer-events: none;
+    z-index: 1000;
+    animation: pipboy-scan 8s infinite linear;
+}
+
+/* Horizontal scanline effect for the entire screen */
+:root[data-timer-theme="pipboy"] html::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        repeating-linear-gradient(0deg,
+            transparent,
+            transparent 1px,
+            rgba(0, 255, 65, 0.05) 1px,
+            rgba(0, 255, 65, 0.05) 3px);
+    pointer-events: none;
+    z-index: 1000;
+}
+
+/* Remove effects from timer container since they are now applied globally */
+:root[data-timer-theme="pipboy"] .timer-container {
+    position: relative;
+}
+
+:root[data-timer-theme="pipboy"] .timer-display {
+    position: relative;
+    z-index: 2;
+}
+
+/* Sidebar styling PipBoy */
+:root[data-timer-theme="pipboy"] .sidebar.focus {
+    background: var(--focus-bg);
+    border-right: 1px solid var(--focus-color);
+    box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+}
+
+:root[data-timer-theme="pipboy"] .sidebar.break {
+    background: linear-gradient(135deg,
+            var(--pipboy-bg),
+            var(--pipboy-dark-green),
+            var(--break-color)) !important;
+    border-right: 1px solid var(--break-color);
+    box-shadow: 0 0 20px rgba(57, 255, 20, 0.3);
+}
+
+:root[data-timer-theme="pipboy"] .sidebar.longBreak {
+    background: linear-gradient(135deg,
+            var(--pipboy-bg),
+            var(--pipboy-dark-green),
+            var(--long-break-color)) !important;
+    border-right: 1px solid var(--long-break-color);
+    box-shadow: 0 0 20px rgba(0, 204, 51, 0.3);
+}
+
+/* === SHARED COMPONENTS STYLES === */
+/* Styles for statistics and settings in PipBoy theme */
+
+:root[data-timer-theme="pipboy"] .base-card,
+:root[data-timer-theme="pipboy"] .base-card-compact,
+:root[data-timer-theme="pipboy"] .base-section {
+    background: var(--pipboy-dark-green);
+    border: 1px solid var(--pipboy-text);
+    box-shadow: 0 0 10px var(--pipboy-glow);
+}
+
+:root[data-timer-theme="pipboy"] .stat-card {
+    background: var(--pipboy-dark-green);
+    border: 1px solid var(--pipboy-text);
+    box-shadow: 0 0 5px var(--pipboy-glow);
+}
+
+:root[data-timer-theme="pipboy"] .day-stat-base {
+    background: rgba(0, 255, 65, 0.1);
+    border: 1px solid transparent;
+    color: var(--pipboy-text);
+}
+
+:root[data-timer-theme="pipboy"] .day-stat-base.today {
+    border-color: var(--focus-color);
+    background: rgba(0, 255, 65, 0.2);
+    box-shadow: 0 0 5px var(--pipboy-glow);
+}
+
+:root[data-timer-theme="pipboy"] .day-stat-base.completed {
+    background: var(--focus-color);
+    color: var(--pipboy-bg);
+    box-shadow: 0 0 10px var(--pipboy-glow);
+}
+
+:root[data-timer-theme="pipboy"] .nav-item-base {
+    font-family: 'Share Tech Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--pipboy-text);
+}
+
+:root[data-timer-theme="pipboy"] .nav-item-base:hover {
+    background: rgba(0, 255, 65, 0.1);
+    box-shadow: 0 0 5px var(--pipboy-glow);
+}
+
+:root[data-timer-theme="pipboy"] .nav-item-base.active {
+    background: var(--focus-color);
+    color: var(--pipboy-bg);
+    box-shadow: 0 0 15px var(--pipboy-glow);
+}
+
+:root[data-timer-theme="pipboy"] .nav-item-base.active:hover {
+    background: var(--focus-color) !important;
+    color: var(--pipboy-bg) !important;
+}
+
+:root[data-timer-theme="pipboy"] .sidebar-base {
+    background: var(--pipboy-bg);
+    border-color: var(--pipboy-text);
+    box-shadow: 2px 0 10px var(--pipboy-glow);
+}
+
+:root[data-timer-theme="pipboy"] .row-base {
+    background: rgba(0, 255, 65, 0.05);
+    color: var(--pipboy-text);
+}
+
+:root[data-timer-theme="pipboy"] .row-base:hover {
+    background: rgba(0, 255, 65, 0.1);
+    box-shadow: 0 0 3px var(--pipboy-glow);
+}
+
+/* Text and headers PipBoy style */
+:root[data-timer-theme="pipboy"] .section-header,
+:root[data-timer-theme="pipboy"] .page-header,
+:root[data-timer-theme="pipboy"] .card-header {
+    color: var(--pipboy-text);
+    font-family: 'Share Tech Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 5px var(--pipboy-glow);
+}
+
+:root[data-timer-theme="pipboy"] .stat-number {
+    color: var(--focus-color);
+    font-family: 'Share Tech Mono', monospace;
+    text-shadow: 0 0 5px var(--pipboy-glow);
+}
+
+:root[data-timer-theme="pipboy"] .stat-label {
+    color: var(--pipboy-text);
+    font-family: 'Share Tech Mono', monospace;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+}
+
+/* Blinking cursor effect for inputs */
+:root[data-timer-theme="pipboy"] input[type="text"],
+:root[data-timer-theme="pipboy"] input[type="number"],
+:root[data-timer-theme="pipboy"] textarea {
+    background: rgba(0, 255, 65, 0.05) !important;
+    border: 1px solid var(--pipboy-text) !important;
+    border-radius: 0 !important;
+    color: var(--pipboy-text) !important;
+    font-family: 'Share Tech Mono', monospace !important;
+    box-shadow: 0 0 5px var(--pipboy-glow);
+}
+
+:root[data-timer-theme="pipboy"] input[type="text"]:focus,
+:root[data-timer-theme="pipboy"] input[type="number"]:focus,
+:root[data-timer-theme="pipboy"] textarea:focus {
+    box-shadow:
+        0 0 10px var(--pipboy-glow),
+        0 0 20px var(--pipboy-glow);
+    outline: none !important;
+}
+
+/* Scrollbar PipBoy style */
+:root[data-timer-theme="pipboy"] ::-webkit-scrollbar {
+    width: 8px;
+    background: var(--pipboy-bg);
+}
+
+:root[data-timer-theme="pipboy"] ::-webkit-scrollbar-thumb {
+    background: var(--pipboy-text);
+    border-radius: 0;
+    box-shadow: 0 0 5px var(--pipboy-glow);
+}
+
+:root[data-timer-theme="pipboy"] ::-webkit-scrollbar-thumb:hover {
+    background: var(--focus-color);
+    box-shadow: 0 0 10px var(--pipboy-glow);
+}
+
+:root[data-timer-theme="pipboy"] html,
+:root[data-timer-theme="pipboy"] body {
+    background: rgba(0, 16, 0, 1);
+    border-radius: 0;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+:root[data-timer-theme="pipboy"] #app {
+    min-height: 100vh;
+    background: rgba(0, 16, 0, 1);
+}
+
+/* === SHARED COMPONENTS STYLES === */
+/* Additional styles for statistics and settings in PipBoy theme */
+
+:root[data-timer-theme="pipboy"] .view-section {
+    background-color: var(--shared-bg) !important;
+}
+
+:root[data-timer-theme="pipboy"] .base-card,
+:root[data-timer-theme="pipboy"] .base-card-compact,
+:root[data-timer-theme="pipboy"] .base-section {
+    background: var(--card-bg);
+    border-color: var(--card-border);
+}
+
+:root[data-timer-theme="pipboy"] .stat-card {
+    background: var(--card-bg);
+    border-color: var(--stat-border);
+}
+
+:root[data-timer-theme="pipboy"] .setting-item {
+    background: var(--setting-item-bg);
+}
+
+:root[data-timer-theme="pipboy"] .setting-item:hover {
+    background: var(--setting-item-hover-bg);
+    border-color: var(--setting-item-hover-border);
+}
+
+:root[data-timer-theme="pipboy"] .setting-item input[type="number"] {
+    border-color: var(--input-border);
+}
+
+:root[data-timer-theme="pipboy"] .setting-item input[type="number"]:focus {
+    border-color: var(--focus-color);
+    box-shadow: 0 0 0 3px var(--input-focus-shadow);
+}
+
+:root[data-timer-theme="pipboy"] .day-stat-base {
+    background: var(--day-stat-bg);
+    border-color: transparent;
+}

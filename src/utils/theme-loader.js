@@ -39,9 +39,9 @@ class ThemeLoader {
         // that gets updated by the build process or manually maintained
 
         // This could be enhanced to use a build-time script that generates this list
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        const knownThemes = [
+        const knownThemes = [
             'espresso.css',
-            'matrix.css',
+            'pipboy.css',
             'pommodore64.css'
         ];
 
