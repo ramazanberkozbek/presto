@@ -895,14 +895,14 @@ export class SettingsManager {
         this.systemThemeListener = (e) => {
             const newSystemTheme = e.matches ? 'dark' : 'light';
             console.log(`🎨 System theme changed: ${newSystemTheme}`);
-            
+
             // Only apply if current preference is "auto"
             const currentPreference = this.settings?.appearance?.theme || 'auto';
             if (currentPreference === 'auto') {
                 const html = document.documentElement;
                 html.setAttribute('data-theme', newSystemTheme);
                 console.log(`🎨 Auto theme updated to: ${newSystemTheme}`);
-                
+
                 // Update timer theme compatibility when system theme changes
                 this.updateTimerThemeCompatibility();
             }
@@ -938,7 +938,7 @@ export class SettingsManager {
 
             // For non-auto themes, keep the early initialization
             console.log(`🎨 Keeping early initialized theme: ${currentTheme}`);
-            
+
             // Update settings to match current theme
             if (this.settings && this.settings.appearance) {
                 this.settings.appearance.theme = currentTheme;
@@ -1017,7 +1017,7 @@ export class SettingsManager {
     // Timer Theme Management Functions
     getCurrentColorMode() {
         const currentTheme = document.documentElement.getAttribute('data-theme');
-        
+
         // Since data-theme is now always 'light' or 'dark' (never 'auto'), this is simpler
         return currentTheme === 'dark' ? 'dark' : 'light';
     }
@@ -1171,7 +1171,7 @@ export class SettingsManager {
         previewStatus.style.color = theme.preview.focus;
 
         // Special handling for specific themes
-        if (themeId === 'matrix') {
+        if (themeId === 'pipboy') {
             previewDisplay.style.background = '#000011';
             previewDisplay.style.border = `1px solid ${theme.preview.focus}`;
             previewDisplay.style.fontFamily = '"Share Tech Mono", monospace';

@@ -159,15 +159,6 @@
     color: var(--text-on-focus);
 }
 
-:root[data-timer-theme="espresso"] .nav-item-base:hover {
-    background: var(--hover-bg);
-}
-
-:root[data-timer-theme="espresso"] .nav-item-base.active:hover {
-    background: var(--focus-color) !important;
-    color: var(--text-on-focus) !important;
-}
-
 :root[data-timer-theme="espresso"] .sidebar-base {
     background: var(--card-bg);
     border-color: var(--stat-border);
