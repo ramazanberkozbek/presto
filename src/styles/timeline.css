@@ -32,16 +32,7 @@
 }
 
 .timeline-hour::after {
-  content: '';
-  position: absolute;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 1px;
-  height: calc(100vh - 200px);
-  max-height: 500px;
-  background: #e5e7eb;
-  z-index: 1;
+  display: none;
 }
 
 .timeline-track {
@@ -53,6 +44,16 @@
   border: 1px solid #e0e0e0;
   overflow: visible;
   transition: height 0.3s ease;
+}
+
+.timeline-grid-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #e5e7eb;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .timeline-session {
@@ -70,7 +71,7 @@
   user-select: none;
   transition: all 0.2s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  z-index: 5;
+  z-index: 10;
 }
 
 .timeline-session-content {

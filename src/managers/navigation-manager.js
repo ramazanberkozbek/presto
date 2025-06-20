@@ -687,6 +687,9 @@ export class NavigationManager {
                 this.createTimelineSession(session, date, timelineTrack, allSessions);
             });
 
+            // Calculate and set timeline height after all sessions are added
+            this.updateTimelineHeight(timelineTrack, allSessions.length);
+
             // Initialize timeline interactions
             this.initializeTimelineInteractions();
 
@@ -843,6 +846,41 @@ export class NavigationManager {
         return TimeUtils.formatTime(seconds);
     }
 
+    updateTimelineHeight(timelineTrack, totalSessions) {
+        const rowHeight = 20; // 15px session height + 5px spacing
+        const baseHeight = 25; // Base padding
+        const minHeight = 60; // Minimum height even with no sessions
+        const requiredHeight = Math.max(minHeight, baseHeight + (totalSessions * rowHeight));
+        
+        timelineTrack.style.height = `${requiredHeight}px`;
+        
+        // Add vertical grid lines
+        this.addTimelineGridLines(timelineTrack);
+    }
+
+    addTimelineGridLines(timelineTrack) {
+        // Remove existing grid lines
+        const existingLines = timelineTrack.querySelectorAll('.timeline-grid-line');
+        existingLines.forEach(line => line.remove());
+
+        // Add grid lines for major hours: 0, 4, 8, 12, 16, 20
+        const majorHours = [0, 4, 8, 12, 16, 20];
+        const timelineStartHour = 0;
+        const timelineRangeHours = 24;
+
+        majorHours.forEach(hour => {
+            const line = document.createElement('div');
+            line.className = 'timeline-grid-line';
+            
+            // Calculate position percentage
+            const hoursFromStart = hour - timelineStartHour;
+            const percentage = (hoursFromStart / timelineRangeHours) * 100;
+            line.style.left = `${percentage}%`;
+            
+            timelineTrack.appendChild(line);
+        });
+    }
+
     setupTimelineHours(timelineHours) {
         timelineHours.innerHTML = '';
 
@@ -934,18 +972,6 @@ export class NavigationManager {
         sessionElement.style.transform = `translateY(${offset}px)`;
         if (offset > 0) {
             sessionElement.classList.add('session-stacked');
-        }
-
-        // Calculate required height for all sessions
-        const totalSessions = allSessions.length;
-        const rowHeight = 20; // 15px session height + 5px spacing
-        const baseHeight = 20; // Base padding
-        const requiredHeight = baseHeight + (totalSessions * rowHeight);
-        
-        // Update timeline track height
-        const currentHeight = parseInt(timelineTrack.style.height) || 50;
-        if (requiredHeight > currentHeight) {
-            timelineTrack.style.height = `${requiredHeight}px`;
         }
 
         timelineTrack.appendChild(sessionElement);
@@ -1045,7 +1071,6 @@ export class NavigationManager {
         
         contextMenu.innerHTML = `
       <div class="context-menu-item edit-item">${isHistorical ? 'Convert to Manual & Edit' : 'Edit Session'}</div>
-      <div class="context-menu-item duplicate-item">Duplicate</div>
       ${isHistorical ? '' : '<div class="context-menu-item danger delete-item">Delete</div>'}
     `;
 
@@ -1084,7 +1109,7 @@ export class NavigationManager {
         const deleteItem = contextMenu.querySelector('.delete-item');
         if (deleteItem) {
             deleteItem.addEventListener('click', () => {
-                if (window.sessionManager && confirm('Are you sure you want to delete this session?')) {
+                if (window.sessionManager) {
                     window.sessionManager.currentEditingSession = session;
                     window.sessionManager.selectedDate = date;
                     window.sessionManager.deleteCurrentSession();
@@ -1092,12 +1117,6 @@ export class NavigationManager {
                 contextMenu.remove();
             });
         }
-
-        contextMenu.querySelector('.duplicate-item').addEventListener('click', () => {
-            // TODO: Implement session duplication
-            console.log('Duplicate session:', session);
-            contextMenu.remove();
-        });
 
         document.body.appendChild(contextMenu);
     }

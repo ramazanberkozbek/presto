@@ -308,8 +308,6 @@ export class SessionManager {
     async deleteCurrentSession() {
         if (!this.currentEditingSession) return;
 
-        if (!confirm('Are you sure you want to delete this session?')) return;
-
         try {
             const dateString = this.selectedDate.toDateString();
 
