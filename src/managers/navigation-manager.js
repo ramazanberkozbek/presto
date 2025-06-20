@@ -846,13 +846,21 @@ export class NavigationManager {
     setupTimelineHours(timelineHours) {
         timelineHours.innerHTML = '';
 
-        // Show only major hours every 3 hours: 6, 9, 12, 15, 18
-        const majorHours = [6, 9, 12, 15, 18];
+        // Show major hours every 4 hours: 0, 4, 8, 12, 16, 20
+        const majorHours = [0, 4, 8, 12, 16, 20];
+        const timelineStartHour = 0; // 12 AM (midnight)
+        const timelineRangeHours = 24; // Full day = 24 hours
 
         majorHours.forEach(hour => {
             const hourElement = document.createElement('div');
             hourElement.className = 'timeline-hour';
-            hourElement.textContent = `${hour}:00`;
+            hourElement.textContent = `${hour.toString().padStart(2, '0')}:00`;
+            
+            // Calculate correct position percentage
+            const hoursFromStart = hour - timelineStartHour;
+            const percentage = (hoursFromStart / timelineRangeHours) * 100;
+            hourElement.style.left = `${percentage}%`;
+            
             timelineHours.appendChild(hourElement);
         });
     }
@@ -870,11 +878,11 @@ export class NavigationManager {
         const [startHour, startMinute] = session.start_time.split(':').map(Number);
         const [endHour, endMinute] = session.end_time.split(':').map(Number);
 
-        // Calculate position and width (6 AM = 0%, 10 PM = 100%)
+        // Calculate position and width (00:00 = 0%, 23:59 = 100%)
         const startTimeInMinutes = startHour * 60 + startMinute;
         const endTimeInMinutes = endHour * 60 + endMinute;
-        const timelineStartMinutes = 6 * 60; // 6 AM
-        const timelineEndMinutes = 22 * 60; // 10 PM
+        const timelineStartMinutes = 0; // 00:00 (midnight)
+        const timelineEndMinutes = 24 * 60; // 24:00 (next midnight)
         const timelineRangeMinutes = timelineEndMinutes - timelineStartMinutes;
 
         const leftPercent = Math.max(0, ((startTimeInMinutes - timelineStartMinutes) / timelineRangeMinutes) * 100);
@@ -921,18 +929,23 @@ export class NavigationManager {
         // Add event listeners for all sessions (including historical ones)
         this.addTimelineSessionEventListeners(sessionElement, session, date);
 
-        // Handle overlapping sessions by stacking them vertically
+        // Place sessions in their own rows
         const offset = this.calculateSessionOffset(session, allSessions);
+        sessionElement.style.transform = `translateY(${offset}px)`;
         if (offset > 0) {
-            sessionElement.style.transform = `translateY(${offset}px)`;
             sessionElement.classList.add('session-stacked');
+        }
 
-            // Expand timeline track height if needed
-            const currentHeight = parseInt(timelineTrack.style.height) || 50;
-            const requiredHeight = 50 + offset + 35; // base height + offset + session height
-            if (requiredHeight > currentHeight) {
-                timelineTrack.style.height = `${requiredHeight}px`;
-            }
+        // Calculate required height for all sessions
+        const totalSessions = allSessions.length;
+        const rowHeight = 20; // 15px session height + 5px spacing
+        const baseHeight = 20; // Base padding
+        const requiredHeight = baseHeight + (totalSessions * rowHeight);
+        
+        // Update timeline track height
+        const currentHeight = parseInt(timelineTrack.style.height) || 50;
+        if (requiredHeight > currentHeight) {
+            timelineTrack.style.height = `${requiredHeight}px`;
         }
 
         timelineTrack.appendChild(sessionElement);
@@ -1206,9 +1219,9 @@ export class NavigationManager {
         const widthPercent = parseFloat(sessionElement.style.width);
         const rightPercent = leftPercent + widthPercent;
 
-        // Convert percentages back to time (6 AM to 10 PM range)
-        const timelineStartMinutes = 6 * 60; // 6 AM
-        const timelineRangeMinutes = 16 * 60; // 16 hours (6 AM to 10 PM)
+        // Convert percentages back to time (00:00 to 23:59 range)
+        const timelineStartMinutes = 0; // 00:00 (midnight)
+        const timelineRangeMinutes = 24 * 60; // 24 hours (full day)
 
         const startMinutes = timelineStartMinutes + (leftPercent / 100) * timelineRangeMinutes;
         const endMinutes = timelineStartMinutes + (rightPercent / 100) * timelineRangeMinutes;
@@ -1411,9 +1424,8 @@ export class NavigationManager {
 
     updateDragTooltip(tooltip, mouseEvent, percentage, session) {
         // Calculate time from percentage
-        const timelineStartMinutes = 6 * 60; // 6 AM
-        const timelineRangeMinutes = 16 * 60; // 16 hours (6 AM to 10 PM)
-        const widthPercent = parseFloat(session.duration) / timelineRangeMinutes * 100;
+        const timelineStartMinutes = 0; // 00:00 (midnight)
+        const timelineRangeMinutes = 24 * 60; // 24 hours (full day)
         
         const startMinutes = timelineStartMinutes + (percentage / 100) * timelineRangeMinutes;
         const endMinutes = startMinutes + (session.duration || 25); // Default 25 min if no duration
@@ -1439,9 +1451,9 @@ export class NavigationManager {
         const widthPercent = parseFloat(sessionElement.style.width);
         const rightPercent = leftPercent + widthPercent;
 
-        // Convert percentages to time (6 AM to 10 PM range)
-        const timelineStartMinutes = 6 * 60; // 6 AM
-        const timelineRangeMinutes = 16 * 60; // 16 hours
+        // Convert percentages to time (00:00 to 23:59 range)
+        const timelineStartMinutes = 0; // 00:00 (midnight)
+        const timelineRangeMinutes = 24 * 60; // 24 hours
 
         const startMinutes = timelineStartMinutes + (leftPercent / 100) * timelineRangeMinutes;
         const endMinutes = timelineStartMinutes + (rightPercent / 100) * timelineRangeMinutes;
@@ -1465,8 +1477,14 @@ export class NavigationManager {
     }
 
     calculateSessionOffset(session, allSessions) {
-        // Always return 0 to keep all sessions on the same line
-        return 0;
+        if (!allSessions || allSessions.length <= 1) return 0;
+
+        // Find the index of this session in the array
+        const sessionIndex = allSessions.findIndex(s => s.id === session.id);
+        
+        // Each session gets its own row
+        const rowHeight = 20; // 15px session height + 5px spacing
+        return sessionIndex * rowHeight;
     }
 
     createSessionHoverTooltip(session) {
