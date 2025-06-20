@@ -8,6 +8,10 @@ export class NavigationManager {
         this.initialized = false;
         this.currentTooltip = null; // Track current tooltip for proper cleanup
         this.tooltipTimeout = null; // Track timeout for debounced tooltip removal
+        
+        // Apply timer-active class on initial load since default view is timer
+        document.body.classList.add('timer-active');
+        document.documentElement.classList.add('timer-active');
     }
 
     async init() {
@@ -57,14 +61,18 @@ export class NavigationManager {
 
         // Handle background based on view
         const body = document.body;
+        const html = document.documentElement;
         if (view === 'timer') {
-            // Timer view - reapply timer background by triggering display update
+            // Timer view - add timer-active class to prevent scrolling and reapply timer background
+            body.classList.add('timer-active');
+            html.classList.add('timer-active');
             if (window.pomodoroTimer) {
                 window.pomodoroTimer.updateDisplay();
             }
         } else {
-            // Non-timer views - remove timer background classes and apply default background
-            body.classList.remove('focus', 'break', 'longBreak');
+            // Non-timer views - remove timer-active class to allow scrolling and remove timer background classes
+            body.classList.remove('timer-active', 'focus', 'break', 'longBreak');
+            html.classList.remove('timer-active');
         }
 
         // Initialize view-specific content
