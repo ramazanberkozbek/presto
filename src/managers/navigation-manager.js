@@ -8,6 +8,10 @@ export class NavigationManager {
         this.initialized = false;
         this.currentTooltip = null; // Track current tooltip for proper cleanup
         this.tooltipTimeout = null; // Track timeout for debounced tooltip removal
+        
+        // Apply timer-active class on initial load since default view is timer
+        document.body.classList.add('timer-active');
+        document.documentElement.classList.add('timer-active');
     }
 
     async init() {
@@ -57,14 +61,18 @@ export class NavigationManager {
 
         // Handle background based on view
         const body = document.body;
+        const html = document.documentElement;
         if (view === 'timer') {
-            // Timer view - reapply timer background by triggering display update
+            // Timer view - add timer-active class to prevent scrolling and reapply timer background
+            body.classList.add('timer-active');
+            html.classList.add('timer-active');
             if (window.pomodoroTimer) {
                 window.pomodoroTimer.updateDisplay();
             }
         } else {
-            // Non-timer views - remove timer background classes and apply default background
-            body.classList.remove('focus', 'break', 'longBreak');
+            // Non-timer views - remove timer-active class to allow scrolling and remove timer background classes
+            body.classList.remove('timer-active', 'focus', 'break', 'longBreak');
+            html.classList.remove('timer-active');
         }
 
         // Initialize view-specific content
@@ -1037,16 +1045,28 @@ export class NavigationManager {
 
         const offsetX = e.clientX - sessionRect.left;
 
+        // Create drag time tooltip
+        const dragTooltip = this.createDragTimeTooltip();
+        document.body.appendChild(dragTooltip);
+
         const handleMouseMove = (e) => {
             const x = e.clientX - timelineRect.left - offsetX;
             const percentage = Math.max(0, Math.min(100, (x / timelineRect.width) * 100));
             sessionElement.style.left = `${percentage}%`;
+            
+            // Update tooltip with current time
+            this.updateDragTooltip(dragTooltip, e, percentage, session);
         };
 
         const handleMouseUp = () => {
             sessionElement.classList.remove('dragging');
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
+            
+            // Remove tooltip
+            if (dragTooltip && dragTooltip.parentNode) {
+                dragTooltip.parentNode.removeChild(dragTooltip);
+            }
 
             // Update session time based on new position
             this.updateSessionTimeFromPosition(sessionElement, session);
@@ -1062,6 +1082,10 @@ export class NavigationManager {
 
         const timeline = document.getElementById('timeline-track');
         const timelineRect = timeline.getBoundingClientRect();
+
+        // Create resize time tooltip
+        const resizeTooltip = this.createDragTimeTooltip();
+        document.body.appendChild(resizeTooltip);
 
         const handleMouseMove = (e) => {
             const x = e.clientX - timelineRect.left;
@@ -1080,12 +1104,20 @@ export class NavigationManager {
                 const newWidth = Math.max(2, percentage - currentLeft); // Minimum 2% width
                 sessionElement.style.width = `${newWidth}%`;
             }
+            
+            // Update tooltip with current time range
+            this.updateResizeTooltip(resizeTooltip, e, sessionElement);
         };
 
         const handleMouseUp = () => {
             sessionElement.classList.remove('resizing');
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
+            
+            // Remove tooltip
+            if (resizeTooltip && resizeTooltip.parentNode) {
+                resizeTooltip.parentNode.removeChild(resizeTooltip);
+            }
 
             // Update session time based on new size and position
             this.updateSessionTimeFromPosition(sessionElement, session);
@@ -1136,14 +1168,10 @@ export class NavigationManager {
 
         // Save changes if using SessionManager
         if (window.sessionManager && !session.isHistorical) {
-            // Update the session in SessionManager
-            const dateString = this.currentDate.toDateString();
-            if (window.sessionManager.sessions[dateString]) {
-                const sessionIndex = window.sessionManager.sessions[dateString].findIndex(s => s.id === session.id);
-                if (sessionIndex !== -1) {
-                    window.sessionManager.sessions[dateString][sessionIndex] = { ...session };
-                }
-            }
+            // Set the selected date for SessionManager
+            window.sessionManager.selectedDate = this.currentDate;
+            // Use the proper updateSession method to ensure persistence
+            window.sessionManager.updateSession(session);
         }
     }
 
@@ -1253,6 +1281,82 @@ export class NavigationManager {
         });
 
         this.currentTooltip = null;
+    }
+
+    createDragTimeTooltip() {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'drag-time-tooltip';
+        tooltip.style.cssText = `
+            position: fixed;
+            background: var(--shared-text);
+            color: var(--card-bg);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            z-index: 10000;
+            pointer-events: none;
+            box-shadow: 0 4px 12px var(--shared-border);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        `;
+        return tooltip;
+    }
+
+    updateDragTooltip(tooltip, mouseEvent, percentage, session) {
+        // Calculate time from percentage
+        const timelineStartMinutes = 6 * 60; // 6 AM
+        const timelineRangeMinutes = 16 * 60; // 16 hours (6 AM to 10 PM)
+        const widthPercent = parseFloat(session.duration) / timelineRangeMinutes * 100;
+        
+        const startMinutes = timelineStartMinutes + (percentage / 100) * timelineRangeMinutes;
+        const endMinutes = startMinutes + (session.duration || 25); // Default 25 min if no duration
+        
+        const startHour = Math.floor(startMinutes / 60);
+        const startMin = Math.round(startMinutes % 60);
+        const endHour = Math.floor(endMinutes / 60);
+        const endMin = Math.round(endMinutes % 60);
+        
+        const startTime = `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`;
+        const endTime = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
+        
+        tooltip.textContent = `${startTime} - ${endTime}`;
+        
+        // Position tooltip near mouse
+        tooltip.style.left = `${mouseEvent.clientX + 15}px`;
+        tooltip.style.top = `${mouseEvent.clientY - 35}px`;
+        tooltip.style.opacity = '1';
+    }
+
+    updateResizeTooltip(tooltip, mouseEvent, sessionElement) {
+        const leftPercent = parseFloat(sessionElement.style.left);
+        const widthPercent = parseFloat(sessionElement.style.width);
+        const rightPercent = leftPercent + widthPercent;
+
+        // Convert percentages to time (6 AM to 10 PM range)
+        const timelineStartMinutes = 6 * 60; // 6 AM
+        const timelineRangeMinutes = 16 * 60; // 16 hours
+
+        const startMinutes = timelineStartMinutes + (leftPercent / 100) * timelineRangeMinutes;
+        const endMinutes = timelineStartMinutes + (rightPercent / 100) * timelineRangeMinutes;
+        const durationMinutes = endMinutes - startMinutes;
+
+        const startHour = Math.floor(startMinutes / 60);
+        const startMin = Math.round(startMinutes % 60);
+        const endHour = Math.floor(endMinutes / 60);
+        const endMin = Math.round(endMinutes % 60);
+
+        const startTime = `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`;
+        const endTime = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
+        const duration = `${Math.round(durationMinutes)}min`;
+
+        tooltip.textContent = `${startTime} - ${endTime} (${duration})`;
+
+        // Position tooltip near mouse
+        tooltip.style.left = `${mouseEvent.clientX + 15}px`;
+        tooltip.style.top = `${mouseEvent.clientY - 35}px`;
+        tooltip.style.opacity = '1';
     }
 
     calculateSessionOffset(session, allSessions) {

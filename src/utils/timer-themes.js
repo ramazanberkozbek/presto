@@ -34,7 +34,7 @@ export const TIMER_THEMES = {
             break: '#39ff14',
             longBreak: '#00cc33'
         }
-    }
+    },
 };
 
 // Function to dynamically register a new theme

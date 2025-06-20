@@ -5,6 +5,28 @@ body {
   padding: 0;
 }
 
+/* Timer view specific - prevent scrolling */
+body.timer-active {
+  overflow: hidden;
+  height: 100vh;
+}
+
+html.timer-active {
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* Non-timer views - ensure scrolling is allowed */
+body:not(.timer-active) {
+  overflow: auto;
+  height: auto;
+}
+
+html:not(.timer-active) {
+  overflow: auto;
+  height: auto;
+}
+
 /* Timer background states - applied to body when timer is active */
 /* These styles have higher specificity and will override the default background */
 body.focus {

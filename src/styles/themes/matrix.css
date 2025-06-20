@@ -23,7 +23,7 @@
 
     /* Timer Text Colors - Verde brillante su nero */
     --focus-timer-color: #00ff41;
-    --break-timer-color: #39ff14;
+    --break-timer-color: #000;
     --long-break-timer-color: #00cc33;
 
     /* Button Colors - Effetto terminale */
