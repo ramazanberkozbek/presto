@@ -361,3 +361,44 @@
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
   border-color: rgba(255, 255, 255, 0.8);
 }
+
+/* Session Hover Tooltip */
+.session-hover-tooltip {
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-width: 250px;
+}
+
+.session-hover-tooltip .tooltip-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.session-hover-tooltip .tooltip-type {
+  font-weight: 600;
+  color: #fff;
+}
+
+.session-hover-tooltip .tooltip-time {
+  font-weight: 500;
+  color: #e0e0e0;
+}
+
+.session-hover-tooltip .tooltip-duration {
+  color: #b0b0b0;
+  font-size: 11px;
+}
+
+.session-hover-tooltip .tooltip-notes {
+  color: #d0d0d0;
+  font-style: italic;
+  margin-top: 2px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}

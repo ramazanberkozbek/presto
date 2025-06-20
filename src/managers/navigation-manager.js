@@ -918,10 +918,8 @@ export class NavigationManager {
       `;
         }
 
-        // Add event listeners for non-historical sessions
-        if (!session.isHistorical) {
-            this.addTimelineSessionEventListeners(sessionElement, session, date);
-        }
+        // Add event listeners for all sessions (including historical ones)
+        this.addTimelineSessionEventListeners(sessionElement, session, date);
 
         // Handle overlapping sessions by stacking them vertically
         const offset = this.calculateSessionOffset(session, allSessions);
@@ -980,6 +978,31 @@ export class NavigationManager {
                 this.startSessionResize(e, sessionElement, session, 'right');
             });
         }
+
+        // Hover tooltip
+        let hoverTooltip = null;
+        
+        sessionElement.addEventListener('mouseenter', (e) => {
+            // Don't show hover tooltip if dragging or resizing (they have their own tooltips)
+            if (sessionElement.classList.contains('dragging') || sessionElement.classList.contains('resizing')) return;
+            
+            hoverTooltip = this.createSessionHoverTooltip(session);
+            document.body.appendChild(hoverTooltip);
+            this.updateHoverTooltip(hoverTooltip, e);
+        });
+
+        sessionElement.addEventListener('mousemove', (e) => {
+            if (hoverTooltip && !sessionElement.classList.contains('dragging') && !sessionElement.classList.contains('resizing')) {
+                this.updateHoverTooltip(hoverTooltip, e);
+            }
+        });
+
+        sessionElement.addEventListener('mouseleave', () => {
+            if (hoverTooltip && hoverTooltip.parentNode) {
+                hoverTooltip.parentNode.removeChild(hoverTooltip);
+                hoverTooltip = null;
+            }
+        });
     }
 
     initializeTimelineInteractions() {
@@ -1005,28 +1028,57 @@ export class NavigationManager {
         contextMenu.style.top = `${e.pageY}px`;
         contextMenu.style.display = 'block';
 
+        const isHistorical = session.isHistorical;
+        
         contextMenu.innerHTML = `
-      <div class="context-menu-item edit-item">Edit Session</div>
+      <div class="context-menu-item edit-item">${isHistorical ? 'Convert to Manual & Edit' : 'Edit Session'}</div>
       <div class="context-menu-item duplicate-item">Duplicate</div>
-      <div class="context-menu-item danger delete-item">Delete</div>
+      ${isHistorical ? '' : '<div class="context-menu-item danger delete-item">Delete</div>'}
     `;
 
         // Add event listeners
         contextMenu.querySelector('.edit-item').addEventListener('click', () => {
             if (window.sessionManager) {
-                window.sessionManager.openEditSessionModal(session, date);
+                if (isHistorical) {
+                    // Convert historical session to manual session first
+                    const manualSession = {
+                        id: this.generateSessionId(),
+                        session_type: session.session_type,
+                        duration: session.duration,
+                        start_time: session.start_time,
+                        end_time: session.end_time,
+                        notes: session.notes || '',
+                        created_at: new Date().toISOString()
+                    };
+                    
+                    // Set the selected date for SessionManager
+                    window.sessionManager.selectedDate = new Date(date);
+                    
+                    // Add as new manual session
+                    window.sessionManager.addSession(manualSession);
+                    
+                    // Open edit modal with the new manual session
+                    window.sessionManager.openEditSessionModal(manualSession, date);
+                    
+                    console.log('Converted historical session to manual for editing:', manualSession);
+                } else {
+                    window.sessionManager.openEditSessionModal(session, date);
+                }
             }
             contextMenu.remove();
         });
 
-        contextMenu.querySelector('.delete-item').addEventListener('click', () => {
-            if (window.sessionManager && confirm('Are you sure you want to delete this session?')) {
-                window.sessionManager.currentEditingSession = session;
-                window.sessionManager.selectedDate = date;
-                window.sessionManager.deleteCurrentSession();
-            }
-            contextMenu.remove();
-        });
+        const deleteItem = contextMenu.querySelector('.delete-item');
+        if (deleteItem) {
+            deleteItem.addEventListener('click', () => {
+                if (window.sessionManager && confirm('Are you sure you want to delete this session?')) {
+                    window.sessionManager.currentEditingSession = session;
+                    window.sessionManager.selectedDate = date;
+                    window.sessionManager.deleteCurrentSession();
+                }
+                contextMenu.remove();
+            });
+        }
 
         contextMenu.querySelector('.duplicate-item').addEventListener('click', () => {
             // TODO: Implement session duplication
@@ -1040,23 +1092,37 @@ export class NavigationManager {
     startSessionDrag(e, sessionElement, session) {
         e.preventDefault();
         sessionElement.classList.add('dragging');
+        
+        // Remove any existing hover tooltip
+        const existingHoverTooltip = document.querySelector('.session-hover-tooltip');
+        if (existingHoverTooltip && existingHoverTooltip.parentNode) {
+            existingHoverTooltip.parentNode.removeChild(existingHoverTooltip);
+        }
 
         const timeline = document.getElementById('timeline-track');
         const timelineRect = timeline.getBoundingClientRect();
-        const sessionRect = sessionElement.getBoundingClientRect();
-
-        const offsetX = e.clientX - sessionRect.left;
+        
+        // Calculate initial mouse position relative to timeline
+        const initialMouseX = e.clientX - timelineRect.left;
+        const currentLeft = parseFloat(sessionElement.style.left) || 0;
+        const currentLeftPx = (currentLeft / 100) * timelineRect.width;
+        
+        // Calculate offset within the session element
+        const offsetX = initialMouseX - currentLeftPx;
 
         // Create drag time tooltip
         const dragTooltip = this.createDragTimeTooltip();
         document.body.appendChild(dragTooltip);
 
         const handleMouseMove = (e) => {
+            // Calculate the new position maintaining the original click offset
             const x = e.clientX - timelineRect.left - offsetX;
-            const percentage = Math.max(0, Math.min(100, (x / timelineRect.width) * 100));
+            const sessionWidth = parseFloat(sessionElement.style.width) || 0;
+            const maxLeft = 100 - sessionWidth; // Prevent session from going beyond timeline
+            const percentage = Math.max(0, Math.min(maxLeft, (x / timelineRect.width) * 100));
             sessionElement.style.left = `${percentage}%`;
             
-            // Update tooltip with current time
+            // Update drag tooltip with current time
             this.updateDragTooltip(dragTooltip, e, percentage, session);
         };
 
@@ -1065,7 +1131,7 @@ export class NavigationManager {
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
             
-            // Remove tooltip
+            // Remove drag tooltip
             if (dragTooltip && dragTooltip.parentNode) {
                 dragTooltip.parentNode.removeChild(dragTooltip);
             }
@@ -1081,6 +1147,12 @@ export class NavigationManager {
     startSessionResize(e, sessionElement, session, side) {
         e.preventDefault();
         sessionElement.classList.add('resizing');
+        
+        // Remove any existing hover tooltip
+        const existingHoverTooltip = document.querySelector('.session-hover-tooltip');
+        if (existingHoverTooltip && existingHoverTooltip.parentNode) {
+            existingHoverTooltip.parentNode.removeChild(existingHoverTooltip);
+        }
 
         const timeline = document.getElementById('timeline-track');
         const timelineRect = timeline.getBoundingClientRect();
@@ -1168,13 +1240,44 @@ export class NavigationManager {
             sessionElement.title = `${sessionType}: ${newStartTime} - ${newEndTime} (${newDuration}m)${notes}`;
         }
 
-        // Save changes if using SessionManager
-        if (window.sessionManager && !session.isHistorical) {
+        // Save changes using SessionManager
+        if (window.sessionManager) {
             // Set the selected date for SessionManager
             window.sessionManager.selectedDate = this.currentDate;
-            // Use the proper updateSession method to ensure persistence
-            window.sessionManager.updateSession(session);
+            
+            if (session.isHistorical) {
+                // Convert historical session to manual session
+                const manualSession = {
+                    id: this.generateSessionId(), // Generate new ID for manual session
+                    session_type: session.session_type,
+                    duration: newDuration,
+                    start_time: newStartTime,
+                    end_time: newEndTime,
+                    notes: session.notes || null,
+                    created_at: new Date().toISOString()
+                };
+                
+                // Add as new manual session
+                window.sessionManager.addSession(manualSession);
+                
+                // Update the session object to reflect it's now manual
+                session.isHistorical = false;
+                session.id = manualSession.id;
+                session.created_at = manualSession.created_at;
+                
+                // Remove historical styling
+                sessionElement.classList.remove('historical');
+                
+                console.log('Converted historical session to manual session:', manualSession);
+            } else {
+                // Use the proper updateSession method to ensure persistence
+                window.sessionManager.updateSession(session);
+            }
         }
+    }
+
+    generateSessionId() {
+        return Date.now().toString() + Math.random().toString(36).substring(2, 11);
     }
 
     addTooltipEvents(element) {
@@ -1362,36 +1465,39 @@ export class NavigationManager {
     }
 
     calculateSessionOffset(session, allSessions) {
-        if (!allSessions || allSessions.length <= 1) return 0;
+        // Always return 0 to keep all sessions on the same line
+        return 0;
+    }
 
-        const [sessionStartHour, sessionStartMin] = session.start_time.split(':').map(Number);
-        const [sessionEndHour, sessionEndMin] = session.end_time.split(':').map(Number);
-        const sessionStartMinutes = sessionStartHour * 60 + sessionStartMin;
-        const sessionEndMinutes = sessionEndHour * 60 + sessionEndMin;
+    createSessionHoverTooltip(session) {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'session-hover-tooltip';
+        
+        const sessionType = this.getSessionTypeDisplay(session.session_type);
+        const notes = session.notes ? ` - ${session.notes}` : '';
+        const historicalText = session.isHistorical ? ' (From Timer)' : '';
+        
+        tooltip.innerHTML = `
+            <div class="tooltip-content">
+                <div class="tooltip-type">${sessionType}${historicalText}</div>
+                <div class="tooltip-time">${session.start_time} - ${session.end_time}</div>
+                <div class="tooltip-duration">${session.duration} minutes</div>
+                ${notes ? `<div class="tooltip-notes">${session.notes}</div>` : ''}
+            </div>
+        `;
+        
+        tooltip.style.position = 'fixed';
+        tooltip.style.zIndex = '1000';
+        tooltip.style.opacity = '0';
+        tooltip.style.transition = 'opacity 0.2s ease';
+        tooltip.style.pointerEvents = 'none';
+        
+        return tooltip;
+    }
 
-        let offset = 0;
-        const stackHeight = 40; // Height for each stacked session
-
-        // Check all sessions that come before this one in the array
-        const sessionIndex = allSessions.findIndex(s => s.id === session.id);
-
-        for (let i = 0; i < sessionIndex; i++) {
-            const otherSession = allSessions[i];
-            const [otherStartHour, otherStartMin] = otherSession.start_time.split(':').map(Number);
-            const [otherEndHour, otherEndMin] = otherSession.end_time.split(':').map(Number);
-            const otherStartMinutes = otherStartHour * 60 + otherStartMin;
-            const otherEndMinutes = otherEndHour * 60 + otherEndMin;
-
-            // Check if sessions overlap
-            const isOverlapping = (
-                sessionStartMinutes < otherEndMinutes && sessionEndMinutes > otherStartMinutes
-            );
-
-            if (isOverlapping) {
-                offset += stackHeight;
-            }
-        }
-
-        return offset;
+    updateHoverTooltip(tooltip, mouseEvent) {
+        tooltip.style.left = `${mouseEvent.clientX + 10}px`;
+        tooltip.style.top = `${mouseEvent.clientY - 10}px`;
+        tooltip.style.opacity = '1';
     }
 }

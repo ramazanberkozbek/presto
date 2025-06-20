@@ -36,6 +36,18 @@ struct PomodoroSession {
     date: String,
 }
 
+#[derive(Serialize, Deserialize, Clone)]
+struct ManualSession {
+    id: String,
+    session_type: String, // "focus", "break", "longBreak", "custom"
+    duration: u32,        // in minutes
+    start_time: String,   // "HH:MM"
+    end_time: String,     // "HH:MM"
+    notes: Option<String>,
+    created_at: String,   // ISO string
+    date: String,         // Date string for the session date
+}
+
 #[derive(Serialize, Deserialize)]
 struct Task {
     id: u64,
@@ -697,6 +709,7 @@ async fn reset_all_data(app: AppHandle) -> Result<(), String> {
         "tasks.json",
         "history.json",
         "settings.json",
+        "manual_sessions.json",
     ];
 
     for file_name in files_to_delete {
@@ -742,6 +755,93 @@ async fn is_autostart_enabled(app: AppHandle) -> Result<bool, String> {
         .map_err(|e| format!("Failed to check autostart status: {}", e))
 }
 
+#[tauri::command]
+async fn save_manual_sessions(sessions: Vec<ManualSession>, app: AppHandle) -> Result<(), String> {
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to get app data directory: {}", e))?;
+
+    // Create the directory if it doesn't exist
+    fs::create_dir_all(&app_data_dir).map_err(|e| format!("Failed to create directory: {}", e))?;
+
+    let file_path = app_data_dir.join("manual_sessions.json");
+    let json = serde_json::to_string_pretty(&sessions)
+        .map_err(|e| format!("Failed to serialize manual sessions: {}", e))?;
+
+    fs::write(file_path, json).map_err(|e| format!("Failed to write manual sessions file: {}", e))?;
+
+    // Track manual sessions saved analytics (if enabled)
+    if are_analytics_enabled(&app).await {
+        let properties = Some(serde_json::json!({
+            "session_count": sessions.len()
+        }));
+        let _ = app.track_event("manual_sessions_saved", properties);
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn load_manual_sessions(app: AppHandle) -> Result<Vec<ManualSession>, String> {
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to get app data directory: {}", e))?;
+    let file_path = app_data_dir.join("manual_sessions.json");
+
+    if !file_path.exists() {
+        return Ok(Vec::new());
+    }
+
+    let content = fs::read_to_string(file_path)
+        .map_err(|e| format!("Failed to read manual sessions file: {}", e))?;
+    let sessions: Vec<ManualSession> =
+        serde_json::from_str(&content).map_err(|e| format!("Failed to parse manual sessions: {}", e))?;
+
+    Ok(sessions)
+}
+
+#[tauri::command]
+async fn save_manual_session(session: ManualSession, app: AppHandle) -> Result<(), String> {
+    // Load existing sessions
+    let mut sessions = load_manual_sessions(app.clone()).await?;
+    
+    // Remove existing session with same ID if it exists (for updates)
+    sessions.retain(|s| s.id != session.id);
+    
+    // Add the new/updated session
+    sessions.push(session);
+    
+    // Save all sessions back
+    save_manual_sessions(sessions, app).await
+}
+
+#[tauri::command]
+async fn delete_manual_session(session_id: String, app: AppHandle) -> Result<(), String> {
+    // Load existing sessions
+    let mut sessions = load_manual_sessions(app.clone()).await?;
+    
+    // Remove the session with the specified ID
+    sessions.retain(|s| s.id != session_id);
+    
+    // Save the updated sessions back
+    save_manual_sessions(sessions, app).await
+}
+
+#[tauri::command]
+async fn get_manual_sessions_for_date(date: String, app: AppHandle) -> Result<Vec<ManualSession>, String> {
+    let sessions = load_manual_sessions(app).await?;
+    
+    // Filter sessions for the specified date
+    let filtered_sessions: Vec<ManualSession> = sessions
+        .into_iter()
+        .filter(|s| s.date == date)
+        .collect();
+    
+    Ok(filtered_sessions)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::async_runtime::block_on(async {
@@ -778,7 +878,12 @@ pub fn run() {
                 update_activity_timeout,
                 enable_autostart,
                 disable_autostart,
-                is_autostart_enabled
+                is_autostart_enabled,
+                save_manual_sessions,
+                load_manual_sessions,
+                save_manual_session,
+                delete_manual_session,
+                get_manual_sessions_for_date
             ])
             .setup(|app| {
                 // Track app started event (if enabled)
