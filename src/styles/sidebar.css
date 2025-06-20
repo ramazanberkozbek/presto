@@ -118,7 +118,7 @@
 
 .sidebar.break .sidebar-icon.active {
   background: var(--break-primary-btn);
-  color: var(--break-timer-color);
+  color: #000;
   box-shadow: 0 4px 16px color-mix(in srgb, var(--break-timer-color) 30%, transparent);
 }
 
@@ -135,7 +135,7 @@
 
 .sidebar.longBreak .sidebar-icon.active {
   background: var(--long-break-primary-btn);
-  color: var(--long-break-timer-color);
+  color: #000;
   box-shadow: 0 4px 16px color-mix(in srgb, var(--long-break-timer-color) 30%, transparent);
 }
 

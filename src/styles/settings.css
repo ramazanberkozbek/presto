@@ -944,24 +944,16 @@
   font-size: 0.85rem;
   font-weight: 500;
   position: relative;
+  opacity: 0.5;
 }
 
 .theme-option:hover {
-  background: var(--input-focus-shadow);
-  color: var(--accent-color);
+  opacity: 1;
   transform: translateY(-1px);
 }
 
 .theme-option.active {
-  background: var(--accent-color);
-  color: var(--text-on-focus);
-  box-shadow: 0 2px 8px var(--input-focus-shadow);
-}
-
-.theme-option.active:hover {
-  background: var(--accent-color);
-  color: var(--text-on-focus);
-  transform: translateY(-1px);
+  opacity: 1;
 }
 
 .theme-option i {
@@ -974,29 +966,6 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-}
-
-/* Theme specific icons and colors */
-.theme-option[data-theme="auto"] i {
-  background: linear-gradient(45deg, var(--break-color), var(--long-break-color));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.theme-option[data-theme="light"] i {
-  color: var(--break-color);
-}
-
-.theme-option[data-theme="dark"] i {
-  color: var(--shared-text);
-}
-
-.theme-option[data-theme="auto"].active i,
-.theme-option[data-theme="light"].active i,
-.theme-option[data-theme="dark"].active i {
-  color: var(--text-on-focus);
-  -webkit-text-fill-color: var(--text-on-focus);
 }
 
 /* Timer Theme Grid Styles */
@@ -1188,18 +1157,18 @@
 }
 
 /* Theme-specific preview styles */
-.timer-preview-display[data-preview-theme="matrix"] {
+.timer-preview-display[data-preview-theme="pipboy"] {
   background: #000011 !important;
   border-color: #00ff41 !important;
   font-family: 'Share Tech Mono', monospace !important;
 }
 
-.timer-preview-display[data-preview-theme="matrix"] .timer-preview-time {
+.timer-preview-display[data-preview-theme="pipboy"] .timer-preview-time {
   color: #00ff41 !important;
   text-shadow: 0 0 5px #00ff41;
 }
 
-.timer-preview-display[data-preview-theme="matrix"] .timer-preview-status {
+.timer-preview-display[data-preview-theme="pipboy"] .timer-preview-status {
   color: #00ff41 !important;
   text-shadow: 0 0 3px #00ff41;
 }
@@ -1267,7 +1236,7 @@
   border-color: var(--shared-border);
 }
 
-[data-theme="dark"] .timer-preview-display[data-preview-theme="matrix"] {
+[data-theme="dark"] .timer-preview-display[data-preview-theme="pipboy"] {
   background: #000011 !important;
 }
 
@@ -1286,7 +1255,7 @@
     border-color: var(--shared-border);
   }
 
-  [data-theme="auto"] .timer-preview-display[data-preview-theme="matrix"] {
+  [data-theme="auto"] .timer-preview-display[data-preview-theme="pipboy"] {
     background: #000011 !important;
   }
 

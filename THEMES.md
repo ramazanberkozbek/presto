@@ -58,7 +58,7 @@ Create a new CSS file in the `src/styles/themes/` folder with the following form
 
 - **`espresso.css`** - Default theme with warm colors
 - **`pommodore64.css`** - Retro theme inspired by Commodore 64
-- **`matrix.css`** - Matrix theme with green digital effects
+- **`pipboy.css`** - Theme inspired by Fallout (PipBoy)
 
 ### 3. The System Does the Rest!
 

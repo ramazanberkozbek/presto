@@ -24,9 +24,9 @@ export const TIMER_THEMES = {
             longBreak: '#00b894'
         }
     },
-    matrix: {
-        name: 'Matrix',
-        description: 'Un tema ispirato al film Matrix con effetti digitali, colori verdi e animazioni futuristiche',
+    pipboy: {
+        name: 'PipBoy',
+        description: 'A retro-futuristic theme inspired by Fallout\'s PipBoy interface with green terminal colors and digital effects',
         supports: ['dark'],
         isDefault: false,
         preview: {
