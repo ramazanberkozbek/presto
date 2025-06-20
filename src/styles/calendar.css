@@ -572,4 +572,50 @@
   font-weight: 600;
 }
 
+/* Sessions Header Styles */
+.sessions-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.sessions-header h4 {
+  margin: 0;
+  color: var(--accent-color);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.add-session-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent-color);
+  color: var(--text-on-focus);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px var(--shared-border);
+}
+
+.add-session-btn:hover {
+  background: var(--focus-timer-color);
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px var(--shared-border);
+}
+
+.add-session-btn:active {
+  transform: scale(0.95);
+}
+
+.add-session-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.5;
+}
+
 /* Theme support is now handled through CSS variables in individual theme files */
