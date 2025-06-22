@@ -3,6 +3,7 @@ import { NavigationManager } from './managers/navigation-manager.js';
 import { SettingsManager } from './managers/settings-manager.js';
 import { SessionManager } from './managers/session-manager.js';
 import { TeamManager } from './managers/team-manager.js';
+import { authManager } from './managers/auth-manager.js';
 import { PomodoroTimer } from './core/pomodoro-timer.js';
 import { NotificationUtils } from './utils/common-utils.js';
 import { updateNotification } from './components/update-notification.js';
@@ -381,6 +382,566 @@ async function requestNotificationPermission() {
   }
 }
 
+// Show authentication screen
+function showAuthScreen() {
+  // Hide the main app content
+  const appContent = document.querySelector('.app-content') || document.body;
+  if (appContent.children.length > 0) {
+    for (let child of appContent.children) {
+      child.style.display = 'none';
+    }
+  }
+
+  // Create auth overlay
+  const authOverlay = document.createElement('div');
+  authOverlay.id = 'auth-overlay';
+  authOverlay.className = 'auth-overlay';
+  authOverlay.innerHTML = `
+    <div class="auth-container">
+      <div class="auth-header">
+        <h1>Welcome to Presto! 🍅</h1>
+        <p>Your productivity companion is ready to help you stay focused.</p>
+      </div>
+      
+      <div class="auth-content">
+        <div class="auth-section">
+          <h2>Sign in to sync your data</h2>
+          <p>Keep your sessions, tasks, and settings synchronized across devices.</p>
+          
+          <div class="auth-providers">
+            <button class="auth-btn google-btn" data-provider="google">
+              <svg width="20" height="20" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              Continue with Google
+            </button>
+            
+            <button class="auth-btn github-btn" data-provider="github">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              </svg>
+              Continue with GitHub
+            </button>
+            
+            <button class="auth-btn apple-btn" data-provider="apple">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+              </svg>
+              Continue with Apple
+            </button>
+          </div>
+          
+          <div class="auth-divider">
+            <span>or</span>
+          </div>
+          
+          <div class="email-auth">
+            <form id="auth-form">
+              <div class="form-group">
+                <input type="email" id="email" placeholder="Email address" required>
+              </div>
+              <div class="form-group">
+                <input type="password" id="password" placeholder="Password" required>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="auth-btn primary-btn" data-action="signin">Sign In</button>
+                <button type="button" class="auth-btn secondary-btn" data-action="signup">Sign Up</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        
+        <div class="auth-divider-main">
+          <span>or</span>
+        </div>
+        
+        <div class="guest-section">
+          <h3>Continue as Guest</h3>
+          <p>Try Presto without creating an account. Your data will be stored locally only.</p>
+          <button class="auth-btn guest-btn" id="continue-guest">
+            Continue as Guest
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Add styles
+  const authStyles = document.createElement('style');
+  authStyles.textContent = `
+    .auth-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      animation: fadeIn 0.3s ease-in;
+    }
+    
+    .auth-container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      max-width: 480px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 32px;
+    }
+    
+    .auth-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    
+    .auth-header h1 {
+      margin: 0 0 8px 0;
+      color: #2d3748;
+      font-size: 28px;
+      font-weight: 600;
+    }
+    
+    .auth-header p {
+      margin: 0;
+      color: #718096;
+      font-size: 16px;
+    }
+    
+    .auth-section h2 {
+      margin: 0 0 8px 0;
+      color: #2d3748;
+      font-size: 20px;
+      font-weight: 600;
+    }
+    
+    .auth-section p {
+      margin: 0 0 24px 0;
+      color: #718096;
+      font-size: 14px;
+    }
+    
+    .auth-providers {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    
+    .auth-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: white;
+      color: #2d3748;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    
+    .auth-btn:hover {
+      background: #f7fafc;
+      border-color: #cbd5e0;
+      transform: translateY(-1px);
+    }
+    
+    .google-btn:hover {
+      background: #f8f9ff;
+      border-color: #4285F4;
+    }
+    
+    .github-btn:hover {
+      background: #f8f9fa;
+      border-color: #24292e;
+    }
+    
+    .apple-btn:hover {
+      background: #f8f9fa;
+      border-color: #000000;
+    }
+    
+    .primary-btn {
+      background: #4299e1;
+      color: white;
+      border-color: #4299e1;
+    }
+    
+    .primary-btn:hover {
+      background: #3182ce;
+      border-color: #3182ce;
+    }
+    
+    .secondary-btn {
+      background: #e2e8f0;
+      color: #4a5568;
+      border-color: #e2e8f0;
+    }
+    
+    .secondary-btn:hover {
+      background: #cbd5e0;
+      border-color: #cbd5e0;
+    }
+    
+    .guest-btn {
+      background: #48bb78;
+      color: white;
+      border-color: #48bb78;
+      width: 100%;
+    }
+    
+    .guest-btn:hover {
+      background: #38a169;
+      border-color: #38a169;
+    }
+    
+    .auth-divider, .auth-divider-main {
+      display: flex;
+      align-items: center;
+      margin: 24px 0;
+      text-align: center;
+    }
+    
+    .auth-divider::before, .auth-divider::after,
+    .auth-divider-main::before, .auth-divider-main::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e2e8f0;
+    }
+    
+    .auth-divider span, .auth-divider-main span {
+      padding: 0 16px;
+      color: #a0aec0;
+      font-size: 12px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+    
+    .email-auth {
+      margin-bottom: 24px;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s ease;
+      box-sizing: border-box;
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: #4299e1;
+      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+    }
+    
+    .form-actions {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .form-actions .auth-btn {
+      flex: 1;
+    }
+    
+    .guest-section {
+      text-align: center;
+      padding: 24px;
+      background: #f7fafc;
+      border-radius: 12px;
+    }
+    
+    .guest-section h3 {
+      margin: 0 0 8px 0;
+      color: #2d3748;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .guest-section p {
+      margin: 0 0 16px 0;
+      color: #718096;
+      font-size: 14px;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    .auth-loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    
+    .auth-loading::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      margin: -10px 0 0 -10px;
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  `;
+  
+  document.head.appendChild(authStyles);
+  document.body.appendChild(authOverlay);
+
+  // Setup event listeners
+  setupAuthEventListeners();
+}
+
+// Setup authentication event listeners
+function setupAuthEventListeners() {
+  const authOverlay = document.getElementById('auth-overlay');
+  if (!authOverlay) return;
+
+  // OAuth provider buttons
+  const providerButtons = authOverlay.querySelectorAll('[data-provider]');
+  providerButtons.forEach(button => {
+    button.addEventListener('click', async (e) => {
+      const provider = e.currentTarget.dataset.provider;
+      await handleOAuthSignIn(provider, e.currentTarget);
+    });
+  });
+
+  // Email form
+  const authForm = document.getElementById('auth-form');
+  if (authForm) {
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      await handleEmailAuth(email, password, 'signin', e.submitter);
+    });
+
+    // Sign up button
+    const signUpBtn = authForm.querySelector('[data-action="signup"]');
+    if (signUpBtn) {
+      signUpBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        if (!email || !password) {
+          alert('Please enter both email and password');
+          return;
+        }
+        
+        await handleEmailAuth(email, password, 'signup', e.currentTarget);
+      });
+    }
+  }
+
+  // Guest mode button
+  const guestBtn = document.getElementById('continue-guest');
+  if (guestBtn) {
+    guestBtn.addEventListener('click', () => {
+      authManager.continueAsGuest();
+      hideAuthScreen();
+      initializeApplication(); // Continue with app initialization
+    });
+  }
+
+  // Listen for auth state changes
+  authManager.onAuthChange((status, user) => {
+    if (status === 'authenticated') {
+      hideAuthScreen();
+      initializeApplication(); // Continue with app initialization
+    } else if (status === 'guest') {
+      hideAuthScreen();
+      initializeApplication(); // Continue with app initialization
+    }
+  });
+}
+
+// Handle OAuth sign-in
+async function handleOAuthSignIn(provider, button) {
+  setButtonLoading(button, true);
+  
+  try {
+    const result = await authManager.signInWithProvider(provider);
+    if (!result.success) {
+      alert(`Sign-in failed: ${result.error}`);
+    }
+  } catch (error) {
+    console.error('OAuth sign-in error:', error);
+    alert(`Sign-in failed: ${error.message}`);
+  } finally {
+    setButtonLoading(button, false);
+  }
+}
+
+// Handle email authentication
+async function handleEmailAuth(email, password, action, button) {
+  if (!email || !password) {
+    alert('Please enter both email and password');
+    return;
+  }
+
+  setButtonLoading(button, true);
+  
+  try {
+    let result;
+    if (action === 'signin') {
+      result = await authManager.signInWithEmail(email, password);
+    } else {
+      result = await authManager.signUpWithEmail(email, password);
+    }
+    
+    if (!result.success) {
+      alert(`${action === 'signin' ? 'Sign-in' : 'Sign-up'} failed: ${result.error}`);
+    }
+  } catch (error) {
+    console.error('Email auth error:', error);
+    alert(`${action === 'signin' ? 'Sign-in' : 'Sign-up'} failed: ${error.message}`);
+  } finally {
+    setButtonLoading(button, false);
+  }
+}
+
+// Set button loading state
+function setButtonLoading(button, loading) {
+  if (loading) {
+    button.classList.add('auth-loading');
+    button.disabled = true;
+  } else {
+    button.classList.remove('auth-loading');
+    button.disabled = false;
+  }
+}
+
+// Hide authentication screen
+function hideAuthScreen() {
+  const authOverlay = document.getElementById('auth-overlay');
+  if (authOverlay) {
+    authOverlay.remove();
+  }
+  
+  // Show the main app content
+  const appContent = document.querySelector('.app-content') || document.body;
+  if (appContent.children.length > 0) {
+    for (let child of appContent.children) {
+      child.style.display = '';
+    }
+  }
+}
+
+// Update user avatar UI based on auth state
+function updateUserAvatarUI() {
+  const avatarContainer = document.getElementById('user-avatar-container');
+  const avatarImg = document.getElementById('user-avatar-img');
+  const avatarFallback = document.getElementById('user-avatar-fallback');
+  const userName = document.getElementById('user-name');
+  const signOutBtn = document.getElementById('user-sign-out');
+  const signInBtn = document.getElementById('user-sign-in');
+  
+  if (!avatarContainer) return;
+  
+  // Show avatar container
+  avatarContainer.style.display = 'flex';
+  
+  if (authManager.isAuthenticated()) {
+    // User is authenticated
+    const user = authManager.getCurrentUser();
+    const avatarUrl = authManager.getUserAvatarUrl();
+    const displayName = authManager.getUserDisplayName();
+    
+    // Update avatar
+    if (avatarUrl) {
+      avatarImg.src = avatarUrl;
+      avatarImg.style.display = 'block';
+      avatarFallback.style.display = 'none';
+    } else {
+      avatarImg.style.display = 'none';
+      avatarFallback.style.display = 'flex';
+      avatarFallback.textContent = displayName.charAt(0).toUpperCase();
+    }
+    
+    // Update name
+    userName.textContent = displayName;
+    
+    // Show sign out, hide sign in
+    signOutBtn.style.display = 'flex';
+    signInBtn.style.display = 'none';
+    
+  } else if (authManager.isGuestMode()) {
+    // Guest mode
+    avatarImg.style.display = 'none';
+    avatarFallback.style.display = 'flex';
+    avatarFallback.textContent = 'G';
+    userName.textContent = 'Guest';
+    
+    // Hide sign out, show sign in
+    signOutBtn.style.display = 'none';
+    signInBtn.style.display = 'flex';
+    
+  } else {
+    // Not authenticated, hide avatar
+    avatarContainer.style.display = 'none';
+  }
+}
+
+// Setup user avatar event listeners
+function setupUserAvatarEventListeners() {
+  const signOutBtn = document.getElementById('user-sign-out');
+  const signInBtn = document.getElementById('user-sign-in');
+  
+  if (signOutBtn) {
+    signOutBtn.addEventListener('click', async () => {
+      const result = await authManager.signOut();
+      if (result.success) {
+        updateUserAvatarUI();
+        // Optionally show a success message
+        NotificationUtils.showNotificationPing('Signed out successfully! 👋', null, 'focus');
+      } else {
+        alert(`Sign out failed: ${result.error}`);
+      }
+    });
+  }
+  
+  if (signInBtn) {
+    signInBtn.addEventListener('click', () => {
+      // Clear the first run flag temporarily to show auth screen
+      localStorage.removeItem('presto-auth-seen');
+      showAuthScreen();
+    });
+  }
+  
+  // Listen for auth state changes
+  authManager.onAuthChange((status, user) => {
+    updateUserAvatarUI();
+  });
+}
+
 // Initialize the application
 async function initializeApplication() {
   try {
@@ -391,6 +952,20 @@ async function initializeApplication() {
 
     // Request notification permission using Tauri v2 API
     await requestNotificationPermission();
+
+    // Initialize auth manager first
+    console.log('🔐 Initializing Auth Manager...');
+    window.authManager = authManager;
+    
+    // Check if this is first run and show auth screen
+    if (authManager.isFirstRun()) {
+      console.log('👋 First run detected, showing authentication screen...');
+      showAuthScreen();
+      return; // Don't initialize the app until user has chosen auth method
+    }
+    
+    // Update user avatar UI based on current auth state
+    updateUserAvatarUI();
 
     // Initialize settings manager first (other modules depend on it)
     console.log('📋 Initializing Settings Manager...');
@@ -433,6 +1008,9 @@ async function initializeApplication() {
 
     // Setup global event listeners
     setupGlobalEventListeners();
+
+    // Setup user avatar event listeners
+    setupUserAvatarEventListeners();
 
     // Setup update management
     setupUpdateManagement();

@@ -190,3 +190,157 @@
   color: var(--long-break-timer-color);
   box-shadow: 0 6px 20px color-mix(in srgb, var(--long-break-timer-color) 30%, transparent);
 }
+
+/* User Avatar Styles */
+.user-avatar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 8px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  background: var(--focus-secondary-btn);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--focus-timer-color);
+  background: var(--focus-secondary-btn);
+  text-transform: uppercase;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.user-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--focus-timer-color);
+  text-align: center;
+  opacity: 0.8;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.user-action-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--focus-timer-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0.6;
+}
+
+.user-action-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.user-action-btn:hover {
+  background: var(--focus-secondary-btn);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Theme states for user avatar */
+.sidebar.break .user-avatar {
+  background: var(--break-secondary-btn);
+  border-color: var(--break-timer-color);
+}
+
+.sidebar.break .avatar-fallback {
+  background: var(--break-secondary-btn);
+  color: var(--break-timer-color);
+}
+
+.sidebar.break .user-name {
+  color: var(--break-timer-color);
+}
+
+.sidebar.break .user-action-btn {
+  color: var(--break-timer-color);
+}
+
+.sidebar.break .user-action-btn:hover {
+  background: var(--break-secondary-btn);
+}
+
+.sidebar.longBreak .user-avatar {
+  background: var(--long-break-secondary-btn);
+  border-color: var(--long-break-timer-color);
+}
+
+.sidebar.longBreak .avatar-fallback {
+  background: var(--long-break-secondary-btn);
+  color: var(--long-break-timer-color);
+}
+
+.sidebar.longBreak .user-name {
+  color: var(--long-break-timer-color);
+}
+
+.sidebar.longBreak .user-action-btn {
+  color: var(--long-break-timer-color);
+}
+
+.sidebar.longBreak .user-action-btn:hover {
+  background: var(--long-break-secondary-btn);
+}
+
+/* Hover effects for avatar container */
+.user-avatar-container:hover .user-avatar {
+  transform: scale(1.05);
+  border-color: currentColor;
+}
+
+.user-avatar-container:hover .user-name {
+  opacity: 1;
+}
+
+.user-avatar-container:hover .user-action-btn {
+  opacity: 0.8;
+}
