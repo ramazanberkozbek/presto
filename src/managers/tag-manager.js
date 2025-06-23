@@ -86,14 +86,21 @@ class TagManager {
         try {
             // Check if Tauri is available
             if (typeof window.__TAURI__ === 'undefined' || typeof window.__TAURI__.invoke !== 'function') {
-                console.warn('Tauri is not available, using fallback tags');
-                this.tags = [{
-                    id: 'default-focus',
-                    name: 'Focus',
-                    icon: 'ri-brain-line',
-                    color: '#4CAF50',
-                    created_at: new Date().toISOString()
-                }];
+                console.warn('Tauri is not available, using localStorage fallback');
+                // Load from localStorage
+                const savedTags = localStorage.getItem('presto-tags');
+                if (savedTags) {
+                    this.tags = JSON.parse(savedTags);
+                } else {
+                    this.tags = [{
+                        id: 'default-focus',
+                        name: 'Focus',
+                        icon: 'ri-brain-line',
+                        color: '#4CAF50',
+                        created_at: new Date().toISOString()
+                    }];
+                    this.saveTagsToLocalStorage();
+                }
                 this.renderTagList();
                 if (this.currentTags.length === 0) {
                     this.currentTags = [this.tags[0]];
@@ -112,14 +119,20 @@ class TagManager {
             }
         } catch (error) {
             console.error('Failed to load tags:', error);
-            // Fallback to default tag
-            this.tags = [{
-                id: 'default-focus',
-                name: 'Focus',
-                icon: 'ri-brain-line',
-                color: '#4CAF50',
-                created_at: new Date().toISOString()
-            }];
+            // Fallback to localStorage or default tag
+            const savedTags = localStorage.getItem('presto-tags');
+            if (savedTags) {
+                this.tags = JSON.parse(savedTags);
+            } else {
+                this.tags = [{
+                    id: 'default-focus',
+                    name: 'Focus',
+                    icon: 'ri-brain-line',
+                    color: '#4CAF50',
+                    created_at: new Date().toISOString()
+                }];
+                this.saveTagsToLocalStorage();
+            }
             this.renderTagList();
             if (this.currentTags.length === 0) {
                 this.currentTags = [this.tags[0]];
@@ -202,8 +215,17 @@ class TagManager {
         try {
             if (window.__TAURI__ && typeof window.__TAURI__.invoke === 'function') {
                 await window.__TAURI__.invoke('save_tag', newTag);
+            } else {
+                // Save to localStorage as fallback
+                this.saveTagsToLocalStorage();
             }
             this.tags.push(newTag);
+            
+            // If using localStorage, save the updated tags
+            if (typeof window.__TAURI__ === 'undefined' || typeof window.__TAURI__.invoke !== 'function') {
+                this.saveTagsToLocalStorage();
+            }
+            
             this.renderTagList();
             
             // Clear form
@@ -229,6 +251,11 @@ class TagManager {
             // Remove from local arrays
             this.tags = this.tags.filter(t => t.id !== tagId);
             this.currentTags = this.currentTags.filter(t => t.id !== tagId);
+            
+            // If using localStorage, save the updated tags
+            if (typeof window.__TAURI__ === 'undefined' || typeof window.__TAURI__.invoke !== 'function') {
+                this.saveTagsToLocalStorage();
+            }
             
             // Stop tracking if active
             this.stopTagTracking(tagId);
@@ -273,6 +300,14 @@ class TagManager {
     updateCreateButtonState() {
         const hasName = this.newTagName.value.trim().length > 0;
         this.createTagBtn.disabled = !hasName;
+    }
+
+    saveTagsToLocalStorage() {
+        try {
+            localStorage.setItem('presto-tags', JSON.stringify(this.tags));
+        } catch (error) {
+            console.error('Failed to save tags to localStorage:', error);
+        }
     }
 
     toggleDropdown() {

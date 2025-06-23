@@ -767,6 +767,12 @@ export class PomodoroTimer {
             }
         } else {
             this.currentMode = 'focus';
+            
+            // Restore TagManager display when returning to focus mode
+            if (window.tagManager) {
+                window.tagManager.updateStatusDisplay();
+            }
+            
             if (this.completedPomodoros < this.totalSessions) {
                 this.currentSession = this.completedPomodoros + 1;
             }
@@ -847,6 +853,11 @@ export class PomodoroTimer {
             } else {
                 // Traditional behavior - go back to focus
                 this.currentMode = 'focus';
+                
+                // Restore TagManager display when returning to focus mode
+                if (window.tagManager) {
+                    window.tagManager.updateStatusDisplay();
+                }
                 if (this.completedPomodoros < this.totalSessions) {
                     this.currentSession = this.completedPomodoros + 1;
                 }
@@ -1008,7 +1019,7 @@ export class PomodoroTimer {
         this.timerMinutes.textContent = displayMinutes.toString().padStart(2, '0');
         this.timerSeconds.textContent = displaySeconds.toString().padStart(2, '0');
 
-        // Update status
+        // Update status - respect TagManager when tags are selected
         const statusTexts = {
             focus: 'Focus',
             break: 'Break',
@@ -1016,29 +1027,49 @@ export class PomodoroTimer {
         };
 
         let statusText = statusTexts[this.currentMode];
+        let shouldUpdateStatus = true;
 
-        // Add overtime indicator for continuous sessions
-        if (isOvertime) {
-            statusText += ' (Overtime)';
-        }
-        // Add auto-pause indicator
-        else if (this.isAutoPaused) {
-            statusText += ' (Auto-paused)';
-        } else if (this.isPaused && !this.isRunning) {
-            statusText += ' (Paused)';
-        }
-
-        // Update status text (use the span element instead of overwriting the entire div)
-        const statusTextElement = document.getElementById('status-text');
-        if (statusTextElement) {
-            statusTextElement.textContent = statusText;
-        } else {
-            // Fallback to setting the entire timer status if span doesn't exist
-            this.timerStatus.textContent = statusText;
+        // Check if TagManager is active and has selected tags for focus mode
+        if (this.currentMode === 'focus' && window.tagManager && window.tagManager.getCurrentTags().length > 0) {
+            // Don't override tag display during normal focus sessions
+            if (!isOvertime && !this.isAutoPaused && !(this.isPaused && !this.isRunning)) {
+                shouldUpdateStatus = false;
+            } else {
+                // For special states, append to tag name instead of overriding
+                const currentTags = window.tagManager.getCurrentTags();
+                if (currentTags.length === 1) {
+                    statusText = currentTags[0].name;
+                } else if (currentTags.length > 1) {
+                    statusText = `${currentTags.length} Tags`;
+                }
+            }
         }
 
-        // Update status icon based on current mode
-        this.updateStatusIcon();
+        // Add state indicators
+        if (shouldUpdateStatus) {
+            if (isOvertime) {
+                statusText += ' (Overtime)';
+            }
+            else if (this.isAutoPaused) {
+                statusText += ' (Auto-paused)';
+            } else if (this.isPaused && !this.isRunning) {
+                statusText += ' (Paused)';
+            }
+
+            // Update status text only when necessary
+            const statusTextElement = document.getElementById('status-text');
+            if (statusTextElement) {
+                statusTextElement.textContent = statusText;
+            } else {
+                // Fallback to setting the entire timer status if span doesn't exist
+                this.timerStatus.textContent = statusText;
+            }
+        }
+
+        // Update status icon based on current mode (only for break modes or special states)
+        if (this.currentMode !== 'focus' || isOvertime || this.isAutoPaused || (this.isPaused && !this.isRunning)) {
+            this.updateStatusIcon();
+        }
 
         // Update play/pause button
         if (this.isRunning && !this.isPaused && !this.isAutoPaused) {
@@ -1379,6 +1410,11 @@ export class PomodoroTimer {
         // Return to focus mode
         this.currentMode = 'focus';
         this.currentSession = this.completedPomodoros + 1;
+        
+        // Restore TagManager display when returning to focus mode
+        if (window.tagManager) {
+            window.tagManager.updateStatusDisplay();
+        }
 
         // Reset timer to focus duration
         this.timeRemaining = this.durations.focus;
