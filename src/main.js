@@ -1194,7 +1194,7 @@ async function updateUserAvatarUI() {
     if (guestIcon) guestIcon.style.display = 'block';
 
     if (userName) userName.textContent = 'Guest';
-    if (userStatus) userStatus.textContent = 'Guest Mode';
+    if (userStatus) userStatus.textContent = 'Sync your data and access your sessions across devices.';
 
     // Hide sign out, show sign in
     if (signOutBtn) signOutBtn.style.display = 'none';
