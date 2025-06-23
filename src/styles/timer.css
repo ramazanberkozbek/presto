@@ -80,8 +80,6 @@
   border: 2px solid var(--focus-timer-color);
   border-radius: 1rem;
   width: 320px;
-  max-height: 500px;
-  overflow-y: auto;
   z-index: 1000;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   display: none;
@@ -90,7 +88,7 @@
 .tag-dropdown-menu.active {
   display: block;
   animation: slideDown 0.2s ease;
-  background-color: #fff;
+  background-color: var(--focus-bg);
 }
 
 @keyframes slideDown {
@@ -114,8 +112,7 @@
 }
 
 .tag-list {
-  max-height: 250px;
-  overflow-y: auto;
+  /* Natural height, no scroll */
 }
 
 .tag-item {
@@ -180,12 +177,17 @@
 }
 
 .new-tag-input {
+  padding: 0;
+}
+
+.tag-input-row {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 0.5rem;
 }
 
 .new-tag-input input {
+  flex: 1;
   padding: 0.5rem;
   border: 1px solid var(--sidebar-item-border);
   border-radius: 0.5rem;
@@ -199,11 +201,80 @@
   border-color: var(--focus-timer-color);
 }
 
-.icon-selector {
+/* Icon Selector Container */
+.icon-selector-container {
+  position: relative;
+}
+
+.selected-icon-btn {
   display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0.5rem;
+  background: var(--sidebar-bg);
+  border: 1px solid var(--sidebar-item-border);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 48px;
+  justify-content: center;
+}
+
+.selected-icon-btn:hover {
+  border-color: var(--focus-timer-color);
+  background-color: var(--focus-secondary-btn);
+}
+
+.selected-icon-btn .dropdown-arrow {
+  font-size: 14px;
+  opacity: 0.7;
+  transition: transform 0.2s ease;
+}
+
+.selected-icon-btn.active .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.icon-selector-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: var(--bg-color);
+  border: 2px solid var(--focus-timer-color);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  display: none;
+  z-index: 1001;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+}
+
+.icon-selector-dropdown.active {
+  display: block;
+  animation: fadeIn 0.2s ease;
+  background-color: var(--focus-bg);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.icon-selector-dropdown {
+  display: none;
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.5rem;
-  flex-wrap: wrap;
-  margin: 0.5rem 0;
+}
+
+.icon-selector-dropdown.active {
+  display: grid;
 }
 
 .icon-option,

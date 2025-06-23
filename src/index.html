@@ -110,18 +110,26 @@
           </div>
           <div class="tag-dropdown-footer">
             <div class="new-tag-input" id="new-tag-input">
-              <input type="text" placeholder="Nuova tag..." id="new-tag-name">
-              <div class="icon-selector" id="icon-selector">
-                <div class="icon-option" data-icon="ri-brain-line"><i class="ri-brain-line"></i></div>
-                <div class="icon-option" data-icon="ri-focus-3-line"><i class="ri-focus-3-line"></i></div>
-                <div class="icon-option" data-icon="ri-lightbulb-line"><i class="ri-lightbulb-line"></i></div>
-                <div class="emoji-option" data-icon="🧠">🧠</div>
-                <div class="emoji-option" data-icon="💪">💪</div>
-                <div class="emoji-option" data-icon="🎯">🎯</div>
-                <div class="emoji-option" data-icon="⚡">⚡</div>
-                <div class="emoji-option" data-icon="🔥">🔥</div>
+              <div class="tag-input-row">
+                <div class="icon-selector-container">
+                  <button class="selected-icon-btn" id="selected-icon-btn">
+                    <i class="ri-brain-line" id="selected-icon-display"></i>
+                    <i class="ri-arrow-down-s-line dropdown-arrow"></i>
+                  </button>
+                  <div class="icon-selector-dropdown" id="icon-selector-dropdown">
+                    <div class="icon-option" data-icon="ri-brain-line"><i class="ri-brain-line"></i></div>
+                    <div class="icon-option" data-icon="ri-focus-3-line"><i class="ri-focus-3-line"></i></div>
+                    <div class="icon-option" data-icon="ri-lightbulb-line"><i class="ri-lightbulb-line"></i></div>
+                    <div class="emoji-option" data-icon="🧠">🧠</div>
+                    <div class="emoji-option" data-icon="💪">💪</div>
+                    <div class="emoji-option" data-icon="🎯">🎯</div>
+                    <div class="emoji-option" data-icon="⚡">⚡</div>
+                    <div class="emoji-option" data-icon="🔥">🔥</div>
+                  </div>
+                </div>
+                <input type="text" placeholder="New tag..." id="new-tag-name">
+                <button class="create-tag-btn" id="create-tag-btn">+</button>
               </div>
-              <button class="create-tag-btn" id="create-tag-btn">Create</button>
             </div>
           </div>
         </div>

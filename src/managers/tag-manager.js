@@ -22,7 +22,9 @@ class TagManager {
         this.dropdownMenu = document.getElementById('tag-dropdown-menu');
         this.tagList = document.getElementById('tag-list');
         this.newTagName = document.getElementById('new-tag-name');
-        this.iconSelector = document.getElementById('icon-selector');
+        this.iconSelector = document.getElementById('icon-selector-dropdown');
+        this.selectedIconBtn = document.getElementById('selected-icon-btn');
+        this.selectedIconDisplay = document.getElementById('selected-icon-display');
         this.createTagBtn = document.getElementById('create-tag-btn');
         
         // Debug: check if all elements are found
@@ -56,11 +58,23 @@ class TagManager {
             }
         });
 
+        // Icon selector button toggle
+        this.selectedIconBtn.addEventListener('click', () => {
+            this.toggleIconSelector();
+        });
+
         // Icon selection
         this.iconSelector.addEventListener('click', (e) => {
             const iconOption = e.target.closest('.icon-option, .emoji-option');
             if (iconOption) {
                 this.selectIcon(iconOption);
+            }
+        });
+
+        // Close icon selector when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!this.selectedIconBtn.contains(e.target) && !this.iconSelector.contains(e.target)) {
+                this.closeIconSelector();
             }
         });
 
@@ -166,6 +180,7 @@ class TagManager {
             // Tag selection event
             tagItem.addEventListener('click', (e) => {
                 if (!e.target.classList.contains('tag-item-delete')) {
+                    e.stopPropagation(); // Prevent event bubbling
                     this.toggleTag(tag);
                 }
             });
@@ -272,6 +287,25 @@ class TagManager {
         }
     }
 
+    toggleIconSelector() {
+        const isOpen = this.iconSelector.classList.contains('active');
+        if (isOpen) {
+            this.closeIconSelector();
+        } else {
+            this.openIconSelector();
+        }
+    }
+
+    openIconSelector() {
+        this.iconSelector.classList.add('active');
+        this.selectedIconBtn.classList.add('active');
+    }
+
+    closeIconSelector() {
+        this.iconSelector.classList.remove('active');
+        this.selectedIconBtn.classList.remove('active');
+    }
+
     selectIcon(iconOption) {
         // Remove previous selection
         this.iconSelector.querySelectorAll('.selected').forEach(el => {
@@ -281,7 +315,24 @@ class TagManager {
         // Select new icon
         iconOption.classList.add('selected');
         this.selectedIcon = iconOption.dataset.icon;
+        
+        // Update the display button
+        this.updateSelectedIconDisplay();
         this.updateCreateButtonState();
+    }
+
+    updateSelectedIconDisplay() {
+        const iconDisplay = this.selectedIconDisplay;
+        if (this.selectedIcon.startsWith('ri-')) {
+            iconDisplay.className = this.selectedIcon;
+            iconDisplay.textContent = '';
+            iconDisplay.style.fontFamily = 'remixicon';
+        } else {
+            // For emoji
+            iconDisplay.className = '';
+            iconDisplay.textContent = this.selectedIcon;
+            iconDisplay.style.fontFamily = 'inherit';
+        }
     }
 
     resetIconSelection() {
@@ -294,6 +345,7 @@ class TagManager {
         if (defaultIcon) {
             defaultIcon.classList.add('selected');
             this.selectedIcon = 'ri-brain-line';
+            this.updateSelectedIconDisplay();
         }
     }
 
