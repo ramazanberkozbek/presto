@@ -342,11 +342,13 @@ export class PomodoroTimer {
 
             // Listen for user activity
             await listen('user-activity', () => {
+                // console.log('🔄 ACTIVITY: Global activity detected via Tauri backend');
                 this.handleUserActivity();
             });
 
             // Listen for user inactivity
             await listen('user-inactivity', () => {
+                // console.log('💤 INACTIVITY: Global inactivity detected via Tauri backend');
                 this.autoPauseTimer();
             });
 
@@ -376,11 +378,18 @@ export class PomodoroTimer {
     }
 
     handleUserActivity() {
-        if (!this.smartPauseEnabled || !this.isRunning || this.currentMode !== 'focus') return;
+        // console.log('🎯 handleUserActivity called - smartPauseEnabled:', this.smartPauseEnabled, 'isRunning:', this.isRunning, 'currentMode:', this.currentMode, 'isAutoPaused:', this.isAutoPaused);
+
+        // if (!this.smartPauseEnabled || !this.isRunning || this.currentMode !== 'focus') {
+        //     console.log('❌ handleUserActivity early return due to conditions');
+        //     return;
+        // }
 
         // If currently auto-paused, resume the timer
         if (this.isAutoPaused) {
+            console.log('🔄 Timer is auto-paused, calling resumeFromAutoPause()');
             this.resumeFromAutoPause();
+            return; // Exit early after resume to avoid setting new timeout immediately
         }
 
         // Clear existing timeout and countdown
@@ -440,11 +449,17 @@ export class PomodoroTimer {
     }
 
     autoPauseTimer() {
-        if (!this.isRunning || this.isPaused || this.isAutoPaused || this.currentMode !== 'focus') return;
+        console.log('🚨 autoPauseTimer called - isRunning:', this.isRunning, 'isPaused:', this.isPaused, 'isAutoPaused:', this.isAutoPaused, 'currentMode:', this.currentMode);
 
-        console.log('Auto-pausing timer due to inactivity');
+        if (!this.isRunning || this.isPaused || this.isAutoPaused || this.currentMode !== 'focus') {
+            console.log('❌ autoPauseTimer early return due to conditions');
+            return;
+        }
+
+        console.log('💤 Auto-pausing timer due to inactivity');
         this.isAutoPaused = true;
         this.isPaused = true;
+        console.log('🔧 States set: isAutoPaused =', this.isAutoPaused, 'isPaused =', this.isPaused);
 
         // Stop the timer interval and countdown
         clearInterval(this.timerInterval);
@@ -463,12 +478,20 @@ export class PomodoroTimer {
     resumeFromAutoPause() {
         if (!this.isAutoPaused) return;
 
-        console.log('Resuming timer from auto-pause');
+        console.log('🔄 Resuming from auto-pause...');
+
+        // Clear any existing timer interval first
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
+
+        // Set states to resume - be very explicit about the state
         this.isAutoPaused = false;
         this.isPaused = false;
+        this.isRunning = true;
 
-        // Show resume notification
-        NotificationUtils.showNotificationPing('Timer resumed - you\'re back! 🎯', 'info', this.currentMode);
+        console.log('✅ States set: isAutoPaused =', this.isAutoPaused, 'isPaused =', this.isPaused, 'isRunning =', this.isRunning);
 
         // Initialize timer accuracy tracking for resume
         this.timerStartTime = Date.now();
@@ -477,17 +500,34 @@ export class PomodoroTimer {
         // Restart the timer interval with accuracy updates
         this.timerInterval = setInterval(() => {
             this.updateTimerWithAccuracy();
-        }, 100); // Update more frequently (10 times per second) for smoother display
+        }, 100);
 
-        // Update UI
+        // Force synchronous UI update first
         this.updateDisplay();
         this.updateButtons();
         this.updateTrayIcon();
 
-        // Restart smart pause monitoring if enabled and in focus mode
+        // Show resume notification after UI update
+        NotificationUtils.showNotificationPing('Timer resumed - you\'re back! 🎯', 'info', this.currentMode);
+
+        // Restart smart pause monitoring by setting new timeout
         if (this.smartPauseEnabled && this.currentMode === 'focus') {
-            this.handleUserActivity();
+            // Clear any existing timeout first
+            if (this.activityTimeout) {
+                clearTimeout(this.activityTimeout);
+            }
+            this.stopSmartPauseCountdown();
+
+            // Set new timeout for auto-pause
+            this.activityTimeout = setTimeout(() => {
+                this.autoPauseTimer();
+            }, this.inactivityThreshold);
+
+            // Start countdown display
+            this.startSmartPauseCountdown();
         }
+
+        console.log('🎯 Resume complete, timer should be running normally');
     }
 
     async enableSmartPause(enabled) {
@@ -528,7 +568,7 @@ export class PomodoroTimer {
     startTimer() {
         if (!this.isRunning) {
             const wasResuming = this.isPaused; // Check if we're resuming from pause
-            
+
             this.isRunning = true;
             this.isPaused = false;
 
@@ -562,7 +602,7 @@ export class PomodoroTimer {
 
             // Update tray menu
             this.updateTrayMenu();
-            
+
             // Notify tag manager about timer start or resume
             if (window.tagManager) {
                 if (wasResuming) {
@@ -649,7 +689,7 @@ export class PomodoroTimer {
 
             // Update tray menu
             this.updateTrayMenu();
-            
+
             // Notify tag manager about timer pause
             if (window.tagManager) {
                 window.tagManager.onTimerPause();
@@ -687,7 +727,7 @@ export class PomodoroTimer {
 
         // Update tray menu
         this.updateTrayMenu();
-        
+
         // Notify tag manager about timer stop
         if (window.tagManager) {
             window.tagManager.onTimerStop();
@@ -767,12 +807,12 @@ export class PomodoroTimer {
             }
         } else {
             this.currentMode = 'focus';
-            
+
             // Restore TagManager display when returning to focus mode
             if (window.tagManager) {
                 window.tagManager.updateStatusDisplay();
             }
-            
+
             if (this.completedPomodoros < this.totalSessions) {
                 this.currentSession = this.completedPomodoros + 1;
             }
@@ -853,7 +893,7 @@ export class PomodoroTimer {
             } else {
                 // Traditional behavior - go back to focus
                 this.currentMode = 'focus';
-                
+
                 // Restore TagManager display when returning to focus mode
                 if (window.tagManager) {
                     window.tagManager.updateStatusDisplay();
@@ -937,7 +977,7 @@ export class PomodoroTimer {
 
         // Update tray menu
         this.updateTrayMenu();
-        
+
         // Notify tag manager about timer completion
         if (window.tagManager) {
             window.tagManager.onTimerComplete();
@@ -1047,13 +1087,20 @@ export class PomodoroTimer {
 
         // Add state indicators
         if (shouldUpdateStatus) {
+            console.log('📊 updateDisplay - isOvertime:', isOvertime, 'isAutoPaused:', this.isAutoPaused, 'isPaused:', this.isPaused, 'isRunning:', this.isRunning);
+
             if (isOvertime) {
                 statusText += ' (Overtime)';
+                console.log('⏰ Showing Overtime status');
             }
             else if (this.isAutoPaused) {
                 statusText += ' (Auto-paused)';
+                console.log('💤 Showing Auto-paused status');
             } else if (this.isPaused && !this.isRunning) {
                 statusText += ' (Paused)';
+                console.log('⏸️ Showing Paused status');
+            } else {
+                console.log('▶️ No status suffix (timer running normally)');
             }
 
             // Update status text only when necessary
@@ -1410,7 +1457,7 @@ export class PomodoroTimer {
         // Return to focus mode
         this.currentMode = 'focus';
         this.currentSession = this.completedPomodoros + 1;
-        
+
         // Restore TagManager display when returning to focus mode
         if (window.tagManager) {
             window.tagManager.updateStatusDisplay();
