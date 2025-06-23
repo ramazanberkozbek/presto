@@ -1,17 +1,29 @@
-import { supabase, authHelpers } from '../utils/supabase.js';
+import { initSupabase, getSupabase, getAuthHelpers } from '../utils/supabase.js';
 
 class AuthManager {
     constructor() {
         this.currentUser = null;
         this.isGuest = false;
         this.authListeners = [];
-        this.init();
+        this.supabase = null;
+        this.authHelpers = null;
+        this.initialized = false;
     }
 
     async init() {
-        // Check if user is already authenticated
+        if (this.initialized) return;
+
         try {
-            const { data: { session } } = await supabase.auth.getSession();
+            // Initialize Supabase first
+            await initSupabase();
+            this.supabase = getSupabase();
+            this.authHelpers = getAuthHelpers();
+            this.initialized = true;
+
+            console.log('✅ AuthManager initialized with Supabase');
+
+            // Check if user is already authenticated
+            const { data: { session } } = await this.supabase.auth.getSession();
             if (session) {
                 this.currentUser = session.user;
                 this.isGuest = false;
@@ -32,7 +44,7 @@ class AuthManager {
         }
 
         // Listen for auth changes
-        supabase.auth.onAuthStateChange((event, session) => {
+        this.supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_IN' && session) {
                 this.currentUser = session.user;
                 this.isGuest = false;
@@ -84,10 +96,12 @@ class AuthManager {
 
     // Sign in with email/password
     async signInWithEmail(email, password) {
+        if (!this.initialized) await this.init();
+
         try {
-            const { data, error } = await authHelpers.signInWithEmail(email, password);
+            const { data, error } = await this.authHelpers.signInWithEmail(email, password);
             if (error) throw error;
-            
+
             this.markAuthSeen();
             return { success: true, data };
         } catch (error) {
@@ -97,10 +111,12 @@ class AuthManager {
 
     // Sign up with email/password
     async signUpWithEmail(email, password) {
+        if (!this.initialized) await this.init();
+
         try {
-            const { data, error } = await authHelpers.signUpWithEmail(email, password);
+            const { data, error } = await this.authHelpers.signUpWithEmail(email, password);
             if (error) throw error;
-            
+
             this.markAuthSeen();
             return { success: true, data };
         } catch (error) {
@@ -110,10 +126,12 @@ class AuthManager {
 
     // Sign in with OAuth provider
     async signInWithProvider(provider) {
+        if (!this.initialized) await this.init();
+
         try {
-            const { data, error } = await authHelpers.signInWithProvider(provider);
+            const { data, error } = await this.authHelpers.signInWithProvider(provider);
             if (error) throw error;
-            
+
             this.markAuthSeen();
             return { success: true, data };
         } catch (error) {
@@ -123,10 +141,12 @@ class AuthManager {
 
     // Sign out
     async signOut() {
+        if (!this.initialized) await this.init();
+
         try {
-            const { error } = await authHelpers.signOut();
+            const { error } = await this.authHelpers.signOut();
             if (error) throw error;
-            
+
             return { success: true };
         } catch (error) {
             return { success: false, error: error.message };
@@ -136,43 +156,58 @@ class AuthManager {
     // Get user avatar URL
     getUserAvatarUrl() {
         if (!this.currentUser) return null;
-        
+
         // Try to get avatar from user metadata
         const avatarUrl = this.currentUser.user_metadata?.avatar_url;
         if (avatarUrl) return avatarUrl;
-        
+
         // For Google OAuth, try the picture field
         const picture = this.currentUser.user_metadata?.picture;
         if (picture) return picture;
-        
-        // Fallback to Gravatar
+
+        // Return Gravatar URL for email (will be tested asynchronously)
         const email = this.currentUser.email;
         if (email) {
             const hash = this.md5(email.toLowerCase().trim());
-            return `https://www.gravatar.com/avatar/${hash}?d=identicon&s=32`;
+            return `https://www.gravatar.com/avatar/${hash}?d=404&s=48`; // d=404 returns 404 if no gravatar exists
         }
-        
+
         return null;
+    }
+
+    // Check if Gravatar exists for email
+    async checkGravatarExists(email) {
+        if (!email) return false;
+        
+        const hash = this.md5(email.toLowerCase().trim());
+        const gravatarUrl = `https://www.gravatar.com/avatar/${hash}?d=404&s=48`;
+        
+        try {
+            const response = await fetch(gravatarUrl, { method: 'HEAD' });
+            return response.ok;
+        } catch (error) {
+            return false;
+        }
     }
 
     // Get user display name
     getUserDisplayName() {
         if (!this.currentUser) return 'Guest';
-        
-        const name = this.currentUser.user_metadata?.full_name || 
-                    this.currentUser.user_metadata?.name ||
-                    this.currentUser.email?.split('@')[0] ||
-                    'User';
-        
+
+        const name = this.currentUser.user_metadata?.full_name ||
+            this.currentUser.user_metadata?.name ||
+            this.currentUser.email?.split('@')[0] ||
+            'User';
+
         return name;
     }
 
-    // Simple MD5 hash for Gravatar
+    // MD5 hash for Gravatar using a reliable implementation
     md5(string) {
-        // Simple MD5 implementation for Gravatar
-        // In a real app, you might want to use a proper crypto library
+        // Correct MD5 implementation for Gravatar
         function md5cycle(x, k) {
             var a = x[0], b = x[1], c = x[2], d = x[3];
+            
             a = ff(a, b, c, d, k[0], 7, -680876936);
             d = ff(d, a, b, c, k[1], 12, -389564586);
             c = ff(c, d, a, b, k[2], 17, 606105819);
@@ -189,6 +224,7 @@ class AuthManager {
             d = ff(d, a, b, c, k[13], 12, -40341101);
             c = ff(c, d, a, b, k[14], 17, -1502002290);
             b = ff(b, c, d, a, k[15], 22, 1236535329);
+            
             a = gg(a, b, c, d, k[1], 5, -165796510);
             d = gg(d, a, b, c, k[6], 9, -1069501632);
             c = gg(c, d, a, b, k[11], 14, 643717713);
@@ -205,6 +241,7 @@ class AuthManager {
             d = gg(d, a, b, c, k[2], 9, -51403784);
             c = gg(c, d, a, b, k[7], 14, 1735328473);
             b = gg(b, c, d, a, k[12], 20, -1926607734);
+            
             a = hh(a, b, c, d, k[5], 4, -378558);
             d = hh(d, a, b, c, k[8], 11, -2022574463);
             c = hh(c, d, a, b, k[11], 16, 1839030562);
@@ -221,6 +258,7 @@ class AuthManager {
             d = hh(d, a, b, c, k[12], 11, -421815835);
             c = hh(c, d, a, b, k[15], 16, 530742520);
             b = hh(b, c, d, a, k[2], 23, -995338651);
+            
             a = ii(a, b, c, d, k[0], 6, -198630844);
             d = ii(d, a, b, c, k[7], 10, 1126891415);
             c = ii(c, d, a, b, k[14], 15, -1416354905);
@@ -237,6 +275,7 @@ class AuthManager {
             d = ii(d, a, b, c, k[11], 10, -1120210379);
             c = ii(c, d, a, b, k[2], 15, 718787259);
             b = ii(b, c, d, a, k[9], 21, -343485551);
+            
             x[0] = add32(a, x[0]);
             x[1] = add32(b, x[1]);
             x[2] = add32(c, x[2]);
@@ -265,48 +304,54 @@ class AuthManager {
         }
 
         function md51(s) {
-            var n = s.length,
-                state = [1732584193, -271733879, -1732584194, 271733878], i;
+            var n = s.length;
+            var state = [1732584193, -271733879, -1732584194, 271733878];
+            var i;
+            
             for (i = 64; i <= s.length; i += 64) {
                 md5cycle(state, md5blk(s.substring(i - 64, i)));
             }
+            
             s = s.substring(i - 64);
             var tail = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-            for (i = 0; i < s.length; i++)
+            
+            for (i = 0; i < s.length; i++) {
                 tail[i >> 2] |= s.charCodeAt(i) << ((i % 4) << 3);
+            }
+            
             tail[i >> 2] |= 0x80 << ((i % 4) << 3);
+            
             if (i > 55) {
                 md5cycle(state, tail);
                 for (i = 0; i < 16; i++) tail[i] = 0;
             }
+            
             tail[14] = n * 8;
             md5cycle(state, tail);
             return state;
         }
 
         function md5blk(s) {
-            var md5blks = [], i;
-            for (i = 0; i < 64; i += 4) {
-                md5blks[i >> 2] = s.charCodeAt(i)
-                    + (s.charCodeAt(i + 1) << 8)
-                    + (s.charCodeAt(i + 2) << 16)
-                    + (s.charCodeAt(i + 3) << 24);
+            var md5blks = [];
+            for (var i = 0; i < 64; i += 4) {
+                md5blks[i >> 2] = s.charCodeAt(i) + (s.charCodeAt(i + 1) << 8) + (s.charCodeAt(i + 2) << 16) + (s.charCodeAt(i + 3) << 24);
             }
             return md5blks;
         }
 
         function rhex(n) {
-            var hex_chr = '0123456789abcdef'.split('');
             var s = '', j = 0;
-            for (var i = 0; i < 4; i++)
-                s += hex_chr[(n >> (j + 4)) & 0x0F]
-                    + hex_chr[(n >> j) & 0x0F];
+            for (var i = 0; i < 4; i++) {
+                s += ((n >> (j + 4)) & 0x0F).toString(16) + ((n >> j) & 0x0F).toString(16);
+                j += 8;
+            }
             return s;
         }
 
         function hex(x) {
-            for (var i = 0; i < x.length; i++)
+            for (var i = 0; i < x.length; i++) {
                 x[i] = rhex(x[i]);
+            }
             return x.join('');
         }
 

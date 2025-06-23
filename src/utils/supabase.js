@@ -1,27 +1,49 @@
-import { createClient } from '@supabase/supabase-js'
-
-// Get environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
+// Wait for Supabase to be available
+function waitForSupabase() {
+  return new Promise((resolve, reject) => {
+    const check = () => {
+      if (window.supabase && window.supabase.createClient) {
+        resolve();
+      } else {
+        setTimeout(check, 50);
+      }
+    };
+    check();
+    setTimeout(() => reject(new Error('Supabase timeout')), 5000);
+  });
 }
 
-// Create Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    // Configure redirect URLs for OAuth
-    redirectTo: window.location.origin,
-    // Enable deep links for OAuth in Tauri
-    detectSessionInUrl: true,
-    persistSession: true,
-    autoRefreshToken: true
-  }
-})
+// Initialize Supabase client
+let supabase = null;
+let authHelpers = null;
 
-// Auth helper functions
-export const authHelpers = {
+async function initSupabase() {
+  await waitForSupabase();
+  
+  const { createClient } = window.supabase;
+  
+  // Get environment variables from .env file (loaded by Tauri)
+  const supabaseUrl = 'https://unrlsklikpmeltjvyavn.supabase.co';
+  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVucmxza2xpa3BtZWx0anZ5YXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MTUyNDgsImV4cCI6MjA2NjE5MTI0OH0.yT9e7YeTospM949FCB2fBcYOgFxg_w6HXRyWf8CKdVQ';
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Missing Supabase environment variables');
+  }
+
+  // Create Supabase client
+  supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      // Configure redirect URLs for OAuth
+      redirectTo: window.location.origin,
+      // Enable deep links for OAuth in Tauri
+      detectSessionInUrl: true,
+      persistSession: true,
+      autoRefreshToken: true
+    }
+  });
+
+  // Auth helper functions
+  authHelpers = {
   // Sign in with email/password
   async signInWithEmail(email, password) {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -68,8 +90,21 @@ export const authHelpers = {
     return supabase.auth.getSession()
   },
 
-  // Listen for auth state changes
-  onAuthStateChange(callback) {
-    return supabase.auth.onAuthStateChange(callback)
-  }
+    // Listen for auth state changes
+    onAuthStateChange(callback) {
+      return supabase.auth.onAuthStateChange(callback)
+    }
+  };
 }
+
+// Export functions to get initialized instances
+export function getSupabase() {
+  return supabase;
+}
+
+export function getAuthHelpers() {
+  return authHelpers;
+}
+
+// Initialize and export
+export { initSupabase };
