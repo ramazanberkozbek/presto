@@ -3,6 +3,7 @@ import { NavigationManager } from './managers/navigation-manager.js';
 import { SettingsManager } from './managers/settings-manager.js';
 import { SessionManager } from './managers/session-manager.js';
 import { TeamManager } from './managers/team-manager.js';
+// Auth manager will be imported after Supabase is loaded
 import { PomodoroTimer } from './core/pomodoro-timer.js';
 import { NotificationUtils } from './utils/common-utils.js';
 import { updateNotification } from './components/update-notification.js';
@@ -381,6 +382,1002 @@ async function requestNotificationPermission() {
   }
 }
 
+// Show authentication screen
+function showAuthScreen() {
+  // Hide the main app content
+  const appContent = document.querySelector('.app-content') || document.body;
+  if (appContent.children.length > 0) {
+    for (let child of appContent.children) {
+      child.style.display = 'none';
+    }
+  }
+
+  // Create auth overlay
+  const authOverlay = document.createElement('div');
+  authOverlay.id = 'auth-overlay';
+  authOverlay.className = 'auth-overlay';
+  authOverlay.innerHTML = `
+    <div class="auth-container">
+      <div class="auth-header">
+        <h1>Welcome to Presto! 🍅</h1>
+        <p>Your productivity companion is ready to help you stay focused.</p>
+      </div>
+      
+      <div class="auth-content">
+        <div class="auth-column auth-main">
+          <h2>Sign in to sync your data</h2>
+          
+          <div class="auth-providers">
+            <button class="auth-btn google-btn" data-provider="google">
+              <svg width="18" height="18" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              Google
+            </button>
+            
+            <button class="auth-btn github-btn" data-provider="github">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              </svg>
+              GitHub
+            </button>
+            
+            <button class="auth-btn apple-btn" data-provider="apple">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+              </svg>
+              Apple
+            </button>
+          </div>
+          
+          <div class="auth-divider">
+            <span>or</span>
+          </div>
+          
+          <form id="auth-form" class="email-auth">
+            <div class="form-row">
+              <input type="email" id="email" placeholder="Email address" required>
+              <input type="password" id="password" placeholder="Password" required>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="auth-btn primary-btn" data-action="signin">Sign In</button>
+              <button type="button" class="auth-btn secondary-btn" data-action="signup">Sign Up</button>
+            </div>
+          </form>
+        </div>
+        
+        <div class="auth-column auth-guest">
+          <div class="guest-section">
+            <div class="guest-icon">
+              <i class="ri-user-line"></i>
+            </div>
+            <h3>Continue as Guest</h3>
+            <p>Try Presto without creating an account. Your data will be stored locally only.</p>
+            <button class="auth-btn guest-btn" id="continue-guest">
+              <i class="ri-arrow-right-line"></i>
+              Continue as Guest
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Add styles
+  const authStyles = document.createElement('style');
+  authStyles.textContent = `
+    .auth-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      animation: fadeIn 0.3s ease-in;
+    }
+    
+    .auth-container {
+      background: white;
+      border-radius: 16px;
+      max-width: 480px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 32px;
+    }
+    
+    .auth-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    
+    .auth-header h1 {
+      margin: 0 0 8px 0;
+      color: #2d3748;
+      font-size: 28px;
+      font-weight: 600;
+    }
+    
+    .auth-header p {
+      margin: 0;
+      color: #718096;
+      font-size: 16px;
+    }
+    
+    .auth-section h2 {
+      margin: 0 0 8px 0;
+      color: #2d3748;
+      font-size: 20px;
+      font-weight: 600;
+    }
+    
+    .auth-section p {
+      margin: 0 0 24px 0;
+      color: #718096;
+      font-size: 14px;
+    }
+    
+    .auth-providers {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    
+    .auth-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: white;
+      color: #2d3748;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    
+    .auth-btn:hover {
+      background: #f7fafc;
+      border-color: #cbd5e0;
+      transform: translateY(-1px);
+    }
+    
+    .google-btn:hover {
+      background: #f8f9ff;
+      border-color: #4285F4;
+    }
+    
+    .github-btn:hover {
+      background: #f8f9fa;
+      border-color: #24292e;
+    }
+    
+    .apple-btn:hover {
+      background: #f8f9fa;
+      border-color: #000000;
+    }
+    
+    .primary-btn {
+      background: #4299e1;
+      color: white;
+      border-color: #4299e1;
+    }
+    
+    .primary-btn:hover {
+      background: #3182ce;
+      border-color: #3182ce;
+    }
+    
+    .secondary-btn {
+      background: #e2e8f0;
+      color: #4a5568;
+      border-color: #e2e8f0;
+    }
+    
+    .secondary-btn:hover {
+      background: #cbd5e0;
+      border-color: #cbd5e0;
+    }
+    
+    .guest-btn {
+      background: #48bb78;
+      color: white;
+      border-color: #48bb78;
+      width: 100%;
+    }
+    
+    .guest-btn:hover {
+      background: #38a169;
+      border-color: #38a169;
+    }
+    
+    .auth-divider, .auth-divider-main {
+      display: flex;
+      align-items: center;
+      margin: 24px 0;
+      text-align: center;
+    }
+    
+    .auth-divider::before, .auth-divider::after,
+    .auth-divider-main::before, .auth-divider-main::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e2e8f0;
+    }
+    
+    .auth-divider span, .auth-divider-main span {
+      padding: 0 16px;
+      color: #a0aec0;
+      font-size: 12px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+    
+    .email-auth {
+      margin-bottom: 24px;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s ease;
+      box-sizing: border-box;
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: #4299e1;
+      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+    }
+    
+    .form-actions {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .form-actions .auth-btn {
+      flex: 1;
+    }
+    
+    .guest-section {
+      text-align: center;
+      padding: 24px;
+      background: #f7fafc;
+      border-radius: 12px;
+    }
+    
+    .guest-section h3 {
+      margin: 0 0 8px 0;
+      color: #2d3748;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .guest-section p {
+      margin: 0 0 16px 0;
+      color: #718096;
+      font-size: 14px;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    .auth-loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    
+    .auth-loading::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      margin: -10px 0 0 -10px;
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* New responsive layout styles */
+    .auth-container {
+      width: 100%;
+      max-width: 900px;
+      max-height: 95vh;
+      overflow: hidden;
+      margin: 20px;
+    }
+    
+    .auth-header {
+      text-align: center;
+      padding: 32px 32px 24px 32px;
+      border-bottom: 1px solid #f1f5f9;
+      margin-bottom: 0;
+    }
+    
+    .auth-header h1 {
+      margin: 0 0 8px 0;
+      color: #1e293b;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    
+    .auth-header p {
+      margin: 0;
+      color: #64748b;
+      font-size: 16px;
+    }
+    
+    .auth-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: calc(95vh - 140px);
+    }
+    
+    .auth-column {
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    
+    .auth-main {
+      border-right: 1px solid #f1f5f9;
+    }
+    
+    .auth-main h2 {
+      margin: 0 0 24px 0;
+      color: #1e293b;
+      font-size: 20px;
+      font-weight: 600;
+      text-align: center;
+    }
+    
+    .auth-providers {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    
+    .auth-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: white;
+      color: #374151;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      min-height: 44px;
+    }
+    
+    .auth-btn:hover {
+      background: #f8fafc;
+      border-color: #cbd5e0;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .form-row input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+    }
+    
+    .primary-btn {
+      background: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+    }
+    
+    .primary-btn:hover {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+    
+    .secondary-btn {
+      background: #f1f5f9;
+      color: #475569;
+      border-color: #e2e8f0;
+    }
+    
+    .secondary-btn:hover {
+      background: #e2e8f0;
+      border-color: #cbd5e0;
+    }
+    
+    .auth-guest {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      align-items: center;
+      text-align: center;
+    }
+    
+    .guest-section {
+      max-width: 280px;
+      margin: 0 auto;
+      text-align: center;
+      padding: 0;
+      background: transparent;
+      border-radius: 0;
+    }
+    
+    .guest-icon {
+      width: 80px;
+      height: 80px;
+      background: #e74c3c;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px auto;
+      box-shadow: 0 8px 25px rgba(231, 76, 60, 0.25);
+    }
+    
+    .guest-icon i {
+      font-size: 36px;
+      color: white;
+    }
+    
+    .guest-section h3 {
+      margin: 0 0 12px 0;
+      color: #1e293b;
+      font-size: 22px;
+      font-weight: 600;
+    }
+    
+    .guest-section p {
+      margin: 0 0 24px 0;
+      color: #64748b;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    .guest-btn {
+      background: #e74c3c;
+      color: white;
+      border-color: #e74c3c;
+      font-weight: 600;
+      padding: 14px 24px;
+      border-radius: 12px;
+      width: 100%;
+      gap: 8px;
+    }
+    
+    .guest-btn:hover {
+      background: #c0392b;
+      border-color: #c0392b;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
+    }
+    
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+      .auth-container {
+        margin: 0;
+        border-radius: 0;
+        max-height: 100vh;
+        height: 100vh;
+        box-shadow: none;
+        border: none;
+      }
+      
+      .auth-content {
+        grid-template-columns: 1fr;
+        min-height: calc(100vh - 140px);
+      }
+      
+      .auth-main {
+        border-right: none;
+        border-bottom: 1px solid #f1f5f9;
+        padding: 24px;
+      }
+      
+      .auth-guest {
+        padding: 24px;
+      }
+      
+      .auth-providers {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      
+      .guest-icon {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 16px;
+      }
+      
+      .guest-icon i {
+        font-size: 28px;
+      }
+      
+      .guest-section h3 {
+        font-size: 20px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .auth-header {
+        padding: 24px 20px 20px 20px;
+      }
+      
+      .auth-column {
+        padding: 20px;
+      }
+      
+      .auth-header h1 {
+        font-size: 24px;
+      }
+      
+      .auth-header p {
+        font-size: 14px;
+      }
+    }
+  `;
+
+  document.head.appendChild(authStyles);
+  document.body.appendChild(authOverlay);
+
+  // Setup event listeners
+  setupAuthEventListeners();
+}
+
+// Setup authentication event listeners
+function setupAuthEventListeners() {
+  const authOverlay = document.getElementById('auth-overlay');
+  if (!authOverlay) return;
+
+  // OAuth provider buttons
+  const providerButtons = authOverlay.querySelectorAll('[data-provider]');
+  providerButtons.forEach(button => {
+    button.addEventListener('click', async (e) => {
+      const provider = e.currentTarget.dataset.provider;
+      await handleOAuthSignIn(provider, e.currentTarget);
+    });
+  });
+
+  // Email form
+  const authForm = document.getElementById('auth-form');
+  if (authForm) {
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      await handleEmailAuth(email, password, 'signin', e.submitter);
+    });
+
+    // Sign up button
+    const signUpBtn = authForm.querySelector('[data-action="signup"]');
+    if (signUpBtn) {
+      signUpBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        if (!email || !password) {
+          alert('Please enter both email and password');
+          return;
+        }
+
+        await handleEmailAuth(email, password, 'signup', e.currentTarget);
+      });
+    }
+  }
+
+  // Guest mode button
+  const guestBtn = document.getElementById('continue-guest');
+  if (guestBtn) {
+    guestBtn.addEventListener('click', async () => {
+      window.authManager.continueAsGuest();
+      await hideAuthScreen();
+      initializeApplication(); // Continue with app initialization
+    });
+  }
+
+  // Listen for auth state changes  
+  if (window.authManager) {
+    window.authManager.onAuthChange(async (status, user) => {
+      if (status === 'authenticated') {
+        await hideAuthScreen();
+        // Only continue initialization if this is first run (app not yet initialized)
+        if (!window.pomodoroTimer) {
+          initializeApplication(); // Continue with app initialization
+        }
+      } else if (status === 'guest') {
+        await hideAuthScreen();
+        // Only continue initialization if this is first run (app not yet initialized)
+        if (!window.pomodoroTimer) {
+          initializeApplication(); // Continue with app initialization
+        }
+      }
+    });
+  }
+}
+
+// Handle OAuth sign-in
+async function handleOAuthSignIn(provider, button) {
+  setButtonLoading(button, true);
+
+  try {
+    const result = await window.authManager.signInWithProvider(provider);
+    if (!result.success) {
+      alert(`Sign-in failed: ${result.error}`);
+    }
+  } catch (error) {
+    console.error('OAuth sign-in error:', error);
+    alert(`Sign-in failed: ${error.message}`);
+  } finally {
+    setButtonLoading(button, false);
+  }
+}
+
+// Handle email authentication
+async function handleEmailAuth(email, password, action, button) {
+  if (!email || !password) {
+    alert('Please enter both email and password');
+    return;
+  }
+
+  setButtonLoading(button, true);
+
+  try {
+    let result;
+    if (action === 'signin') {
+      result = await window.authManager.signInWithEmail(email, password);
+    } else {
+      result = await window.authManager.signUpWithEmail(email, password);
+    }
+
+    if (!result.success) {
+      alert(`${action === 'signin' ? 'Sign-in' : 'Sign-up'} failed: ${result.error}`);
+    }
+  } catch (error) {
+    console.error('Email auth error:', error);
+    alert(`${action === 'signin' ? 'Sign-in' : 'Sign-up'} failed: ${error.message}`);
+  } finally {
+    setButtonLoading(button, false);
+  }
+}
+
+// Set button loading state
+function setButtonLoading(button, loading) {
+  if (loading) {
+    button.classList.add('auth-loading');
+    button.disabled = true;
+  } else {
+    button.classList.remove('auth-loading');
+    button.disabled = false;
+  }
+}
+
+// Hide authentication screen
+async function hideAuthScreen() {
+  const authOverlay = document.getElementById('auth-overlay');
+  if (authOverlay) {
+    authOverlay.remove();
+  }
+
+  // Show the main app content
+  const appContent = document.querySelector('.app-content') || document.body;
+  if (appContent.children.length > 0) {
+    for (let child of appContent.children) {
+      child.style.display = '';
+    }
+  }
+
+  // Update avatar UI after auth screen is hidden
+  await updateUserAvatarUI();
+}
+
+// Update user avatar UI based on auth state
+async function updateUserAvatarUI() {
+  const avatarContainer = document.getElementById('user-avatar-container');
+  const avatarImg = document.getElementById('user-avatar-img');
+  const avatarFallback = document.getElementById('user-avatar-fallback');
+  const guestIcon = document.getElementById('user-guest-icon');
+  const userInitial = document.getElementById('user-initial');
+  const userName = document.getElementById('user-name');
+  const userStatus = document.getElementById('user-status');
+  const signOutBtn = document.getElementById('user-sign-out');
+  const signInBtn = document.getElementById('user-sign-in');
+  const dropdown = document.getElementById('user-dropdown');
+
+  if (!avatarContainer) return;
+
+  // Hide dropdown if it's open
+  if (dropdown) {
+    dropdown.style.display = 'none';
+  }
+
+  // Always show avatar container
+  avatarContainer.style.display = 'flex';
+
+  // Reset all fallback elements
+  if (guestIcon) guestIcon.style.display = 'none';
+  if (userInitial) userInitial.style.display = 'none';
+
+  if (window.authManager && window.authManager.isAuthenticated()) {
+    // User is authenticated
+    const user = window.authManager.getCurrentUser();
+    const avatarUrl = window.authManager.getUserAvatarUrl();
+    const displayName = window.authManager.getUserDisplayName();
+
+    // Try to load avatar image
+    if (avatarUrl) {
+      try {
+        // Test if the image loads successfully
+        await testImageLoad(avatarUrl);
+        avatarImg.src = avatarUrl;
+        avatarImg.style.display = 'block';
+        avatarFallback.style.display = 'none';
+      } catch (error) {
+        // Image failed to load, show initial
+        avatarImg.style.display = 'none';
+        avatarFallback.style.display = 'flex';
+        if (userInitial) {
+          userInitial.textContent = displayName.charAt(0).toUpperCase();
+          userInitial.style.display = 'block';
+        }
+      }
+    } else {
+      // No avatar URL, show initial
+      avatarImg.style.display = 'none';
+      avatarFallback.style.display = 'flex';
+      if (userInitial) {
+        userInitial.textContent = displayName.charAt(0).toUpperCase();
+        userInitial.style.display = 'block';
+      }
+    }
+
+    // Update user info
+    if (userName) userName.textContent = displayName;
+    if (userStatus) userStatus.textContent = 'Signed In';
+
+    // Show sign out, hide sign in
+    if (signOutBtn) signOutBtn.style.display = 'flex';
+    if (signInBtn) signInBtn.style.display = 'none';
+
+  } else {
+    // Guest mode or not authenticated - show user icon
+    avatarImg.style.display = 'none';
+    avatarFallback.style.display = 'flex';
+    if (guestIcon) guestIcon.style.display = 'block';
+
+    if (userName) userName.textContent = 'Guest';
+    if (userStatus) userStatus.textContent = 'Sync your data and access your sessions across devices.';
+
+    // Hide sign out, show sign in
+    if (signOutBtn) signOutBtn.style.display = 'none';
+    if (signInBtn) signInBtn.style.display = 'flex';
+  }
+}
+
+// Test if an image URL loads successfully
+function testImageLoad(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error('Image failed to load'));
+    img.src = url;
+  });
+}
+
+// Position dropdown intelligently based on screen size and available space
+function positionDropdown(avatarBtn, dropdown) {
+  const isMobile = window.innerWidth <= 768;
+  const avatarRect = avatarBtn.getBoundingClientRect();
+  const dropdownRect = dropdown.getBoundingClientRect();
+
+  // Reset any inline positioning
+  dropdown.style.left = '';
+  dropdown.style.right = '';
+  dropdown.style.bottom = '';
+  dropdown.style.top = '';
+  dropdown.style.transform = '';
+
+  if (isMobile) {
+    // Mobile: position above the avatar, centered
+    dropdown.style.bottom = '60px';
+    dropdown.style.left = '50%';
+    dropdown.style.transform = 'translateX(-50%)';
+
+    // Check if dropdown would go off-screen horizontally
+    const dropdownWidth = 200; // Our dropdown width
+    const sidebarCenter = avatarRect.left + (avatarRect.width / 2);
+    const leftEdge = sidebarCenter - (dropdownWidth / 2);
+    const rightEdge = sidebarCenter + (dropdownWidth / 2);
+
+    if (leftEdge < 10) {
+      // Too far left, adjust
+      dropdown.style.left = '10px';
+      dropdown.style.transform = 'none';
+    } else if (rightEdge > window.innerWidth - 10) {
+      // Too far right, adjust
+      dropdown.style.right = '10px';
+      dropdown.style.left = 'auto';
+      dropdown.style.transform = 'none';
+    }
+  } else {
+    // Desktop: position to the right of the avatar
+    dropdown.style.bottom = '0';
+    dropdown.style.left = '70px';
+
+    // Check if dropdown would go off-screen to the right
+    const dropdownRight = avatarRect.right + 200; // dropdown width
+    if (dropdownRight > window.innerWidth - 20) {
+      // Position to the left instead
+      dropdown.style.left = 'auto';
+      dropdown.style.right = '70px';
+    }
+
+    // Check if dropdown would go off-screen vertically
+    const dropdownBottom = avatarRect.bottom;
+    const dropdownHeight = 120; // Approximate dropdown height
+    if (dropdownBottom + dropdownHeight > window.innerHeight - 20) {
+      // Position above instead
+      dropdown.style.bottom = 'auto';
+      dropdown.style.top = `-${dropdownHeight}px`;
+    }
+  }
+}
+
+// Setup user avatar event listeners
+function setupUserAvatarEventListeners() {
+  // Prevent multiple setups
+  if (window.avatarListenersSetup) {
+    console.log('🔄 Avatar listeners already setup, skipping...');
+    return;
+  }
+
+  const avatarBtn = document.getElementById('user-avatar-btn');
+  const dropdown = document.getElementById('user-dropdown');
+  const signOutBtn = document.getElementById('user-sign-out');
+  const signInBtn = document.getElementById('user-sign-in');
+
+  console.log('🎯 Setting up avatar listeners...', { avatarBtn: !!avatarBtn, dropdown: !!dropdown });
+
+  // Toggle dropdown on avatar click
+  if (avatarBtn && dropdown) {
+    avatarBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      console.log('🖱️ Avatar clicked! Auth state:', {
+        isAuthenticated: window.authManager?.isAuthenticated(),
+        isGuest: window.authManager?.isGuestMode(),
+        user: window.authManager?.getCurrentUser()?.email
+      });
+
+      // If user is not authenticated and not in guest mode, show auth screen
+      if (!window.authManager || (!window.authManager.isAuthenticated() && !window.authManager.isGuestMode())) {
+        localStorage.removeItem('presto-auth-seen');
+        showAuthScreen();
+        return;
+      }
+
+      // For both authenticated users and guests, show the dropdown
+      // Guests will see "Sign In" option, authenticated users will see "Sign Out"
+
+      // Toggle dropdown
+      const isVisible = dropdown.style.display === 'block';
+      console.log('🔽 Toggling dropdown. Currently visible:', isVisible);
+
+      if (isVisible) {
+        dropdown.style.display = 'none';
+        console.log('🔼 Dropdown hidden');
+      } else {
+        // Show dropdown and position it intelligently
+        dropdown.style.display = 'block';
+        positionDropdown(avatarBtn, dropdown);
+        console.log('🔽 Dropdown shown and positioned');
+      }
+    });
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (dropdown && !dropdown.contains(e.target) && !avatarBtn.contains(e.target)) {
+      dropdown.style.display = 'none';
+    }
+  });
+
+  // Sign out handler
+  if (signOutBtn) {
+    signOutBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      dropdown.style.display = 'none';
+
+      const result = await window.authManager.signOut();
+      if (result.success) {
+        await updateUserAvatarUI();
+        NotificationUtils.showNotificationPing('Signed out successfully! 👋', null, 'focus');
+      } else {
+        alert(`Sign out failed: ${result.error}`);
+      }
+    });
+  }
+
+  // Sign in handler
+  if (signInBtn) {
+    signInBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.style.display = 'none';
+
+      // Clear the first run flag temporarily to show auth screen
+      localStorage.removeItem('presto-auth-seen');
+      showAuthScreen();
+    });
+  }
+
+  // Listen for auth state changes
+  if (window.authManager) {
+    window.authManager.onAuthChange(async (status, user) => {
+      console.log('🔄 Auth state changed:', status, user?.email || 'no user');
+      await updateUserAvatarUI();
+    });
+  }
+
+  // Reposition dropdown on window resize
+  window.addEventListener('resize', () => {
+    if (dropdown && dropdown.style.display === 'block') {
+      positionDropdown(avatarBtn, dropdown);
+    }
+  });
+
+  // Mark listeners as setup
+  window.avatarListenersSetup = true;
+  console.log('✅ Avatar listeners setup complete');
+}
+
+
 // Initialize the application
 async function initializeApplication() {
   try {
@@ -391,6 +1388,24 @@ async function initializeApplication() {
 
     // Request notification permission using Tauri v2 API
     await requestNotificationPermission();
+
+    // Import and initialize auth manager 
+    const { authManager } = await import('./managers/auth-manager.js');
+    console.log('🔐 Initializing Auth Manager...');
+    window.authManager = authManager;
+
+    // Initialize auth manager (which will wait for Supabase)
+    await authManager.init();
+
+    // Check if this is first run and show auth screen
+    if (authManager.isFirstRun()) {
+      console.log('👋 First run detected, showing authentication screen...');
+      showAuthScreen();
+      return; // Don't initialize the app until user has chosen auth method
+    }
+
+    // Update user avatar UI based on current auth state
+    await updateUserAvatarUI();
 
     // Initialize settings manager first (other modules depend on it)
     console.log('📋 Initializing Settings Manager...');
@@ -428,11 +1443,14 @@ async function initializeApplication() {
     console.log('🔄 Initializing Update Manager...');
     window.updateManager = new window.UpdateManagerV2();
     if (window.updateManager.loadPreferences) {
-        window.updateManager.loadPreferences(); // Carica le preferenze salvate se supportato
+      window.updateManager.loadPreferences(); // Carica le preferenze salvate se supportato
     }
 
     // Setup global event listeners
     setupGlobalEventListeners();
+
+    // Setup user avatar event listeners
+    setupUserAvatarEventListeners();
 
     // Setup update management
     setupUpdateManagement();

@@ -87,6 +87,25 @@
   .sidebar-bottom {
     margin-top: 0;
     margin-bottom: 0;
+    display: flex;
+    flex-direction: row;
+    /* Orizzontale in mobile */
+    align-items: center;
+    gap: 1rem;
+    margin-left: auto;
+    /* Spinge tutto a destra */
+  }
+
+  /* User avatar adjustments for mobile */
+  .user-avatar-container {
+    margin-bottom: 0;
+    margin-left: 0;
+    /* Reset, già gestito da sidebar-bottom */
+  }
+
+  .user-avatar-btn {
+    width: 44px;
+    height: 44px;
   }
 
   .sidebar-icon,
@@ -209,6 +228,11 @@
     margin-right: 0.75rem;
   }
 
+  .sidebar-bottom {
+    gap: 0.75rem;
+    /* Ridotto per schermi piccoli */
+  }
+
   .sidebar-icon,
   .sidebar-icon-large {
     width: 40px;
@@ -220,6 +244,12 @@
   .sidebar-icon-large svg {
     width: 20px;
     height: 20px;
+  }
+
+  /* User avatar adjustments for extra small screens */
+  .user-avatar-btn {
+    width: 32px;
+    height: 32px;
   }
 
   body {
