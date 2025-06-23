@@ -527,6 +527,10 @@ export class PomodoroTimer {
             this.startSmartPauseCountdown();
         }
 
+        // Update display to remove (Auto-paused) status
+        this.updateDisplay();
+        this.updateButtons();
+        
         console.log('🎯 Resume complete, timer should be running normally');
     }
 
