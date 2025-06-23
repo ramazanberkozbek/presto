@@ -527,6 +527,8 @@ export class PomodoroTimer {
 
     startTimer() {
         if (!this.isRunning) {
+            const wasResuming = this.isPaused; // Check if we're resuming from pause
+            
             this.isRunning = true;
             this.isPaused = false;
 
@@ -560,6 +562,15 @@ export class PomodoroTimer {
 
             // Update tray menu
             this.updateTrayMenu();
+            
+            // Notify tag manager about timer start or resume
+            if (window.tagManager) {
+                if (wasResuming) {
+                    window.tagManager.onTimerResume();
+                } else {
+                    window.tagManager.onTimerStart();
+                }
+            }
         }
     }
 
@@ -638,6 +649,11 @@ export class PomodoroTimer {
 
             // Update tray menu
             this.updateTrayMenu();
+            
+            // Notify tag manager about timer pause
+            if (window.tagManager) {
+                window.tagManager.onTimerPause();
+            }
         }
     }
 
@@ -671,6 +687,11 @@ export class PomodoroTimer {
 
         // Update tray menu
         this.updateTrayMenu();
+        
+        // Notify tag manager about timer stop
+        if (window.tagManager) {
+            window.tagManager.onTimerStop();
+        }
     }
 
     skipSession() {
@@ -905,6 +926,11 @@ export class PomodoroTimer {
 
         // Update tray menu
         this.updateTrayMenu();
+        
+        // Notify tag manager about timer completion
+        if (window.tagManager) {
+            window.tagManager.onTimerComplete();
+        }
     }
 
     // Show completion notification for continuous sessions without stopping the timer

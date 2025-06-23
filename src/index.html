@@ -12,6 +12,7 @@
   <title>Presto</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.0/dist/umd/supabase.js"></script>
   <script src="/managers/update-manager-global.js" defer></script>
+  <script src="/managers/tag-manager.js" defer></script>
   <script type="module" src="/main.js" defer></script>
 </head>
 
@@ -92,9 +93,35 @@
 
       <!-- Status Label -->
       <div style="text-align:center">
-        <div class="timer-status" id="timer-status">
+        <div class="timer-status clickable" id="timer-status">
           <i id="status-icon" class="ri-brain-line"></i>
           <span id="status-text">Focus</span>
+          <i class="ri-arrow-down-s-line tag-dropdown-arrow" id="tag-dropdown-arrow"></i>
+        </div>
+        <!-- Tag Dropdown Menu -->
+        <div class="tag-dropdown-menu" id="tag-dropdown-menu">
+          <div class="tag-dropdown-header">
+            <span>Seleziona Tag</span>
+          </div>
+          <div class="tag-list" id="tag-list">
+            <!-- Tag items will be populated dynamically -->
+          </div>
+          <div class="tag-dropdown-footer">
+            <div class="new-tag-input" id="new-tag-input">
+              <input type="text" placeholder="Nuova tag..." id="new-tag-name">
+              <div class="icon-selector" id="icon-selector">
+                <div class="icon-option" data-icon="ri-brain-line"><i class="ri-brain-line"></i></div>
+                <div class="icon-option" data-icon="ri-focus-3-line"><i class="ri-focus-3-line"></i></div>
+                <div class="icon-option" data-icon="ri-lightbulb-line"><i class="ri-lightbulb-line"></i></div>
+                <div class="emoji-option" data-icon="🧠">🧠</div>
+                <div class="emoji-option" data-icon="💪">💪</div>
+                <div class="emoji-option" data-icon="🎯">🎯</div>
+                <div class="emoji-option" data-icon="⚡">⚡</div>
+                <div class="emoji-option" data-icon="🔥">🔥</div>
+              </div>
+              <button class="create-tag-btn" id="create-tag-btn">Crea</button>
+            </div>
+          </div>
         </div>
       </div>
 
