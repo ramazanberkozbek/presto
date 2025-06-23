@@ -86,6 +86,7 @@ export class NavigationManager {
             await this.updateWeeklySessionsChart();
             this.updateDailyChart();
             await this.updateSelectedDayDetails();
+            await this.initSessionsTable(); // Initialize sessions table when viewing calendar
         } else if (view === 'settings') {
             // Settings view will be handled by SettingsManager
             if (window.settingsManager) {
@@ -432,10 +433,21 @@ export class NavigationManager {
                 const date = new Date(weekStart);
                 date.setDate(weekStart.getDate() + index);
 
-                // Find real session data for this date
+                // Get data from both timer history and SessionManager
                 const dayData = history.find(h => h.date === date.toDateString());
-                const sessionsMinutes = dayData ? dayData.total_focus_time / 60 : 0; // Convert seconds to minutes
-                const sessions = dayData ? dayData.completed_pomodoros : 0;
+                let sessionsMinutes = dayData ? dayData.total_focus_time / 60 : 0; // Convert seconds to minutes
+                let sessions = dayData ? dayData.completed_pomodoros : 0;
+
+                // Add sessions from SessionManager for this date
+                if (window.sessionManager) {
+                    const manualSessions = window.sessionManager.getSessionsForDate(date);
+                    const focusSessions = manualSessions.filter(s => s.session_type === 'focus' || s.session_type === 'custom');
+                    
+                    // Add minutes from manual/timer sessions
+                    const manualMinutes = focusSessions.reduce((total, session) => total + (session.duration || 0), 0);
+                    sessionsMinutes += manualMinutes;
+                    sessions += focusSessions.length;
+                }
 
                 // Only consider days that have completely passed (exclude today) for average calculation
                 const isCompletePastDay = date.toDateString() !== today.toDateString() && date < today;
@@ -1440,7 +1452,7 @@ export class NavigationManager {
 
     // Sessions History Table Methods
     async initSessionsTable() {
-        await this.populateSessionsTable('week');
+        await this.populateSessionsTable('today');
         this.setupSessionsTableEventListeners();
     }
 
@@ -1453,7 +1465,7 @@ export class NavigationManager {
         }
     }
 
-    async populateSessionsTable(period = 'week') {
+    async populateSessionsTable(period = 'today') {
         const tableBody = document.getElementById('sessions-table-body');
         if (!tableBody || !window.sessionManager) return;
 
@@ -1593,7 +1605,7 @@ export class NavigationManager {
                         
                         // Refresh the table
                         const filterSelect = document.getElementById('sessions-filter-period');
-                        const currentPeriod = filterSelect ? filterSelect.value : 'week';
+                        const currentPeriod = filterSelect ? filterSelect.value : 'today';
                         await this.populateSessionsTable(currentPeriod);
                         
                         // Refresh other views
