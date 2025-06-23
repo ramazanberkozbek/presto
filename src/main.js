@@ -412,11 +412,11 @@ function showAuthScreen() {
             <h3>Continue as Guest</h3>
             <p>Try Presto without creating an account. Your data will be stored locally only.</p>
             <button class="auth-btn guest-btn" id="continue-guest">
-              <i class="ri-arrow-right-line"></i>
+              <i class="ri-arrow-left-line"></i>
               Continue as Guest
             </button>
             <a href="#" class="guest-link" id="continue-guest-link" style="display: none;">
-              <i class="ri-arrow-right-line"></i>
+              <i class="ri-arrow-left-line"></i>
               Continue as Guest
             </a>
           </div>

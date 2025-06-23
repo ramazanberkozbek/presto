@@ -314,24 +314,59 @@ export class NavigationManager {
 
             // Process today's sessions (excluding break sessions)
             todaysSessions.forEach(session => {
-                const [startHour] = session.start_time.split(':').map(Number);
-                const duration = session.duration || 0;
-
-                // Only include focus and custom sessions, exclude break sessions
                 if (session.session_type === 'focus' || session.session_type === 'custom') {
-                    hourlyData[startHour].focusMinutes += duration;
+                    const [startHour, startMinute] = session.start_time.split(':').map(Number);
+                    const [endHour, endMinute] = session.end_time.split(':').map(Number);
+                    
+                    const startTotalMinutes = startHour * 60 + startMinute;
+                    const endTotalMinutes = endHour * 60 + endMinute;
+                    
+                    // Distribute session time across all affected hours
+                    for (let hour = startHour; hour <= endHour; hour++) {
+                        const hourStartMinutes = hour * 60;
+                        const hourEndMinutes = (hour + 1) * 60;
+                        
+                        const sessionStartInHour = Math.max(startTotalMinutes, hourStartMinutes);
+                        const sessionEndInHour = Math.min(endTotalMinutes, hourEndMinutes);
+                        
+                        if (sessionEndInHour > sessionStartInHour) {
+                            const minutesInThisHour = sessionEndInHour - sessionStartInHour;
+                            hourlyData[hour].focusMinutes += minutesInThisHour;
+                        }
+                    }
                 }
                 // Skip break and longBreak sessions from chart display
             });
 
-            // If we have timer session data but no manual sessions, distribute timer sessions across the current hour
-            if (timerSessionData && todaysSessions.length === 0 && timerSessionData.completed_pomodoros > 0) {
-                const currentHour = new Date().getHours();
+            // Add timer session data if available
+            if (timerSessionData && timerSessionData.completed_pomodoros > 0) {
                 const totalTimerFocusMinutes = Math.floor(timerSessionData.total_focus_time / 60);
-
-                // Distribute the focus time to the current hour (as a simple approximation)
-                if (totalTimerFocusMinutes > 0) {
-                    hourlyData[currentHour].focusMinutes += totalTimerFocusMinutes;
+                const completedPomodoros = timerSessionData.completed_pomodoros;
+                
+                if (totalTimerFocusMinutes > 0 && completedPomodoros > 0) {
+                    // Try to get session start time from timer if available
+                    let sessionStartHour = new Date().getHours(); // Default to current hour
+                    
+                    if (window.pomodoroTimer && window.pomodoroTimer.sessionStartTime) {
+                        sessionStartHour = new Date(window.pomodoroTimer.sessionStartTime).getHours();
+                    }
+                    
+                    // Distribute pomodoros over time, assuming 25-30 minutes per pomodoro + breaks
+                    const avgPomodoroWithBreak = 35; // 25min focus + ~10min break average
+                    const totalSessionMinutes = completedPomodoros * avgPomodoroWithBreak;
+                    
+                    // Calculate end hour based on total session time
+                    const sessionStartMinutes = sessionStartHour * 60;
+                    const sessionEndMinutes = sessionStartMinutes + totalSessionMinutes;
+                    const sessionEndHour = Math.min(Math.floor(sessionEndMinutes / 60), 23);
+                    
+                    // Distribute focus time proportionally across the hours
+                    const hoursSpanned = Math.max(1, sessionEndHour - sessionStartHour + 1);
+                    const focusMinutesPerHour = totalTimerFocusMinutes / hoursSpanned;
+                    
+                    for (let hour = sessionStartHour; hour <= sessionEndHour; hour++) {
+                        hourlyData[hour].focusMinutes += focusMinutesPerHour;
+                    }
                 }
             }
 
