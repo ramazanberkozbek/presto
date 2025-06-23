@@ -907,7 +907,8 @@ pub fn run() {
                 delete_tag,
                 load_session_tags,
                 save_session_tags,
-                add_session_tag
+                add_session_tag,
+                get_env_var
             ])
             .setup(|app| {
                 // Track app started event (if enabled)
@@ -1166,6 +1167,42 @@ async fn add_session_tag(session_tag: SessionTag, app: AppHandle) -> Result<(), 
     let mut session_tags = load_session_tags(app.clone()).await?;
     session_tags.push(session_tag);
     save_session_tags(session_tags, app).await
+}
+
+#[tauri::command]
+async fn get_env_var(key: String) -> Result<String, String> {
+    // First try to get from environment variables
+    if let Ok(value) = std::env::var(&key) {
+        return Ok(value);
+    }
+    
+    // Try multiple possible locations for .env file
+    let possible_paths = vec![
+        std::env::current_dir().ok().map(|p| p.join(".env")),
+        std::env::current_dir().ok().and_then(|p| p.parent().map(|parent| parent.join(".env"))),
+        Some(std::path::PathBuf::from("/Users/stefanonovelli/Sites/Personal/presto/.env")),
+    ];
+    
+    for path_opt in possible_paths {
+        if let Some(env_path) = path_opt {
+            println!("Checking .env path: {:?}", env_path);
+            if env_path.exists() {
+                println!("Found .env file at: {:?}", env_path);
+                if let Ok(content) = std::fs::read_to_string(&env_path) {
+                    for line in content.lines() {
+                        let line = line.trim();
+                        if line.starts_with(&format!("{}=", key)) {
+                            if let Some(value) = line.split('=').nth(1) {
+                                return Ok(value.to_string());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    Err(format!("Environment variable '{}' not found in any location", key))
 }
 
 #[tauri::command]

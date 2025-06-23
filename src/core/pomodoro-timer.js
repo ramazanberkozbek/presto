@@ -490,6 +490,7 @@ export class PomodoroTimer {
         this.isAutoPaused = false;
         this.isPaused = false;
         this.isRunning = true;
+        this._justResumedFromAutoPause = true; // Flag to ensure status update happens
 
         console.log('✅ States set: isAutoPaused =', this.isAutoPaused, 'isPaused =', this.isPaused, 'isRunning =', this.isRunning);
 
@@ -506,6 +507,9 @@ export class PomodoroTimer {
         this.updateDisplay();
         this.updateButtons();
         this.updateTrayIcon();
+        
+        // Clear the resume flag after UI update
+        this._justResumedFromAutoPause = false;
 
         // Show resume notification after UI update
         NotificationUtils.showNotificationPing('Timer resumed - you\'re back! 🎯', 'info', this.currentMode);
@@ -575,6 +579,11 @@ export class PomodoroTimer {
 
             this.isRunning = true;
             this.isPaused = false;
+            
+            // Set flag to ensure status update when resuming from manual pause
+            if (wasResuming) {
+                this._justResumedFromPause = true;
+            }
 
             // Track session start time if not already set
             if (!this.sessionStartTime) {
@@ -594,6 +603,12 @@ export class PomodoroTimer {
 
             this.updateButtons();
             this.updateDisplay();
+            
+            // Clear the resume flag after UI update
+            if (wasResuming) {
+                this._justResumedFromPause = false;
+            }
+            
             if (this.enableSoundNotifications) {
                 NotificationUtils.playNotificationSound();
             }
@@ -1076,7 +1091,8 @@ export class PomodoroTimer {
         // Check if TagManager is active and has selected tags for focus mode
         if (this.currentMode === 'focus' && window.tagManager && window.tagManager.getCurrentTags().length > 0) {
             // Don't override tag display during normal focus sessions
-            if (!isOvertime && !this.isAutoPaused && !(this.isPaused && !this.isRunning)) {
+            // BUT always allow status updates when just resumed from pause to clear pause labels
+            if (!isOvertime && !this.isAutoPaused && !(this.isPaused && !this.isRunning) && !this._justResumedFromAutoPause && !this._justResumedFromPause) {
                 shouldUpdateStatus = false;
             } else {
                 // For special states, append to tag name instead of overriding
@@ -1091,7 +1107,7 @@ export class PomodoroTimer {
 
         // Add state indicators
         if (shouldUpdateStatus) {
-            console.log('📊 updateDisplay - isOvertime:', isOvertime, 'isAutoPaused:', this.isAutoPaused, 'isPaused:', this.isPaused, 'isRunning:', this.isRunning);
+            console.log('📊 updateDisplay - isOvertime:', isOvertime, 'isAutoPaused:', this.isAutoPaused, 'isPaused:', this.isPaused, 'isRunning:', this.isRunning, 'justResumedFromAutoPause:', this._justResumedFromAutoPause, 'justResumedFromPause:', this._justResumedFromPause);
 
             if (isOvertime) {
                 statusText += ' (Overtime)';
