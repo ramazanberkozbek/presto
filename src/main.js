@@ -443,8 +443,8 @@ function showAuthScreen() {
               <input type="password" id="password" placeholder="Password" required>
             </div>
             <div class="form-actions">
-              <button type="submit" class="auth-btn primary-btn" data-action="signin">Sign In</button>
-              <button type="button" class="auth-btn secondary-btn" data-action="signup">Sign Up</button>
+              <button type="submit" class="auth-btn primary-btn" data-action="signin">Login</button>
+              <button type="button" class="auth-btn secondary-btn" data-action="signup">Register</button>
             </div>
           </form>
         </div>
