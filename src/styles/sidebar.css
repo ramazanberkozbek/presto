@@ -46,7 +46,8 @@
   margin-top: auto;
   margin-bottom: 1rem;
   display: flex;
-  flex-direction: column; /* Verticale su desktop */
+  flex-direction: column;
+  /* Verticale su desktop */
   align-items: center;
   gap: 1rem;
 }
@@ -198,14 +199,13 @@
 /* User Avatar Styles */
 .user-avatar-container {
   position: relative;
-  margin-bottom: 16px;
   display: flex;
   justify-content: center;
 }
 
 .user-avatar-btn {
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   overflow: hidden;
   border: 2px solid transparent;
@@ -254,7 +254,8 @@
 .user-dropdown {
   position: absolute;
   bottom: 0;
-  left: 70px; /* Desktop: appare a destra */
+  left: 70px;
+  /* Desktop: appare a destra */
   width: 200px;
   background: var(--focus-bg);
   border: 1px solid color-mix(in srgb, var(--focus-timer-color) 20%, transparent);
@@ -270,6 +271,7 @@
     opacity: 0;
     transform: translateX(-10px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateX(0) scale(1);
@@ -279,17 +281,19 @@
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .user-dropdown {
-    bottom: 60px; /* Mobile: sopra l'avatar */
+    bottom: 60px;
+    /* Mobile: sopra l'avatar */
     left: 50%;
     transform: translateX(-50%);
     animation: dropdownFadeInUp 0.2s ease-out;
   }
-  
+
   @keyframes dropdownFadeInUp {
     from {
       opacity: 0;
       transform: translateX(-50%) translateY(10px) scale(0.95);
     }
+
     to {
       opacity: 1;
       transform: translateX(-50%) translateY(0) scale(1);
