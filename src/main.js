@@ -850,13 +850,13 @@ function showAuthScreen() {
     .guest-icon {
       width: 80px;
       height: 80px;
-      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      background: #e74c3c;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       margin: 0 auto 24px auto;
-      box-shadow: 0 8px 25px rgba(245, 158, 11, 0.25);
+      box-shadow: 0 8px 25px rgba(231, 76, 60, 0.25);
     }
     
     .guest-icon i {
@@ -879,9 +879,9 @@ function showAuthScreen() {
     }
     
     .guest-btn {
-      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      background: #e74c3c;
       color: white;
-      border-color: #f59e0b;
+      border-color: #e74c3c;
       font-weight: 600;
       padding: 14px 24px;
       border-radius: 12px;
@@ -890,10 +890,10 @@ function showAuthScreen() {
     }
     
     .guest-btn:hover {
-      background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-      border-color: #d97706;
+      background: #c0392b;
+      border-color: #c0392b;
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+      box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
     }
     
     /* Mobile responsiveness */
