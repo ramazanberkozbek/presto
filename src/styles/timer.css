@@ -55,6 +55,7 @@
   gap: 8px;
 }
 
+
 .timer-status.clickable:hover {
   background-color: var(--focus-primary-btn);
 }
@@ -72,7 +73,7 @@
 
 .tag-dropdown-menu {
   position: absolute;
-  top: 110px;
+  top: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
   background: var(--bg-color);
