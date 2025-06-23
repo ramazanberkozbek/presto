@@ -110,20 +110,6 @@
   background: #9b59b6;
 }
 
-.timeline-session.historical {
-  opacity: 0.6;
-  cursor: default;
-  height: 15px;
-  min-width: 20px;
-  border-radius: 2px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.timeline-session.historical:hover {
-  transform: none;
-  opacity: 0.8;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-}
 
 /* Today's Sessions - Minimal Display */
 .timeline-session.today-session {

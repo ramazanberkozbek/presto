@@ -36,6 +36,9 @@ export class NavigationManager {
 
         // Initialize calendar
         await this.initCalendar();
+        
+        // Initialize sessions table
+        await this.initSessionsTable();
     }
 
     async handleNavClick(e) {
@@ -275,6 +278,7 @@ export class NavigationManager {
         }
     }
 
+
     async updateDailyChart() {
         const dailyChart = document.getElementById('daily-chart');
         if (!dailyChart) return;
@@ -285,25 +289,10 @@ export class NavigationManager {
         const maxHeight = 140; // Increased height to use more of available space
 
         try {
-            // Get today's sessions to calculate hourly data
+            // Get today's sessions from SessionManager (now includes timer sessions)
             const todaysSessions = window.sessionManager
                 ? window.sessionManager.getSessionsForDate(new Date())
                 : [];
-
-            // Also try to get current timer session data if available
-            let timerSessionData = null;
-            if (window.pomodoroTimer) {
-                const today = new Date().toDateString();
-                try {
-                    // Check if there are completed pomodoros from the timer today
-                    const currentSession = await invoke('load_session_data');
-                    if (currentSession && currentSession.date === today && currentSession.completed_pomodoros > 0) {
-                        timerSessionData = currentSession;
-                    }
-                } catch (error) {
-                    console.log('No timer session data available:', error);
-                }
-            }
 
             // Initialize hourly data
             const hourlyData = hours.map(hour => ({
@@ -312,8 +301,9 @@ export class NavigationManager {
                 breakMinutes: 0
             }));
 
-            // Process today's sessions (excluding break sessions)
+            // Process all sessions with unified logic
             todaysSessions.forEach(session => {
+                // Only include focus and custom sessions, exclude break sessions
                 if (session.session_type === 'focus' || session.session_type === 'custom') {
                     const [startHour, startMinute] = session.start_time.split(':').map(Number);
                     const [endHour, endMinute] = session.end_time.split(':').map(Number);
@@ -337,38 +327,6 @@ export class NavigationManager {
                 }
                 // Skip break and longBreak sessions from chart display
             });
-
-            // Add timer session data if available
-            if (timerSessionData && timerSessionData.completed_pomodoros > 0) {
-                const totalTimerFocusMinutes = Math.floor(timerSessionData.total_focus_time / 60);
-                const completedPomodoros = timerSessionData.completed_pomodoros;
-                
-                if (totalTimerFocusMinutes > 0 && completedPomodoros > 0) {
-                    // Try to get session start time from timer if available
-                    let sessionStartHour = new Date().getHours(); // Default to current hour
-                    
-                    if (window.pomodoroTimer && window.pomodoroTimer.sessionStartTime) {
-                        sessionStartHour = new Date(window.pomodoroTimer.sessionStartTime).getHours();
-                    }
-                    
-                    // Distribute pomodoros over time, assuming 25-30 minutes per pomodoro + breaks
-                    const avgPomodoroWithBreak = 35; // 25min focus + ~10min break average
-                    const totalSessionMinutes = completedPomodoros * avgPomodoroWithBreak;
-                    
-                    // Calculate end hour based on total session time
-                    const sessionStartMinutes = sessionStartHour * 60;
-                    const sessionEndMinutes = sessionStartMinutes + totalSessionMinutes;
-                    const sessionEndHour = Math.min(Math.floor(sessionEndMinutes / 60), 23);
-                    
-                    // Distribute focus time proportionally across the hours
-                    const hoursSpanned = Math.max(1, sessionEndHour - sessionStartHour + 1);
-                    const focusMinutesPerHour = totalTimerFocusMinutes / hoursSpanned;
-                    
-                    for (let hour = sessionStartHour; hour <= sessionEndHour; hour++) {
-                        hourlyData[hour].focusMinutes += focusMinutesPerHour;
-                    }
-                }
-            }
 
             // Find max total minutes for scaling (only focus minutes now)
             const maxTotalMinutes = Math.max(
@@ -652,47 +610,10 @@ export class NavigationManager {
         timelineTrack.style.height = '50px';
 
         try {
-            // Get sessions from SessionManager first (for manually added sessions)
-            let manualSessions = [];
+            // Get all sessions from SessionManager (now includes timer sessions automatically)
+            let allSessions = [];
             if (window.sessionManager) {
-                manualSessions = window.sessionManager.getSessionsForDate(date);
-            }
-
-            // Get historical data for completed pomodoros
-            const history = await invoke('get_stats_history');
-            const selectedDateStr = date.toDateString();
-            const dayData = history.find(h => h.date === selectedDateStr);
-
-            // Combine manual sessions with historical data
-            const allSessions = [...manualSessions];
-
-            // Add historical pomodoros if no manual sessions exist for focus sessions
-            if (dayData && dayData.completed_pomodoros > 0) {
-                const focusSessionsCount = manualSessions.filter(s => s.session_type === 'focus' || s.session_type === 'custom').length;
-
-                // If we have fewer manual focus sessions than completed pomodoros, add the difference
-                for (let i = focusSessionsCount; i < dayData.completed_pomodoros; i++) {
-                    const sessionStartTime = new Date(date);
-                    sessionStartTime.setHours(9 + Math.floor(i * 0.5), (i * 30) % 60);
-
-                    allSessions.push({
-                        id: `historical-${i}`,
-                        session_type: 'focus',
-                        duration: 25,
-                        start_time: sessionStartTime.toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: false
-                        }),
-                        end_time: new Date(sessionStartTime.getTime() + 25 * 60000).toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: false
-                        }),
-                        notes: null,
-                        isHistorical: true
-                    });
-                }
+                allSessions = window.sessionManager.getSessionsForDate(date);
             }
 
             // Sort sessions by start time
@@ -946,7 +867,6 @@ export class NavigationManager {
         const sessionElement = document.createElement('div');
         sessionElement.className = `timeline-session ${session.session_type}`;
         sessionElement.dataset.sessionId = session.id;
-        sessionElement.dataset.isHistorical = session.isHistorical || false;
 
         // Check if this session is from today
         const isToday = this.isSameDay(date, new Date());
@@ -972,7 +892,7 @@ export class NavigationManager {
         // Session content - different display for today's sessions
         const sessionType = this.getSessionTypeDisplay(session.session_type);
 
-        if (isToday && !session.isHistorical) {
+        if (isToday) {
             // For today's sessions: minimal display, information only in tooltip
             sessionElement.classList.add('today-session');
             sessionElement.innerHTML = `
@@ -984,13 +904,6 @@ export class NavigationManager {
             // Set tooltip with full information
             const notes = session.notes ? ` - ${session.notes}` : '';
             sessionElement.title = `${sessionType}: ${session.start_time} - ${session.end_time} (${session.duration}m)${notes}`;
-        } else if (session.isHistorical) {
-            // For historical sessions: ultra-minimal display, just colored block
-            sessionElement.classList.add('historical');
-            sessionElement.innerHTML = `<div class="timeline-session-content-minimal"></div>`;
-
-            // Set tooltip with basic information
-            sessionElement.title = `${sessionType}: ${session.start_time} - ${session.end_time} (${session.duration}m)`;
         } else {
             // For other days: show full content
             sessionElement.innerHTML = `
@@ -1106,41 +1019,16 @@ export class NavigationManager {
         contextMenu.style.top = `${e.pageY}px`;
         contextMenu.style.display = 'block';
 
-        const isHistorical = session.isHistorical;
         
         contextMenu.innerHTML = `
-      <div class="context-menu-item edit-item">${isHistorical ? 'Convert to Manual & Edit' : 'Edit Session'}</div>
-      ${isHistorical ? '' : '<div class="context-menu-item danger delete-item">Delete</div>'}
+      <div class="context-menu-item edit-item">Edit Session</div>
+      <div class="context-menu-item danger delete-item">Delete</div>
     `;
 
         // Add event listeners
         contextMenu.querySelector('.edit-item').addEventListener('click', () => {
             if (window.sessionManager) {
-                if (isHistorical) {
-                    // Convert historical session to manual session first
-                    const manualSession = {
-                        id: this.generateSessionId(),
-                        session_type: session.session_type,
-                        duration: session.duration,
-                        start_time: session.start_time,
-                        end_time: session.end_time,
-                        notes: session.notes || '',
-                        created_at: new Date().toISOString()
-                    };
-                    
-                    // Set the selected date for SessionManager
-                    window.sessionManager.selectedDate = new Date(date);
-                    
-                    // Add as new manual session
-                    window.sessionManager.addSession(manualSession);
-                    
-                    // Open edit modal with the new manual session
-                    window.sessionManager.openEditSessionModal(manualSession, date);
-                    
-                    console.log('Converted historical session to manual for editing:', manualSession);
-                } else {
-                    window.sessionManager.openEditSessionModal(session, date);
-                }
+                window.sessionManager.openEditSessionModal(session, date);
             }
             contextMenu.remove();
         });
@@ -1316,34 +1204,8 @@ export class NavigationManager {
             // Set the selected date for SessionManager
             window.sessionManager.selectedDate = this.currentDate;
             
-            if (session.isHistorical) {
-                // Convert historical session to manual session
-                const manualSession = {
-                    id: this.generateSessionId(), // Generate new ID for manual session
-                    session_type: session.session_type,
-                    duration: newDuration,
-                    start_time: newStartTime,
-                    end_time: newEndTime,
-                    notes: session.notes || null,
-                    created_at: new Date().toISOString()
-                };
-                
-                // Add as new manual session
-                window.sessionManager.addSession(manualSession);
-                
-                // Update the session object to reflect it's now manual
-                session.isHistorical = false;
-                session.id = manualSession.id;
-                session.created_at = manualSession.created_at;
-                
-                // Remove historical styling
-                sessionElement.classList.remove('historical');
-                
-                console.log('Converted historical session to manual session:', manualSession);
-            } else {
-                // Use the proper updateSession method to ensure persistence
-                window.sessionManager.updateSession(session);
-            }
+            // Use the proper updateSession method to ensure persistence
+            window.sessionManager.updateSession(session);
         }
     }
 
@@ -1551,11 +1413,10 @@ export class NavigationManager {
         
         const sessionType = this.getSessionTypeDisplay(session.session_type);
         const notes = session.notes ? ` - ${session.notes}` : '';
-        const historicalText = session.isHistorical ? ' (From Timer)' : '';
         
         tooltip.innerHTML = `
             <div class="tooltip-content">
-                <div class="tooltip-type">${sessionType}${historicalText}</div>
+                <div class="tooltip-type">${sessionType}</div>
                 <div class="tooltip-time">${session.start_time} - ${session.end_time}</div>
                 <div class="tooltip-duration">${session.duration} minutes</div>
                 ${notes ? `<div class="tooltip-notes">${session.notes}</div>` : ''}
@@ -1575,5 +1436,180 @@ export class NavigationManager {
         tooltip.style.left = `${mouseEvent.clientX + 10}px`;
         tooltip.style.top = `${mouseEvent.clientY - 10}px`;
         tooltip.style.opacity = '1';
+    }
+
+    // Sessions History Table Methods
+    async initSessionsTable() {
+        await this.populateSessionsTable('week');
+        this.setupSessionsTableEventListeners();
+    }
+
+    setupSessionsTableEventListeners() {
+        const filterSelect = document.getElementById('sessions-filter-period');
+        if (filterSelect) {
+            filterSelect.addEventListener('change', async (e) => {
+                await this.populateSessionsTable(e.target.value);
+            });
+        }
+    }
+
+    async populateSessionsTable(period = 'week') {
+        const tableBody = document.getElementById('sessions-table-body');
+        if (!tableBody || !window.sessionManager) return;
+
+        const sessions = this.getSessionsForPeriod(period);
+        tableBody.innerHTML = '';
+
+        if (sessions.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="sessions-table-empty">
+                        No sessions found for the selected period
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        // Sort sessions by date and time (newest first)
+        sessions.sort((a, b) => {
+            const dateComparison = b.created_at.localeCompare(a.created_at);
+            if (dateComparison !== 0) return dateComparison;
+            return b.start_time.localeCompare(a.start_time);
+        });
+
+        for (const session of sessions) {
+            const row = await this.createSessionTableRow(session);
+            tableBody.appendChild(row);
+        }
+    }
+
+    getSessionsForPeriod(period) {
+        if (!window.sessionManager) return [];
+
+        const now = new Date();
+        let startDate;
+
+        switch (period) {
+            case 'today':
+                startDate = new Date(now.setHours(0, 0, 0, 0));
+                break;
+            case 'week':
+                startDate = new Date(now);
+                startDate.setDate(now.getDate() - 7);
+                break;
+            case 'month':
+                startDate = new Date(now);
+                startDate.setMonth(now.getMonth() - 1);
+                break;
+            case 'all':
+                return this.getAllSessionsFromManager();
+            default:
+                startDate = new Date(now);
+                startDate.setDate(now.getDate() - 7);
+        }
+
+        return this.getAllSessionsFromManager().filter(session => {
+            const sessionDate = new Date(session.created_at);
+            return sessionDate >= startDate;
+        });
+    }
+
+    getAllSessionsFromManager() {
+        const allSessions = [];
+        
+        // Get all sessions from all dates in SessionManager
+        for (const [dateString, sessions] of Object.entries(window.sessionManager.sessions)) {
+            allSessions.push(...sessions);
+        }
+        
+        return allSessions;
+    }
+
+    async createSessionTableRow(session) {
+        const row = document.createElement('tr');
+        
+        // Format date
+        const sessionDate = new Date(session.created_at);
+        const formattedDate = sessionDate.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+
+        // Format time range
+        const timeRange = `${session.start_time} - ${session.end_time}`;
+
+        // Get session tags (if tag system is available)
+        const tags = await this.getSessionTags(session.id);
+        const tagsHtml = tags.length > 0 
+            ? tags.map(tag => `<span class="session-tag">${tag.name}</span>`).join('')
+            : '<span class="text-muted">-</span>';
+
+        // Create type badge
+        const typeBadge = `<span class="session-type-badge ${session.session_type}">${session.session_type}</span>`;
+
+        row.innerHTML = `
+            <td>${formattedDate}</td>
+            <td>${timeRange}</td>
+            <td>${session.duration}m</td>
+            <td><div class="session-tags">${tagsHtml}</div></td>
+            <td>${typeBadge}</td>
+            <td>
+                <div class="session-actions">
+                    <button class="session-action-btn delete" onclick="navigationManager.deleteSessionFromTable('${session.id}')" title="Delete Session">
+                        <i class="ri-delete-bin-line"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+
+        return row;
+    }
+
+    async getSessionTags(sessionId) {
+        // If tag system is available, get tags for this session
+        if (window.tagManager) {
+            try {
+                return await window.tagManager.getSessionTags(sessionId);
+            } catch (error) {
+                console.log('Tags not available for session:', sessionId);
+            }
+        }
+        return [];
+    }
+
+    async deleteSessionFromTable(sessionId) {
+        if (!window.sessionManager || !sessionId) return;
+
+        if (confirm('Are you sure you want to delete this session? This action cannot be undone.')) {
+            try {
+                // Find and delete the session
+                for (const [dateString, sessions] of Object.entries(window.sessionManager.sessions)) {
+                    const sessionIndex = sessions.findIndex(s => s.id === sessionId);
+                    if (sessionIndex !== -1) {
+                        sessions.splice(sessionIndex, 1);
+                        await window.sessionManager.saveSessionsToStorage();
+                        
+                        // Refresh the table
+                        const filterSelect = document.getElementById('sessions-filter-period');
+                        const currentPeriod = filterSelect ? filterSelect.value : 'week';
+                        await this.populateSessionsTable(currentPeriod);
+                        
+                        // Refresh other views
+                        await this.updateDailyChart();
+                        await this.updateFocusSummary();
+                        await this.updateWeeklySessionsChart();
+                        await this.updateTimelineForDate(new Date());
+                        
+                        console.log('Session deleted successfully:', sessionId);
+                        break;
+                    }
+                }
+            } catch (error) {
+                console.error('Error deleting session:', error);
+                alert('Failed to delete session. Please try again.');
+            }
+        }
     }
 }

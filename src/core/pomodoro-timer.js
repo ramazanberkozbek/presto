@@ -189,7 +189,7 @@ export class PomodoroTimer {
             }
         });
 
-        this.skipBtn.addEventListener('click', () => this.skipSession());
+        this.skipBtn.addEventListener('click', async () => await this.skipSession());
 
         this.stopBtn.addEventListener('click', () => {
             if (this.currentMode === 'focus') {
@@ -202,7 +202,7 @@ export class PomodoroTimer {
         });
 
         // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
+        document.addEventListener('keydown', async (e) => {
             // Only trigger if not typing in an input
             if (e.target.tagName !== 'INPUT') {
                 // Check custom shortcuts first
@@ -222,7 +222,7 @@ export class PomodoroTimer {
                     }
                 } else if (this.matchesShortcut(e, this.customShortcuts.skip)) {
                     e.preventDefault();
-                    this.skipSession();
+                    await this.skipSession();
                 }
                 // Keep existing hardcoded shortcuts as fallback
                 else {
@@ -276,8 +276,8 @@ export class PomodoroTimer {
         });
 
         // Listen for skip from tray
-        await listen('tray-skip', () => {
-            this.skipSession();
+        await listen('tray-skip', async () => {
+            await this.skipSession();
         });
 
         // Listen for cancel from tray
@@ -753,7 +753,7 @@ export class PomodoroTimer {
         }
     }
 
-    skipSession() {
+    async skipSession() {
         this.isRunning = false;
         this.isPaused = false;
         this.isAutoPaused = false;
@@ -773,6 +773,13 @@ export class PomodoroTimer {
         if (this.timeRemaining < 0 && this.allowContinuousSessions) {
             shouldSaveSession = true;
             this.sessionCompletedButNotSaved = false;
+            
+            // Save overtime focus session to SessionManager as individual session
+            // Only save if session lasted at least 1 minute
+            if (this.currentMode === 'focus' && this.lastCompletedSessionTime > 60) {
+                await this.saveCompletedFocusSession();
+            }
+            
             // Move to next mode as usual
             if (this.currentMode === 'focus') {
                 if (this.completedPomodoros % 4 === 0) {
@@ -816,6 +823,12 @@ export class PomodoroTimer {
                 const actualElapsedTime = this.currentSessionElapsedTime || (this.durations.focus - this.timeRemaining);
                 this.totalFocusTime += actualElapsedTime;
                 this.lastCompletedSessionTime = actualElapsedTime;
+                
+                // Save skipped focus session to SessionManager as individual session
+                // Only save if session lasted at least 1 minute
+                if (this.lastCompletedSessionTime > 60) {
+                    await this.saveCompletedFocusSession();
+                }
             }
             shouldSaveSession = true;
             this.sessionCompletedButNotSaved = false;
@@ -936,6 +949,12 @@ export class PomodoroTimer {
         this.timeRemaining = this.durations[this.currentMode];
         this.updateDisplay();
         this.updateButtons();
+        
+        // Save completed focus session to SessionManager as individual session
+        if (this.lastCompletedSessionTime > 0 && this.completedPomodoros > 0) {
+            await this.saveCompletedFocusSession();
+        }
+        
         await this.saveSessionData();
         await this.updateWeeklyStats();
         this.showNotification();
@@ -1028,6 +1047,9 @@ export class PomodoroTimer {
 
             // Mark session as completed but not saved yet (will be saved when user skips)
             this.sessionCompletedButNotSaved = true;
+            
+            // Save completed focus session to SessionManager immediately
+            await this.saveCompletedFocusSession();
         }
 
         // For continuous sessions, don't save the session data here
@@ -1806,6 +1828,40 @@ export class PomodoroTimer {
             } catch (error) {
                 console.error('Failed to update navigation charts:', error);
             }
+        }
+    }
+
+    async saveCompletedFocusSession() {
+        if (!window.sessionManager) {
+            console.log('SessionManager not available, skipping individual session save');
+            return;
+        }
+
+        const now = new Date();
+        const durationMinutes = Math.round(this.lastCompletedSessionTime / 60);
+        
+        // Calculate session end time (now) and start time (backwards from duration)
+        const endHour = now.getHours();
+        const endMinute = now.getMinutes();
+        const startTotalMinutes = endHour * 60 + endMinute - durationMinutes;
+        const startHour = Math.max(0, Math.floor(startTotalMinutes / 60));
+        const startMinute = Math.max(0, startTotalMinutes % 60);
+
+        const sessionData = {
+            id: `timer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            session_type: 'focus',
+            duration: durationMinutes,
+            start_time: `${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`,
+            end_time: `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`,
+            notes: this.currentTask && this.currentTask.trim() ? this.currentTask.trim() : null,
+            created_at: now.toISOString()
+        };
+
+        try {
+            await window.sessionManager.addSession(sessionData);
+            console.log('Timer session saved to SessionManager:', sessionData);
+        } catch (error) {
+            console.error('Failed to save timer session to SessionManager:', error);
         }
     }
 
