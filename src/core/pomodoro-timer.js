@@ -189,7 +189,7 @@ export class PomodoroTimer {
             }
         });
 
-        this.skipBtn.addEventListener('click', () => this.skipSession());
+        this.skipBtn.addEventListener('click', async () => await this.skipSession());
 
         this.stopBtn.addEventListener('click', () => {
             if (this.currentMode === 'focus') {
@@ -202,7 +202,7 @@ export class PomodoroTimer {
         });
 
         // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
+        document.addEventListener('keydown', async (e) => {
             // Only trigger if not typing in an input
             if (e.target.tagName !== 'INPUT') {
                 // Check custom shortcuts first
@@ -222,7 +222,7 @@ export class PomodoroTimer {
                     }
                 } else if (this.matchesShortcut(e, this.customShortcuts.skip)) {
                     e.preventDefault();
-                    this.skipSession();
+                    await this.skipSession();
                 }
                 // Keep existing hardcoded shortcuts as fallback
                 else {
@@ -276,8 +276,8 @@ export class PomodoroTimer {
         });
 
         // Listen for skip from tray
-        await listen('tray-skip', () => {
-            this.skipSession();
+        await listen('tray-skip', async () => {
+            await this.skipSession();
         });
 
         // Listen for cancel from tray
@@ -342,11 +342,13 @@ export class PomodoroTimer {
 
             // Listen for user activity
             await listen('user-activity', () => {
+                // console.log('🔄 ACTIVITY: Global activity detected via Tauri backend');
                 this.handleUserActivity();
             });
 
             // Listen for user inactivity
             await listen('user-inactivity', () => {
+                // console.log('💤 INACTIVITY: Global inactivity detected via Tauri backend');
                 this.autoPauseTimer();
             });
 
@@ -376,11 +378,18 @@ export class PomodoroTimer {
     }
 
     handleUserActivity() {
-        if (!this.smartPauseEnabled || !this.isRunning || this.currentMode !== 'focus') return;
+        // console.log('🎯 handleUserActivity called - smartPauseEnabled:', this.smartPauseEnabled, 'isRunning:', this.isRunning, 'currentMode:', this.currentMode, 'isAutoPaused:', this.isAutoPaused);
+
+        // if (!this.smartPauseEnabled || !this.isRunning || this.currentMode !== 'focus') {
+        //     console.log('❌ handleUserActivity early return due to conditions');
+        //     return;
+        // }
 
         // If currently auto-paused, resume the timer
         if (this.isAutoPaused) {
+            console.log('🔄 Timer is auto-paused, calling resumeFromAutoPause()');
             this.resumeFromAutoPause();
+            return; // Exit early after resume to avoid setting new timeout immediately
         }
 
         // Clear existing timeout and countdown
@@ -440,11 +449,17 @@ export class PomodoroTimer {
     }
 
     autoPauseTimer() {
-        if (!this.isRunning || this.isPaused || this.isAutoPaused || this.currentMode !== 'focus') return;
+        console.log('🚨 autoPauseTimer called - isRunning:', this.isRunning, 'isPaused:', this.isPaused, 'isAutoPaused:', this.isAutoPaused, 'currentMode:', this.currentMode);
 
-        console.log('Auto-pausing timer due to inactivity');
+        if (!this.isRunning || this.isPaused || this.isAutoPaused || this.currentMode !== 'focus') {
+            console.log('❌ autoPauseTimer early return due to conditions');
+            return;
+        }
+
+        console.log('💤 Auto-pausing timer due to inactivity');
         this.isAutoPaused = true;
         this.isPaused = true;
+        console.log('🔧 States set: isAutoPaused =', this.isAutoPaused, 'isPaused =', this.isPaused);
 
         // Stop the timer interval and countdown
         clearInterval(this.timerInterval);
@@ -463,12 +478,21 @@ export class PomodoroTimer {
     resumeFromAutoPause() {
         if (!this.isAutoPaused) return;
 
-        console.log('Resuming timer from auto-pause');
+        console.log('🔄 Resuming from auto-pause...');
+
+        // Clear any existing timer interval first
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
+
+        // Set states to resume - be very explicit about the state
         this.isAutoPaused = false;
         this.isPaused = false;
+        this.isRunning = true;
+        this._justResumedFromAutoPause = true; // Flag to ensure status update happens
 
-        // Show resume notification
-        NotificationUtils.showNotificationPing('Timer resumed - you\'re back! 🎯', 'info', this.currentMode);
+        console.log('✅ States set: isAutoPaused =', this.isAutoPaused, 'isPaused =', this.isPaused, 'isRunning =', this.isRunning);
 
         // Initialize timer accuracy tracking for resume
         this.timerStartTime = Date.now();
@@ -477,17 +501,41 @@ export class PomodoroTimer {
         // Restart the timer interval with accuracy updates
         this.timerInterval = setInterval(() => {
             this.updateTimerWithAccuracy();
-        }, 100); // Update more frequently (10 times per second) for smoother display
+        }, 100);
 
-        // Update UI
+        // Force synchronous UI update first
         this.updateDisplay();
         this.updateButtons();
         this.updateTrayIcon();
 
-        // Restart smart pause monitoring if enabled and in focus mode
+        // Clear the resume flag after UI update
+        this._justResumedFromAutoPause = false;
+
+        // Show resume notification after UI update
+        NotificationUtils.showNotificationPing('Timer resumed - you\'re back! 🎯', 'info', this.currentMode);
+
+        // Restart smart pause monitoring by setting new timeout
         if (this.smartPauseEnabled && this.currentMode === 'focus') {
-            this.handleUserActivity();
+            // Clear any existing timeout first
+            if (this.activityTimeout) {
+                clearTimeout(this.activityTimeout);
+            }
+            this.stopSmartPauseCountdown();
+
+            // Set new timeout for auto-pause
+            this.activityTimeout = setTimeout(() => {
+                this.autoPauseTimer();
+            }, this.inactivityThreshold);
+
+            // Start countdown display
+            this.startSmartPauseCountdown();
         }
+
+        // Update display to remove (Auto-paused) status
+        this.updateDisplay();
+        this.updateButtons();
+
+        console.log('🎯 Resume complete, timer should be running normally');
     }
 
     async enableSmartPause(enabled) {
@@ -527,8 +575,15 @@ export class PomodoroTimer {
 
     startTimer() {
         if (!this.isRunning) {
+            const wasResuming = this.isPaused; // Check if we're resuming from pause
+
             this.isRunning = true;
             this.isPaused = false;
+
+            // Set flag to ensure status update when resuming from manual pause
+            if (wasResuming) {
+                this._justResumedFromPause = true;
+            }
 
             // Track session start time if not already set
             if (!this.sessionStartTime) {
@@ -548,6 +603,12 @@ export class PomodoroTimer {
 
             this.updateButtons();
             this.updateDisplay();
+
+            // Clear the resume flag after UI update
+            if (wasResuming) {
+                this._justResumedFromPause = false;
+            }
+
             if (this.enableSoundNotifications) {
                 NotificationUtils.playNotificationSound();
             }
@@ -560,6 +621,15 @@ export class PomodoroTimer {
 
             // Update tray menu
             this.updateTrayMenu();
+
+            // Notify tag manager about timer start or resume
+            if (window.tagManager) {
+                if (wasResuming) {
+                    window.tagManager.onTimerResume();
+                } else {
+                    window.tagManager.onTimerStart();
+                }
+            }
         }
     }
 
@@ -638,6 +708,11 @@ export class PomodoroTimer {
 
             // Update tray menu
             this.updateTrayMenu();
+
+            // Notify tag manager about timer pause
+            if (window.tagManager) {
+                window.tagManager.onTimerPause();
+            }
         }
     }
 
@@ -671,9 +746,14 @@ export class PomodoroTimer {
 
         // Update tray menu
         this.updateTrayMenu();
+
+        // Notify tag manager about timer stop
+        if (window.tagManager) {
+            window.tagManager.onTimerStop();
+        }
     }
 
-    skipSession() {
+    async skipSession() {
         this.isRunning = false;
         this.isPaused = false;
         this.isAutoPaused = false;
@@ -693,6 +773,13 @@ export class PomodoroTimer {
         if (this.timeRemaining < 0 && this.allowContinuousSessions) {
             shouldSaveSession = true;
             this.sessionCompletedButNotSaved = false;
+
+            // Save overtime focus session to SessionManager as individual session
+            // Only save if session lasted at least 1 minute
+            if (this.currentMode === 'focus' && this.lastCompletedSessionTime > 3) {
+                await this.saveCompletedFocusSession();
+            }
+
             // Move to next mode as usual
             if (this.currentMode === 'focus') {
                 if (this.completedPomodoros % 4 === 0) {
@@ -711,7 +798,6 @@ export class PomodoroTimer {
             this.updateButtons();
             if (shouldSaveSession) {
                 this.saveSessionData();
-                this.updateWeeklyStats();
             }
             const messages = {
                 focus: 'Focus session skipped. Time for a break! 😌',
@@ -736,6 +822,12 @@ export class PomodoroTimer {
                 const actualElapsedTime = this.currentSessionElapsedTime || (this.durations.focus - this.timeRemaining);
                 this.totalFocusTime += actualElapsedTime;
                 this.lastCompletedSessionTime = actualElapsedTime;
+
+                // Save skipped focus session to SessionManager as individual session
+                // Only save if session lasted at least 1 minute
+                if (this.lastCompletedSessionTime > 60) {
+                    await this.saveCompletedFocusSession();
+                }
             }
             shouldSaveSession = true;
             this.sessionCompletedButNotSaved = false;
@@ -746,6 +838,12 @@ export class PomodoroTimer {
             }
         } else {
             this.currentMode = 'focus';
+
+            // Restore TagManager display when returning to focus mode
+            if (window.tagManager) {
+                window.tagManager.updateStatusDisplay();
+            }
+
             if (this.completedPomodoros < this.totalSessions) {
                 this.currentSession = this.completedPomodoros + 1;
             }
@@ -755,7 +853,6 @@ export class PomodoroTimer {
         this.updateButtons();
         if (shouldSaveSession) {
             this.saveSessionData();
-            this.updateWeeklyStats();
         }
         const messages = {
             focus: 'Focus session skipped. Time for a break! 😌',
@@ -826,6 +923,11 @@ export class PomodoroTimer {
             } else {
                 // Traditional behavior - go back to focus
                 this.currentMode = 'focus';
+
+                // Restore TagManager display when returning to focus mode
+                if (window.tagManager) {
+                    window.tagManager.updateStatusDisplay();
+                }
                 if (this.completedPomodoros < this.totalSessions) {
                     this.currentSession = this.completedPomodoros + 1;
                 }
@@ -845,8 +947,14 @@ export class PomodoroTimer {
         this.timeRemaining = this.durations[this.currentMode];
         this.updateDisplay();
         this.updateButtons();
+
+        // Save completed focus session to SessionManager as individual session
+        if (this.lastCompletedSessionTime > 0 && this.completedPomodoros > 0) {
+            await this.saveCompletedFocusSession();
+        }
+
+        // Only save aggregated session data, individual sessions are handled by saveCompletedFocusSession
         await this.saveSessionData();
-        await this.updateWeeklyStats();
         this.showNotification();
         if (this.enableSoundNotifications) {
             NotificationUtils.playNotificationSound();
@@ -905,6 +1013,11 @@ export class PomodoroTimer {
 
         // Update tray menu
         this.updateTrayMenu();
+
+        // Notify tag manager about timer completion
+        if (window.tagManager) {
+            window.tagManager.onTimerComplete();
+        }
     }
 
     // Show completion notification for continuous sessions without stopping the timer
@@ -932,6 +1045,9 @@ export class PomodoroTimer {
 
             // Mark session as completed but not saved yet (will be saved when user skips)
             this.sessionCompletedButNotSaved = true;
+
+            // Save completed focus session to SessionManager immediately
+            await this.saveCompletedFocusSession();
         }
 
         // For continuous sessions, don't save the session data here
@@ -982,7 +1098,7 @@ export class PomodoroTimer {
         this.timerMinutes.textContent = displayMinutes.toString().padStart(2, '0');
         this.timerSeconds.textContent = displaySeconds.toString().padStart(2, '0');
 
-        // Update status
+        // Update status - respect TagManager when tags are selected
         const statusTexts = {
             focus: 'Focus',
             break: 'Break',
@@ -990,29 +1106,75 @@ export class PomodoroTimer {
         };
 
         let statusText = statusTexts[this.currentMode];
+        let shouldUpdateStatus = true;
 
-        // Add overtime indicator for continuous sessions
-        if (isOvertime) {
-            statusText += ' (Overtime)';
-        }
-        // Add auto-pause indicator
-        else if (this.isAutoPaused) {
-            statusText += ' (Auto-paused)';
-        } else if (this.isPaused && !this.isRunning) {
-            statusText += ' (Paused)';
-        }
-
-        // Update status text (use the span element instead of overwriting the entire div)
-        const statusTextElement = document.getElementById('status-text');
-        if (statusTextElement) {
-            statusTextElement.textContent = statusText;
-        } else {
-            // Fallback to setting the entire timer status if span doesn't exist
-            this.timerStatus.textContent = statusText;
+        // Check if TagManager is active and has selected tags for focus mode
+        if (this.currentMode === 'focus' && window.tagManager && window.tagManager.getCurrentTags().length > 0) {
+            // Don't override tag display during normal focus sessions
+            // BUT always allow status updates when just resumed from pause to clear pause labels
+            if (!isOvertime && !this.isAutoPaused && !(this.isPaused && !this.isRunning) && !this._justResumedFromAutoPause && !this._justResumedFromPause) {
+                shouldUpdateStatus = false;
+            } else {
+                // For special states, append to tag name instead of overriding
+                const currentTags = window.tagManager.getCurrentTags();
+                if (currentTags.length === 1) {
+                    statusText = currentTags[0].name;
+                } else if (currentTags.length > 1) {
+                    statusText = `${currentTags.length} Tags`;
+                }
+            }
         }
 
-        // Update status icon based on current mode
-        this.updateStatusIcon();
+        // Add state indicators
+        if (shouldUpdateStatus) {
+            // Only log state changes, not every update to reduce spam
+            const currentState = `${isOvertime}-${this.isAutoPaused}-${this.isPaused}-${this.isRunning}`;
+            if (!this._lastLoggedState || this._lastLoggedState !== currentState || this._justResumedFromAutoPause || this._justResumedFromPause) {
+                console.log('📊 updateDisplay - isOvertime:', isOvertime, 'isAutoPaused:', this.isAutoPaused, 'isPaused:', this.isPaused, 'isRunning:', this.isRunning, 'justResumedFromAutoPause:', this._justResumedFromAutoPause, 'justResumedFromPause:', this._justResumedFromPause);
+                this._lastLoggedState = currentState;
+            }
+
+            if (isOvertime) {
+                statusText += ' (Overtime)';
+                if (!this._lastLoggedState || !this._lastLoggedState.startsWith('true-')) {
+                    console.log('⏰ Showing Overtime status');
+                }
+            }
+            else if (this.isAutoPaused) {
+                statusText += ' (Auto-paused)';
+                if (!this._lastAutoPausedLogged) {
+                    console.log('💤 Showing Auto-paused status');
+                    this._lastAutoPausedLogged = true;
+                }
+            } else if (this.isPaused && !this.isRunning) {
+                statusText += ' (Paused)';
+                if (!this._lastPausedLogged) {
+                    console.log('⏸️ Showing Paused status');
+                    this._lastPausedLogged = true;
+                }
+            } else {
+                // Reset paused flags when not in those states
+                this._lastAutoPausedLogged = false;
+                this._lastPausedLogged = false;
+                if (this._lastLoggedState && (this._lastLoggedState.includes('true') || this._justResumedFromAutoPause || this._justResumedFromPause)) {
+                    console.log('▶️ No status suffix (timer running normally)');
+                }
+            }
+
+            // Update status text only when necessary
+            const statusTextElement = document.getElementById('status-text');
+            if (statusTextElement) {
+                statusTextElement.textContent = statusText;
+            } else {
+                // Fallback to setting the entire timer status if span doesn't exist
+                this.timerStatus.textContent = statusText;
+            }
+        }
+
+        // Update status icon based on current mode (only for break modes or special states)
+        if (this.currentMode !== 'focus' || isOvertime || this.isAutoPaused || (this.isPaused && !this.isRunning)) {
+            this.updateStatusIcon();
+        }
 
         // Update play/pause button
         if (this.isRunning && !this.isPaused && !this.isAutoPaused) {
@@ -1354,6 +1516,11 @@ export class PomodoroTimer {
         this.currentMode = 'focus';
         this.currentSession = this.completedPomodoros + 1;
 
+        // Restore TagManager display when returning to focus mode
+        if (window.tagManager) {
+            window.tagManager.updateStatusDisplay();
+        }
+
         // Reset timer to focus duration
         this.timeRemaining = this.durations.focus;
         this.isRunning = false;
@@ -1377,7 +1544,6 @@ export class PomodoroTimer {
         this.updateProgressDots();
         this.updateButtons();
         await this.saveSessionData();
-        await this.updateWeeklyStats();
         this.updateTrayIcon();
 
         // Show undo notification
@@ -1677,6 +1843,44 @@ export class PomodoroTimer {
             } catch (error) {
                 console.error('Failed to update navigation charts:', error);
             }
+        }
+    }
+
+    async saveCompletedFocusSession() {
+        if (!window.sessionManager) {
+            console.log('SessionManager not available, skipping individual session save');
+            return;
+        }
+
+        const now = new Date();
+        const durationMinutes = Math.round(this.lastCompletedSessionTime / 60);
+
+        // Calculate session end time (now) and start time (backwards from duration)
+        const endHour = now.getHours();
+        const endMinute = now.getMinutes();
+        const startTotalMinutes = endHour * 60 + endMinute - durationMinutes;
+        const startHour = Math.max(0, Math.floor(startTotalMinutes / 60));
+        const startMinute = Math.max(0, startTotalMinutes % 60);
+
+        // Get current tags from TagManager
+        const currentTags = window.tagManager ? window.tagManager.getCurrentTags() : [];
+        
+        const sessionData = {
+            id: `timer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            session_type: 'focus',
+            duration: durationMinutes,
+            start_time: `${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`,
+            end_time: `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`,
+            notes: this.currentTask && this.currentTask.trim() ? this.currentTask.trim() : null,
+            tags: currentTags, // Include current tags from TagManager
+            created_at: now.toISOString()
+        };
+
+        try {
+            await window.sessionManager.addSession(sessionData);
+            console.log('Timer session saved to SessionManager:', sessionData);
+        } catch (error) {
+            console.error('Failed to save timer session to SessionManager:', error);
         }
     }
 

@@ -21,10 +21,18 @@ async function initSupabase() {
   await waitForSupabase();
   
   const { createClient } = window.supabase;
+  const { invoke } = window.__TAURI__.core;
   
-  // Get environment variables from .env file (loaded by Tauri)
-  const supabaseUrl = 'https://unrlsklikpmeltjvyavn.supabase.co';
-  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVucmxza2xpa3BtZWx0anZ5YXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MTUyNDgsImV4cCI6MjA2NjE5MTI0OH0.yT9e7YeTospM949FCB2fBcYOgFxg_w6HXRyWf8CKdVQ';
+  // Get environment variables from Tauri backend
+  let supabaseUrl, supabaseAnonKey;
+  
+  try {
+    supabaseUrl = await invoke('get_env_var', { key: 'SUPABASE_URL' });
+    supabaseAnonKey = await invoke('get_env_var', { key: 'SUPABASE_ANON_KEY' });
+  } catch (error) {
+    console.error('Failed to load environment variables:', error);
+    throw new Error('Failed to load Supabase configuration from environment');
+  }
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Missing Supabase environment variables');

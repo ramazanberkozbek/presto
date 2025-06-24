@@ -175,6 +175,7 @@ body.longBreak {
   font-size: 0.9rem;
   transition: all 0.2s ease;
   background: white;
+  box-sizing: border-box;
 }
 
 .form-group input:focus,

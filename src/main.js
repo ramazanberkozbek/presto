@@ -404,6 +404,24 @@ function showAuthScreen() {
       </div>
       
       <div class="auth-content">
+        <div class="auth-column auth-guest">
+          <div class="guest-section">
+            <div class="guest-icon">
+              <i class="ri-user-line"></i>
+            </div>
+            <h3>Continue as Guest</h3>
+            <p>Try Presto without creating an account. Your data will be stored locally only.</p>
+            <button class="auth-btn guest-btn" id="continue-guest">
+              <i class="ri-arrow-left-line"></i>
+              Continue as Guest
+            </button>
+            <a href="#" class="guest-link" id="continue-guest-link" style="display: none;">
+              <i class="ri-arrow-left-line"></i>
+              Continue as Guest
+            </a>
+          </div>
+        </div>
+        
         <div class="auth-column auth-main">
           <h2>Sign in to sync your data</h2>
           
@@ -443,24 +461,10 @@ function showAuthScreen() {
               <input type="password" id="password" placeholder="Password" required>
             </div>
             <div class="form-actions">
-              <button type="submit" class="auth-btn primary-btn" data-action="signin">Sign In</button>
-              <button type="button" class="auth-btn secondary-btn" data-action="signup">Sign Up</button>
+              <button type="submit" class="auth-btn primary-btn" data-action="signin">Login</button>
+              <button type="button" class="auth-btn secondary-btn" data-action="signup">Register</button>
             </div>
           </form>
-        </div>
-        
-        <div class="auth-column auth-guest">
-          <div class="guest-section">
-            <div class="guest-icon">
-              <i class="ri-user-line"></i>
-            </div>
-            <h3>Continue as Guest</h3>
-            <p>Try Presto without creating an account. Your data will be stored locally only.</p>
-            <button class="auth-btn guest-btn" id="continue-guest">
-              <i class="ri-arrow-right-line"></i>
-              Continue as Guest
-            </button>
-          </div>
         </div>
       </div>
     </div>
@@ -750,7 +754,7 @@ function showAuthScreen() {
     }
     
     .auth-main {
-      border-right: 1px solid #f1f5f9;
+      border-left: 1px solid #f1f5f9;
     }
     
     .auth-main h2 {
@@ -833,7 +837,7 @@ function showAuthScreen() {
     }
     
     .auth-guest {
-      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      background: #f1f5f9;
       align-items: center;
       text-align: center;
     }
@@ -850,18 +854,18 @@ function showAuthScreen() {
     .guest-icon {
       width: 80px;
       height: 80px;
-      background: #e74c3c;
+      background: #e2e8f0;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       margin: 0 auto 24px auto;
-      box-shadow: 0 8px 25px rgba(231, 76, 60, 0.25);
+      box-shadow: 0 8px 25px rgba(226, 232, 240, 0.25);
     }
     
     .guest-icon i {
       font-size: 36px;
-      color: white;
+      color: #4a5568;
     }
     
     .guest-section h3 {
@@ -879,9 +883,9 @@ function showAuthScreen() {
     }
     
     .guest-btn {
-      background: #e74c3c;
-      color: white;
-      border-color: #e74c3c;
+      background: #e2e8f0;
+      color: #4a5568;
+      border-color: #e2e8f0;
       font-weight: 600;
       padding: 14px 24px;
       border-radius: 12px;
@@ -890,10 +894,10 @@ function showAuthScreen() {
     }
     
     .guest-btn:hover {
-      background: #c0392b;
-      border-color: #c0392b;
+      background: #cbd5e0;
+      border-color: #cbd5e0;
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
+      box-shadow: 0 8px 25px rgba(226, 232, 240, 0.3);
     }
     
     /* Mobile responsiveness */
@@ -910,16 +914,58 @@ function showAuthScreen() {
       .auth-content {
         grid-template-columns: 1fr;
         min-height: calc(100vh - 140px);
+        grid-template-areas: 
+          "main"
+          "guest";
       }
       
       .auth-main {
-        border-right: none;
+        border-left: none;
         border-bottom: 1px solid #f1f5f9;
         padding: 24px;
+        grid-area: main;
       }
       
       .auth-guest {
         padding: 24px;
+        grid-area: guest;
+        background: transparent;
+      }
+      
+      .guest-btn {
+        display: none !important;
+      }
+      
+      .guest-icon {
+        display: none !important;
+      }
+      
+      .guest-section h3 {
+        display: none !important;
+      }
+      
+      .guest-section p {
+        display: none !important;
+      }
+      
+      .guest-link {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 8px;
+        color: #3b82f6;
+        text-decoration: underline;
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      
+      .guest-link:hover {
+        color: #2563eb;
+        transform: none;
+        box-shadow: none;
       }
       
       .auth-providers {
@@ -1019,21 +1065,24 @@ function setupAuthEventListeners() {
   if (guestBtn) {
     guestBtn.addEventListener('click', async () => {
       window.authManager.continueAsGuest();
-      await hideAuthScreen();
-      initializeApplication(); // Continue with app initialization
+      // hideAuthScreen and initializeApplication will be handled by onAuthChange listener
+    });
+  }
+
+  // Guest mode link
+  const guestLink = document.getElementById('continue-guest-link');
+  if (guestLink) {
+    guestLink.addEventListener('click', async (e) => {
+      e.preventDefault();
+      window.authManager.continueAsGuest();
+      // hideAuthScreen and initializeApplication will be handled by onAuthChange listener
     });
   }
 
   // Listen for auth state changes  
   if (window.authManager) {
     window.authManager.onAuthChange(async (status, user) => {
-      if (status === 'authenticated') {
-        await hideAuthScreen();
-        // Only continue initialization if this is first run (app not yet initialized)
-        if (!window.pomodoroTimer) {
-          initializeApplication(); // Continue with app initialization
-        }
-      } else if (status === 'guest') {
+      if (status === 'authenticated' || status === 'guest') {
         await hideAuthScreen();
         // Only continue initialization if this is first run (app not yet initialized)
         if (!window.pomodoroTimer) {
@@ -1380,8 +1429,15 @@ function setupUserAvatarEventListeners() {
 
 // Initialize the application
 async function initializeApplication() {
+  // Prevent double initialization
+  if (window._appInitialized) {
+    console.log('🚀 Application already initialized, skipping...');
+    return;
+  }
+  
   try {
     console.log('🚀 Initializing Presto application...');
+    window._appInitialized = true;
 
     // Initialize theme as early as possible
     await initializeEarlyTheme();
@@ -1463,6 +1519,9 @@ async function initializeApplication() {
   } catch (error) {
     console.error('❌ Failed to initialize application:', error);
     NotificationUtils.showNotificationPing('Failed to initialize app. Please refresh! 🔄', 'error');
+    
+    // Reset initialization flag on error so user can retry
+    window._appInitialized = false;
   }
 }
 

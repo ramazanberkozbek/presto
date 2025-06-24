@@ -4,6 +4,7 @@ use std::fs;
 use std::sync::{Arc, LazyLock, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
+use base64::{Engine as _, engine::general_purpose};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager};
@@ -46,6 +47,24 @@ struct ManualSession {
     notes: Option<String>,
     created_at: String,   // ISO string
     date: String,         // Date string for the session date
+    tags: Option<Vec<serde_json::Value>>, // Array of tag objects
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct Tag {
+    id: String,
+    name: String,
+    icon: String,  // emoji or remix icon class
+    color: String, // hex color code
+    created_at: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct SessionTag {
+    session_id: String,
+    tag_id: String,
+    duration: u32, // time spent on this tag in seconds
+    created_at: String,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -883,7 +902,16 @@ pub fn run() {
                 load_manual_sessions,
                 save_manual_session,
                 delete_manual_session,
-                get_manual_sessions_for_date
+                get_manual_sessions_for_date,
+                load_tags,
+                save_tags,
+                save_tag,
+                delete_tag,
+                load_session_tags,
+                save_session_tags,
+                add_session_tag,
+                get_env_var,
+                write_excel_file
             ])
             .setup(|app| {
                 // Track app started event (if enabled)
@@ -1031,6 +1059,156 @@ pub fn run() {
 }
 
 #[tauri::command]
+async fn load_tags(app: AppHandle) -> Result<Vec<Tag>, String> {
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to get app data directory: {}", e))?;
+
+    let file_path = app_data_dir.join("tags.json");
+    
+    if file_path.exists() {
+        let content = fs::read_to_string(&file_path)
+            .map_err(|e| format!("Failed to read tags: {}", e))?;
+        Ok(serde_json::from_str(&content).unwrap_or_else(|_| Vec::new()))
+    } else {
+        // Return default focus tag if no tags exist
+        let default_tag = Tag {
+            id: "default-focus".to_string(),
+            name: "Focus".to_string(),
+            icon: "ri-brain-line".to_string(),
+            color: "#4CAF50".to_string(),
+            created_at: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs()
+                .to_string(),
+        };
+        Ok(vec![default_tag])
+    }
+}
+
+#[tauri::command]
+async fn save_tags(tags: Vec<Tag>, app: AppHandle) -> Result<(), String> {
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to get app data directory: {}", e))?;
+
+    fs::create_dir_all(&app_data_dir).map_err(|e| format!("Failed to create directory: {}", e))?;
+
+    let file_path = app_data_dir.join("tags.json");
+    let json = serde_json::to_string_pretty(&tags)
+        .map_err(|e| format!("Failed to serialize tags: {}", e))?;
+    fs::write(file_path, json).map_err(|e| format!("Failed to write tags file: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn save_tag(tag: Tag, app: AppHandle) -> Result<(), String> {
+    let mut tags = load_tags(app.clone()).await?;
+    
+    // Remove existing tag with same ID if it exists (for updates)
+    tags.retain(|t| t.id != tag.id);
+    
+    // Add the new/updated tag
+    tags.push(tag);
+    
+    // Save all tags back
+    save_tags(tags, app).await
+}
+
+#[tauri::command]
+async fn delete_tag(tag_id: String, app: AppHandle) -> Result<(), String> {
+    let mut tags = load_tags(app.clone()).await?;
+    
+    // Remove the tag with the specified ID
+    tags.retain(|t| t.id != tag_id);
+    
+    // Save the updated tags back
+    save_tags(tags, app).await
+}
+
+#[tauri::command]
+async fn load_session_tags(app: AppHandle) -> Result<Vec<SessionTag>, String> {
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to get app data directory: {}", e))?;
+
+    let file_path = app_data_dir.join("session_tags.json");
+    
+    if file_path.exists() {
+        let content = fs::read_to_string(&file_path)
+            .map_err(|e| format!("Failed to read session tags: {}", e))?;
+        Ok(serde_json::from_str(&content).unwrap_or_else(|_| Vec::new()))
+    } else {
+        Ok(Vec::new())
+    }
+}
+
+#[tauri::command]
+async fn save_session_tags(session_tags: Vec<SessionTag>, app: AppHandle) -> Result<(), String> {
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to get app data directory: {}", e))?;
+
+    fs::create_dir_all(&app_data_dir).map_err(|e| format!("Failed to create directory: {}", e))?;
+
+    let file_path = app_data_dir.join("session_tags.json");
+    let json = serde_json::to_string_pretty(&session_tags)
+        .map_err(|e| format!("Failed to serialize session tags: {}", e))?;
+    fs::write(file_path, json).map_err(|e| format!("Failed to write session tags file: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn add_session_tag(session_tag: SessionTag, app: AppHandle) -> Result<(), String> {
+    let mut session_tags = load_session_tags(app.clone()).await?;
+    session_tags.push(session_tag);
+    save_session_tags(session_tags, app).await
+}
+
+#[tauri::command]
+async fn get_env_var(key: String) -> Result<String, String> {
+    // First try to get from environment variables
+    if let Ok(value) = std::env::var(&key) {
+        return Ok(value);
+    }
+    
+    // Try multiple possible locations for .env file
+    let possible_paths = vec![
+        std::env::current_dir().ok().map(|p| p.join(".env")),
+        std::env::current_dir().ok().and_then(|p| p.parent().map(|parent| parent.join(".env"))),
+        Some(std::path::PathBuf::from("/Users/stefanonovelli/Sites/Personal/presto/.env")),
+    ];
+    
+    for path_opt in possible_paths {
+        if let Some(env_path) = path_opt {
+            println!("Checking .env path: {:?}", env_path);
+            if env_path.exists() {
+                println!("Found .env file at: {:?}", env_path);
+                if let Ok(content) = std::fs::read_to_string(&env_path) {
+                    for line in content.lines() {
+                        let line = line.trim();
+                        if line.starts_with(&format!("{}=", key)) {
+                            if let Some(value) = line.split('=').nth(1) {
+                                return Ok(value.to_string());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    Err(format!("Environment variable '{}' not found in any location", key))
+}
+
+#[tauri::command]
 async fn update_tray_menu(
     app: AppHandle,
     is_running: bool,
@@ -1096,5 +1274,19 @@ async fn update_tray_menu(
             .map_err(|e| format!("Failed to set tray menu: {}", e))?;
     }
 
+    Ok(())
+}
+
+#[tauri::command]
+async fn write_excel_file(path: String, data: String) -> Result<(), String> {
+    // Decode base64 data
+    let decoded_data = general_purpose::STANDARD
+        .decode(data)
+        .map_err(|e| format!("Failed to decode base64 data: {}", e))?;
+    
+    // Write the binary data to file
+    fs::write(&path, decoded_data)
+        .map_err(|e| format!("Failed to write Excel file to {}: {}", path, e))?;
+    
     Ok(())
 }

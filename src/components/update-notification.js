@@ -82,211 +82,215 @@ export class UpdateNotification {
         styles.id = 'update-notification-styles';
         styles.textContent = `
             .update-notification-container {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                z-index: 10000;
-                transform: translateY(-100%);
-                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: fixed;
+            top: 44px;
+            left: 80px;
+            right: 0;
+            z-index: 10000;
+            transform: translateY(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             }
 
             .update-notification-container.visible {
-                transform: translateY(0);
+            transform: translateY(0);
             }
 
             .update-notification {
-                background: var(--accent-color, #007AFF);
-                color: white;
-                padding: 8px 16px;
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                font-size: 14px;
-                line-height: 1.4;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            background: var(--accent-color, #007AFF);
+            color: white;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            line-height: 1.4;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             }
 
             .update-content {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                flex: 1;
-                min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
             }
 
             .update-icon {
-                color: white;
-                flex-shrink: 0;
-                display: flex;
-                align-items: center;
+            color: white;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
             }
 
             .update-message {
-                font-weight: 500;
-                white-space: nowrap;
+            font-weight: 500;
+            white-space: nowrap;
             }
 
             .update-version {
-                font-size: 13px;
-                opacity: 0.9;
-                font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
-                margin-left: 8px;
+            font-size: 13px;
+            opacity: 0.9;
+            font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+            margin-left: 8px;
             }
 
             .update-actions {
-                display: flex;
-                gap: 8px;
-                margin-left: auto;
-                flex-shrink: 0;
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+            flex-shrink: 0;
             }
 
             .update-btn {
-                padding: 4px 12px;
-                border-radius: 4px;
-                font-size: 13px;
-                font-weight: 500;
-                border: none;
-                cursor: pointer;
-                transition: all 0.2s ease;
-                white-space: nowrap;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
             }
 
             .update-btn-primary {
-                background: rgba(255, 255, 255, 0.2);
-                color: white;
-                border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
             }
 
             .update-btn-primary:hover {
-                background: rgba(255, 255, 255, 0.3);
-                border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.4);
             }
 
             .update-btn-secondary {
-                background: transparent;
-                color: white;
-                border: 1px solid rgba(255, 255, 255, 0.3);
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
             }
 
             .update-btn-secondary:hover {
-                background: rgba(255, 255, 255, 0.1);
-                border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.4);
             }
 
             .update-close {
-                background: transparent;
-                border: none;
-                padding: 4px;
-                cursor: pointer;
-                color: white;
-                opacity: 0.8;
-                transition: opacity 0.2s ease;
-                border-radius: 3px;
-                margin-left: 8px;
-                flex-shrink: 0;
+            background: transparent;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            color: white;
+            opacity: 0.8;
+            transition: opacity 0.2s ease;
+            border-radius: 3px;
+            margin-left: 8px;
+            flex-shrink: 0;
             }
 
             .update-close:hover {
-                opacity: 1;
-                background: rgba(255, 255, 255, 0.1);
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.1);
             }
 
             .update-progress-container {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                flex: 1;
-                min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
             }
 
             .update-progress-icon {
-                flex-shrink: 0;
-                display: flex;
-                align-items: center;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
             }
 
             .spinner {
-                width: 16px;
-                height: 16px;
-                border: 2px solid rgba(255, 255, 255, 0.3);
-                border-top: 2px solid white;
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
             }
 
             @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
             }
 
             .update-progress-message {
-                font-weight: 500;
-                white-space: nowrap;
+            font-weight: 500;
+            white-space: nowrap;
             }
 
             .update-progress-bar {
-                background: rgba(255, 255, 255, 0.2);
-                border-radius: 3px;
-                height: 4px;
-                position: relative;
-                overflow: hidden;
-                flex: 1;
-                min-width: 100px;
-                margin: 0 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            height: 4px;
+            position: relative;
+            overflow: hidden;
+            flex: 1;
+            min-width: 100px;
+            margin: 0 12px;
             }
 
             .update-progress-fill {
-                background: white;
-                height: 100%;
-                width: 0%;
-                transition: width 0.3s ease;
-                border-radius: 3px;
+            background: white;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 3px;
             }
 
             .update-progress-text {
-                font-size: 12px;
-                font-weight: 600;
-                color: white;
-                opacity: 0.9;
-                white-space: nowrap;
-                flex-shrink: 0;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            opacity: 0.9;
+            white-space: nowrap;
+            flex-shrink: 0;
             }
 
             /* Responsive */
             @media (max-width: 768px) {
-                .update-notification {
-                    padding: 6px 12px;
-                    font-size: 13px;
-                }
+            .update-notification-container {
+                left: 0;
+            }
 
-                .update-btn {
-                    padding: 3px 8px;
-                    font-size: 12px;
-                }
+            .update-notification {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
 
-                .update-version {
-                    display: none;
-                }
+            .update-btn {
+                padding: 3px 8px;
+                font-size: 12px;
+            }
 
-                .update-progress-bar {
-                    min-width: 80px;
-                    margin: 0 8px;
-                }
+            .update-version {
+                display: none;
+            }
+
+            .update-progress-bar {
+                min-width: 80px;
+                margin: 0 8px;
+            }
             }
 
             @media (max-width: 480px) {
-                .update-actions {
-                    gap: 6px;
-                }
+            .update-actions {
+                gap: 6px;
+            }
 
-                .update-btn {
-                    padding: 3px 6px;
-                }
+            .update-btn {
+                padding: 3px 6px;
+            }
 
-                .update-close {
-                    margin-left: 4px;
-                }
+            .update-close {
+                margin-left: 4px;
+            }
             }
         `;
 

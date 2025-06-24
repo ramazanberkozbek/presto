@@ -878,6 +878,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "dotenv"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
+
+[[package]]
 name = "dpi"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3042,8 +3048,11 @@ checksum = "925383efa346730478fb4838dbe9137d2a47675ad789c546d150a6e1dd4ab31c"
 name = "presto"
 version = "0.2.17"
 dependencies = [
+ "base64 0.21.7",
+ "chrono",
  "core-foundation 0.9.4",
  "core-graphics 0.23.2",
+ "dotenv",
  "libc",
  "serde",
  "serde_json",
