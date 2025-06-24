@@ -1,5 +1,6 @@
 // Navigation Manager for Sidebar
 import { TimeUtils } from '../utils/common-utils.js';
+import { TagStatistics } from '../utils/tag-statistics.js';
 
 export class NavigationManager {
     constructor() {
@@ -7,6 +8,7 @@ export class NavigationManager {
         this.initialized = false;
         this.currentTooltip = null; // Track current tooltip for proper cleanup
         this.tooltipTimeout = null; // Track timeout for debounced tooltip removal
+        this.tagStatistics = new TagStatistics(); // Initialize tag statistics utility
         
         // Apply timer-active class on initial load since default view is timer
         document.body.classList.add('timer-active');
@@ -84,6 +86,7 @@ export class NavigationManager {
             await this.updateFocusSummary();
             await this.updateWeeklySessionsChart();
             this.updateDailyChart();
+            await this.updateTagUsageChart(); // Update tag usage pie chart
             await this.updateSelectedDayDetails();
             await this.initSessionsTable(); // Initialize sessions table when viewing calendar
         } else if (view === 'settings') {
