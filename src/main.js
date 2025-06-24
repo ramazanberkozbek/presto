@@ -1374,15 +1374,6 @@ function setupUserAvatarEventListeners() {
 
 // Initialize the application
 async function initializeApplication() {
-<<<<<<< Updated upstream
-=======
-  // Prevent double initialization
-  if (window._appInitialized) {
-    console.log('🚀 Application already initialized, skipping...');
-    return;
-  }
-
->>>>>>> Stashed changes
   try {
     console.log('🚀 Initializing Presto application...');
 
@@ -1466,12 +1457,6 @@ async function initializeApplication() {
   } catch (error) {
     console.error('❌ Failed to initialize application:', error);
     NotificationUtils.showNotificationPing('Failed to initialize app. Please refresh! 🔄', 'error');
-<<<<<<< Updated upstream
-=======
-
-    // Reset initialization flag on error so user can retry
-    window._appInitialized = false;
->>>>>>> Stashed changes
   }
 }
 
