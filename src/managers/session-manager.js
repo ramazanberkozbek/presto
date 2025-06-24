@@ -89,7 +89,6 @@ export class SessionManager {
         const closeModalBtn = document.getElementById('close-session-modal');
         const cancelBtn = document.getElementById('cancel-session-btn');
         const sessionForm = document.getElementById('session-form');
-        const sessionTypeSelect = document.getElementById('session-type');
         const deleteSessionBtn = document.getElementById('delete-session-btn');
 
         if (modalOverlay) {
@@ -115,15 +114,13 @@ export class SessionManager {
             });
         }
 
-        if (sessionTypeSelect) {
-            sessionTypeSelect.addEventListener('change', (e) => {
-                this.toggleCustomDuration(e.target.value);
-            });
-        }
 
         if (deleteSessionBtn) {
             deleteSessionBtn.addEventListener('click', () => this.deleteCurrentSession());
         }
+
+        // Add event listeners for automatic time/duration calculation
+        this.setupTimeCalculation();
 
         // Keyboard shortcuts for modal
         document.addEventListener('keydown', (e) => {
@@ -146,15 +143,17 @@ export class SessionManager {
         deleteBtn.style.display = 'none';
         saveBtn.textContent = 'Save Session';
 
-        // Set default time to now
+        // Set default times
         const now = new Date();
-        const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-        document.getElementById('session-start-time').value = timeString;
+        const startTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        const endTime = new Date(now.getTime() + 25 * 60000); // Add 25 minutes
+        const endTimeString = `${endTime.getHours().toString().padStart(2, '0')}:${endTime.getMinutes().toString().padStart(2, '0')}`;
 
-        // Reset form
+        // Reset form and set defaults
         document.getElementById('session-form').reset();
-        document.getElementById('session-start-time').value = timeString;
-        this.toggleCustomDuration('focus');
+        document.getElementById('session-duration').value = 25;
+        document.getElementById('session-start-time').value = startTime;
+        document.getElementById('session-end-time').value = endTimeString;
 
         modal.classList.add('show');
         document.getElementById('session-start-time').focus();
@@ -174,12 +173,9 @@ export class SessionManager {
         saveBtn.textContent = 'Update Session';
 
         // Populate form with session data
-        document.getElementById('session-type').value = session.session_type;
         document.getElementById('session-duration').value = session.duration;
         document.getElementById('session-start-time').value = session.start_time;
-        document.getElementById('session-notes').value = session.notes || '';
-
-        this.toggleCustomDuration(session.session_type);
+        document.getElementById('session-end-time').value = session.end_time;
 
         modal.classList.add('show');
         document.getElementById('session-start-time').focus();
@@ -197,44 +193,76 @@ export class SessionManager {
         return modal && modal.classList.contains('show');
     }
 
-    toggleCustomDuration(sessionType) {
-        const customGroup = document.getElementById('custom-duration-group');
+    setupTimeCalculation() {
+        const startTimeInput = document.getElementById('session-start-time');
+        const endTimeInput = document.getElementById('session-end-time');
         const durationInput = document.getElementById('session-duration');
 
-        if (sessionType === 'custom') {
-            customGroup.style.display = 'block';
-            durationInput.value = 25; // Default custom duration
-            durationInput.focus();
-        } else {
-            customGroup.style.display = 'none';
-            // Set duration based on session type
-            switch (sessionType) {
-                case 'focus':
-                    durationInput.value = 25;
-                    break;
-                case 'break':
-                    durationInput.value = 5;
-                    break;
-                case 'longBreak':
-                    durationInput.value = 20;
-                    break;
-                default:
-                    durationInput.value = 25;
+        const calculateDuration = () => {
+            const startTime = startTimeInput.value;
+            const endTime = endTimeInput.value;
+            
+            if (startTime && endTime) {
+                const startMinutes = this.timeToMinutes(startTime);
+                const endMinutes = this.timeToMinutes(endTime);
+                let duration = endMinutes - startMinutes;
+                
+                // Handle case where end time is next day
+                if (duration < 0) {
+                    duration += 24 * 60; // Add 24 hours
+                }
+                
+                durationInput.value = duration;
             }
+        };
+
+        const calculateEndTime = () => {
+            const startTime = startTimeInput.value;
+            const duration = parseInt(durationInput.value);
+            
+            if (startTime && duration && duration > 0) {
+                const startMinutes = this.timeToMinutes(startTime);
+                const endMinutes = startMinutes + duration;
+                const endTime = this.minutesToTime(endMinutes);
+                endTimeInput.value = endTime;
+            }
+        };
+
+        if (startTimeInput && endTimeInput && durationInput) {
+            startTimeInput.addEventListener('change', calculateDuration);
+            endTimeInput.addEventListener('change', calculateDuration);
+            durationInput.addEventListener('change', calculateEndTime);
         }
     }
 
+    timeToMinutes(timeString) {
+        const [hours, minutes] = timeString.split(':').map(Number);
+        return hours * 60 + minutes;
+    }
+
+    minutesToTime(minutes) {
+        // Handle overflow to next day
+        const totalMinutes = minutes % (24 * 60);
+        const hours = Math.floor(totalMinutes / 60);
+        const mins = totalMinutes % 60;
+        return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+    }
+
+
     async saveSession() {
         const formData = new FormData(document.getElementById('session-form'));
+        const startTime = formData.get('startTime');
+        const endTime = formData.get('endTime');
+        const duration = parseInt(formData.get('duration'));
+        
         const sessionData = {
             id: this.currentEditingSession?.id || this.generateSessionId(),
-            session_type: formData.get('type'),
-            duration: parseInt(formData.get('duration')),
-            start_time: formData.get('startTime'),
-            end_time: this.calculateEndTime(formData.get('startTime'), parseInt(formData.get('duration'))),
-            notes: formData.get('notes') || null,
-            created_at: new Date().toISOString(),
-            tags: [] // Manual sessions start without tags, but field is included for compatibility
+            session_type: 'focus', // All sessions are focus sessions now
+            duration: duration,
+            start_time: startTime,
+            end_time: endTime,
+            created_at: this.currentEditingSession?.created_at || new Date().toISOString(),
+            tags: this.currentEditingSession?.tags || [] // Preserve existing tags
         };
 
         // Validate form
@@ -243,8 +271,19 @@ export class SessionManager {
             return;
         }
 
+        if (!sessionData.end_time) {
+            alert('Please enter an end time');
+            return;
+        }
+
         if (!sessionData.duration || sessionData.duration < 1) {
             alert('Please enter a valid duration');
+            return;
+        }
+
+        // Validate that end time is after start time
+        if (sessionData.end_time <= sessionData.start_time) {
+            alert('End time must be after start time');
             return;
         }
 

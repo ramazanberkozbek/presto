@@ -41,9 +41,8 @@ export class TagStatistics {
 
         // Process sessions to calculate tag durations
         filteredSessions.forEach(session => {
-            // Check for both 'type' and 'session_type' properties for compatibility
-            const sessionType = session.session_type || session.type;
-            if ((sessionType === 'focus' || sessionType === 'custom') && session.duration > 0) {
+            // All sessions are focus sessions now
+            if (session.duration > 0) {
                 // Handle various formats for tags field (backward compatibility)
                 let sessionTags = [];
                 if (Array.isArray(session.tags)) {
@@ -102,10 +101,7 @@ export class TagStatistics {
         return {
             stats: tagStats,
             totalDuration: Math.round(totalDuration * 60), // Convert to seconds
-            totalSessions: filteredSessions.filter(s => {
-                const sessionType = s.session_type || s.type;
-                return sessionType === 'focus' || sessionType === 'custom';
-            }).length
+            totalSessions: filteredSessions.length // All sessions are focus sessions now
         };
     }
 

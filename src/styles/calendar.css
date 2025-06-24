@@ -253,6 +253,7 @@
 .calendar-right-column {
   display: flex;
   flex-direction: column;
+  gap: 1rem;
 }
 
 /* Focus Summary Card */
@@ -802,6 +803,16 @@
   justify-content: center;
   transition: all 0.3s ease;
   font-size: 0.75rem;
+}
+
+.session-action-btn.edit {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.session-action-btn.edit:hover {
+  background: #bfdbfe;
+  transform: scale(1.05);
 }
 
 .session-action-btn.delete {

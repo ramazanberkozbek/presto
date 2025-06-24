@@ -205,7 +205,7 @@ export class NavigationManager {
                 // Get sessions from SessionManager for this date
                 if (window.sessionManager) {
                     const sessions = window.sessionManager.getSessionsForDate(date);
-                    const focusSessions = sessions.filter(s => s.session_type === 'focus' || s.session_type === 'custom');
+                    const focusSessions = sessions; // All sessions are focus sessions now
                     
                     // Calculate total time in seconds from session durations
                     dayTotalTime = focusSessions.reduce((total, session) => total + ((session.duration || 0) * 60), 0);
@@ -236,7 +236,7 @@ export class NavigationManager {
                 // Get sessions from SessionManager for this date
                 if (window.sessionManager) {
                     const sessions = window.sessionManager.getSessionsForDate(date);
-                    const focusSessions = sessions.filter(s => s.session_type === 'focus' || s.session_type === 'custom');
+                    const focusSessions = sessions; // All sessions are focus sessions now
                     
                     // Calculate total time in seconds from session durations
                     dayTotalTime = focusSessions.reduce((total, session) => total + ((session.duration || 0) * 60), 0);
@@ -330,7 +330,7 @@ export class NavigationManager {
             // Process all sessions with unified logic
             todaysSessions.forEach(session => {
                 // Only include focus and custom sessions, exclude break sessions
-                if (session.session_type === 'focus' || session.session_type === 'custom') {
+                if (true) { // All sessions are focus sessions now
                     const [startHour, startMinute] = session.start_time.split(':').map(Number);
                     const [endHour, endMinute] = session.end_time.split(':').map(Number);
                     
@@ -463,7 +463,7 @@ export class NavigationManager {
                 // Get sessions from SessionManager for this date
                 if (window.sessionManager) {
                     const allSessions = window.sessionManager.getSessionsForDate(date);
-                    const focusSessions = allSessions.filter(s => s.session_type === 'focus' || s.session_type === 'custom');
+                    const focusSessions = allSessions; // All sessions are focus sessions now
                     
                     // Calculate total minutes from session durations
                     sessionsMinutes = focusSessions.reduce((total, session) => total + (session.duration || 0), 0);
@@ -719,7 +719,7 @@ export class NavigationManager {
 
             // Filter out break sessions from timeline display
             const visibleSessions = allSessions.filter(session => 
-                session.session_type !== 'break' && session.session_type !== 'longBreak'
+true // All sessions are focus sessions now
             );
 
             // Create timeline session blocks (excluding break sessions)
@@ -742,20 +742,6 @@ export class NavigationManager {
         }
     }
 
-    getSessionTypeDisplay(type) {
-        switch (type) {
-            case 'focus':
-                return 'Focus';
-            case 'break':
-                return 'Short Break';
-            case 'longBreak':
-                return 'Long Break';
-            case 'custom':
-                return 'Custom';
-            default:
-                return 'Focus';
-        }
-    }
 
     async updateCalendar() {
         const calendarGrid = document.getElementById('calendar-grid');
@@ -951,7 +937,7 @@ export class NavigationManager {
 
     createTimelineSession(session, date, timelineTrack, allSessions = []) {
         const sessionElement = document.createElement('div');
-        sessionElement.className = `timeline-session ${session.session_type}`;
+        sessionElement.className = `timeline-session focus`; // All sessions are focus sessions
         sessionElement.dataset.sessionId = session.id;
 
         // Check if this session is from today
@@ -976,8 +962,6 @@ export class NavigationManager {
         sessionElement.style.width = `${widthPercent}%`;
 
         // Session content - different display for today's sessions
-        const sessionType = this.getSessionTypeDisplay(session.session_type);
-
         if (isToday) {
             // For today's sessions: minimal display, information only in tooltip
             sessionElement.classList.add('today-session');
@@ -988,8 +972,7 @@ export class NavigationManager {
       `;
 
             // Set tooltip with full information
-            const notes = session.notes ? ` - ${session.notes}` : '';
-            sessionElement.title = `${sessionType}: ${session.start_time} - ${session.end_time} (${session.duration}m)${notes}`;
+            sessionElement.title = `Focus: ${session.start_time} - ${session.end_time} (${session.duration}m)`;
         } else {
             // For other days: show full content
             sessionElement.innerHTML = `
@@ -1280,9 +1263,7 @@ export class NavigationManager {
 
         // Update tooltip for today's sessions
         if (sessionElement.classList.contains('today-session')) {
-            const sessionType = this.getSessionTypeDisplay(session.session_type);
-            const notes = session.notes ? ` - ${session.notes}` : '';
-            sessionElement.title = `${sessionType}: ${newStartTime} - ${newEndTime} (${newDuration}m)${notes}`;
+            sessionElement.title = `Focus: ${newStartTime} - ${newEndTime} (${newDuration}m)`;
         }
 
         // Save changes using SessionManager
@@ -1497,15 +1478,11 @@ export class NavigationManager {
         const tooltip = document.createElement('div');
         tooltip.className = 'session-hover-tooltip';
         
-        const sessionType = this.getSessionTypeDisplay(session.session_type);
-        const notes = session.notes ? ` - ${session.notes}` : '';
-        
         tooltip.innerHTML = `
             <div class="tooltip-content">
-                <div class="tooltip-type">${sessionType}</div>
+                <div class="tooltip-type">Focus Session</div>
                 <div class="tooltip-time">${session.start_time} - ${session.end_time}</div>
                 <div class="tooltip-duration">${session.duration} minutes</div>
-                ${notes ? `<div class="tooltip-notes">${session.notes}</div>` : ''}
             </div>
         `;
         
@@ -1556,7 +1533,7 @@ export class NavigationManager {
         if (sessions.length === 0) {
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="sessions-table-empty">
+                    <td colspan="5" class="sessions-table-empty">
                         No sessions found for the selected period
                     </td>
                 </tr>
@@ -1656,17 +1633,16 @@ export class NavigationManager {
             `;
         }
 
-        // Create type badge
-        const typeBadge = `<span class="session-type-badge ${session.session_type}">${session.session_type}</span>`;
-
         row.innerHTML = `
             <td>${formattedDate}</td>
             <td>${timeRange}</td>
             <td>${session.duration}m</td>
             <td><div class="session-tags">${tagsHtml}</div></td>
-            <td>${typeBadge}</td>
             <td>
                 <div class="session-actions">
+                    <button class="session-action-btn edit" onclick="navigationManager.editSessionFromTable('${session.id}')" title="Edit Session">
+                        <i class="ri-edit-line"></i>
+                    </button>
                     <button class="session-action-btn delete" onclick="navigationManager.deleteSessionFromTable('${session.id}')" title="Delete Session">
                         <i class="ri-delete-bin-line"></i>
                     </button>
@@ -1765,6 +1741,37 @@ export class NavigationManager {
         }
     }
 
+    async editSessionFromTable(sessionId) {
+        if (!window.sessionManager || !sessionId) return;
+
+        try {
+            // Find the session
+            let sessionToEdit = null;
+            let sessionDate = null;
+            
+            for (const [dateString, sessions] of Object.entries(window.sessionManager.sessions)) {
+                const session = sessions.find(s => s.id === sessionId);
+                if (session) {
+                    sessionToEdit = session;
+                    sessionDate = dateString;
+                    break;
+                }
+            }
+
+            if (!sessionToEdit) {
+                console.warn('Session not found for editing:', sessionId);
+                return;
+            }
+
+            // Open the edit modal using SessionManager
+            window.sessionManager.openEditSessionModal(sessionToEdit, sessionDate);
+            
+        } catch (error) {
+            console.error('Error opening edit session modal:', error);
+            alert('Failed to open edit session. Please try again.');
+        }
+    }
+
     async exportSessionsToExcel() {
         try {
             const filterSelect = document.getElementById('sessions-filter-period');
@@ -1801,9 +1808,7 @@ export class NavigationManager {
                     'Start Time': session.start_time,
                     'End Time': session.end_time,
                     'Duration (minutes)': session.duration,
-                    'Type': session.session_type,
-                    'Tags': tagNames || '-',
-                    'Notes': session.notes || '-'
+                    'Tags': tagNames || '-'
                 });
             }
 
