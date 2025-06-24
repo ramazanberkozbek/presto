@@ -1637,28 +1637,57 @@ export class NavigationManager {
         if (!window.sessionManager || !sessionId) return;
 
         try {
+            let sessionFound = false;
+            
             // Find and delete the session
             for (const [dateString, sessions] of Object.entries(window.sessionManager.sessions)) {
                 const sessionIndex = sessions.findIndex(s => s.id === sessionId);
                 if (sessionIndex !== -1) {
                     sessions.splice(sessionIndex, 1);
-                    await window.sessionManager.saveSessionsToStorage();
-                    
-                    // Refresh the table
-                    const filterSelect = document.getElementById('sessions-filter-period');
-                    const currentPeriod = filterSelect ? filterSelect.value : 'today';
-                    await this.populateSessionsTable(currentPeriod);
-                    
-                    // Refresh other views
-                    await this.updateDailyChart();
-                    await this.updateFocusSummary();
-                    await this.updateWeeklySessionsChart();
-                    await this.updateTimelineForDate(new Date());
-                    
+                    sessionFound = true;
                     console.log('Session deleted successfully:', sessionId);
                     break;
                 }
             }
+
+            if (!sessionFound) {
+                console.warn('Session not found for deletion:', sessionId);
+                return;
+            }
+
+            // Save the updated sessions
+            await window.sessionManager.saveSessionsToStorage();
+            
+            // Refresh the table
+            const filterSelect = document.getElementById('sessions-filter-period');
+            const currentPeriod = filterSelect ? filterSelect.value : 'today';
+            await this.populateSessionsTable(currentPeriod);
+            
+            // Refresh other views (with error handling for each)
+            try {
+                await this.updateDailyChart();
+            } catch (e) {
+                console.warn('Failed to update daily chart after deletion:', e);
+            }
+            
+            try {
+                await this.updateFocusSummary();
+            } catch (e) {
+                console.warn('Failed to update focus summary after deletion:', e);
+            }
+            
+            try {
+                await this.updateWeeklySessionsChart();
+            } catch (e) {
+                console.warn('Failed to update weekly chart after deletion:', e);
+            }
+            
+            try {
+                await this.updateTimelineForDate(new Date());
+            } catch (e) {
+                console.warn('Failed to update timeline after deletion:', e);
+            }
+            
         } catch (error) {
             console.error('Error deleting session:', error);
             alert('Failed to delete session. Please try again.');
