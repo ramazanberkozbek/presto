@@ -507,7 +507,7 @@ export class PomodoroTimer {
         this.updateDisplay();
         this.updateButtons();
         this.updateTrayIcon();
-        
+
         // Clear the resume flag after UI update
         this._justResumedFromAutoPause = false;
 
@@ -534,7 +534,7 @@ export class PomodoroTimer {
         // Update display to remove (Auto-paused) status
         this.updateDisplay();
         this.updateButtons();
-        
+
         console.log('🎯 Resume complete, timer should be running normally');
     }
 
@@ -579,7 +579,7 @@ export class PomodoroTimer {
 
             this.isRunning = true;
             this.isPaused = false;
-            
+
             // Set flag to ensure status update when resuming from manual pause
             if (wasResuming) {
                 this._justResumedFromPause = true;
@@ -603,12 +603,12 @@ export class PomodoroTimer {
 
             this.updateButtons();
             this.updateDisplay();
-            
+
             // Clear the resume flag after UI update
             if (wasResuming) {
                 this._justResumedFromPause = false;
             }
-            
+
             if (this.enableSoundNotifications) {
                 NotificationUtils.playNotificationSound();
             }
@@ -773,13 +773,13 @@ export class PomodoroTimer {
         if (this.timeRemaining < 0 && this.allowContinuousSessions) {
             shouldSaveSession = true;
             this.sessionCompletedButNotSaved = false;
-            
+
             // Save overtime focus session to SessionManager as individual session
             // Only save if session lasted at least 1 minute
-            if (this.currentMode === 'focus' && this.lastCompletedSessionTime > 60) {
+            if (this.currentMode === 'focus' && this.lastCompletedSessionTime > 3) {
                 await this.saveCompletedFocusSession();
             }
-            
+
             // Move to next mode as usual
             if (this.currentMode === 'focus') {
                 if (this.completedPomodoros % 4 === 0) {
@@ -798,7 +798,6 @@ export class PomodoroTimer {
             this.updateButtons();
             if (shouldSaveSession) {
                 this.saveSessionData();
-                this.updateWeeklyStats();
             }
             const messages = {
                 focus: 'Focus session skipped. Time for a break! 😌',
@@ -823,7 +822,7 @@ export class PomodoroTimer {
                 const actualElapsedTime = this.currentSessionElapsedTime || (this.durations.focus - this.timeRemaining);
                 this.totalFocusTime += actualElapsedTime;
                 this.lastCompletedSessionTime = actualElapsedTime;
-                
+
                 // Save skipped focus session to SessionManager as individual session
                 // Only save if session lasted at least 1 minute
                 if (this.lastCompletedSessionTime > 60) {
@@ -854,7 +853,6 @@ export class PomodoroTimer {
         this.updateButtons();
         if (shouldSaveSession) {
             this.saveSessionData();
-            this.updateWeeklyStats();
         }
         const messages = {
             focus: 'Focus session skipped. Time for a break! 😌',
@@ -949,14 +947,14 @@ export class PomodoroTimer {
         this.timeRemaining = this.durations[this.currentMode];
         this.updateDisplay();
         this.updateButtons();
-        
+
         // Save completed focus session to SessionManager as individual session
         if (this.lastCompletedSessionTime > 0 && this.completedPomodoros > 0) {
             await this.saveCompletedFocusSession();
         }
-        
+
+        // Only save aggregated session data, individual sessions are handled by saveCompletedFocusSession
         await this.saveSessionData();
-        await this.updateWeeklyStats();
         this.showNotification();
         if (this.enableSoundNotifications) {
             NotificationUtils.playNotificationSound();
@@ -1047,7 +1045,7 @@ export class PomodoroTimer {
 
             // Mark session as completed but not saved yet (will be saved when user skips)
             this.sessionCompletedButNotSaved = true;
-            
+
             // Save completed focus session to SessionManager immediately
             await this.saveCompletedFocusSession();
         }
@@ -1528,7 +1526,6 @@ export class PomodoroTimer {
         this.updateProgressDots();
         this.updateButtons();
         await this.saveSessionData();
-        await this.updateWeeklyStats();
         this.updateTrayIcon();
 
         // Show undo notification
@@ -1839,7 +1836,7 @@ export class PomodoroTimer {
 
         const now = new Date();
         const durationMinutes = Math.round(this.lastCompletedSessionTime / 60);
-        
+
         // Calculate session end time (now) and start time (backwards from duration)
         const endHour = now.getHours();
         const endMinute = now.getMinutes();

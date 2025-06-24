@@ -1065,8 +1065,7 @@ function setupAuthEventListeners() {
   if (guestBtn) {
     guestBtn.addEventListener('click', async () => {
       window.authManager.continueAsGuest();
-      await hideAuthScreen();
-      initializeApplication(); // Continue with app initialization
+      // hideAuthScreen and initializeApplication will be handled by onAuthChange listener
     });
   }
 
@@ -1076,21 +1075,14 @@ function setupAuthEventListeners() {
     guestLink.addEventListener('click', async (e) => {
       e.preventDefault();
       window.authManager.continueAsGuest();
-      await hideAuthScreen();
-      initializeApplication(); // Continue with app initialization
+      // hideAuthScreen and initializeApplication will be handled by onAuthChange listener
     });
   }
 
   // Listen for auth state changes  
   if (window.authManager) {
     window.authManager.onAuthChange(async (status, user) => {
-      if (status === 'authenticated') {
-        await hideAuthScreen();
-        // Only continue initialization if this is first run (app not yet initialized)
-        if (!window.pomodoroTimer) {
-          initializeApplication(); // Continue with app initialization
-        }
-      } else if (status === 'guest') {
+      if (status === 'authenticated' || status === 'guest') {
         await hideAuthScreen();
         // Only continue initialization if this is first run (app not yet initialized)
         if (!window.pomodoroTimer) {
@@ -1437,8 +1429,15 @@ function setupUserAvatarEventListeners() {
 
 // Initialize the application
 async function initializeApplication() {
+  // Prevent double initialization
+  if (window._appInitialized) {
+    console.log('🚀 Application already initialized, skipping...');
+    return;
+  }
+  
   try {
     console.log('🚀 Initializing Presto application...');
+    window._appInitialized = true;
 
     // Initialize theme as early as possible
     await initializeEarlyTheme();
@@ -1520,6 +1519,9 @@ async function initializeApplication() {
   } catch (error) {
     console.error('❌ Failed to initialize application:', error);
     NotificationUtils.showNotificationPing('Failed to initialize app. Please refresh! 🔄', 'error');
+    
+    // Reset initialization flag on error so user can retry
+    window._appInitialized = false;
   }
 }
 

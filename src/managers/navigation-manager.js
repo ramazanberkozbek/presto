@@ -1,5 +1,4 @@
 // Navigation Manager for Sidebar
-const { invoke } = window.__TAURI__.core;
 import { TimeUtils } from '../utils/common-utils.js';
 
 export class NavigationManager {
@@ -183,7 +182,6 @@ export class NavigationManager {
         let previousWeeklySessions = 0;
 
         try {
-            const history = await invoke('get_stats_history');
             const weekStart = this.getWeekStart(this.currentDate);
             const previousWeekStart = new Date(weekStart);
             previousWeekStart.setDate(weekStart.getDate() - 7);
@@ -195,14 +193,25 @@ export class NavigationManager {
             for (let i = 0; i < 7; i++) {
                 const date = new Date(weekStart);
                 date.setDate(weekStart.getDate() + i);
-                const dayData = history.find(h => h.date === date.toDateString());
-                if (dayData) {
-                    weekTotal += dayData.total_focus_time;
-                    weeklyFocusTime += dayData.total_focus_time;
-                    weeklySessions += dayData.completed_pomodoros;
-                    if (dayData.total_focus_time > 0) {
-                        daysWithData++;
-                    }
+                
+                let dayTotalTime = 0;
+                let daySessions = 0;
+                
+                // Get sessions from SessionManager for this date
+                if (window.sessionManager) {
+                    const sessions = window.sessionManager.getSessionsForDate(date);
+                    const focusSessions = sessions.filter(s => s.session_type === 'focus' || s.session_type === 'custom');
+                    
+                    // Calculate total time in seconds from session durations
+                    dayTotalTime = focusSessions.reduce((total, session) => total + ((session.duration || 0) * 60), 0);
+                    daySessions = focusSessions.length;
+                }
+                
+                if (dayTotalTime > 0) {
+                    weekTotal += dayTotalTime;
+                    weeklyFocusTime += dayTotalTime;
+                    weeklySessions += daySessions;
+                    daysWithData++;
                 }
             }
 
@@ -215,14 +224,25 @@ export class NavigationManager {
             for (let i = 0; i < 7; i++) {
                 const date = new Date(previousWeekStart);
                 date.setDate(previousWeekStart.getDate() + i);
-                const dayData = history.find(h => h.date === date.toDateString());
-                if (dayData) {
-                    previousWeekTotal += dayData.total_focus_time;
-                    previousWeekFocusTime += dayData.total_focus_time;
-                    previousWeeklySessions += dayData.completed_pomodoros;
-                    if (dayData.total_focus_time > 0) {
-                        previousDaysWithData++;
-                    }
+                
+                let dayTotalTime = 0;
+                let daySessions = 0;
+                
+                // Get sessions from SessionManager for this date
+                if (window.sessionManager) {
+                    const sessions = window.sessionManager.getSessionsForDate(date);
+                    const focusSessions = sessions.filter(s => s.session_type === 'focus' || s.session_type === 'custom');
+                    
+                    // Calculate total time in seconds from session durations
+                    dayTotalTime = focusSessions.reduce((total, session) => total + ((session.duration || 0) * 60), 0);
+                    daySessions = focusSessions.length;
+                }
+                
+                if (dayTotalTime > 0) {
+                    previousWeekTotal += dayTotalTime;
+                    previousWeekFocusTime += dayTotalTime;
+                    previousWeeklySessions += daySessions;
+                    previousDaysWithData++;
                 }
             }
 
@@ -417,7 +437,6 @@ export class NavigationManager {
         const maxHeight = 70;
 
         try {
-            const history = await invoke('get_stats_history');
             const weekStart = this.getWeekStart(this.currentDate);
             const today = new Date();
 
@@ -433,20 +452,17 @@ export class NavigationManager {
                 const date = new Date(weekStart);
                 date.setDate(weekStart.getDate() + index);
 
-                // Get data from both timer history and SessionManager
-                const dayData = history.find(h => h.date === date.toDateString());
-                let sessionsMinutes = dayData ? dayData.total_focus_time / 60 : 0; // Convert seconds to minutes
-                let sessions = dayData ? dayData.completed_pomodoros : 0;
+                let sessionsMinutes = 0;
+                let sessions = 0;
 
-                // Add sessions from SessionManager for this date
+                // Get sessions from SessionManager for this date
                 if (window.sessionManager) {
-                    const manualSessions = window.sessionManager.getSessionsForDate(date);
-                    const focusSessions = manualSessions.filter(s => s.session_type === 'focus' || s.session_type === 'custom');
+                    const allSessions = window.sessionManager.getSessionsForDate(date);
+                    const focusSessions = allSessions.filter(s => s.session_type === 'focus' || s.session_type === 'custom');
                     
-                    // Add minutes from manual/timer sessions
-                    const manualMinutes = focusSessions.reduce((total, session) => total + (session.duration || 0), 0);
-                    sessionsMinutes += manualMinutes;
-                    sessions += focusSessions.length;
+                    // Calculate total minutes from session durations
+                    sessionsMinutes = focusSessions.reduce((total, session) => total + (session.duration || 0), 0);
+                    sessions = focusSessions.length;
                 }
 
                 // Only consider days that have completely passed (exclude today) for average calculation
@@ -460,7 +476,6 @@ export class NavigationManager {
                 weekData.push({
                     day,
                     date,
-                    dayData,
                     sessionsMinutes,
                     sessions,
                     isPast: date <= today
@@ -530,7 +545,7 @@ export class NavigationManager {
             }
 
             // Second pass: create the bars with proportional scaling
-            weekData.forEach(({ day, sessionsMinutes, sessions, dayData, isPast }) => {
+            weekData.forEach(({ day, sessionsMinutes, sessions, isPast }) => {
                 const dayBar = document.createElement('div');
                 dayBar.className = 'week-day-bar';
 
@@ -708,15 +723,6 @@ export class NavigationManager {
         const daysInMonth = lastDay.getDate();
         const startingDay = firstDay.getDay();
 
-        // Load session history for the month
-        let history = [];
-        try {
-            history = await invoke('get_stats_history');
-        } catch (error) {
-            console.error('Failed to load calendar data:', error);
-            // Continue with empty history
-        }
-
         // Add empty cells for days before month starts
         for (let i = 0; i < startingDay; i++) {
             const emptyDay = document.createElement('div');
@@ -740,16 +746,19 @@ export class NavigationManager {
                 dayEl.classList.add('today');
             }
 
-            // Add session dots based on real data (if available)
+            // Add session dots based on SessionManager data
             const dots = document.createElement('div');
             dots.className = 'calendar-day-dots';
 
-            if (history.length > 0) {
-                const dayData = history.find(h => h.date === dayDate.toDateString());
-                if (dayData && dayData.completed_pomodoros > 0) {
+            // Get sessions from SessionManager for this date
+            if (window.sessionManager) {
+                const sessions = window.sessionManager.getSessionsForDate(dayDate);
+                const focusSessions = sessions.filter(s => s.session_type === 'focus' || s.session_type === 'custom');
+                
+                if (focusSessions.length > 0) {
                     dayEl.classList.add('has-sessions');
-                    // Create dots for completed pomodoros
-                    const numDots = Math.min(dayData.completed_pomodoros, 5); // Max 5 dots
+                    // Create dots for completed focus sessions
+                    const numDots = Math.min(focusSessions.length, 5); // Max 5 dots
                     for (let i = 0; i < numDots; i++) {
                         const dot = document.createElement('div');
                         dot.className = 'calendar-dot';
