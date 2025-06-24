@@ -83,8 +83,8 @@ export class UpdateNotification {
         styles.textContent = `
             .update-notification-container {
             position: fixed;
-            top: 44px;
-            left: 80px;
+            top: 0;
+            left: 0;
             right: 0;
             z-index: 10000;
             transform: translateY(-100%);
