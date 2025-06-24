@@ -1127,20 +1127,38 @@ export class PomodoroTimer {
 
         // Add state indicators
         if (shouldUpdateStatus) {
-            console.log('📊 updateDisplay - isOvertime:', isOvertime, 'isAutoPaused:', this.isAutoPaused, 'isPaused:', this.isPaused, 'isRunning:', this.isRunning, 'justResumedFromAutoPause:', this._justResumedFromAutoPause, 'justResumedFromPause:', this._justResumedFromPause);
+            // Only log state changes, not every update to reduce spam
+            const currentState = `${isOvertime}-${this.isAutoPaused}-${this.isPaused}-${this.isRunning}`;
+            if (!this._lastLoggedState || this._lastLoggedState !== currentState || this._justResumedFromAutoPause || this._justResumedFromPause) {
+                console.log('📊 updateDisplay - isOvertime:', isOvertime, 'isAutoPaused:', this.isAutoPaused, 'isPaused:', this.isPaused, 'isRunning:', this.isRunning, 'justResumedFromAutoPause:', this._justResumedFromAutoPause, 'justResumedFromPause:', this._justResumedFromPause);
+                this._lastLoggedState = currentState;
+            }
 
             if (isOvertime) {
                 statusText += ' (Overtime)';
-                console.log('⏰ Showing Overtime status');
+                if (!this._lastLoggedState || !this._lastLoggedState.startsWith('true-')) {
+                    console.log('⏰ Showing Overtime status');
+                }
             }
             else if (this.isAutoPaused) {
                 statusText += ' (Auto-paused)';
-                console.log('💤 Showing Auto-paused status');
+                if (!this._lastAutoPausedLogged) {
+                    console.log('💤 Showing Auto-paused status');
+                    this._lastAutoPausedLogged = true;
+                }
             } else if (this.isPaused && !this.isRunning) {
                 statusText += ' (Paused)';
-                console.log('⏸️ Showing Paused status');
+                if (!this._lastPausedLogged) {
+                    console.log('⏸️ Showing Paused status');
+                    this._lastPausedLogged = true;
+                }
             } else {
-                console.log('▶️ No status suffix (timer running normally)');
+                // Reset paused flags when not in those states
+                this._lastAutoPausedLogged = false;
+                this._lastPausedLogged = false;
+                if (this._lastLoggedState && (this._lastLoggedState.includes('true') || this._justResumedFromAutoPause || this._justResumedFromPause)) {
+                    console.log('▶️ No status suffix (timer running normally)');
+                }
             }
 
             // Update status text only when necessary

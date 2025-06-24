@@ -277,7 +277,9 @@ export class SessionManager {
     }
 
     async addSession(sessionData) {
-        const dateString = this.selectedDate.toDateString();
+        // Use current date if selectedDate is null (e.g., when called from timer)
+        const targetDate = this.selectedDate || new Date();
+        const dateString = targetDate.toDateString();
 
         // Add to local storage
         if (!this.sessions[dateString]) {
