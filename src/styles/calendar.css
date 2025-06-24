@@ -664,6 +664,35 @@
   box-shadow: 0 0 0 3px var(--focus-bg-alpha);
 }
 
+.export-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--shared-border);
+  border-radius: 8px;
+  background: var(--setting-item-bg);
+  color: var(--text-color);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.export-btn:hover {
+  background: var(--setting-item-hover-bg);
+  border-color: var(--accent-color);
+  transform: translateY(-1px);
+}
+
+.export-btn:active {
+  transform: translateY(0);
+}
+
+.export-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
 .sessions-table-container {
   overflow-x: auto;
   border-radius: 8px;

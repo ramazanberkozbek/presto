@@ -1472,6 +1472,13 @@ export class NavigationManager {
                 await this.populateSessionsTable(e.target.value);
             });
         }
+
+        const exportBtn = document.getElementById('export-sessions-btn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => {
+                this.exportSessionsToExcel();
+            });
+        }
     }
 
     async populateSessionsTable(period = 'today') {
@@ -1629,34 +1636,136 @@ export class NavigationManager {
     async deleteSessionFromTable(sessionId) {
         if (!window.sessionManager || !sessionId) return;
 
-        if (confirm('Are you sure you want to delete this session? This action cannot be undone.')) {
-            try {
-                // Find and delete the session
-                for (const [dateString, sessions] of Object.entries(window.sessionManager.sessions)) {
-                    const sessionIndex = sessions.findIndex(s => s.id === sessionId);
-                    if (sessionIndex !== -1) {
-                        sessions.splice(sessionIndex, 1);
-                        await window.sessionManager.saveSessionsToStorage();
-                        
-                        // Refresh the table
-                        const filterSelect = document.getElementById('sessions-filter-period');
-                        const currentPeriod = filterSelect ? filterSelect.value : 'today';
-                        await this.populateSessionsTable(currentPeriod);
-                        
-                        // Refresh other views
-                        await this.updateDailyChart();
-                        await this.updateFocusSummary();
-                        await this.updateWeeklySessionsChart();
-                        await this.updateTimelineForDate(new Date());
-                        
-                        console.log('Session deleted successfully:', sessionId);
-                        break;
-                    }
+        try {
+            // Find and delete the session
+            for (const [dateString, sessions] of Object.entries(window.sessionManager.sessions)) {
+                const sessionIndex = sessions.findIndex(s => s.id === sessionId);
+                if (sessionIndex !== -1) {
+                    sessions.splice(sessionIndex, 1);
+                    await window.sessionManager.saveSessionsToStorage();
+                    
+                    // Refresh the table
+                    const filterSelect = document.getElementById('sessions-filter-period');
+                    const currentPeriod = filterSelect ? filterSelect.value : 'today';
+                    await this.populateSessionsTable(currentPeriod);
+                    
+                    // Refresh other views
+                    await this.updateDailyChart();
+                    await this.updateFocusSummary();
+                    await this.updateWeeklySessionsChart();
+                    await this.updateTimelineForDate(new Date());
+                    
+                    console.log('Session deleted successfully:', sessionId);
+                    break;
                 }
-            } catch (error) {
-                console.error('Error deleting session:', error);
-                alert('Failed to delete session. Please try again.');
             }
+        } catch (error) {
+            console.error('Error deleting session:', error);
+            alert('Failed to delete session. Please try again.');
+        }
+    }
+
+    async exportSessionsToExcel() {
+        try {
+            const filterSelect = document.getElementById('sessions-filter-period');
+            const currentPeriod = filterSelect ? filterSelect.value : 'today';
+            const sessions = this.getSessionsForPeriod(currentPeriod);
+
+            if (sessions.length === 0) {
+                alert('No sessions to export for the selected period.');
+                return;
+            }
+
+            const XLSX = window.XLSX;
+            if (!XLSX) {
+                console.error('XLSX library not found');
+                alert('Excel export functionality is not available.');
+                return;
+            }
+
+            // Prepare export data
+            const exportData = [];
+            for (const session of sessions) {
+                const sessionDate = new Date(session.created_at);
+                const formattedDate = sessionDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                });
+
+                const tags = await this.getSessionTags(session.id);
+                const tagNames = tags.map(tag => tag.name).join(', ');
+
+                exportData.push({
+                    'Date': formattedDate,
+                    'Start Time': session.start_time,
+                    'End Time': session.end_time,
+                    'Duration (minutes)': session.duration,
+                    'Type': session.session_type,
+                    'Tags': tagNames || '-',
+                    'Notes': session.notes || '-'
+                });
+            }
+
+            exportData.sort((a, b) => {
+                const dateComparison = new Date(b.Date).getTime() - new Date(a.Date).getTime();
+                if (dateComparison !== 0) return dateComparison;
+                return b['Start Time'].localeCompare(a['Start Time']);
+            });
+
+            // Create Excel workbook
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Session History');
+
+            // Generate default filename
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
+            const defaultFilename = `presto-session-history-${currentPeriod}-${dateStr}.xlsx`;
+
+            // Check if we're in Tauri environment
+            if (window.__TAURI__) {
+                try {
+                    // Use Tauri's save dialog
+                    const filePath = await window.__TAURI__.dialog.save({
+                        defaultPath: defaultFilename,
+                        filters: [{
+                            name: 'Excel files',
+                            extensions: ['xlsx']
+                        }]
+                    });
+
+                    if (filePath) {
+                        // Convert workbook to base64 for Tauri
+                        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+                        
+                        // Use invoke to call Rust backend to save file
+                        await window.__TAURI__.core.invoke('write_excel_file', {
+                            path: filePath,
+                            data: wbout
+                        });
+                        
+                        console.log(`Exported ${sessions.length} sessions to ${filePath}`);
+                        alert(`Sessions exported successfully to:\n${filePath}`);
+                    } else {
+                        console.log('Export cancelled by user');
+                    }
+                } catch (tauriError) {
+                    console.error('Tauri save error:', tauriError);
+                    // Fallback to direct download
+                    XLSX.writeFile(wb, defaultFilename);
+                    console.log(`Tauri save failed, using fallback download: ${defaultFilename}`);
+                    alert(`File saved to Downloads folder as: ${defaultFilename}`);
+                }
+            } else {
+                // Fallback for web environment - direct download
+                XLSX.writeFile(wb, defaultFilename);
+                console.log(`Exported ${sessions.length} sessions to ${defaultFilename}`);
+            }
+            
+        } catch (error) {
+            console.error('Error exporting sessions:', error);
+            alert('Failed to export sessions. Please try again.');
         }
     }
 }

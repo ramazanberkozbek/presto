@@ -4,6 +4,7 @@ use std::fs;
 use std::sync::{Arc, LazyLock, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
+use base64::{Engine as _, engine::general_purpose};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager};
@@ -908,7 +909,8 @@ pub fn run() {
                 load_session_tags,
                 save_session_tags,
                 add_session_tag,
-                get_env_var
+                get_env_var,
+                write_excel_file
             ])
             .setup(|app| {
                 // Track app started event (if enabled)
@@ -1271,5 +1273,19 @@ async fn update_tray_menu(
             .map_err(|e| format!("Failed to set tray menu: {}", e))?;
     }
 
+    Ok(())
+}
+
+#[tauri::command]
+async fn write_excel_file(path: String, data: String) -> Result<(), String> {
+    // Decode base64 data
+    let decoded_data = general_purpose::STANDARD
+        .decode(data)
+        .map_err(|e| format!("Failed to decode base64 data: {}", e))?;
+    
+    // Write the binary data to file
+    fs::write(&path, decoded_data)
+        .map_err(|e| format!("Failed to write Excel file to {}: {}", path, e))?;
+    
     Ok(())
 }
