@@ -233,7 +233,8 @@ export class SessionManager {
             start_time: formData.get('startTime'),
             end_time: this.calculateEndTime(formData.get('startTime'), parseInt(formData.get('duration'))),
             notes: formData.get('notes') || null,
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            tags: [] // Manual sessions start without tags, but field is included for compatibility
         };
 
         // Validate form

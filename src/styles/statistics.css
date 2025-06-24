@@ -240,6 +240,18 @@
   font-weight: 500;
 }
 
+.tag-legend-others {
+  opacity: 0.8;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+.tag-legend-others .tag-legend-name {
+  font-style: italic;
+  font-size: 13px;
+}
+
 /* Pie chart segments */
 .pie-segment {
   position: absolute;

@@ -254,22 +254,6 @@
             </div>
           </div>
 
-          <!-- Tag Usage Pie Chart -->
-          <div class="tag-usage-card">
-            <h3>Tag Usage This Week</h3>
-            <div class="tag-chart-container">
-              <div class="tag-pie-chart" id="tag-pie-chart">
-                <div class="pie-chart-placeholder">
-                  <i class="ri-pie-chart-line"></i>
-                  <span>No data available</span>
-                </div>
-              </div>
-              <div class="tag-legend" id="tag-legend">
-                <!-- Legend items will be populated by JavaScript -->
-              </div>
-            </div>
-          </div>
-
           <!-- Weekly Sessions Chart -->
           <div class="weekly-chart-card">
             <h3>This Week's Sessions</h3>
@@ -302,6 +286,59 @@
                 <span class="legend-color break"></span>
                 Break time
               </span>
+            </div>
+          </div>
+
+          <!-- Tag Usage Pie Chart -->
+          <div class="tag-usage-card">
+            <h3>Tag Usage This Week</h3>
+            <div class="tag-chart-container">
+              <div class="tag-pie-chart" id="tag-pie-chart">
+                <div class="pie-chart-placeholder">
+                  <i class="ri-pie-chart-line"></i>
+                  <span>No data available</span>
+                </div>
+              </div>
+              <div class="tag-legend" id="tag-legend">
+                <!-- Legend items will be populated by JavaScript -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Calendar -->
+        <div class="calendar-right-column">
+          <div class="mini-calendar-container">
+            <div class="calendar-header">
+              <button id="prev-month" class="nav-btn">&lt;</button>
+              <h3 id="current-month">June 2025</h3>
+              <button id="next-month" class="nav-btn">&gt;</button>
+            </div>
+            <div class="calendar-grid" id="calendar-grid">
+              <!-- Will be filled by JavaScript -->
+            </div>
+
+            <!-- Session Details for Selected Day -->
+            <div class="selected-day-details" id="selected-day-details">
+              <div class="sessions-header">
+                <h4 id="selected-day-title">Today's Sessions</h4>
+                <button class="add-session-btn" id="add-session-btn" title="Add Session">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
+                  </svg>
+                </button>
+              </div>
+              <!-- Timeline Container -->
+              <div class="sessions-timeline" id="sessions-timeline">
+                <!-- Timeline Hours -->
+                <div class="timeline-hours" id="timeline-hours">
+                  <!-- Will be filled by JavaScript with hour markers -->
+                </div>
+                <!-- Timeline Track -->
+                <div class="timeline-track" id="timeline-track">
+                  <!-- Will show session blocks positioned by time -->
+                </div>
+              </div>
             </div>
           </div>
 
@@ -344,43 +381,6 @@
                   <!-- Sessions will be populated by JavaScript -->
                 </tbody>
               </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Column: Calendar -->
-        <div class="calendar-right-column">
-          <div class="mini-calendar-container">
-            <div class="calendar-header">
-              <button id="prev-month" class="nav-btn">&lt;</button>
-              <h3 id="current-month">June 2025</h3>
-              <button id="next-month" class="nav-btn">&gt;</button>
-            </div>
-            <div class="calendar-grid" id="calendar-grid">
-              <!-- Will be filled by JavaScript -->
-            </div>
-
-            <!-- Session Details for Selected Day -->
-            <div class="selected-day-details" id="selected-day-details">
-              <div class="sessions-header">
-                <h4 id="selected-day-title">Today's Sessions</h4>
-                <button class="add-session-btn" id="add-session-btn" title="Add Session">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
-                  </svg>
-                </button>
-              </div>
-              <!-- Timeline Container -->
-              <div class="sessions-timeline" id="sessions-timeline">
-                <!-- Timeline Hours -->
-                <div class="timeline-hours" id="timeline-hours">
-                  <!-- Will be filled by JavaScript with hour markers -->
-                </div>
-                <!-- Timeline Track -->
-                <div class="timeline-track" id="timeline-track">
-                  <!-- Will show session blocks positioned by time -->
-                </div>
-              </div>
             </div>
           </div>
         </div>

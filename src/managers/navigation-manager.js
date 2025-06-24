@@ -135,6 +135,7 @@ export class NavigationManager {
             await this.updateFocusSummary();
             await this.updateWeeklySessionsChart();
             this.updateDailyChart();
+            await this.updateTagUsageChart();
         });
 
         nextWeekBtn.addEventListener('click', async () => {
@@ -143,6 +144,7 @@ export class NavigationManager {
             await this.updateFocusSummary();
             await this.updateWeeklySessionsChart();
             this.updateDailyChart();
+            await this.updateTagUsageChart();
         });
 
         // Initial updates will be handled by switchView when calendar is shown
@@ -614,6 +616,64 @@ export class NavigationManager {
         }
     }
 
+    async updateTagUsageChart() {
+        try {
+            // Get all available tags
+            const tags = window.tagManager ? window.tagManager.tags : [];
+            
+            // Get sessions for the current week
+            const sessions = [];
+            const startOfWeek = this.getWeekStart(this.currentDate);
+            
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(startOfWeek);
+                date.setDate(startOfWeek.getDate() + i);
+                
+                if (window.sessionManager) {
+                    const dailySessions = window.sessionManager.getSessionsForDate(date);
+                    
+                    // Filter to focus sessions only and add date info
+                    const focusSessions = dailySessions
+                        .filter(s => {
+                            const sessionType = s.session_type || s.type;
+                            return sessionType === 'focus' || sessionType === 'custom';
+                        })
+                        .map(session => ({
+                            ...session,
+                            date: date.toISOString().split('T')[0] // Add date in YYYY-MM-DD format
+                        }));
+                    sessions.push(...focusSessions);
+                }
+            }
+
+            // Get tag statistics for current week
+            const tagStatsData = this.tagStatistics.getCurrentWeekTagStats(sessions, tags);
+            
+            // Render the pie chart
+            this.tagStatistics.renderTagPieChart('tag-pie-chart', 'tag-legend', tagStatsData);
+            
+        } catch (error) {
+            console.error('Error updating tag usage chart:', error);
+            
+            // Show placeholder on error
+            const chartContainer = document.getElementById('tag-pie-chart');
+            const legendContainer = document.getElementById('tag-legend');
+            
+            if (chartContainer) {
+                chartContainer.innerHTML = `
+                    <div class="pie-chart-placeholder">
+                        <i class="ri-pie-chart-line"></i>
+                        <span>Error loading data</span>
+                    </div>
+                `;
+            }
+            
+            if (legendContainer) {
+                legendContainer.innerHTML = '';
+            }
+        }
+    }
+
     async updateSelectedDayDetails(date = this.currentDate) {
         const selectedDayTitle = document.getElementById('selected-day-title');
         const timelineTrack = document.getElementById('timeline-track');
@@ -799,6 +859,7 @@ export class NavigationManager {
         await this.updateFocusSummary();
         await this.updateWeeklySessionsChart();
         this.updateDailyChart();
+        await this.updateTagUsageChart();
     }
 
     updateDailyDetails(date = this.currentDate) {
@@ -808,6 +869,7 @@ export class NavigationManager {
         this.updateFocusSummary();
         this.updateWeeklySessionsChart();
         this.updateDailyChart();
+        this.updateTagUsageChart();
     }
 
     updateWeeklyChart() {
@@ -1683,6 +1745,12 @@ export class NavigationManager {
                 await this.updateWeeklySessionsChart();
             } catch (e) {
                 console.warn('Failed to update weekly chart after deletion:', e);
+            }
+            
+            try {
+                await this.updateTagUsageChart();
+            } catch (e) {
+                console.warn('Failed to update tag usage chart after deletion:', e);
             }
             
             try {

@@ -41,8 +41,18 @@ export class TagStatistics {
 
         // Process sessions to calculate tag durations
         filteredSessions.forEach(session => {
-            if (session.type === 'focus' && session.duration > 0) {
-                const sessionTags = session.tags || [];
+            // Check for both 'type' and 'session_type' properties for compatibility
+            const sessionType = session.session_type || session.type;
+            if ((sessionType === 'focus' || sessionType === 'custom') && session.duration > 0) {
+                // Handle various formats for tags field (backward compatibility)
+                let sessionTags = [];
+                if (Array.isArray(session.tags)) {
+                    sessionTags = session.tags;
+                } else if (session.tags) {
+                    // In case tags is not an array but exists
+                    sessionTags = [session.tags];
+                }
+                // sessionTags will be empty array if session.tags is null/undefined
                 
                 if (sessionTags.length === 0) {
                     // Session without tags - assign to "Untagged"
@@ -57,8 +67,11 @@ export class TagStatistics {
                 } else {
                     // Distribute session duration equally among all tags
                     const durationPerTag = session.duration / sessionTags.length;
-                    sessionTags.forEach(tagId => {
-                        const tag = tags.find(t => t.id === tagId);
+                    sessionTags.forEach(sessionTag => {
+                        // Handle both tag objects and tag IDs
+                        const tagId = typeof sessionTag === 'string' ? sessionTag : sessionTag.id;
+                        const tag = typeof sessionTag === 'object' ? sessionTag : tags.find(t => t.id === tagId);
+                        
                         if (tag) {
                             const current = tagUsage.get(tagId) || { duration: 0, sessions: 0 };
                             tagUsage.set(tagId, {
@@ -89,7 +102,10 @@ export class TagStatistics {
         return {
             stats: tagStats,
             totalDuration: Math.round(totalDuration * 60), // Convert to seconds
-            totalSessions: filteredSessions.filter(s => s.type === 'focus').length
+            totalSessions: filteredSessions.filter(s => {
+                const sessionType = s.session_type || s.type;
+                return sessionType === 'focus' || sessionType === 'custom';
+            }).length
         };
     }
 
@@ -198,8 +214,12 @@ export class TagStatistics {
         chartContainer.style.background = gradient;
         chartContainer.style.border = '1px solid #e5e7eb';
 
-        // Create legend
-        stats.forEach(stat => {
+        // Show only top 5 tags in legend for better space utilization
+        const topStats = stats.slice(0, 5);
+        const remainingStats = stats.slice(5);
+        
+        // Create legend for top tags
+        topStats.forEach(stat => {
             const legendItem = document.createElement('div');
             legendItem.className = 'tag-legend-item';
             
@@ -222,5 +242,29 @@ export class TagStatistics {
 
             legendContainer.appendChild(legendItem);
         });
+        
+        // If there are more tags, show a summary
+        if (remainingStats.length > 0) {
+            const remainingDuration = remainingStats.reduce((sum, stat) => sum + stat.duration, 0);
+            const remainingPercentage = remainingStats.reduce((sum, stat) => sum + stat.percentage, 0);
+            
+            const othersItem = document.createElement('div');
+            othersItem.className = 'tag-legend-item tag-legend-others';
+            
+            othersItem.innerHTML = `
+                <div class="tag-legend-color" style="background: linear-gradient(45deg, ${remainingStats.slice(0,3).map(s => s.color).join(', ')})"></div>
+                <div class="tag-legend-info">
+                    <div class="tag-legend-name">
+                        <i class="ri-more-line"></i> ${remainingStats.length} others
+                    </div>
+                    <div class="tag-legend-stats">
+                        <span class="tag-legend-time">${this.formatDuration(remainingDuration)}</span>
+                        <span class="tag-legend-percent">${remainingPercentage.toFixed(1)}%</span>
+                    </div>
+                </div>
+            `;
+
+            legendContainer.appendChild(othersItem);
+        }
     }
 }

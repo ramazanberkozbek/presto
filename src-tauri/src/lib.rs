@@ -47,6 +47,7 @@ struct ManualSession {
     notes: Option<String>,
     created_at: String,   // ISO string
     date: String,         // Date string for the session date
+    tags: Option<Vec<serde_json::Value>>, // Array of tag objects
 }
 
 #[derive(Serialize, Deserialize, Clone)]
