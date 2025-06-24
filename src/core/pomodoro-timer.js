@@ -1862,6 +1862,9 @@ export class PomodoroTimer {
         const startHour = Math.max(0, Math.floor(startTotalMinutes / 60));
         const startMinute = Math.max(0, startTotalMinutes % 60);
 
+        // Get current tags from TagManager
+        const currentTags = window.tagManager ? window.tagManager.getCurrentTags() : [];
+        
         const sessionData = {
             id: `timer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             session_type: 'focus',
@@ -1869,6 +1872,7 @@ export class PomodoroTimer {
             start_time: `${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`,
             end_time: `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`,
             notes: this.currentTask && this.currentTask.trim() ? this.currentTask.trim() : null,
+            tags: currentTags, // Include current tags from TagManager
             created_at: now.toISOString()
         };
 

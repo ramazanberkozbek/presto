@@ -52,7 +52,7 @@
   cursor: pointer;
   position: relative;
   transition: background-color 0.2s ease;
-  gap: 8px;
+  gap: 4px;
 }
 
 
@@ -62,13 +62,11 @@
 
 .tag-dropdown-arrow {
   font-size: 18px;
-  opacity: 0.7;
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 .timer-status.active .tag-dropdown-arrow {
   transform: rotate(180deg);
-  opacity: 1;
 }
 
 .tag-dropdown-menu {

@@ -1563,9 +1563,26 @@ export class NavigationManager {
 
         // Get session tags (if tag system is available)
         const tags = await this.getSessionTags(session.id);
-        const tagsHtml = tags.length > 0 
-            ? tags.map(tag => `<span class="session-tag">${tag.name}</span>`).join('')
-            : '<span class="text-muted">-</span>';
+        let tagsHtml;
+        
+        if (tags.length === 0) {
+            tagsHtml = '<span class="text-muted">-</span>';
+        } else if (tags.length === 1) {
+            // Single tag - show normally
+            tagsHtml = `<span class="session-tag">${tags[0].name}</span>`;
+        } else {
+            // Multiple tags - show first + count indicator with tooltip
+            const firstTag = tags[0];
+            const remainingCount = tags.length - 1;
+            const allTagNames = tags.map(tag => tag.name).join(', ');
+            
+            tagsHtml = `
+                <div class="session-tags-compact" title="${allTagNames}">
+                    <span class="session-tag">${firstTag.name}</span>
+                    <span class="session-tag-count">+${remainingCount}</span>
+                </div>
+            `;
+        }
 
         // Create type badge
         const typeBadge = `<span class="session-type-badge ${session.session_type}">${session.session_type}</span>`;
@@ -1589,10 +1606,19 @@ export class NavigationManager {
     }
 
     async getSessionTags(sessionId) {
-        // If tag system is available, get tags for this session
-        if (window.tagManager) {
+        // Get tags directly from session data
+        if (window.sessionManager) {
             try {
-                return await window.tagManager.getSessionTags(sessionId);
+                // Find the session in all dates
+                for (const dateString in window.sessionManager.sessions) {
+                    const dateSessions = window.sessionManager.sessions[dateString];
+                    if (dateSessions) {
+                        const session = dateSessions.find(s => s.id === sessionId);
+                        if (session && session.tags) {
+                            return session.tags;
+                        }
+                    }
+                }
             } catch (error) {
                 console.log('Tags not available for session:', sessionId);
             }
