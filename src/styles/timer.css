@@ -6,6 +6,50 @@
   background: transparent;
 }
 
+/* Timer Status Container with Adjust Buttons */
+.timer-status-container {
+  display: flex;
+  align-items: start;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.timer-adjust-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--focus-timer-color);
+  padding: 0;
+}
+
+.timer-adjust-btn:hover {
+  transform: scale(1.05);
+}
+
+.timer-adjust-btn:active {
+  transform: scale(0.95);
+}
+
+.timer-adjust-btn i {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.timer-adjust-btn span {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+}
+
 /* Timer status label - positioned outside timer-container in HTML */
 #timer-view .timer-status {
   font-size: 14px;
@@ -393,6 +437,20 @@
 .container.longBreak #timer-view .timer-status {
   background-color: var(--long-break-secondary-btn);
   border: 2px solid var(--long-break-timer-color);
+  color: var(--long-break-timer-color);
+}
+
+/* Timer adjust buttons for different timer modes */
+.container.focus .timer-adjust-btn {
+  color: var(--focus-timer-color);
+}
+
+.container.break .timer-adjust-btn {
+  color: var(--break-timer-color);
+}
+
+
+.container.longBreak .timer-adjust-btn {
   color: var(--long-break-timer-color);
 }
 
