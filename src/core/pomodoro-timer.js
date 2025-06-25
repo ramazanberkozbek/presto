@@ -65,6 +65,8 @@ export class PomodoroTimer {
         this.smartPauseCountdown = document.getElementById('smart-pause-countdown');
         this.autoStartIndicator = document.getElementById('auto-start-indicator');
         this.continuousSessionIndicator = document.getElementById('continuous-session-indicator');
+        this.timerPlusBtn = document.getElementById('timer-plus-btn');
+        this.timerMinusBtn = document.getElementById('timer-minus-btn');
 
         // Task management
         this.tasks = [];
@@ -200,6 +202,19 @@ export class PomodoroTimer {
                 this.undoLastSession();
             }
         });
+
+        // Timer adjustment buttons
+        if (this.timerPlusBtn) {
+            this.timerPlusBtn.addEventListener('click', () => {
+                this.adjustTimer(5);
+            });
+        }
+
+        if (this.timerMinusBtn) {
+            this.timerMinusBtn.addEventListener('click', () => {
+                this.adjustTimer(-5);
+            });
+        }
 
         // Keyboard shortcuts
         document.addEventListener('keydown', async (e) => {
@@ -751,6 +766,39 @@ export class PomodoroTimer {
         if (window.tagManager) {
             window.tagManager.onTimerStop();
         }
+    }
+
+    adjustTimer(minutes) {
+        // Convert minutes to seconds
+        const adjustment = minutes * 60;
+        
+        // Add the adjustment to the current time remaining
+        this.timeRemaining += adjustment;
+        
+        // Ensure we don't go below 0 seconds
+        if (this.timeRemaining < 0) {
+            this.timeRemaining = 0;
+        }
+        
+        // If timer is running, we need to update the accuracy tracking
+        if (this.isRunning && this.timerStartTime) {
+            // Calculate how much time should remain based on the adjustment
+            const now = Date.now();
+            const elapsedSinceStart = Math.floor((now - this.timerStartTime) / 1000);
+            
+            // Update the timer duration to account for the adjustment
+            this.timerDuration = elapsedSinceStart + this.timeRemaining;
+        }
+        
+        // Update the display immediately
+        this.updateDisplay();
+        
+        // Show notification
+        const action = minutes > 0 ? 'added' : 'subtracted';
+        const absMinutes = Math.abs(minutes);
+        NotificationUtils.showNotificationPing(
+            `${absMinutes} minute${absMinutes !== 1 ? 's' : ''} ${action} ${minutes > 0 ? 'to' : 'from'} timer ⏰`
+        );
     }
 
     async skipSession() {

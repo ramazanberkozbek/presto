@@ -95,10 +95,20 @@
 
       <!-- Status Label -->
       <div style="text-align:center; position: relative">
-        <div class="timer-status clickable" id="timer-status">
-          <i id="status-icon" class="ri-brain-line"></i>
-          <span id="status-text">Focus</span>
-          <i class="ri-arrow-down-s-line tag-dropdown-arrow" id="tag-dropdown-arrow"></i>
+        <div class="timer-status-container">
+          <button class="timer-adjust-btn" id="timer-minus-btn" title="Subtract 5 minutes">
+            <i class="ri-subtract-line"></i>
+            <span>5</span>
+          </button>
+          <div class="timer-status clickable" id="timer-status">
+            <i id="status-icon" class="ri-brain-line"></i>
+            <span id="status-text">Focus</span>
+            <i class="ri-arrow-down-s-line tag-dropdown-arrow" id="tag-dropdown-arrow"></i>
+          </div>
+          <button class="timer-adjust-btn" id="timer-plus-btn" title="Add 5 minutes">
+            <i class="ri-add-line"></i>
+            <span>5</span>
+          </button>
         </div>
         <!-- Tag Dropdown Menu -->
         <div class="tag-dropdown-menu" id="tag-dropdown-menu">
