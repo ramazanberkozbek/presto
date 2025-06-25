@@ -32,9 +32,7 @@ export class UpdateNotification {
             <div class="update-notification">
                 <div class="update-content">
                     <div class="update-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11 2.05C11 1.47 11.47 1 12.05 1C16.05 1 19.05 4.47 19.05 8.47C19.05 9.53 18.05 10.53 17 10.53H15V12.53C15 13.58 14 14.58 13 14.58H11V16.58C11 17.63 10 18.63 9 18.63H7V20.63C7 21.68 6 22.68 5 22.68H3C2.45 22.68 2 22.23 2 21.68V19.68C2 19.13 2.45 18.68 3 18.68H5V16.63C5 16.08 5.45 15.63 6 15.63H9V13.58C9 13.03 9.45 12.58 10 12.58H13V10.53H17C19.21 10.53 21.05 8.69 21.05 6.47C21.05 3.35 18.7 1 15.58 1C11.47 1 11 2.05 11 2.05ZM17 8.53C17 9.58 16 10.58 15 10.58C14 10.58 13 9.58 13 8.53C13 7.48 14 6.48 15 6.48C16 6.48 17 7.48 17 8.53Z" fill="currentColor"/>
-                        </svg>
+                        <i class="ri-lightbulb-flash-line"></i>
                     </div>
                     <span class="update-message">Update available</span>
                     <span class="update-version"></span>
@@ -43,7 +41,7 @@ export class UpdateNotification {
                             Update via Homebrew
                         </button>
                         <button class="update-btn update-btn-secondary" data-action="dismiss">
-                            Skip this release
+                            Skip release
                         </button>
                     </div>
                 </div>
@@ -69,7 +67,7 @@ export class UpdateNotification {
         this.injectStyles();
 
         // Add to DOM but hidden
-        this.container.style.display = 'none';
+        // this.container.style.display = 'none';
         document.body.appendChild(this.container);
 
         // Bind button events
@@ -267,7 +265,7 @@ export class UpdateNotification {
             @media (max-width: 768px) {
             .update-notification-container {
                 left: 0 !important;
-                top: 20px;
+                top: 30px;
             }
 
             .update-notification {
@@ -482,7 +480,7 @@ export class UpdateNotification {
         }
 
         this.currentVersion = updateInfo.version;
-        
+
         const versionElement = this.container.querySelector('.update-version');
         if (versionElement) {
             versionElement.textContent = `Version ${updateInfo.version}`;
