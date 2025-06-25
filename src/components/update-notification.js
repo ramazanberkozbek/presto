@@ -4,7 +4,8 @@
  * Component for showing update notifications in the user interface
  */
 
-import { updateManager } from '../managers/update-manager.js';
+// Usa l'updateManager globale invece dell'import per essere sincronizzato con main.js
+const getUpdateManager = () => window.updateManager || window.updateManagerInstance;
 
 export class UpdateNotification {
     constructor() {
@@ -14,7 +15,32 @@ export class UpdateNotification {
         this.currentVersion = null;
 
         this.createNotificationContainer();
-        this.bindEvents();
+        // Aspetta che l'updateManager sia disponibile prima di bind degli eventi
+        this.waitForUpdateManager();
+    }
+
+    /**
+     * Aspetta che l'updateManager sia disponibile e poi bind gli eventi
+     */
+    async waitForUpdateManager() {
+        // Aspetta che l'updateManager sia disponibile (max 10 secondi)
+        let attempts = 0;
+        const maxAttempts = 100; // 10 secondi con 100ms di intervallo
+
+        while (attempts < maxAttempts && !getUpdateManager()) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+
+        if (getUpdateManager()) {
+            console.log('✅ [UpdateNotification] UpdateManager trovato, bind eventi notifica');
+            this.bindEvents();
+            
+            // RIMOSSO: Il controllo dello stato iniziale può causare problemi
+            // L'updateManager dovrebbe emettere gli eventi corretti al momento giusto
+        } else {
+            console.warn('⚠️ [UpdateNotification] UpdateManager non trovato dopo 10 secondi');
+        }
     }
 
     /**
@@ -87,7 +113,7 @@ export class UpdateNotification {
         styles.textContent = `
             .update-notification-container {
             position: fixed;
-            top: 40px;
+            top: 0;
             left: 0;
             right: 0;
             z-index: 10000;
@@ -447,8 +473,36 @@ export class UpdateNotification {
      * Binds update manager events
      */
     bindEvents() {
+        const updateManager = getUpdateManager();
+
+        if (!updateManager) {
+            console.error('❌ [UpdateNotification] UpdateManager non disponibile per bind eventi notifica');
+            return;
+        }
+
+        console.log('🔔 [UpdateNotification] Bind eventi notifica aggiornamenti...');
+        console.log('🔍 [UpdateNotification] UpdateManager state:', {
+            updateAvailable: updateManager.updateAvailable,
+            currentUpdate: updateManager.currentUpdate,
+            isDevelopmentMode: updateManager.isDevelopmentMode ? updateManager.isDevelopmentMode() : 'N/A',
+            testMode: localStorage.getItem('presto_force_update_test')
+        });
+
         updateManager.on('updateAvailable', (event) => {
+            console.log('🔔 [UpdateNotification] Evento updateAvailable ricevuto:', event.detail);
             this.showUpdateAvailable(event.detail);
+        });
+
+        // Ascolta anche quando NON ci sono aggiornamenti per nascondere la notifica
+        updateManager.on('updateNotAvailable', () => {
+            console.log('👍 [UpdateNotification] Nessun aggiornamento disponibile - nascondo notifica');
+            this.hide();
+        });
+
+        // Nasconde la notifica anche quando il controllo fallisce
+        updateManager.on('checkError', () => {
+            console.log('❌ [UpdateNotification] Errore controllo aggiornamenti - nascondo notifica');
+            this.hide();
         });
 
         updateManager.on('downloadProgress', (event) => {
@@ -469,15 +523,36 @@ export class UpdateNotification {
      * Shows update available notification
      */
     showUpdateAvailable(updateInfo) {
+        console.log('🔔 [UpdateNotification] Richiesta mostra notifica aggiornamento:', updateInfo);
+
         if (!updateInfo || !updateInfo.version) {
+            console.log('❌ [UpdateNotification] Informazioni aggiornamento non valide - non mostro notifica');
             return;
+        }
+
+        // Verifica esplicita che l'aggiornamento sia davvero disponibile
+        if (updateInfo.available === false) {
+            console.log('❌ [UpdateNotification] Aggiornamento esplicitamente non disponibile - non mostro notifica');
+            return;
+        }
+
+        // Verifica se siamo in modalità sviluppo senza test mode
+        const updateManager = getUpdateManager();
+        if (updateManager && updateManager.isDevelopmentMode && updateManager.isDevelopmentMode()) {
+            const hasTestMode = localStorage.getItem('presto_force_update_test') === 'true';
+            if (!hasTestMode) {
+                console.log('🔍 [UpdateNotification] Modalità sviluppo senza test mode - non mostro notifica');
+                return;
+            }
         }
 
         // Don't show if this version has been skipped
         if (this.isVersionSkipped(updateInfo.version)) {
-            console.log(`Version ${updateInfo.version} was skipped, not showing notification`);
+            console.log(`⏭️ [UpdateNotification] Versione ${updateInfo.version} è stata saltata - non mostro notifica`);
             return;
         }
+
+        console.log(`✅ [UpdateNotification] Mostro notifica per aggiornamento ${updateInfo.version}`);
 
         this.currentVersion = updateInfo.version;
 
@@ -518,7 +593,12 @@ export class UpdateNotification {
      * Shows the notification
      */
     show() {
-        if (this.isVisible) return;
+        if (this.isVisible) {
+            console.log('🔔 [UpdateNotification] Notifica già visibile - skip');
+            return;
+        }
+
+        console.log('🔔 [UpdateNotification] Mostro notifica aggiornamento');
 
         this.container.style.display = 'block';
 
@@ -536,7 +616,12 @@ export class UpdateNotification {
      * Hides the notification
      */
     hide() {
-        if (!this.isVisible) return;
+        if (!this.isVisible) {
+            console.log('🔔 [UpdateNotification] Notifica già nascosta - skip');
+            return;
+        }
+
+        console.log('🔔 [UpdateNotification] Nascondo notifica aggiornamento');
 
         this.container.classList.remove('visible');
 
