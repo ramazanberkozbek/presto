@@ -11,6 +11,7 @@ use tauri::{Emitter, Manager};
 use tauri_plugin_aptabase::EventTracker;
 use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
+use tauri_plugin_oauth::start;
 
 // Type alias for the app handle to avoid generic complexity
 type AppHandle = tauri::AppHandle<tauri::Wry>;
@@ -875,6 +876,7 @@ pub fn run() {
             ))
             .plugin(tauri_plugin_updater::Builder::new().build())
             .plugin(tauri_plugin_process::init())
+            .plugin(tauri_plugin_oauth::init())
             .plugin(tauri_plugin_aptabase::Builder::new("A-EU-9457123106").build())
             .invoke_handler(tauri::generate_handler![
                 greet,
@@ -911,7 +913,8 @@ pub fn run() {
                 save_session_tags,
                 add_session_tag,
                 get_env_var,
-                write_excel_file
+                write_excel_file,
+                start_oauth_server
             ])
             .setup(|app| {
                 // Track app started event (if enabled)
@@ -1289,4 +1292,14 @@ async fn write_excel_file(path: String, data: String) -> Result<(), String> {
         .map_err(|e| format!("Failed to write Excel file to {}: {}", path, e))?;
     
     Ok(())
+}
+
+#[tauri::command]
+async fn start_oauth_server(window: tauri::Window) -> Result<u16, String> {
+    start(move |url| {
+        println!("OAuth callback received: {}", url);
+        // Emit the URL to the frontend
+        let _ = window.emit("oauth-callback", url);
+    })
+    .map_err(|err| err.to_string())
 }
