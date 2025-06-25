@@ -1,7 +1,7 @@
 /**
  * Update Notification Component
  * 
- * Componente per mostrare notifiche di aggiornamento nell'interfaccia utente
+ * Component for showing update notifications in the user interface
  */
 
 import { updateManager } from '../managers/update-manager.js';
@@ -11,33 +11,39 @@ export class UpdateNotification {
         this.container = null;
         this.isVisible = false;
         this.animationDuration = 300;
+        this.currentVersion = null;
 
         this.createNotificationContainer();
         this.bindEvents();
     }
 
     /**
-     * Crea il container per le notifiche di aggiornamento
+     * Creates the container for update notifications
      */
     createNotificationContainer() {
         this.container = document.createElement('div');
         this.container.className = 'update-notification-container';
+
+        // Add desktop class if running in Tauri desktop app
+        if (window.__TAURI__ && window.__TAURI__.core) {
+            this.container.classList.add('desktop');
+        }
         this.container.innerHTML = `
             <div class="update-notification">
                 <div class="update-content">
                     <div class="update-icon">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2L13.09 8.26L19 7L17.74 13.26L22 12L20.74 18.26L24 17L22.74 23.26L12 22L10.91 15.74L5 17L6.26 10.74L2 12L3.26 5.74L0 7L1.26 0.74L12 2Z" fill="currentColor"/>
+                            <path d="M11 2.05C11 1.47 11.47 1 12.05 1C16.05 1 19.05 4.47 19.05 8.47C19.05 9.53 18.05 10.53 17 10.53H15V12.53C15 13.58 14 14.58 13 14.58H11V16.58C11 17.63 10 18.63 9 18.63H7V20.63C7 21.68 6 22.68 5 22.68H3C2.45 22.68 2 22.23 2 21.68V19.68C2 19.13 2.45 18.68 3 18.68H5V16.63C5 16.08 5.45 15.63 6 15.63H9V13.58C9 13.03 9.45 12.58 10 12.58H13V10.53H17C19.21 10.53 21.05 8.69 21.05 6.47C21.05 3.35 18.7 1 15.58 1C11.47 1 11 2.05 11 2.05ZM17 8.53C17 9.58 16 10.58 15 10.58C14 10.58 13 9.58 13 8.53C13 7.48 14 6.48 15 6.48C16 6.48 17 7.48 17 8.53Z" fill="currentColor"/>
                         </svg>
                     </div>
-                    <span class="update-message">Aggiornamento disponibile</span>
+                    <span class="update-message">Update available</span>
                     <span class="update-version"></span>
                     <div class="update-actions">
                         <button class="update-btn update-btn-primary" data-action="download">
-                            Aggiorna
+                            Update via Homebrew
                         </button>
                         <button class="update-btn update-btn-secondary" data-action="dismiss">
-                            Ignora
+                            Skip this release
                         </button>
                     </div>
                 </div>
@@ -45,7 +51,7 @@ export class UpdateNotification {
                     <div class="update-progress-icon">
                         <div class="spinner"></div>
                     </div>
-                    <span class="update-progress-message">Download in corso...</span>
+                    <span class="update-progress-message">Installing update...</span>
                     <div class="update-progress-bar">
                         <div class="update-progress-fill"></div>
                         <span class="update-progress-text">0%</span>
@@ -59,19 +65,19 @@ export class UpdateNotification {
             </div>
         `;
 
-        // Aggiungi gli stili
+        // Inject styles
         this.injectStyles();
 
-        // Aggiungi al DOM ma nascosto
+        // Add to DOM but hidden
         this.container.style.display = 'none';
         document.body.appendChild(this.container);
 
-        // Bind degli eventi sui pulsanti
+        // Bind button events
         this.bindButtonEvents();
     }
 
     /**
-     * Inietta gli stili CSS per la notifica
+     * Injects CSS styles for the notification
      */
     injectStyles() {
         if (document.getElementById('update-notification-styles')) {
@@ -83,12 +89,16 @@ export class UpdateNotification {
         styles.textContent = `
             .update-notification-container {
             position: fixed;
-            top: 0;
+            top: 40px;
             left: 0;
             right: 0;
             z-index: 10000;
             transform: translateY(-100%);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+            .update-notification-container.desktop {
+            left: 80px;
             }
 
             .update-notification-container.visible {
@@ -256,17 +266,32 @@ export class UpdateNotification {
             /* Responsive */
             @media (max-width: 768px) {
             .update-notification-container {
-                left: 0;
+                left: 0 !important;
+                top: 20px;
             }
 
             .update-notification {
-                padding: 6px 12px;
-                font-size: 13px;
+                padding: 4px 8px;
+                font-size: 12px;
+                gap: 6px;
+            }
+
+            .update-content {
+                gap: 6px;
+            }
+
+            .update-message {
+                font-size: 12px;
+            }
+
+            .update-actions {
+                gap: 4px;
             }
 
             .update-btn {
-                padding: 3px 8px;
-                font-size: 12px;
+                padding: 2px 6px;
+                font-size: 11px;
+                border-radius: 3px;
             }
 
             .update-version {
@@ -274,8 +299,13 @@ export class UpdateNotification {
             }
 
             .update-progress-bar {
-                min-width: 80px;
-                margin: 0 8px;
+                min-width: 60px;
+                margin: 0 6px;
+            }
+
+            .update-close {
+                padding: 2px;
+                margin-left: 4px;
             }
             }
 
@@ -298,7 +328,7 @@ export class UpdateNotification {
     }
 
     /**
-     * Associa gli eventi ai pulsanti
+     * Binds events to buttons
      */
     bindButtonEvents() {
         const buttons = this.container.querySelectorAll('[data-action]');
@@ -311,7 +341,7 @@ export class UpdateNotification {
     }
 
     /**
-     * Gestisce le azioni dei pulsanti
+     * Handles button actions
      */
     handleAction(action) {
         switch (action) {
@@ -319,7 +349,7 @@ export class UpdateNotification {
                 this.startDownload();
                 break;
             case 'dismiss':
-                this.hide();
+                this.skipVersion();
                 break;
             case 'close':
                 this.hide();
@@ -328,24 +358,84 @@ export class UpdateNotification {
     }
 
     /**
-     * Avvia il download dell'aggiornamento
+     * Saves skipped version to localStorage
      */
-    async startDownload() {
-        // Mostra la sezione di progresso
-        const content = this.container.querySelector('.update-content');
-        const progressContainer = this.container.querySelector('.update-progress-container');
-
-        content.style.display = 'none';
-        progressContainer.style.display = 'block';
-
-        // Avvia il download tramite il manager
-        await updateManager.downloadAndInstall();
+    skipVersion() {
+        if (this.currentVersion) {
+            try {
+                const skippedVersions = this.getSkippedVersions();
+                if (!skippedVersions.includes(this.currentVersion)) {
+                    skippedVersions.push(this.currentVersion);
+                    localStorage.setItem('presto-skipped-versions', JSON.stringify(skippedVersions));
+                    console.log(`Skipped version ${this.currentVersion}`);
+                }
+            } catch (err) {
+                console.error('Could not save skipped version:', err);
+            }
+        }
+        this.hide();
     }
 
     /**
-     * Aggiorna il progresso del download
+     * Gets list of skipped versions from localStorage
      */
-    updateProgress(progress, chunkLength = 0, contentLength = 0) {
+    getSkippedVersions() {
+        try {
+            const stored = localStorage.getItem('presto-skipped-versions');
+            return stored ? JSON.parse(stored) : [];
+        } catch (err) {
+            console.error('Could not load skipped versions:', err);
+            return [];
+        }
+    }
+
+    /**
+     * Checks if a version has been skipped
+     */
+    isVersionSkipped(version) {
+        const skippedVersions = this.getSkippedVersions();
+        return skippedVersions.includes(version);
+    }
+
+    /**
+     * Shows brew install command to user
+     */
+    async startDownload() {
+        // Show brew install command instead of Tauri updater
+        const brewCommand = 'brew install murdercode/presto/presto --cask';
+
+        // Copy command to clipboard if available
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            try {
+                await navigator.clipboard.writeText(brewCommand);
+                console.log('Brew command copied to clipboard');
+            } catch (err) {
+                console.log('Could not copy to clipboard:', err);
+            }
+        }
+
+        // Show alert with the command
+        const message = `To update Presto, run this command in your terminal:\n\n${brewCommand}\n\n${navigator.clipboard ? 'The command has been copied to your clipboard.' : 'Please copy this command manually.'}`;
+
+        if (window.__TAURI__ && window.__TAURI__.dialog) {
+            // Use Tauri dialog if available
+            await window.__TAURI__.dialog.message(message, {
+                title: 'Update Presto via Homebrew',
+                type: 'info'
+            });
+        } else {
+            // Fallback to browser alert
+            alert(message);
+        }
+
+        // Hide the notification after showing the command
+        this.hide();
+    }
+
+    /**
+     * Updates download progress
+     */
+    updateProgress(progress) {
         const progressFill = this.container.querySelector('.update-progress-fill');
         const progressText = this.container.querySelector('.update-progress-text');
 
@@ -356,7 +446,7 @@ export class UpdateNotification {
     }
 
     /**
-     * Associa gli eventi del manager degli aggiornamenti
+     * Binds update manager events
      */
     bindEvents() {
         updateManager.on('updateAvailable', (event) => {
@@ -378,51 +468,63 @@ export class UpdateNotification {
     }
 
     /**
-     * Mostra la notifica di aggiornamento disponibile
+     * Shows update available notification
      */
     showUpdateAvailable(updateInfo) {
+        if (!updateInfo || !updateInfo.version) {
+            return;
+        }
+
+        // Don't show if this version has been skipped
+        if (this.isVersionSkipped(updateInfo.version)) {
+            console.log(`Version ${updateInfo.version} was skipped, not showing notification`);
+            return;
+        }
+
+        this.currentVersion = updateInfo.version;
+        
         const versionElement = this.container.querySelector('.update-version');
-        if (versionElement && updateInfo) {
-            versionElement.textContent = `Versione ${updateInfo.version}`;
+        if (versionElement) {
+            versionElement.textContent = `Version ${updateInfo.version}`;
         }
 
         this.show();
     }
 
     /**
-     * Mostra lo stato di installazione
+     * Shows installation status
      */
     showInstalling() {
         const message = this.container.querySelector('.update-progress-message');
 
-        if (message) message.textContent = 'Installazione in corso...';
+        if (message) message.textContent = 'Installing update...';
 
         this.updateProgress(100);
     }
 
     /**
-     * Mostra un errore
+     * Shows an error
      */
     showError() {
         const message = this.container.querySelector('.update-progress-message');
 
-        if (message) message.textContent = 'Errore aggiornamento';
+        if (message) message.textContent = 'Update error';
 
-        // Nascondi dopo 5 secondi
+        // Hide after 5 seconds
         setTimeout(() => {
             this.hide();
         }, 5000);
     }
 
     /**
-     * Mostra la notifica
+     * Shows the notification
      */
     show() {
         if (this.isVisible) return;
 
         this.container.style.display = 'block';
 
-        // Forza un reflow prima di aggiungere la classe
+        // Force reflow before adding class
         this.container.offsetHeight;
 
         requestAnimationFrame(() => {
@@ -433,7 +535,7 @@ export class UpdateNotification {
     }
 
     /**
-     * Nasconde la notifica
+     * Hides the notification
      */
     hide() {
         if (!this.isVisible) return;
@@ -449,7 +551,7 @@ export class UpdateNotification {
     }
 
     /**
-     * Resetta la notifica allo stato iniziale
+     * Resets notification to initial state
      */
     resetToInitialState() {
         const content = this.container.querySelector('.update-content');
@@ -462,7 +564,7 @@ export class UpdateNotification {
     }
 
     /**
-     * Distrugge il componente
+     * Destroys the component
      */
     destroy() {
         if (this.container && this.container.parentNode) {
@@ -473,5 +575,5 @@ export class UpdateNotification {
     }
 }
 
-// Esporta un'istanza singleton
+// Export singleton instance
 export const updateNotification = new UpdateNotification();
