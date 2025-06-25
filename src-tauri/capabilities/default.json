@@ -32,6 +32,9 @@
     "autostart:allow-is-enabled",
     "updater:default",
     "updater:allow-check",
-    "updater:allow-download-and-install"
+    "updater:allow-download-and-install",
+    "oauth:default",
+    "oauth:allow-start",
+    "oauth:allow-cancel"
   ]
 }
