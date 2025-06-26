@@ -96,17 +96,13 @@
       <!-- Status Label -->
       <div style="text-align:center; position: relative">
         <div class="timer-status-container">
-          <button class="timer-adjust-btn" id="timer-minus-btn" title="Subtract 5 minutes">
-            <span>-5</span>
-          </button>
+
           <div class="timer-status clickable" id="timer-status">
             <i id="status-icon" class="ri-brain-line"></i>
             <span id="status-text">Focus</span>
             <i class="ri-arrow-down-s-line tag-dropdown-arrow" id="tag-dropdown-arrow"></i>
           </div>
-          <button class="timer-adjust-btn" id="timer-plus-btn" title="Add 5 minutes">
-            <span>+5</span>
-          </button>
+
         </div>
         <!-- Tag Dropdown Menu -->
         <div class="tag-dropdown-menu" id="tag-dropdown-menu">
@@ -189,6 +185,7 @@
 
       <!-- Settings Indicators -->
       <div class="settings-indicators">
+
         <!-- Smart Pause Indicator -->
         <div class="smart-pause-container">
           <span id="smart-pause-countdown" class="countdown-number" style="display: none;"></span>
@@ -203,6 +200,17 @@
         <!-- Continuous Session Indicator -->
         <i id="continuous-session-indicator" class="ri-repeat-line"
           data-tooltip="Continuous Sessions: Click to toggle continuous mode"></i>
+
+
+        <!-- Timer Adjustment Buttons -->
+        <button class="timer-adjust-btn" id="timer-minus-btn" title="Subtract 5 minutes">
+          <span>-5</span>
+        </button>
+        <!-- Timer Adjustment Buttons -->
+        <button class="timer-adjust-btn" id="timer-plus-btn" title="Add 5 minutes">
+          <span>+5</span>
+        </button>
+
       </div>
     </div>
 
@@ -363,11 +371,17 @@
                 </select>
                 <button id="export-sessions-btn" class="export-btn" title="Export to Excel">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <polyline points="14,2 14,8 20,8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <polyline points="10,9 9,9 8,9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path
+                      d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z"
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    <polyline points="14,2 14,8 20,8" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round" />
+                    <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round" />
+                    <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round" />
+                    <polyline points="10,9 9,9 8,9" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round" />
                   </svg>
                   Export
                 </button>
