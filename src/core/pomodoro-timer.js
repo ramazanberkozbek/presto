@@ -30,6 +30,8 @@ export class PomodoroTimer {
         this.currentSessionElapsedTime = 0; // Actual elapsed time for current session (in seconds)
         this.lastCompletedSessionTime = 0; // Time of the last completed session for undo functionality
         this.sessionCompletedButNotSaved = false; // Flag to track if session completed but not saved yet
+        this.maxSessionTime = 120 * 60 * 1000; // Default 2 hours in milliseconds
+        this.maxSessionTimeReached = false; // Flag to track if max session time was reached
 
         // Timer accuracy tracking (for background throttling fix)
         this.timerStartTime = null; // When the timer was started (Date.now())
@@ -667,6 +669,9 @@ export class PomodoroTimer {
                 }
             }
 
+            // Check if max session time has been reached
+            this.checkMaxSessionTime();
+
             this.updateDisplay();
 
             // Warning when less than 2 minutes remaining
@@ -693,6 +698,35 @@ export class PomodoroTimer {
                     this.completeSession();
                 }
             }
+        }
+    }
+
+    checkMaxSessionTime() {
+        // Only check during focus sessions and if a session is active
+        if (this.currentMode !== 'focus' || !this.sessionStartTime || this.maxSessionTimeReached) {
+            return;
+        }
+
+        const now = Date.now();
+        const sessionElapsed = now - this.sessionStartTime;
+
+        // Check if session has exceeded max time
+        if (sessionElapsed >= this.maxSessionTime) {
+            this.maxSessionTimeReached = true;
+            this.pauseTimer();
+            
+            // Show notification
+            const maxTimeInMinutes = Math.floor(this.maxSessionTime / (60 * 1000));
+            NotificationUtils.showNotificationPing(
+                `Session automatically paused after ${maxTimeInMinutes} minutes. Take a break! 🛑`,
+                'warning'
+            );
+            
+            // Show desktop notification if enabled
+            NotificationUtils.showDesktopNotification(
+                'Session Time Limit Reached',
+                `Your session has been automatically paused after ${maxTimeInMinutes} minutes. Consider taking a break!`
+            );
         }
     }
 
@@ -748,6 +782,7 @@ export class PomodoroTimer {
         this.sessionStartTime = null;
         this.currentSessionElapsedTime = 0;
         this.sessionCompletedButNotSaved = false; // Reset flag
+        this.maxSessionTimeReached = false; // Reset max session time flag
 
         // Reset timer accuracy tracking
         this.timerStartTime = null;
@@ -1022,6 +1057,7 @@ export class PomodoroTimer {
         this.sessionStartTime = null;
         this.currentSessionElapsedTime = 0;
         this.sessionCompletedButNotSaved = false; // Reset flag
+        this.maxSessionTimeReached = false; // Reset max session time flag
 
         // Reset timer accuracy tracking
         this.timerStartTime = null;
@@ -1617,6 +1653,7 @@ export class PomodoroTimer {
         this.currentSessionElapsedTime = 0;
         this.lastCompletedSessionTime = 0;
         this.sessionCompletedButNotSaved = false; // Reset flag
+        this.maxSessionTimeReached = false; // Reset max session time flag
 
         // Reset timer accuracy tracking
         this.timerStartTime = null;
@@ -2148,6 +2185,9 @@ export class PomodoroTimer {
         }
 
         this.totalSessions = settings.timer.total_sessions;
+        
+        // Update max session time (convert from minutes to milliseconds)
+        this.maxSessionTime = (settings.timer.max_session_time || 120) * 60 * 1000;
 
         // If timer is not running, update current time remaining
         if (!this.isRunning) {
@@ -2231,6 +2271,7 @@ export class PomodoroTimer {
         this.sessionStartTime = null;
         this.currentSessionElapsedTime = 0;
         this.lastCompletedSessionTime = 0;
+        this.maxSessionTimeReached = false; // Reset max session time flag
 
         // Reset timer accuracy tracking
         this.timerStartTime = null;
