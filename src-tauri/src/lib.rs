@@ -416,9 +416,25 @@ async fn load_session_data(app: AppHandle) -> Result<Option<PomodoroSession>, St
     }
 
     let content =
-        fs::read_to_string(file_path).map_err(|e| format!("Failed to read session file: {}", e))?;
-    let session: PomodoroSession =
+        fs::read_to_string(&file_path).map_err(|e| format!("Failed to read session file: {}", e))?;
+    let mut session: PomodoroSession =
         serde_json::from_str(&content).map_err(|e| format!("Failed to parse session: {}", e))?;
+
+    // Get today's date string
+    let today = chrono::Local::now().format("%a %b %d %Y").to_string();
+    
+    // If the saved session is not from today, reset the counters but keep the date updated
+    if session.date != today {
+        session.completed_pomodoros = 0;
+        session.total_focus_time = 0;
+        session.current_session = 1;
+        session.date = today;
+        
+        // Save the reset session back to file
+        let json = serde_json::to_string_pretty(&session)
+            .map_err(|e| format!("Failed to serialize reset session: {}", e))?;
+        fs::write(file_path, json).map_err(|e| format!("Failed to write reset session file: {}", e))?;
+    }
 
     Ok(Some(session))
 }

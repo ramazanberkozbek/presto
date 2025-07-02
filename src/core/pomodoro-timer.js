@@ -1933,25 +1933,48 @@ export class PomodoroTimer {
     }
 
     async loadSessionData() {
+        const today = new Date().toDateString();
+        
         try {
             const data = await invoke('load_session_data');
-            if (data && data.date === new Date().toDateString()) {
+            if (data && data.date === today) {
+                // Load today's session data
                 this.completedPomodoros = data.completed_pomodoros || 0;
                 this.totalFocusTime = data.total_focus_time || 0;
                 this.currentSession = data.current_session || 1;
+                this.updateProgressDots();
+            } else {
+                // Reset to default values for new day or no data
+                this.completedPomodoros = 0;
+                this.totalFocusTime = 0;
+                this.currentSession = 1;
                 this.updateProgressDots();
             }
         } catch (error) {
             console.error('Failed to load session data from Tauri, using localStorage:', error);
             const saved = localStorage.getItem('pomodoro-session');
+            
             if (saved) {
                 const data = JSON.parse(saved);
-                if (data.date === new Date().toDateString()) {
+                if (data.date === today) {
+                    // Load today's session data from localStorage
                     this.completedPomodoros = data.completedPomodoros || 0;
                     this.totalFocusTime = data.totalFocusTime || 0;
                     this.currentSession = data.currentSession || 1;
                     this.updateProgressDots();
+                } else {
+                    // Reset to default values for new day or no data
+                    this.completedPomodoros = 0;
+                    this.totalFocusTime = 0;
+                    this.currentSession = 1;
+                    this.updateProgressDots();
                 }
+            } else {
+                // No saved data at all, reset to defaults
+                this.completedPomodoros = 0;
+                this.totalFocusTime = 0;
+                this.currentSession = 1;
+                this.updateProgressDots();
             }
         }
     }
