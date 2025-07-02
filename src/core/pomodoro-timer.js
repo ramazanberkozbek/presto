@@ -835,8 +835,24 @@ export class PomodoroTimer {
                 } else {
                     this.currentMode = 'break';
                 }
+                
+                // Reset display state tracking when switching to break modes
+                this._lastLoggedState = null;
+                this._lastAutoPausedLogged = false;
+                this._lastPausedLogged = false;
             } else {
                 this.currentMode = 'focus';
+                
+                // Reset display state tracking when switching to focus mode
+                this._lastLoggedState = null;
+                this._lastAutoPausedLogged = false;
+                this._lastPausedLogged = false;
+                
+                // Restore TagManager display when returning to focus mode
+                if (window.tagManager) {
+                    window.tagManager.updateStatusDisplay();
+                }
+                
                 if (this.completedPomodoros < this.totalSessions) {
                     this.currentSession = this.completedPomodoros + 1;
                 }
@@ -884,8 +900,18 @@ export class PomodoroTimer {
             } else {
                 this.currentMode = 'break';
             }
+            
+            // Reset display state tracking when switching to break modes
+            this._lastLoggedState = null;
+            this._lastAutoPausedLogged = false;
+            this._lastPausedLogged = false;
         } else {
             this.currentMode = 'focus';
+            
+            // Reset display state tracking when switching to focus mode
+            this._lastLoggedState = null;
+            this._lastAutoPausedLogged = false;
+            this._lastPausedLogged = false;
 
             // Restore TagManager display when returning to focus mode
             if (window.tagManager) {
@@ -962,6 +988,11 @@ export class PomodoroTimer {
                 } else {
                     this.currentMode = 'break';
                 }
+                
+                // Reset display state tracking when switching to break modes
+                this._lastLoggedState = null;
+                this._lastAutoPausedLogged = false;
+                this._lastPausedLogged = false;
             }
         } else {
             // Break completed
@@ -971,6 +1002,11 @@ export class PomodoroTimer {
             } else {
                 // Traditional behavior - go back to focus
                 this.currentMode = 'focus';
+                
+                // Reset display state tracking when switching to focus mode
+                this._lastLoggedState = null;
+                this._lastAutoPausedLogged = false;
+                this._lastPausedLogged = false;
 
                 // Restore TagManager display when returning to focus mode
                 if (window.tagManager) {
