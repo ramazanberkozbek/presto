@@ -88,6 +88,10 @@ export class PomodoroTimer {
             skip: "CommandOrControl+Alt+S"   // Save Session
         };
 
+        // Midnight monitoring for daily reset
+        this.midnightMonitorInterval = null;
+        this.currentDateString = new Date().toDateString();
+
         this.init();
     }
 
@@ -182,6 +186,9 @@ export class PomodoroTimer {
 
         // Initialize tray menu state
         this.updateTrayMenu();
+
+        // Start midnight monitoring for daily reset
+        this.startMidnightMonitoring();
     }
 
     setupEventListeners() {
@@ -834,6 +841,82 @@ export class PomodoroTimer {
         NotificationUtils.showNotificationPing(
             `${absMinutes} minute${absMinutes !== 1 ? 's' : ''} ${action} ${minutes > 0 ? 'to' : 'from'} timer ⏰`
         );
+    }
+
+    // Midnight monitoring methods for daily reset
+    startMidnightMonitoring() {
+        // Clear any existing monitoring
+        this.stopMidnightMonitoring();
+
+        // Check for date change every minute
+        this.midnightMonitorInterval = setInterval(() => {
+            this.checkForMidnightReset();
+        }, 60000); // Check every minute
+
+        console.log('🌙 Midnight monitoring started');
+    }
+
+    stopMidnightMonitoring() {
+        if (this.midnightMonitorInterval) {
+            clearInterval(this.midnightMonitorInterval);
+            this.midnightMonitorInterval = null;
+            console.log('🌙 Midnight monitoring stopped');
+        }
+    }
+
+    checkForMidnightReset() {
+        const newDateString = new Date().toDateString();
+        
+        if (newDateString !== this.currentDateString) {
+            console.log('🌙 Date change detected:', this.currentDateString, '→', newDateString);
+            this.currentDateString = newDateString;
+            this.performMidnightReset();
+        }
+    }
+
+    async performMidnightReset() {
+        console.log('🌅 Performing midnight reset...');
+
+        // Store previous session count for notification
+        const previousPomodoros = this.completedPomodoros;
+
+        // Use enhanced loadSessionData with force reset to ensure clean state
+        await this.loadSessionData(true);
+        
+        // Update display to show the reset state
+        this.updateDisplay();
+        
+        // Save the reset state
+        await this.saveSessionData();
+
+        // Show user notification about the reset
+        if (previousPomodoros > 0) {
+            NotificationUtils.showNotificationPing(
+                `New day! Yesterday's ${previousPomodoros} sessions have been saved. Fresh start! 🌅`,
+                'info'
+            );
+        } else {
+            NotificationUtils.showNotificationPing(
+                'Good morning! Ready for a productive new day? 🌅',
+                'info'
+            );
+        }
+
+        // Update all visual elements
+        this.updateTrayIcon();
+        
+        // Refresh navigation charts if available
+        if (window.navigationManager) {
+            try {
+                await window.navigationManager.updateDailyChart();
+                await window.navigationManager.updateFocusSummary();
+                await window.navigationManager.updateWeeklySessionsChart();
+            } catch (error) {
+                console.error('Failed to update navigation charts after midnight reset:', error);
+            }
+        }
+
+        console.log('✅ Midnight reset completed successfully');
     }
 
     async skipSession() {
@@ -2005,23 +2088,28 @@ export class PomodoroTimer {
         }
     }
 
-    async loadSessionData() {
+    async loadSessionData(forceReset = false) {
         const today = new Date().toDateString();
+        
+        // Update current date string for midnight monitoring
+        this.currentDateString = today;
         
         try {
             const data = await invoke('load_session_data');
-            if (data && data.date === today) {
+            if (data && data.date === today && !forceReset) {
                 // Load today's session data
                 this.completedPomodoros = data.completed_pomodoros || 0;
                 this.totalFocusTime = data.total_focus_time || 0;
                 this.currentSession = data.current_session || 1;
                 this.updateProgressDots();
+                console.log('📊 Loaded existing session data for today');
             } else {
-                // Reset to default values for new day or no data
+                // Reset to default values for new day, no data, or forced reset
                 this.completedPomodoros = 0;
                 this.totalFocusTime = 0;
                 this.currentSession = 1;
                 this.updateProgressDots();
+                console.log('🌅 Reset session data for new day or forced reset');
             }
         } catch (error) {
             console.error('Failed to load session data from Tauri, using localStorage:', error);
@@ -2029,18 +2117,20 @@ export class PomodoroTimer {
             
             if (saved) {
                 const data = JSON.parse(saved);
-                if (data.date === today) {
+                if (data.date === today && !forceReset) {
                     // Load today's session data from localStorage
                     this.completedPomodoros = data.completedPomodoros || 0;
                     this.totalFocusTime = data.totalFocusTime || 0;
                     this.currentSession = data.currentSession || 1;
                     this.updateProgressDots();
+                    console.log('📊 Loaded existing session data from localStorage');
                 } else {
-                    // Reset to default values for new day or no data
+                    // Reset to default values for new day, no data, or forced reset
                     this.completedPomodoros = 0;
                     this.totalFocusTime = 0;
                     this.currentSession = 1;
                     this.updateProgressDots();
+                    console.log('🌅 Reset session data from localStorage for new day or forced reset');
                 }
             } else {
                 // No saved data at all, reset to defaults
@@ -2048,6 +2138,7 @@ export class PomodoroTimer {
                 this.totalFocusTime = 0;
                 this.currentSession = 1;
                 this.updateProgressDots();
+                console.log('🌅 No saved data found, using defaults');
             }
         }
     }
@@ -2259,6 +2350,9 @@ export class PomodoroTimer {
         this.smartPauseEnabled = false;
         this.inactivityThreshold = 30000; // Reset to default 30 seconds
 
+        // Clear midnight monitoring
+        this.stopMidnightMonitoring();
+
         // Reset all counters and state
         this.completedPomodoros = 0;
         this.generateProgressDots();
@@ -2306,6 +2400,9 @@ export class PomodoroTimer {
         this.updateWeeklyStats();
         this.updateTrayIcon();
         this.updateSettingIndicators();
+
+        // Restart midnight monitoring
+        this.startMidnightMonitoring();
 
         console.log('Timer reset to initial state');
     }
