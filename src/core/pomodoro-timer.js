@@ -30,6 +30,8 @@ export class PomodoroTimer {
         this.currentSessionElapsedTime = 0; // Actual elapsed time for current session (in seconds)
         this.lastCompletedSessionTime = 0; // Time of the last completed session for undo functionality
         this.sessionCompletedButNotSaved = false; // Flag to track if session completed but not saved yet
+        this.maxSessionTime = 120 * 60 * 1000; // Default 2 hours in milliseconds
+        this.maxSessionTimeReached = false; // Flag to track if max session time was reached
 
         // Timer accuracy tracking (for background throttling fix)
         this.timerStartTime = null; // When the timer was started (Date.now())
@@ -85,6 +87,10 @@ export class PomodoroTimer {
             reset: "CommandOrControl+Alt+R", // Delete Session (focus) / Undo (break)
             skip: "CommandOrControl+Alt+S"   // Save Session
         };
+
+        // Midnight monitoring for daily reset
+        this.midnightMonitorInterval = null;
+        this.currentDateString = new Date().toDateString();
 
         this.init();
     }
@@ -180,6 +186,9 @@ export class PomodoroTimer {
 
         // Initialize tray menu state
         this.updateTrayMenu();
+
+        // Start midnight monitoring for daily reset
+        this.startMidnightMonitoring();
     }
 
     setupEventListeners() {
@@ -667,6 +676,9 @@ export class PomodoroTimer {
                 }
             }
 
+            // Check if max session time has been reached
+            this.checkMaxSessionTime();
+
             this.updateDisplay();
 
             // Warning when less than 2 minutes remaining
@@ -693,6 +705,35 @@ export class PomodoroTimer {
                     this.completeSession();
                 }
             }
+        }
+    }
+
+    checkMaxSessionTime() {
+        // Only check during focus sessions and if a session is active
+        if (this.currentMode !== 'focus' || !this.sessionStartTime || this.maxSessionTimeReached) {
+            return;
+        }
+
+        const now = Date.now();
+        const sessionElapsed = now - this.sessionStartTime;
+
+        // Check if session has exceeded max time
+        if (sessionElapsed >= this.maxSessionTime) {
+            this.maxSessionTimeReached = true;
+            this.pauseTimer();
+            
+            // Show notification
+            const maxTimeInMinutes = Math.floor(this.maxSessionTime / (60 * 1000));
+            NotificationUtils.showNotificationPing(
+                `Session automatically paused after ${maxTimeInMinutes} minutes. Take a break! 🛑`,
+                'warning'
+            );
+            
+            // Show desktop notification if enabled
+            NotificationUtils.showDesktopNotification(
+                'Session Time Limit Reached',
+                `Your session has been automatically paused after ${maxTimeInMinutes} minutes. Consider taking a break!`
+            );
         }
     }
 
@@ -748,6 +789,7 @@ export class PomodoroTimer {
         this.sessionStartTime = null;
         this.currentSessionElapsedTime = 0;
         this.sessionCompletedButNotSaved = false; // Reset flag
+        this.maxSessionTimeReached = false; // Reset max session time flag
 
         // Reset timer accuracy tracking
         this.timerStartTime = null;
@@ -801,6 +843,82 @@ export class PomodoroTimer {
         );
     }
 
+    // Midnight monitoring methods for daily reset
+    startMidnightMonitoring() {
+        // Clear any existing monitoring
+        this.stopMidnightMonitoring();
+
+        // Check for date change every minute
+        this.midnightMonitorInterval = setInterval(() => {
+            this.checkForMidnightReset();
+        }, 60000); // Check every minute
+
+        console.log('🌙 Midnight monitoring started');
+    }
+
+    stopMidnightMonitoring() {
+        if (this.midnightMonitorInterval) {
+            clearInterval(this.midnightMonitorInterval);
+            this.midnightMonitorInterval = null;
+            console.log('🌙 Midnight monitoring stopped');
+        }
+    }
+
+    checkForMidnightReset() {
+        const newDateString = new Date().toDateString();
+        
+        if (newDateString !== this.currentDateString) {
+            console.log('🌙 Date change detected:', this.currentDateString, '→', newDateString);
+            this.currentDateString = newDateString;
+            this.performMidnightReset();
+        }
+    }
+
+    async performMidnightReset() {
+        console.log('🌅 Performing midnight reset...');
+
+        // Store previous session count for notification
+        const previousPomodoros = this.completedPomodoros;
+
+        // Use enhanced loadSessionData with force reset to ensure clean state
+        await this.loadSessionData(true);
+        
+        // Update display to show the reset state
+        this.updateDisplay();
+        
+        // Save the reset state
+        await this.saveSessionData();
+
+        // Show user notification about the reset
+        if (previousPomodoros > 0) {
+            NotificationUtils.showNotificationPing(
+                `New day! Yesterday's ${previousPomodoros} sessions have been saved. Fresh start! 🌅`,
+                'info'
+            );
+        } else {
+            NotificationUtils.showNotificationPing(
+                'Good morning! Ready for a productive new day? 🌅',
+                'info'
+            );
+        }
+
+        // Update all visual elements
+        this.updateTrayIcon();
+        
+        // Refresh navigation charts if available
+        if (window.navigationManager) {
+            try {
+                await window.navigationManager.updateDailyChart();
+                await window.navigationManager.updateFocusSummary();
+                await window.navigationManager.updateWeeklySessionsChart();
+            } catch (error) {
+                console.error('Failed to update navigation charts after midnight reset:', error);
+            }
+        }
+
+        console.log('✅ Midnight reset completed successfully');
+    }
+
     async skipSession() {
         this.isRunning = false;
         this.isPaused = false;
@@ -835,8 +953,24 @@ export class PomodoroTimer {
                 } else {
                     this.currentMode = 'break';
                 }
+                
+                // Reset display state tracking when switching to break modes
+                this._lastLoggedState = null;
+                this._lastAutoPausedLogged = false;
+                this._lastPausedLogged = false;
             } else {
                 this.currentMode = 'focus';
+                
+                // Reset display state tracking when switching to focus mode
+                this._lastLoggedState = null;
+                this._lastAutoPausedLogged = false;
+                this._lastPausedLogged = false;
+                
+                // Restore TagManager display when returning to focus mode
+                if (window.tagManager) {
+                    window.tagManager.updateStatusDisplay();
+                }
+                
                 if (this.completedPomodoros < this.totalSessions) {
                     this.currentSession = this.completedPomodoros + 1;
                 }
@@ -884,8 +1018,18 @@ export class PomodoroTimer {
             } else {
                 this.currentMode = 'break';
             }
+            
+            // Reset display state tracking when switching to break modes
+            this._lastLoggedState = null;
+            this._lastAutoPausedLogged = false;
+            this._lastPausedLogged = false;
         } else {
             this.currentMode = 'focus';
+            
+            // Reset display state tracking when switching to focus mode
+            this._lastLoggedState = null;
+            this._lastAutoPausedLogged = false;
+            this._lastPausedLogged = false;
 
             // Restore TagManager display when returning to focus mode
             if (window.tagManager) {
@@ -962,6 +1106,11 @@ export class PomodoroTimer {
                 } else {
                     this.currentMode = 'break';
                 }
+                
+                // Reset display state tracking when switching to break modes
+                this._lastLoggedState = null;
+                this._lastAutoPausedLogged = false;
+                this._lastPausedLogged = false;
             }
         } else {
             // Break completed
@@ -971,6 +1120,11 @@ export class PomodoroTimer {
             } else {
                 // Traditional behavior - go back to focus
                 this.currentMode = 'focus';
+                
+                // Reset display state tracking when switching to focus mode
+                this._lastLoggedState = null;
+                this._lastAutoPausedLogged = false;
+                this._lastPausedLogged = false;
 
                 // Restore TagManager display when returning to focus mode
                 if (window.tagManager) {
@@ -986,6 +1140,7 @@ export class PomodoroTimer {
         this.sessionStartTime = null;
         this.currentSessionElapsedTime = 0;
         this.sessionCompletedButNotSaved = false; // Reset flag
+        this.maxSessionTimeReached = false; // Reset max session time flag
 
         // Reset timer accuracy tracking
         this.timerStartTime = null;
@@ -1581,6 +1736,7 @@ export class PomodoroTimer {
         this.currentSessionElapsedTime = 0;
         this.lastCompletedSessionTime = 0;
         this.sessionCompletedButNotSaved = false; // Reset flag
+        this.maxSessionTimeReached = false; // Reset max session time flag
 
         // Reset timer accuracy tracking
         this.timerStartTime = null;
@@ -1932,26 +2088,57 @@ export class PomodoroTimer {
         }
     }
 
-    async loadSessionData() {
+    async loadSessionData(forceReset = false) {
+        const today = new Date().toDateString();
+        
+        // Update current date string for midnight monitoring
+        this.currentDateString = today;
+        
         try {
             const data = await invoke('load_session_data');
-            if (data && data.date === new Date().toDateString()) {
+            if (data && data.date === today && !forceReset) {
+                // Load today's session data
                 this.completedPomodoros = data.completed_pomodoros || 0;
                 this.totalFocusTime = data.total_focus_time || 0;
                 this.currentSession = data.current_session || 1;
                 this.updateProgressDots();
+                console.log('📊 Loaded existing session data for today');
+            } else {
+                // Reset to default values for new day, no data, or forced reset
+                this.completedPomodoros = 0;
+                this.totalFocusTime = 0;
+                this.currentSession = 1;
+                this.updateProgressDots();
+                console.log('🌅 Reset session data for new day or forced reset');
             }
         } catch (error) {
             console.error('Failed to load session data from Tauri, using localStorage:', error);
             const saved = localStorage.getItem('pomodoro-session');
+            
             if (saved) {
                 const data = JSON.parse(saved);
-                if (data.date === new Date().toDateString()) {
+                if (data.date === today && !forceReset) {
+                    // Load today's session data from localStorage
                     this.completedPomodoros = data.completedPomodoros || 0;
                     this.totalFocusTime = data.totalFocusTime || 0;
                     this.currentSession = data.currentSession || 1;
                     this.updateProgressDots();
+                    console.log('📊 Loaded existing session data from localStorage');
+                } else {
+                    // Reset to default values for new day, no data, or forced reset
+                    this.completedPomodoros = 0;
+                    this.totalFocusTime = 0;
+                    this.currentSession = 1;
+                    this.updateProgressDots();
+                    console.log('🌅 Reset session data from localStorage for new day or forced reset');
                 }
+            } else {
+                // No saved data at all, reset to defaults
+                this.completedPomodoros = 0;
+                this.totalFocusTime = 0;
+                this.currentSession = 1;
+                this.updateProgressDots();
+                console.log('🌅 No saved data found, using defaults');
             }
         }
     }
@@ -2089,6 +2276,9 @@ export class PomodoroTimer {
         }
 
         this.totalSessions = settings.timer.total_sessions;
+        
+        // Update max session time (convert from minutes to milliseconds)
+        this.maxSessionTime = (settings.timer.max_session_time || 120) * 60 * 1000;
 
         // If timer is not running, update current time remaining
         if (!this.isRunning) {
@@ -2160,6 +2350,9 @@ export class PomodoroTimer {
         this.smartPauseEnabled = false;
         this.inactivityThreshold = 30000; // Reset to default 30 seconds
 
+        // Clear midnight monitoring
+        this.stopMidnightMonitoring();
+
         // Reset all counters and state
         this.completedPomodoros = 0;
         this.generateProgressDots();
@@ -2172,6 +2365,7 @@ export class PomodoroTimer {
         this.sessionStartTime = null;
         this.currentSessionElapsedTime = 0;
         this.lastCompletedSessionTime = 0;
+        this.maxSessionTimeReached = false; // Reset max session time flag
 
         // Reset timer accuracy tracking
         this.timerStartTime = null;
@@ -2206,6 +2400,9 @@ export class PomodoroTimer {
         this.updateWeeklyStats();
         this.updateTrayIcon();
         this.updateSettingIndicators();
+
+        // Restart midnight monitoring
+        this.startMidnightMonitoring();
 
         console.log('Timer reset to initial state');
     }

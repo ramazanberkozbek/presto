@@ -99,7 +99,8 @@ export class SettingsManager {
                 break_duration: 5,
                 long_break_duration: 20,
                 total_sessions: 10,
-                weekly_goal_minutes: 125
+                weekly_goal_minutes: 125,
+                max_session_time: 120 // 2 hours in minutes
             },
             notifications: {
                 desktop_notifications: true,
@@ -133,6 +134,12 @@ export class SettingsManager {
         document.getElementById('break-duration').value = this.settings.timer.break_duration;
         document.getElementById('long-break-duration').value = this.settings.timer.long_break_duration;
         document.getElementById('total-sessions').value = this.settings.timer.total_sessions;
+        
+        // Populate max session time
+        const maxSessionTimeField = document.getElementById('max-session-time');
+        if (maxSessionTimeField) {
+            maxSessionTimeField.value = this.settings.timer.max_session_time || 120;
+        }
 
         // Populate weekly goal
         const weeklyGoalField = document.getElementById('weekly-goal-minutes');
@@ -421,6 +428,12 @@ export class SettingsManager {
             this.settings.timer.break_duration = parseInt(document.getElementById('break-duration').value);
             this.settings.timer.long_break_duration = parseInt(document.getElementById('long-break-duration').value);
             this.settings.timer.total_sessions = parseInt(document.getElementById('total-sessions').value);
+            
+            // Max session time setting
+            const maxSessionTimeField = document.getElementById('max-session-time');
+            if (maxSessionTimeField) {
+                this.settings.timer.max_session_time = parseInt(maxSessionTimeField.value) || 120;
+            }
 
             // Appearance settings
             const themeSelect = document.getElementById('theme-select');
@@ -527,7 +540,8 @@ export class SettingsManager {
             'break-duration',
             'long-break-duration',
             'total-sessions',
-            'weekly-goal-minutes'
+            'weekly-goal-minutes',
+            'max-session-time'
         ];
 
         // Appearance settings
@@ -628,6 +642,12 @@ export class SettingsManager {
             this.settings.timer.break_duration = parseInt(document.getElementById('break-duration').value);
             this.settings.timer.long_break_duration = parseInt(document.getElementById('long-break-duration').value);
             this.settings.timer.total_sessions = parseInt(document.getElementById('total-sessions').value);
+
+            // Max session time setting
+            const maxSessionTimeField = document.getElementById('max-session-time');
+            if (maxSessionTimeField) {
+                this.settings.timer.max_session_time = parseInt(maxSessionTimeField.value) || 120;
+            }
 
             // Weekly goal setting
             const weeklyGoalField = document.getElementById('weekly-goal-minutes');
