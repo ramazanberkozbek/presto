@@ -1707,11 +1707,13 @@ true // All sessions are focus sessions now
             let sessionFound = false;
             
             // Find and delete the session
+            let deletedFromDate = null;
             for (const [dateString, sessions] of Object.entries(window.sessionManager.sessions)) {
                 const sessionIndex = sessions.findIndex(s => s.id === sessionId);
                 if (sessionIndex !== -1) {
                     sessions.splice(sessionIndex, 1);
                     sessionFound = true;
+                    deletedFromDate = dateString;
                     console.log('Session deleted successfully:', sessionId);
                     break;
                 }
@@ -1724,6 +1726,11 @@ true // All sessions are focus sessions now
 
             // Save the updated sessions
             await window.sessionManager.saveSessionsToStorage();
+
+            // Dispatch session deleted event for synchronization with other components
+            window.dispatchEvent(new CustomEvent('sessionDeleted', { 
+                detail: { sessionId, date: deletedFromDate } 
+            }));
             
             // Refresh the table
             const currentDate = this.selectedDate || this.currentDate;
