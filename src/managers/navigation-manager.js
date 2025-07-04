@@ -736,9 +736,9 @@ true // All sessions are focus sessions now
         } catch (error) {
             console.error('Failed to load session details:', error);
             const errorItem = document.createElement('div');
-            errorItem.className = 'sessions-empty';
+            errorItem.className = 'timeline-empty';
             errorItem.textContent = 'Error loading session data';
-            sessionsList.appendChild(errorItem);
+            timelineTrack.appendChild(errorItem);
         }
     }
 
@@ -846,6 +846,9 @@ true // All sessions are focus sessions now
         await this.updateWeeklySessionsChart();
         this.updateDailyChart();
         await this.updateTagUsageChart();
+        
+        // Update session history table for selected date
+        await this.populateSessionsTableForDate(date);
     }
 
     updateDailyDetails(date = this.currentDate) {
@@ -942,6 +945,9 @@ true // All sessions are focus sessions now
 
         // Check if this session is from today
         const isToday = this.isSameDay(date, new Date());
+        
+        // Define session type for display
+        const sessionType = session.session_type || session.type || 'Focus';
 
         // Parse start and end times
         const [startHour, startMinute] = session.start_time.split(':').map(Number);
@@ -1503,18 +1509,11 @@ true // All sessions are focus sessions now
 
     // Sessions History Table Methods
     async initSessionsTable() {
-        await this.populateSessionsTable('today');
+        await this.populateSessionsTableForDate(this.currentDate);
         this.setupSessionsTableEventListeners();
     }
 
     setupSessionsTableEventListeners() {
-        const filterSelect = document.getElementById('sessions-filter-period');
-        if (filterSelect) {
-            filterSelect.addEventListener('change', async (e) => {
-                await this.populateSessionsTable(e.target.value);
-            });
-        }
-
         const exportBtn = document.getElementById('export-sessions-btn');
         if (exportBtn) {
             exportBtn.addEventListener('click', () => {
@@ -1594,6 +1593,33 @@ true // All sessions are focus sessions now
         }
         
         return allSessions;
+    }
+
+    async populateSessionsTableForDate(date) {
+        const tableBody = document.getElementById('sessions-table-body');
+        if (!tableBody || !window.sessionManager) return;
+
+        const sessions = window.sessionManager.getSessionsForDate(date);
+        tableBody.innerHTML = '';
+
+        if (sessions.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="sessions-table-empty">
+                        No sessions found for selected date
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        // Sort sessions by time (newest first)
+        sessions.sort((a, b) => b.start_time.localeCompare(a.start_time));
+
+        for (const session of sessions) {
+            const row = await this.createSessionTableRow(session);
+            tableBody.appendChild(row);
+        }
     }
 
     async createSessionTableRow(session) {
@@ -1700,9 +1726,8 @@ true // All sessions are focus sessions now
             await window.sessionManager.saveSessionsToStorage();
             
             // Refresh the table
-            const filterSelect = document.getElementById('sessions-filter-period');
-            const currentPeriod = filterSelect ? filterSelect.value : 'today';
-            await this.populateSessionsTable(currentPeriod);
+            const currentDate = this.selectedDate || this.currentDate;
+            await this.populateSessionsTableForDate(currentDate);
             
             // Refresh other views (with error handling for each)
             try {
@@ -1774,9 +1799,8 @@ true // All sessions are focus sessions now
 
     async exportSessionsToExcel() {
         try {
-            const filterSelect = document.getElementById('sessions-filter-period');
-            const currentPeriod = filterSelect ? filterSelect.value : 'today';
-            const sessions = this.getSessionsForPeriod(currentPeriod);
+            const currentDate = this.selectedDate || this.currentDate;
+            const sessions = window.sessionManager.getSessionsForDate(currentDate);
 
             if (sessions.length === 0) {
                 alert('No sessions to export for the selected period.');
