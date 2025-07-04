@@ -27,6 +27,7 @@ export class PomodoroTimer {
 
         // Session time tracking
         this.sessionStartTime = null; // When the current session was started
+        this.lastSessionStartTime = null; // Preserved start time for the last completed session
         this.currentSessionElapsedTime = 0; // Actual elapsed time for current session (in seconds)
         this.lastCompletedSessionTime = 0; // Time of the last completed session for undo functionality
         this.sessionCompletedButNotSaved = false; // Flag to track if session completed but not saved yet
@@ -612,8 +613,19 @@ export class PomodoroTimer {
             // Track session start time if not already set
             if (!this.sessionStartTime) {
                 this.sessionStartTime = Date.now();
+                console.log('🟢 NEW SESSION STARTED - sessionStartTime set to:', {
+                    timestamp: this.sessionStartTime,
+                    dateISO: new Date(this.sessionStartTime).toISOString(),
+                    dateLocal: new Date(this.sessionStartTime).toString()
+                });
                 this.currentSessionElapsedTime = 0;
                 this.sessionCompletedButNotSaved = false; // Reset flag for new session
+            } else {
+                console.log('⚠️ Session already started - not updating sessionStartTime:', {
+                    existingTimestamp: this.sessionStartTime,
+                    existingDateISO: new Date(this.sessionStartTime).toISOString(),
+                    existingDateLocal: new Date(this.sessionStartTime).toString()
+                });
             }
 
             // Initialize timer accuracy tracking
@@ -981,6 +993,14 @@ export class PomodoroTimer {
             if (shouldSaveSession) {
                 this.saveSessionData();
             }
+            
+            // Reset session start time for next session (after saving)
+            console.log('🔄 Resetting sessionStartTime after overtime skip:', {
+                beforeReset: this.sessionStartTime,
+                beforeResetISO: this.sessionStartTime ? new Date(this.sessionStartTime).toISOString() : null
+            });
+            this.sessionStartTime = null;
+            
             const messages = {
                 focus: 'Focus session skipped. Time for a break! 😌',
                 break: 'Break skipped. Ready to focus? 🍅',
@@ -1004,6 +1024,14 @@ export class PomodoroTimer {
                 const actualElapsedTime = this.currentSessionElapsedTime || (this.durations.focus - this.timeRemaining);
                 this.totalFocusTime += actualElapsedTime;
                 this.lastCompletedSessionTime = actualElapsedTime;
+                
+                // Preserve session start time for saving
+                console.log('Preserving session start time:', {
+                    before: this.lastSessionStartTime,
+                    sessionStartTime: this.sessionStartTime,
+                    preservedValue: this.sessionStartTime
+                });
+                this.lastSessionStartTime = this.sessionStartTime;
 
                 // Save skipped focus session to SessionManager as individual session
                 // Only save if session lasted at least 1 minute
@@ -1046,6 +1074,14 @@ export class PomodoroTimer {
         if (shouldSaveSession) {
             this.saveSessionData();
         }
+        
+        // Reset session start time for next session (after saving)
+        console.log('🔄 Resetting sessionStartTime after normal skip:', {
+            beforeReset: this.sessionStartTime,
+            beforeResetISO: this.sessionStartTime ? new Date(this.sessionStartTime).toISOString() : null
+        });
+        this.sessionStartTime = null;
+        
         const messages = {
             focus: 'Focus session skipped. Time for a break! 😌',
             break: 'Break skipped. Ready to focus? 🍅',
@@ -1085,6 +1121,14 @@ export class PomodoroTimer {
 
             // Store the actual elapsed time for undo functionality
             this.lastCompletedSessionTime = actualElapsedTime;
+            
+            // Preserve session start time for saving
+            console.log('Preserving session start time (timer completion):', {
+                before: this.lastSessionStartTime,
+                sessionStartTime: this.sessionStartTime,
+                preservedValue: this.sessionStartTime
+            });
+            this.lastSessionStartTime = this.sessionStartTime;
 
             // Mark current task as completed if exists
             if (this.currentTask.trim()) {
@@ -1136,7 +1180,13 @@ export class PomodoroTimer {
             }
         }
 
+        // Save completed focus session to SessionManager as individual session BEFORE resetting sessionStartTime
+        if (this.lastCompletedSessionTime > 0 && this.completedPomodoros > 0) {
+            await this.saveCompletedFocusSession();
+        }
+
         // Reset session tracking for next session
+        console.log('Resetting sessionStartTime for next session (from completeSession)');
         this.sessionStartTime = null;
         this.currentSessionElapsedTime = 0;
         this.sessionCompletedButNotSaved = false; // Reset flag
@@ -1150,11 +1200,6 @@ export class PomodoroTimer {
         this.timeRemaining = this.durations[this.currentMode];
         this.updateDisplay();
         this.updateButtons();
-
-        // Save completed focus session to SessionManager as individual session
-        if (this.lastCompletedSessionTime > 0 && this.completedPomodoros > 0) {
-            await this.saveCompletedFocusSession();
-        }
 
         // Only save aggregated session data, individual sessions are handled by saveCompletedFocusSession
         await this.saveSessionData();
@@ -1236,6 +1281,14 @@ export class PomodoroTimer {
 
             // Store the actual elapsed time for undo functionality
             this.lastCompletedSessionTime = actualElapsedTime;
+            
+            // Preserve session start time for saving
+            console.log('Preserving session start time (overtime):', {
+                before: this.lastSessionStartTime,
+                sessionStartTime: this.sessionStartTime,
+                preservedValue: this.sessionStartTime
+            });
+            this.lastSessionStartTime = this.sessionStartTime;
 
             // Mark current task as completed if exists
             if (this.currentTask.trim()) {
@@ -2059,12 +2112,50 @@ export class PomodoroTimer {
         const now = new Date();
         const durationMinutes = Math.round(this.lastCompletedSessionTime / 60);
 
-        // Calculate session end time (now) and start time (backwards from duration)
+        // Use preserved session start time if available, otherwise fall back to calculating backwards
+        let startHour, startMinute;
+        const actualSessionStartTime = this.lastSessionStartTime;
+        
+        console.log('Session saving debug:', {
+            lastSessionStartTime: this.lastSessionStartTime,
+            sessionStartTime: this.sessionStartTime,
+            actualSessionStartTime: actualSessionStartTime,
+            durationMinutes: durationMinutes,
+            nowISO: now.toISOString(),
+            nowLocal: now.toString()
+        });
+        
+        if (actualSessionStartTime) {
+            const sessionStart = new Date(actualSessionStartTime);
+            startHour = sessionStart.getHours();
+            startMinute = sessionStart.getMinutes();
+            console.log('Using preserved session start time:', {
+                timestampUTC: sessionStart.toISOString(),
+                timestampLocal: sessionStart.toString(),
+                extractedHour: startHour,
+                extractedMinute: startMinute
+            });
+        } else {
+            // Fallback to calculating backwards from duration
+            const endHour = now.getHours();
+            const endMinute = now.getMinutes();
+            const startTotalMinutes = endHour * 60 + endMinute - durationMinutes;
+            startHour = Math.max(0, Math.floor(startTotalMinutes / 60));
+            startMinute = Math.max(0, startTotalMinutes % 60);
+            console.log('Using fallback calculation for session start time (no preserved time available)');
+        }
+
         const endHour = now.getHours();
         const endMinute = now.getMinutes();
-        const startTotalMinutes = endHour * 60 + endMinute - durationMinutes;
-        const startHour = Math.max(0, Math.floor(startTotalMinutes / 60));
-        const startMinute = Math.max(0, startTotalMinutes % 60);
+        
+        console.log('Final time values:', {
+            startHour: startHour,
+            startMinute: startMinute,
+            endHour: endHour,
+            endMinute: endMinute,
+            startTimeString: `${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`,
+            endTimeString: `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`
+        });
 
         // Get current tags from TagManager
         const currentTags = window.tagManager ? window.tagManager.getCurrentTags() : [];
@@ -2083,6 +2174,10 @@ export class PomodoroTimer {
         try {
             await window.sessionManager.addSession(sessionData);
             console.log('Timer session saved to SessionManager:', sessionData);
+            
+            // Clear the preserved session start time after successful save
+            this.lastSessionStartTime = null;
+            console.log('Cleared lastSessionStartTime after successful save');
         } catch (error) {
             console.error('Failed to save timer session to SessionManager:', error);
         }
