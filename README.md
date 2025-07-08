@@ -55,7 +55,7 @@ brew install --cask murdercode/presto/presto
 If you see this error when launching Presto for the first time, it's a temporary issue that occurs because the app lacks an Apple Developer signature (which requires paying $99 to Apple). This is a common situation for open-source applications. To resolve it, run this command in Terminal:
 
 ```bash
-xattr -d com.apple.quarantine /Applications/Presto.app
+xattr -d com.apple.quarantine /Applications/presto.app
 ```
 
 Then you can launch Presto normally from your Applications folder or Spotlight.
