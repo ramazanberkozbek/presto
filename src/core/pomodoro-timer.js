@@ -27,6 +27,7 @@ export class PomodoroTimer {
 
         // Session time tracking
         this.sessionStartTime = null; // When the current session was started
+        this.lastSessionStartTime = null; // Preserved start time for the last completed session
         this.currentSessionElapsedTime = 0; // Actual elapsed time for current session (in seconds)
         this.lastCompletedSessionTime = 0; // Time of the last completed session for undo functionality
         this.sessionCompletedButNotSaved = false; // Flag to track if session completed but not saved yet
@@ -109,7 +110,7 @@ export class PomodoroTimer {
         // Generate initial progress dots
         this.generateProgressDots();
         this.updateDisplay();
-        this.updateProgressDots();
+        await this.updateProgressDots();
         this.updateStopUndoButton(); // Initialize stop/undo button state
         this.updateSkipIcon(); // Initialize skip button icon
         this.updateSmartIndicator(); // Initialize smart pause indicator
@@ -189,6 +190,42 @@ export class PomodoroTimer {
 
         // Start midnight monitoring for daily reset
         this.startMidnightMonitoring();
+
+        // Setup event listeners for session synchronization
+        this.setupSessionEventListeners();
+    }
+
+    setupSessionEventListeners() {
+        // Listen for session changes from SessionManager to keep dots synchronized
+        window.addEventListener('sessionAdded', async (event) => {
+            const { date } = event.detail;
+            const today = new Date().toDateString();
+            
+            // Only update dots if the session was added for today
+            if (date === today) {
+                await this.updateProgressDots();
+            }
+        });
+
+        window.addEventListener('sessionDeleted', async (event) => {
+            const { date } = event.detail;
+            const today = new Date().toDateString();
+            
+            // Only update dots if the session was deleted from today
+            if (date === today) {
+                await this.updateProgressDots();
+            }
+        });
+
+        window.addEventListener('sessionUpdated', async (event) => {
+            const { date } = event.detail;
+            const today = new Date().toDateString();
+            
+            // Only update dots if the session was updated for today
+            if (date === today) {
+                await this.updateProgressDots();
+            }
+        });
     }
 
     setupEventListeners() {
@@ -612,8 +649,19 @@ export class PomodoroTimer {
             // Track session start time if not already set
             if (!this.sessionStartTime) {
                 this.sessionStartTime = Date.now();
+                console.log('🟢 NEW SESSION STARTED - sessionStartTime set to:', {
+                    timestamp: this.sessionStartTime,
+                    dateISO: new Date(this.sessionStartTime).toISOString(),
+                    dateLocal: new Date(this.sessionStartTime).toString()
+                });
                 this.currentSessionElapsedTime = 0;
                 this.sessionCompletedButNotSaved = false; // Reset flag for new session
+            } else {
+                console.log('⚠️ Session already started - not updating sessionStartTime:', {
+                    existingTimestamp: this.sessionStartTime,
+                    existingDateISO: new Date(this.sessionStartTime).toISOString(),
+                    existingDateLocal: new Date(this.sessionStartTime).toString()
+                });
             }
 
             // Initialize timer accuracy tracking
@@ -981,6 +1029,14 @@ export class PomodoroTimer {
             if (shouldSaveSession) {
                 this.saveSessionData();
             }
+            
+            // Reset session start time for next session (after saving)
+            console.log('🔄 Resetting sessionStartTime after overtime skip:', {
+                beforeReset: this.sessionStartTime,
+                beforeResetISO: this.sessionStartTime ? new Date(this.sessionStartTime).toISOString() : null
+            });
+            this.sessionStartTime = null;
+            
             const messages = {
                 focus: 'Focus session skipped. Time for a break! 😌',
                 break: 'Break skipped. Ready to focus? 🍅',
@@ -1000,10 +1056,18 @@ export class PomodoroTimer {
         if (this.currentMode === 'focus') {
             if (!this.sessionCompletedButNotSaved) {
                 this.completedPomodoros++;
-                this.updateProgressDots();
+                await this.updateProgressDots();
                 const actualElapsedTime = this.currentSessionElapsedTime || (this.durations.focus - this.timeRemaining);
                 this.totalFocusTime += actualElapsedTime;
                 this.lastCompletedSessionTime = actualElapsedTime;
+                
+                // Preserve session start time for saving
+                console.log('Preserving session start time:', {
+                    before: this.lastSessionStartTime,
+                    sessionStartTime: this.sessionStartTime,
+                    preservedValue: this.sessionStartTime
+                });
+                this.lastSessionStartTime = this.sessionStartTime;
 
                 // Save skipped focus session to SessionManager as individual session
                 // Only save if session lasted at least 1 minute
@@ -1046,6 +1110,14 @@ export class PomodoroTimer {
         if (shouldSaveSession) {
             this.saveSessionData();
         }
+        
+        // Reset session start time for next session (after saving)
+        console.log('🔄 Resetting sessionStartTime after normal skip:', {
+            beforeReset: this.sessionStartTime,
+            beforeResetISO: this.sessionStartTime ? new Date(this.sessionStartTime).toISOString() : null
+        });
+        this.sessionStartTime = null;
+        
         const messages = {
             focus: 'Focus session skipped. Time for a break! 😌',
             break: 'Break skipped. Ready to focus? 🍅',
@@ -1077,7 +1149,7 @@ export class PomodoroTimer {
 
         if (this.currentMode === 'focus') {
             this.completedPomodoros++;
-            this.updateProgressDots();
+            await this.updateProgressDots();
 
             // Calculate actual elapsed time for focus sessions
             const actualElapsedTime = this.currentSessionElapsedTime || (this.durations.focus - this.timeRemaining);
@@ -1085,6 +1157,14 @@ export class PomodoroTimer {
 
             // Store the actual elapsed time for undo functionality
             this.lastCompletedSessionTime = actualElapsedTime;
+            
+            // Preserve session start time for saving
+            console.log('Preserving session start time (timer completion):', {
+                before: this.lastSessionStartTime,
+                sessionStartTime: this.sessionStartTime,
+                preservedValue: this.sessionStartTime
+            });
+            this.lastSessionStartTime = this.sessionStartTime;
 
             // Mark current task as completed if exists
             if (this.currentTask.trim()) {
@@ -1136,7 +1216,13 @@ export class PomodoroTimer {
             }
         }
 
+        // Save completed focus session to SessionManager as individual session BEFORE resetting sessionStartTime
+        if (this.lastCompletedSessionTime > 0 && this.completedPomodoros > 0) {
+            await this.saveCompletedFocusSession();
+        }
+
         // Reset session tracking for next session
+        console.log('Resetting sessionStartTime for next session (from completeSession)');
         this.sessionStartTime = null;
         this.currentSessionElapsedTime = 0;
         this.sessionCompletedButNotSaved = false; // Reset flag
@@ -1150,11 +1236,6 @@ export class PomodoroTimer {
         this.timeRemaining = this.durations[this.currentMode];
         this.updateDisplay();
         this.updateButtons();
-
-        // Save completed focus session to SessionManager as individual session
-        if (this.lastCompletedSessionTime > 0 && this.completedPomodoros > 0) {
-            await this.saveCompletedFocusSession();
-        }
 
         // Only save aggregated session data, individual sessions are handled by saveCompletedFocusSession
         await this.saveSessionData();
@@ -1228,7 +1309,7 @@ export class PomodoroTimer {
         // Update completed sessions count for focus sessions
         if (this.currentMode === 'focus') {
             this.completedPomodoros++;
-            this.updateProgressDots();
+            await this.updateProgressDots();
 
             // Calculate actual elapsed time for focus sessions
             const actualElapsedTime = this.currentSessionElapsedTime || this.durations.focus;
@@ -1236,6 +1317,14 @@ export class PomodoroTimer {
 
             // Store the actual elapsed time for undo functionality
             this.lastCompletedSessionTime = actualElapsedTime;
+            
+            // Preserve session start time for saving
+            console.log('Preserving session start time (overtime):', {
+                before: this.lastSessionStartTime,
+                sessionStartTime: this.sessionStartTime,
+                preservedValue: this.sessionStartTime
+            });
+            this.lastSessionStartTime = this.sessionStartTime;
 
             // Mark current task as completed if exists
             if (this.currentTask.trim()) {
@@ -1745,7 +1834,7 @@ export class PomodoroTimer {
 
         // Update all displays
         this.updateDisplay();
-        this.updateProgressDots();
+        await this.updateProgressDots();
         this.updateButtons();
         await this.saveSessionData();
         this.updateTrayIcon();
@@ -1773,7 +1862,7 @@ export class PomodoroTimer {
     }
 
     // Progress dots update
-    updateProgressDots() {
+    async updateProgressDots() {
         const dots = this.progressDots.querySelectorAll('.dot');
 
         // Remove any existing overflow indicator
@@ -1782,20 +1871,23 @@ export class PomodoroTimer {
             existingOverflow.remove();
         }
 
-        // Update each dot based on completed pomodoros and current session
+        // Get actual completed sessions count from SessionManager
+        const actualCompletedSessions = await this.getCompletedSessionsToday();
+
+        // Update each dot based on actual completed sessions and current session
         dots.forEach((dot, index) => {
             // Remove all classes first
             dot.classList.remove('completed', 'current');
 
-            if (index < this.completedPomodoros) {
+            if (index < actualCompletedSessions) {
                 dot.classList.add('completed');
-            } else if (index === this.completedPomodoros && this.currentMode === 'focus') {
+            } else if (index === actualCompletedSessions && this.currentMode === 'focus') {
                 dot.classList.add('current');
             }
         });
 
-        if (this.completedPomodoros > this.totalSessions) {
-            const overflowCount = this.completedPomodoros - this.totalSessions;
+        if (actualCompletedSessions > this.totalSessions) {
+            const overflowCount = actualCompletedSessions - this.totalSessions;
             const overflowIndicator = document.createElement('div');
             overflowIndicator.className = 'overflow-indicator';
             overflowIndicator.textContent = `+${overflowCount}`;
@@ -2050,6 +2142,21 @@ export class PomodoroTimer {
         }
     }
 
+    async getCompletedSessionsToday() {
+        if (!window.sessionManager) {
+            return this.completedPomodoros; // Fallback to internal counter
+        }
+
+        try {
+            const today = new Date(); // Pass Date object instead of string
+            const todaySessions = await window.sessionManager.getSessionsForDate(today);
+            return todaySessions ? todaySessions.length : 0;
+        } catch (error) {
+            console.error('Failed to get completed sessions from SessionManager:', error);
+            return this.completedPomodoros; // Fallback to internal counter
+        }
+    }
+
     async saveCompletedFocusSession() {
         if (!window.sessionManager) {
             console.log('SessionManager not available, skipping individual session save');
@@ -2059,12 +2166,50 @@ export class PomodoroTimer {
         const now = new Date();
         const durationMinutes = Math.round(this.lastCompletedSessionTime / 60);
 
-        // Calculate session end time (now) and start time (backwards from duration)
+        // Use preserved session start time if available, otherwise fall back to calculating backwards
+        let startHour, startMinute;
+        const actualSessionStartTime = this.lastSessionStartTime;
+        
+        console.log('Session saving debug:', {
+            lastSessionStartTime: this.lastSessionStartTime,
+            sessionStartTime: this.sessionStartTime,
+            actualSessionStartTime: actualSessionStartTime,
+            durationMinutes: durationMinutes,
+            nowISO: now.toISOString(),
+            nowLocal: now.toString()
+        });
+        
+        if (actualSessionStartTime) {
+            const sessionStart = new Date(actualSessionStartTime);
+            startHour = sessionStart.getHours();
+            startMinute = sessionStart.getMinutes();
+            console.log('Using preserved session start time:', {
+                timestampUTC: sessionStart.toISOString(),
+                timestampLocal: sessionStart.toString(),
+                extractedHour: startHour,
+                extractedMinute: startMinute
+            });
+        } else {
+            // Fallback to calculating backwards from duration
+            const endHour = now.getHours();
+            const endMinute = now.getMinutes();
+            const startTotalMinutes = endHour * 60 + endMinute - durationMinutes;
+            startHour = Math.max(0, Math.floor(startTotalMinutes / 60));
+            startMinute = Math.max(0, startTotalMinutes % 60);
+            console.log('Using fallback calculation for session start time (no preserved time available)');
+        }
+
         const endHour = now.getHours();
         const endMinute = now.getMinutes();
-        const startTotalMinutes = endHour * 60 + endMinute - durationMinutes;
-        const startHour = Math.max(0, Math.floor(startTotalMinutes / 60));
-        const startMinute = Math.max(0, startTotalMinutes % 60);
+        
+        console.log('Final time values:', {
+            startHour: startHour,
+            startMinute: startMinute,
+            endHour: endHour,
+            endMinute: endMinute,
+            startTimeString: `${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`,
+            endTimeString: `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`
+        });
 
         // Get current tags from TagManager
         const currentTags = window.tagManager ? window.tagManager.getCurrentTags() : [];
@@ -2083,6 +2228,10 @@ export class PomodoroTimer {
         try {
             await window.sessionManager.addSession(sessionData);
             console.log('Timer session saved to SessionManager:', sessionData);
+            
+            // Clear the preserved session start time after successful save
+            this.lastSessionStartTime = null;
+            console.log('Cleared lastSessionStartTime after successful save');
         } catch (error) {
             console.error('Failed to save timer session to SessionManager:', error);
         }
@@ -2101,14 +2250,14 @@ export class PomodoroTimer {
                 this.completedPomodoros = data.completed_pomodoros || 0;
                 this.totalFocusTime = data.total_focus_time || 0;
                 this.currentSession = data.current_session || 1;
-                this.updateProgressDots();
+                await this.updateProgressDots();
                 console.log('📊 Loaded existing session data for today');
             } else {
                 // Reset to default values for new day, no data, or forced reset
                 this.completedPomodoros = 0;
                 this.totalFocusTime = 0;
                 this.currentSession = 1;
-                this.updateProgressDots();
+                await this.updateProgressDots();
                 console.log('🌅 Reset session data for new day or forced reset');
             }
         } catch (error) {
@@ -2122,14 +2271,14 @@ export class PomodoroTimer {
                     this.completedPomodoros = data.completedPomodoros || 0;
                     this.totalFocusTime = data.totalFocusTime || 0;
                     this.currentSession = data.currentSession || 1;
-                    this.updateProgressDots();
+                    await this.updateProgressDots();
                     console.log('📊 Loaded existing session data from localStorage');
                 } else {
                     // Reset to default values for new day, no data, or forced reset
                     this.completedPomodoros = 0;
                     this.totalFocusTime = 0;
                     this.currentSession = 1;
-                    this.updateProgressDots();
+                    await this.updateProgressDots();
                     console.log('🌅 Reset session data from localStorage for new day or forced reset');
                 }
             } else {
@@ -2137,7 +2286,7 @@ export class PomodoroTimer {
                 this.completedPomodoros = 0;
                 this.totalFocusTime = 0;
                 this.currentSession = 1;
-                this.updateProgressDots();
+                await this.updateProgressDots();
                 console.log('🌅 No saved data found, using defaults');
             }
         }
@@ -2288,7 +2437,7 @@ export class PomodoroTimer {
 
         // Regenerate progress dots when total sessions change
         this.generateProgressDots();
-        this.updateProgressDots();
+        await this.updateProgressDots();
 
         // Update notification preferences
         this.enableDesktopNotifications = settings.notifications.desktop_notifications;

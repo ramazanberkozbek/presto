@@ -330,6 +330,11 @@ export class SessionManager {
         
         // Save to storage (Tauri backend or localStorage)
         await this.saveSessionsToStorage();
+
+        // Dispatch session added event for synchronization with other components
+        window.dispatchEvent(new CustomEvent('sessionAdded', { 
+            detail: { sessionData, date: dateString } 
+        }));
     }
 
     async updateSession(sessionData) {
@@ -345,6 +350,11 @@ export class SessionManager {
 
         // Save to storage (Tauri backend or localStorage)
         await this.saveSessionsToStorage();
+
+        // Dispatch session updated event for synchronization with other components
+        window.dispatchEvent(new CustomEvent('sessionUpdated', { 
+            detail: { sessionData, date: dateString } 
+        }));
     }
 
     async deleteCurrentSession() {
@@ -360,6 +370,11 @@ export class SessionManager {
 
             // Save to storage (Tauri backend or localStorage)
             await this.saveSessionsToStorage();
+
+            // Dispatch session deleted event for synchronization with other components
+            window.dispatchEvent(new CustomEvent('sessionDeleted', { 
+                detail: { sessionId: this.currentEditingSession.id, date: dateString } 
+            }));
 
             // Store the selected date before closing modal (as closeModal sets it to null)
             const dateForRefresh = this.selectedDate;
