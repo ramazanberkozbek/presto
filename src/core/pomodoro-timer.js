@@ -1865,11 +1865,9 @@ export class PomodoroTimer {
     async updateProgressDots() {
         const dots = this.progressDots.querySelectorAll('.dot');
 
-        // Remove any existing overflow indicator
-        const existingOverflow = this.progressDots.querySelector('.overflow-indicator');
-        if (existingOverflow) {
-            existingOverflow.remove();
-        }
+        // Remove any existing overflow indicators
+        const existingOverflows = this.progressDots.querySelectorAll('.overflow-indicator');
+        existingOverflows.forEach(overflow => overflow.remove());
 
         // Get actual completed sessions count from SessionManager
         const actualCompletedSessions = await this.getCompletedSessionsToday();
