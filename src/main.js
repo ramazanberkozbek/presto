@@ -6,7 +6,7 @@ import { TeamManager } from './managers/team-manager.js';
 // Auth manager will be imported after Supabase is loaded
 import { PomodoroTimer } from './core/pomodoro-timer.js';
 import { NotificationUtils } from './utils/common-utils.js';
-import { updateNotification } from './components/update-notification.js';
+// Removed unused import: updateNotification
 
 // Global application state
 let timer = null;
@@ -297,48 +297,92 @@ async function initializeEarlyTheme() {
     return themePreference;
   }
 
-  try {
-    // Try to load theme from saved settings first
-    const savedSettings = await invoke('load_settings');
-    const themeFromSettings = savedSettings?.appearance?.theme;
-    const timerThemeFromSettings = savedSettings?.appearance?.timer_theme;
-
-    if (themeFromSettings) {
-      const actualTheme = getActualTheme(themeFromSettings);
-      document.documentElement.setAttribute('data-theme', actualTheme);
-      localStorage.setItem('theme-preference', themeFromSettings); // Store preference (could be "auto")
-      console.log(`🎨 Early theme loaded from settings: ${themeFromSettings} -> actual: ${actualTheme}`);
-    }
-
-    // Also initialize timer theme early
-    if (timerThemeFromSettings) {
-      document.documentElement.setAttribute('data-timer-theme', timerThemeFromSettings);
-      localStorage.setItem('timer-theme-preference', timerThemeFromSettings);
-      console.log(`🎨 Early timer theme loaded from settings: ${timerThemeFromSettings}`);
-    } else {
-      // Default to espresso theme
-      document.documentElement.setAttribute('data-timer-theme', 'espresso');
-      localStorage.setItem('timer-theme-preference', 'espresso');
-      console.log(`🎨 Early timer theme initialized to default: espresso`);
-    }
-
-    if (themeFromSettings) {
-      return;
-    }
-  } catch (error) {
-    console.log('🎨 Could not load theme from settings, using localStorage fallback');
-
-    // Still initialize timer theme with fallback
-    const storedTimerTheme = localStorage.getItem('timer-theme-preference') || 'espresso';
-    document.documentElement.setAttribute('data-timer-theme', storedTimerTheme);
-    console.log(`🎨 Early timer theme initialized from localStorage: ${storedTimerTheme}`);
+  // Helper function to check if Tauri is available and ready
+  function isTauriReady() {
+    return typeof window !== 'undefined' && 
+           window.__TAURI__ && 
+           window.__TAURI__.core && 
+           typeof window.__TAURI__.core.invoke === 'function';
   }
 
-  // Fallback to localStorage or default for main theme
+  // Helper function to wait for Tauri to be ready (with timeout)
+  function waitForTauri(maxWaitTime = 2000) {
+    return new Promise((resolve) => {
+      const startTime = Date.now();
+      
+      const checkTauri = () => {
+        if (isTauriReady()) {
+          resolve(true);
+          return;
+        }
+        
+        if (Date.now() - startTime > maxWaitTime) {
+          resolve(false);
+          return;
+        }
+        
+        setTimeout(checkTauri, 50);
+      };
+      
+      checkTauri();
+    });
+  }
+
+  try {
+    // Wait for Tauri to be ready before trying to load settings
+    const tauriReady = await waitForTauri();
+    
+    if (tauriReady) {
+      console.log('🎨 Tauri is ready, loading theme from settings...');
+      
+      try {
+        const { invoke } = window.__TAURI__.core;
+        const savedSettings = await invoke('load_settings');
+        const themeFromSettings = savedSettings?.appearance?.theme;
+        const timerThemeFromSettings = savedSettings?.appearance?.timer_theme;
+
+        if (themeFromSettings) {
+          const actualTheme = getActualTheme(themeFromSettings);
+          document.documentElement.setAttribute('data-theme', actualTheme);
+          localStorage.setItem('theme-preference', themeFromSettings); // Store preference (could be "auto")
+          console.log(`🎨 Early theme loaded from settings: ${themeFromSettings} -> actual: ${actualTheme}`);
+        }
+
+        // Also initialize timer theme early
+        if (timerThemeFromSettings) {
+          document.documentElement.setAttribute('data-timer-theme', timerThemeFromSettings);
+          localStorage.setItem('timer-theme-preference', timerThemeFromSettings);
+          console.log(`🎨 Early timer theme loaded from settings: ${timerThemeFromSettings}`);
+        } else {
+          // Default to espresso theme
+          document.documentElement.setAttribute('data-timer-theme', 'espresso');
+          localStorage.setItem('timer-theme-preference', 'espresso');
+          console.log(`🎨 Early timer theme initialized to default: espresso`);
+        }
+
+        if (themeFromSettings) {
+          return;
+        }
+      } catch (settingsError) {
+        console.log('🎨 Could not load theme from settings, using localStorage fallback:', settingsError.message);
+      }
+    } else {
+      console.log('🎨 Tauri not ready within timeout, using localStorage fallback');
+    }
+  } catch (error) {
+    console.log('🎨 Error waiting for Tauri, using localStorage fallback:', error.message);
+  }
+
+  // Fallback to localStorage or default for both themes
   const storedTheme = localStorage.getItem('theme-preference') || 'auto';
   const actualTheme = getActualTheme(storedTheme);
   document.documentElement.setAttribute('data-theme', actualTheme);
   console.log(`🎨 Early theme initialized from localStorage: ${storedTheme} -> actual: ${actualTheme}`);
+
+  // Initialize timer theme with fallback
+  const storedTimerTheme = localStorage.getItem('timer-theme-preference') || 'espresso';
+  document.documentElement.setAttribute('data-timer-theme', storedTimerTheme);
+  console.log(`🎨 Early timer theme initialized from localStorage: ${storedTimerTheme}`);
 }
 
 // Request notification permission using Tauri v2 API
@@ -1059,7 +1103,6 @@ function setupAuthEventListeners() {
   if (guestBtn) {
     guestBtn.addEventListener('click', async () => {
       window.authManager.continueAsGuest();
-      // hideAuthScreen and initializeApplication will be handled by onAuthChange listener
     });
   }
 
@@ -1069,19 +1112,15 @@ function setupAuthEventListeners() {
     guestLink.addEventListener('click', async (e) => {
       e.preventDefault();
       window.authManager.continueAsGuest();
-      // hideAuthScreen and initializeApplication will be handled by onAuthChange listener
     });
   }
 
-  // Listen for auth state changes  
+  // Listen for auth state changes (for manual sign-in/out via UI)
   if (window.authManager) {
     window.authManager.onAuthChange(async (status, user) => {
       if (status === 'authenticated' || status === 'guest') {
         await hideAuthScreen();
-        // Only continue initialization if this is first run (app not yet initialized)
-        if (!window.pomodoroTimer) {
-          initializeApplication(); // Continue with app initialization
-        }
+        // Note: App initialization is now handled directly, not through auth changes
       }
     });
   }
@@ -1423,35 +1462,105 @@ function setupUserAvatarEventListeners() {
 
 // Initialize the application
 async function initializeApplication() {
-  // Prevent double initialization
-  if (window._appInitialized) {
-    console.log('🚀 Application already initialized, skipping...');
+  // Prevent double initialization only if fully completed
+  if (window._appFullyInitialized) {
+    console.log('🚀 Application already fully initialized, skipping...');
     return;
   }
   
+  // Prevent concurrent initialization attempts
+  if (window._appInitializing) {
+    console.log('🚀 Application initialization already in progress, skipping...');
+    return;
+  }
+  
+  // Set initialization flag early to prevent race conditions
+  window._appInitializing = true;
+  
   try {
     console.log('🚀 Initializing Presto application...');
-    window._appInitialized = true;
+    
+    // Show loading state
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.id = 'app-loading';
+    loadingOverlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      color: white;
+      font-size: 18px;
+      font-family: system-ui, -apple-system, sans-serif;
+    `;
+    loadingOverlay.innerHTML = `
+      <div style="text-align: center;">
+        <div style="font-size: 48px; margin-bottom: 20px;">🍅</div>
+        <div>Initializing Presto...</div>
+      </div>
+    `;
+    document.body.appendChild(loadingOverlay);
+
+    // Safety timeout to remove loading overlay if initialization hangs
+    const safetyTimeout = setTimeout(() => {
+      const stuckOverlay = document.getElementById('app-loading');
+      if (stuckOverlay) {
+        console.error('⚠️ Initialization timeout - removing loading overlay');
+        stuckOverlay.remove();
+        
+        // Show error message
+        NotificationUtils.showNotificationPing('Initialization timed out. Please refresh! 🔄', 'error');
+      }
+    }, 15000); // 15 seconds timeout
+
+    // Helper function to update loading text
+    const updateLoadingText = (text) => {
+      const overlay = document.getElementById('app-loading');
+      if (overlay) {
+        const textElement = overlay.querySelector('div:last-child');
+        if (textElement) {
+          textElement.textContent = text;
+        }
+      }
+    };
 
     // Initialize theme as early as possible
+    updateLoadingText('Loading theme...');
     await initializeEarlyTheme();
 
     // Request notification permission using Tauri v2 API
+    updateLoadingText('Requesting permissions...');
     await requestNotificationPermission();
 
     // Import and initialize auth manager 
+    updateLoadingText('Loading authentication...');
     const { authManager } = await import('./managers/auth-manager.js');
     console.log('🔐 Initializing Auth Manager...');
     window.authManager = authManager;
 
     // Initialize auth manager (which will wait for Supabase)
+    updateLoadingText('Connecting to services...');
     await authManager.init();
 
-    // Check if this is first run and show auth screen
+    // Initialize Update Manager early (needed by UpdateNotification)
+    updateLoadingText('Initializing update system...');
+    console.log('🔄 Initializing Update Manager...');
+    window.updateManager = new window.UpdateManagerV2();
+    window.updateManagerInstance = window.updateManager; // Alias for compatibility
+    if (window.updateManager.loadPreferences) {
+      window.updateManager.loadPreferences(); // Carica le preferenze salvate se supportato
+    }
+
+    // Skip first run authentication - proceed directly with guest mode
     if (authManager.isFirstRun()) {
-      console.log('👋 First run detected, showing authentication screen...');
-      showAuthScreen();
-      return; // Don't initialize the app until user has chosen auth method
+      console.log('👋 First run detected, proceeding as guest...');
+      // Set guest mode automatically
+      authManager.continueAsGuest();
     }
 
     // Update user avatar UI based on current auth state
@@ -1489,12 +1598,7 @@ async function initializeApplication() {
     teamManager = new TeamManager();
     window.teamManager = teamManager;
 
-    // Initialize Update Manager
-    console.log('🔄 Initializing Update Manager...');
-    window.updateManager = new window.UpdateManagerV2();
-    if (window.updateManager.loadPreferences) {
-      window.updateManager.loadPreferences(); // Carica le preferenze salvate se supportato
-    }
+    // Update Manager already initialized earlier
 
     // Setup global event listeners
     setupGlobalEventListeners();
@@ -1507,15 +1611,90 @@ async function initializeApplication() {
 
     console.log('✅ Application initialized successfully!');
 
+    // Clear safety timeout
+    clearTimeout(safetyTimeout);
+    
+    // Mark as fully initialized
+    window._appFullyInitialized = true;
+    window._appInitializing = false;
+
+    // Remove loading overlay
+    const loadingOverlaySuccess = document.getElementById('app-loading');
+    if (loadingOverlaySuccess) {
+      loadingOverlaySuccess.remove();
+    }
+
     // Show welcome notification
     NotificationUtils.showNotificationPing('Welcome to Presto! 🍅', null, 'focus');
 
   } catch (error) {
     console.error('❌ Failed to initialize application:', error);
+    
+    // Clear safety timeout and remove loading overlay even on error
+    clearTimeout(safetyTimeout);
+    const loadingOverlayError = document.getElementById('app-loading');
+    if (loadingOverlayError) {
+      loadingOverlayError.remove();
+    }
+    
+    // Show error notification
     NotificationUtils.showNotificationPing('Failed to initialize app. Please refresh! 🔄', 'error');
     
-    // Reset initialization flag on error so user can retry
-    window._appInitialized = false;
+    // Reset initialization flags on error so user can retry
+    window._appInitializing = false;
+    window._appFullyInitialized = false;
+    
+    // Show error screen instead of leaving user with blank screen
+    const errorScreen = document.createElement('div');
+    errorScreen.id = 'app-error';
+    errorScreen.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #1a1a1a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      color: white;
+      font-family: system-ui, -apple-system, sans-serif;
+    `;
+    errorScreen.innerHTML = `
+      <div style="text-align: center; max-width: 500px; padding: 40px;">
+        <div style="font-size: 64px; margin-bottom: 20px;">⚠️</div>
+        <h1 style="margin-bottom: 20px; color: #e74c3c;">Initialization Failed</h1>
+        <p style="margin-bottom: 30px; line-height: 1.6; color: #bdc3c7;">
+          The application failed to initialize properly. This might be due to:
+        </p>
+        <ul style="text-align: left; margin-bottom: 30px; color: #bdc3c7;">
+          <li>Missing dependencies</li>
+          <li>Corrupted settings</li>
+          <li>System permission issues</li>
+        </ul>
+        <button onclick="location.reload()" style="
+          background: #3498db;
+          color: white;
+          border: none;
+          padding: 12px 24px;
+          border-radius: 6px;
+          font-size: 16px;
+          cursor: pointer;
+          margin-right: 10px;
+        ">🔄 Retry</button>
+        <button onclick="localStorage.clear(); location.reload()" style="
+          background: #e74c3c;
+          color: white;
+          border: none;
+          padding: 12px 24px;
+          border-radius: 6px;
+          font-size: 16px;
+          cursor: pointer;
+        ">🗑️ Reset & Retry</button>
+      </div>
+    `;
+    document.body.appendChild(errorScreen);
   }
 }
 
@@ -1804,7 +1983,27 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 // Initialize when DOM is ready
-window.addEventListener("DOMContentLoaded", initializeApplication);
+function initializeWhenReady() {
+  // Check if DOM is already loaded
+  if (document.readyState === 'loading') {
+    // DOM is still loading, wait for DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', initializeApplication);
+  } else {
+    // DOM is already loaded, initialize immediately
+    initializeApplication();
+  }
+}
+
+// Also add a backup initialization in case DOMContentLoaded doesn't fire
+window.addEventListener('load', () => {
+  if (!window._appFullyInitialized && !window._appInitializing) {
+    console.log('🚀 Backup initialization triggered by window.load');
+    initializeApplication();
+  }
+});
+
+// Initialize when ready
+initializeWhenReady();
 
 // Export for debugging
 window.app = {

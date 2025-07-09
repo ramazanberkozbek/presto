@@ -40,6 +40,7 @@ export class UpdateNotification {
             // L'updateManager dovrebbe emettere gli eventi corretti al momento giusto
         } else {
             console.warn('⚠️ [UpdateNotification] UpdateManager non trovato dopo 10 secondi');
+            // Non bloccare l'app, continua senza update notifications
         }
     }
 
