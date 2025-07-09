@@ -21,22 +21,10 @@ async function initSupabase() {
   await waitForSupabase();
   
   const { createClient } = window.supabase;
-  const { invoke } = window.__TAURI__.core;
   
-  // Get environment variables from Tauri backend
-  let supabaseUrl, supabaseAnonKey;
-  
-  try {
-    supabaseUrl = await invoke('get_env_var', { key: 'SUPABASE_URL' });
-    supabaseAnonKey = await invoke('get_env_var', { key: 'SUPABASE_ANON_KEY' });
-  } catch (error) {
-    console.error('Failed to load environment variables:', error);
-    throw new Error('Failed to load Supabase configuration from environment');
-  }
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Missing Supabase environment variables');
-  }
+  // Hardcoded Supabase configuration
+  const supabaseUrl = 'https://lopgwwppinkqvttozqfx.supabase.co';
+  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvcGd3d3BwaW5rcXZ0dG96cWZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2NzgxMDIsImV4cCI6MjA2NjI1NDEwMn0.DqPcwsBJdPeV5iWsMkZLMn6-xZ_A9l-Xh7R-wi7kc2k';
 
   // Create Supabase client
   supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -90,7 +78,7 @@ async function initSupabase() {
       console.log(`Starting Tauri OAuth flow for ${provider}...`);
       
       // Get Supabase configuration
-      const supabaseUrl = await invoke('get_env_var', { key: 'SUPABASE_URL' });
+      const supabaseUrl = 'https://lopgwwppinkqvttozqfx.supabase.co';
       
       // Start OAuth flow using tauri-plugin-oauth
       console.log('Invoking OAuth start...');
