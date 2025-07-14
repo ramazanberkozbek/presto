@@ -986,13 +986,21 @@ export class PomodoroTimer {
         // OVERTIME: If in overtime and continuous sessions, save session and skip double-counting
         if (this.timeRemaining < 0 && this.allowContinuousSessions) {
             shouldSaveSession = true;
-            this.sessionCompletedButNotSaved = false;
-
-            // Save overtime focus session to SessionManager as individual session
-            // Only save if session lasted at least 1 minute
-            if (this.currentMode === 'focus' && this.lastCompletedSessionTime > 3) {
-                await this.saveCompletedFocusSession();
+            
+            // During overtime, if session was completed but not saved, now save it with overtime included
+            if (this.sessionCompletedButNotSaved && this.currentMode === 'focus') {
+                // Calculate total time including overtime
+                const now = Date.now();
+                const totalElapsedTime = Math.floor((now - this.sessionStartTime) / 1000);
+                this.lastCompletedSessionTime = totalElapsedTime;
+                
+                // Only save if session lasted at least 1 minute
+                if (this.lastCompletedSessionTime > 60) {
+                    await this.saveCompletedFocusSession();
+                }
             }
+            
+            this.sessionCompletedButNotSaved = false;
 
             // Move to next mode as usual
             if (this.currentMode === 'focus') {
@@ -1338,8 +1346,7 @@ export class PomodoroTimer {
             // Mark session as completed but not saved yet (will be saved when user skips)
             this.sessionCompletedButNotSaved = true;
 
-            // Save completed focus session to SessionManager immediately
-            await this.saveCompletedFocusSession();
+            // Don't save session immediately during overtime - wait for skip to include full duration
         }
 
         // For continuous sessions, don't save the session data here
