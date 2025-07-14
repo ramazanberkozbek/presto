@@ -3049,7 +3049,7 @@ checksum = "925383efa346730478fb4838dbe9137d2a47675ad789c546d150a6e1dd4ab31c"
 
 [[package]]
 name = "presto"
-version = "0.3.9"
+version = "0.3.10"
 dependencies = [
  "base64 0.21.7",
  "chrono",
