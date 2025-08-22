@@ -97,7 +97,7 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
             if (window.__TAURI__?.app?.getVersion) {
                 return await window.__TAURI__.app.getVersion();
             }
-            
+
             if (window.__TAURI__?.core?.invoke) {
                 return await window.__TAURI__.core.invoke('plugin:app|version');
             }
@@ -140,7 +140,7 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
     enableTestMode() {
         localStorage.setItem('presto_force_update_test', 'true');
         console.warn('⚠️ MODALITÀ TEST AGGIORNAMENTI ATTIVATA');
-        
+
         if (!this.isDevelopmentMode() && this.autoCheck && !this.checkInterval) {
             this.startAutoCheck();
         }
@@ -154,7 +154,7 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
     disableTestMode() {
         localStorage.removeItem('presto_force_update_test');
         console.log('ℹ️ Modalità test aggiornamenti disattivata');
-        
+
         if (this.isDevelopmentMode()) {
             this.stopAutoCheck();
         }
@@ -277,7 +277,7 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
     compareVersions(a, b) {
         const cleanA = a.replace(/^v/, '');
         const cleanB = b.replace(/^v/, '');
-        
+
         const aParts = cleanA.split('.').map(n => parseInt(n) || 0);
         const bParts = cleanB.split('.').map(n => parseInt(n) || 0);
 
@@ -319,7 +319,7 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
 
             const githubRelease = await response.json();
             const latestVersion = githubRelease.tag_name.replace(/^v/, '');
-            
+
             console.log(`📋 Ultima versione GitHub: ${latestVersion}`);
 
             // Confronta versioni
@@ -328,7 +328,7 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
                 this.updateAvailable = false;
                 this.currentUpdate = null;
                 this.emit('updateNotAvailable');
-                
+
                 if (showDialog) {
                     alert(`Nessun aggiornamento disponibile.\n\nVersione corrente: ${currentVersion}\nUltima versione: ${latestVersion}`);
                 }
@@ -349,9 +349,9 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
 
             if (showDialog) {
                 const message = `🎉 Aggiornamento disponibile!\n\n` +
-                               `Versione corrente: ${currentVersion}\n` +
-                               `Nuova versione: ${latestVersion}\n\n` +
-                               `Nota: In modalità sviluppo, scarica manualmente da GitHub.`;
+                    `Versione corrente: ${currentVersion}\n` +
+                    `Nuova versione: ${latestVersion}\n\n` +
+                    `Nota: In modalità sviluppo, scarica manualmente da GitHub.`;
                 alert(message);
             }
 
@@ -447,7 +447,7 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
                 if (tauriAPI) {
                     console.log('🔄 Usando API Tauri updater...');
                     const tauriUpdate = await tauriAPI.check();
-                    
+
                     if (tauriUpdate && tauriUpdate.available) {
                         console.log('✅ Aggiornamento confermato via Tauri API');
                         this.updateAvailable = true;
@@ -504,10 +504,10 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
      */
     async simulateUpdate() {
         console.log('🧪 Simulazione aggiornamento per test...');
-        
+
         const currentVersion = await this.getAppVersion();
         const simulatedNewVersion = this.incrementVersion(currentVersion);
-        
+
         const update = {
             version: simulatedNewVersion,
             date: new Date().toISOString(),
@@ -577,16 +577,16 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
             // Se supporta download automatico via Tauri
             if (this.currentUpdate.isAutoDownloadable && this.currentUpdate.source === 'tauri-api') {
                 console.log('📥 Download automatico via Tauri...');
-                
+
                 const tauriAPI = await this.getTauriUpdaterAPI();
                 if (tauriAPI && tauriAPI.downloadAndInstall) {
                     await tauriAPI.downloadAndInstall((progress) => {
                         console.log(`📥 Progresso download: ${progress}%`);
                         this.downloadProgress = progress;
-                        this.emit('downloadProgress', { 
+                        this.emit('downloadProgress', {
                             progress,
                             chunkLength: progress,
-                            contentLength: 100 
+                            contentLength: 100
                         });
                     });
 
@@ -598,10 +598,10 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
                     });
 
                     this.emit('downloadFinished');
-                    
+
                     // Installa e riavvia
                     this.emit('installFinished');
-                    
+
                     const shouldRestart = await this.askConfirmation(
                         'Aggiornamento scaricato e installato con successo!\n\nVuoi riavviare ora l\'applicazione?',
                         { title: 'Aggiornamento Completato' }
@@ -615,7 +615,7 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
                 // Download manuale
                 console.log('🌐 Reindirizzamento a download manuale...');
                 await this.openDownloadUrl(this.currentUpdate.downloadUrl);
-                
+
                 this.emit('downloadError', new Error('Download manuale richiesto'));
             }
 
@@ -633,15 +633,15 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
      */
     async simulateDownloadAndInstall() {
         console.log('🧪 Simulazione download...');
-        
+
         // Simula progresso download
         for (let i = 0; i <= 100; i += 10) {
             await new Promise(resolve => setTimeout(resolve, 100));
             this.downloadProgress = i;
-            this.emit('downloadProgress', { 
+            this.emit('downloadProgress', {
                 progress: i,
                 chunkLength: i,
-                contentLength: 100 
+                contentLength: 100
             });
         }
 
@@ -671,7 +671,7 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
      */
     setAutoCheck(enabled) {
         this.autoCheck = enabled;
-        
+
         if (enabled) {
             this.startAutoCheck();
         } else {

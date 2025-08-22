@@ -35,7 +35,7 @@ export class UpdateNotification {
         if (getUpdateManager()) {
             console.log('✅ [UpdateNotification] UpdateManager trovato, bind eventi notifica');
             this.bindEvents();
-            
+
             // RIMOSSO: Il controllo dello stato iniziale può causare problemi
             // L'updateManager dovrebbe emettere gli eventi corretti al momento giusto
         } else {
@@ -366,7 +366,7 @@ export class UpdateNotification {
                 while (target && !target.dataset.action) {
                     target = target.parentElement;
                 }
-                
+
                 const action = target ? target.dataset.action : null;
                 console.log('🔔 [UpdateNotification] Target trovato:', target, 'Action:', action);
                 if (action) {
