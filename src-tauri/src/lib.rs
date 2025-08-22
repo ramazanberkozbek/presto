@@ -1,10 +1,10 @@
+use base64::{engine::general_purpose, Engine as _};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::sync::{Arc, LazyLock, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
-use base64::{Engine as _, engine::general_purpose};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager};
@@ -46,8 +46,8 @@ struct ManualSession {
     start_time: String,   // "HH:MM"
     end_time: String,     // "HH:MM"
     notes: Option<String>,
-    created_at: String,   // ISO string
-    date: String,         // Date string for the session date
+    created_at: String,                   // ISO string
+    date: String,                         // Date string for the session date
     tags: Option<Vec<serde_json::Value>>, // Array of tag objects
 }
 
@@ -89,6 +89,8 @@ struct AppSettings {
     analytics_enabled: bool,
     #[serde(default)]
     hide_icon_on_close: bool,
+    #[serde(default)]
+    hide_status_bar: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -174,9 +176,10 @@ impl Default for AppSettings {
                 smart_pause_timeout: 30, // default 30 seconds
             },
             advanced: AdvancedSettings::default(),
-            autostart: false,        // default to disabled
-            analytics_enabled: true, // default to enabled
+            autostart: false,          // default to disabled
+            analytics_enabled: true,   // default to enabled
             hide_icon_on_close: false, // default to disabled
+            hide_status_bar: false,    // default to disabled
         }
     }
 }
@@ -418,25 +421,26 @@ async fn load_session_data(app: AppHandle) -> Result<Option<PomodoroSession>, St
         return Ok(None);
     }
 
-    let content =
-        fs::read_to_string(&file_path).map_err(|e| format!("Failed to read session file: {}", e))?;
+    let content = fs::read_to_string(&file_path)
+        .map_err(|e| format!("Failed to read session file: {}", e))?;
     let mut session: PomodoroSession =
         serde_json::from_str(&content).map_err(|e| format!("Failed to parse session: {}", e))?;
 
     // Get today's date string
     let today = chrono::Local::now().format("%a %b %d %Y").to_string();
-    
+
     // If the saved session is not from today, reset the counters but keep the date updated
     if session.date != today {
         session.completed_pomodoros = 0;
         session.total_focus_time = 0;
         session.current_session = 1;
         session.date = today;
-        
+
         // Save the reset session back to file
         let json = serde_json::to_string_pretty(&session)
             .map_err(|e| format!("Failed to serialize reset session: {}", e))?;
-        fs::write(file_path, json).map_err(|e| format!("Failed to write reset session file: {}", e))?;
+        fs::write(file_path, json)
+            .map_err(|e| format!("Failed to write reset session file: {}", e))?;
     }
 
     Ok(Some(session))
@@ -630,7 +634,7 @@ async fn show_window(app: AppHandle) -> Result<(), String> {
                 // Ignore error, just proceed with showing window
             }
         }
-        
+
         window
             .show()
             .map_err(|e| format!("Failed to show window: {}", e))?;
@@ -824,7 +828,8 @@ async fn save_manual_sessions(sessions: Vec<ManualSession>, app: AppHandle) -> R
     let json = serde_json::to_string_pretty(&sessions)
         .map_err(|e| format!("Failed to serialize manual sessions: {}", e))?;
 
-    fs::write(file_path, json).map_err(|e| format!("Failed to write manual sessions file: {}", e))?;
+    fs::write(file_path, json)
+        .map_err(|e| format!("Failed to write manual sessions file: {}", e))?;
 
     // Track manual sessions saved analytics (if enabled)
     if are_analytics_enabled(&app).await {
@@ -851,8 +856,8 @@ async fn load_manual_sessions(app: AppHandle) -> Result<Vec<ManualSession>, Stri
 
     let content = fs::read_to_string(file_path)
         .map_err(|e| format!("Failed to read manual sessions file: {}", e))?;
-    let sessions: Vec<ManualSession> =
-        serde_json::from_str(&content).map_err(|e| format!("Failed to parse manual sessions: {}", e))?;
+    let sessions: Vec<ManualSession> = serde_json::from_str(&content)
+        .map_err(|e| format!("Failed to parse manual sessions: {}", e))?;
 
     Ok(sessions)
 }
@@ -861,13 +866,13 @@ async fn load_manual_sessions(app: AppHandle) -> Result<Vec<ManualSession>, Stri
 async fn save_manual_session(session: ManualSession, app: AppHandle) -> Result<(), String> {
     // Load existing sessions
     let mut sessions = load_manual_sessions(app.clone()).await?;
-    
+
     // Remove existing session with same ID if it exists (for updates)
     sessions.retain(|s| s.id != session.id);
-    
+
     // Add the new/updated session
     sessions.push(session);
-    
+
     // Save all sessions back
     save_manual_sessions(sessions, app).await
 }
@@ -876,24 +881,25 @@ async fn save_manual_session(session: ManualSession, app: AppHandle) -> Result<(
 async fn delete_manual_session(session_id: String, app: AppHandle) -> Result<(), String> {
     // Load existing sessions
     let mut sessions = load_manual_sessions(app.clone()).await?;
-    
+
     // Remove the session with the specified ID
     sessions.retain(|s| s.id != session_id);
-    
+
     // Save the updated sessions back
     save_manual_sessions(sessions, app).await
 }
 
 #[tauri::command]
-async fn get_manual_sessions_for_date(date: String, app: AppHandle) -> Result<Vec<ManualSession>, String> {
+async fn get_manual_sessions_for_date(
+    date: String,
+    app: AppHandle,
+) -> Result<Vec<ManualSession>, String> {
     let sessions = load_manual_sessions(app).await?;
-    
+
     // Filter sessions for the specified date
-    let filtered_sessions: Vec<ManualSession> = sessions
-        .into_iter()
-        .filter(|s| s.date == date)
-        .collect();
-    
+    let filtered_sessions: Vec<ManualSession> =
+        sessions.into_iter().filter(|s| s.date == date).collect();
+
     Ok(filtered_sessions)
 }
 
@@ -949,7 +955,8 @@ pub fn run() {
                 add_session_tag,
                 write_excel_file,
                 start_oauth_server,
-                set_dock_visibility
+                set_dock_visibility,
+                set_status_bar_visibility
             ])
             .setup(|app| {
                 // Track app started event (if enabled)
@@ -1048,7 +1055,7 @@ pub fn run() {
                         if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                             // Always prevent close
                             api.prevent_close();
-                            
+
                             // Check if we should hide the app icon
                             let app_handle_clone = app_handle_for_close.clone();
                             tauri::async_runtime::spawn(async move {
@@ -1056,24 +1063,34 @@ pub fn run() {
                                     Ok(settings) => {
                                         if settings.hide_icon_on_close {
                                             // Hide the window and set app as dock hidden
-                                            if let Some(window) = app_handle_clone.get_webview_window("main") {
+                                            if let Some(window) =
+                                                app_handle_clone.get_webview_window("main")
+                                            {
                                                 let _ = window.hide();
                                                 // Use macOS specific API to hide from dock
                                                 #[cfg(target_os = "macos")]
                                                 {
-                                                    let _ = set_dock_visibility(app_handle_clone.clone(), false).await;
+                                                    let _ = set_dock_visibility(
+                                                        app_handle_clone.clone(),
+                                                        false,
+                                                    )
+                                                    .await;
                                                 }
                                             }
                                         } else {
                                             // Just hide the window without hiding from dock
-                                            if let Some(window) = app_handle_clone.get_webview_window("main") {
+                                            if let Some(window) =
+                                                app_handle_clone.get_webview_window("main")
+                                            {
                                                 let _ = window.hide();
                                             }
                                         }
                                     }
                                     Err(_) => {
                                         // Default behavior: just hide the window
-                                        if let Some(window) = app_handle_clone.get_webview_window("main") {
+                                        if let Some(window) =
+                                            app_handle_clone.get_webview_window("main")
+                                        {
                                             let _ = window.hide();
                                         }
                                     }
@@ -1124,6 +1141,21 @@ pub fn run() {
                     let _ = app_handle.track_event("app_exited", None);
                     app_handle.flush_events_blocking();
                 }
+                tauri::RunEvent::Reopen { .. } => {
+                    // When the user clicks on the dock icon, show the window
+                    if let Some(window) = app_handle.get_webview_window("main") {
+                        let _ = window.show();
+                        let _ = window.set_focus();
+                        // If the app was previously hidden from dock, restore it
+                        #[cfg(target_os = "macos")]
+                        {
+                            let app_handle_clone = app_handle.clone();
+                            tauri::async_runtime::spawn(async move {
+                                let _ = set_dock_visibility(app_handle_clone, true).await;
+                            });
+                        }
+                    }
+                }
                 _ => {}
             });
     })
@@ -1137,10 +1169,10 @@ async fn load_tags(app: AppHandle) -> Result<Vec<Tag>, String> {
         .map_err(|e| format!("Failed to get app data directory: {}", e))?;
 
     let file_path = app_data_dir.join("tags.json");
-    
+
     if file_path.exists() {
-        let content = fs::read_to_string(&file_path)
-            .map_err(|e| format!("Failed to read tags: {}", e))?;
+        let content =
+            fs::read_to_string(&file_path).map_err(|e| format!("Failed to read tags: {}", e))?;
         Ok(serde_json::from_str(&content).unwrap_or_else(|_| Vec::new()))
     } else {
         // Return default focus tag if no tags exist
@@ -1179,13 +1211,13 @@ async fn save_tags(tags: Vec<Tag>, app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 async fn save_tag(tag: Tag, app: AppHandle) -> Result<(), String> {
     let mut tags = load_tags(app.clone()).await?;
-    
+
     // Remove existing tag with same ID if it exists (for updates)
     tags.retain(|t| t.id != tag.id);
-    
+
     // Add the new/updated tag
     tags.push(tag);
-    
+
     // Save all tags back
     save_tags(tags, app).await
 }
@@ -1193,10 +1225,10 @@ async fn save_tag(tag: Tag, app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 async fn delete_tag(tag_id: String, app: AppHandle) -> Result<(), String> {
     let mut tags = load_tags(app.clone()).await?;
-    
+
     // Remove the tag with the specified ID
     tags.retain(|t| t.id != tag_id);
-    
+
     // Save the updated tags back
     save_tags(tags, app).await
 }
@@ -1209,7 +1241,7 @@ async fn load_session_tags(app: AppHandle) -> Result<Vec<SessionTag>, String> {
         .map_err(|e| format!("Failed to get app data directory: {}", e))?;
 
     let file_path = app_data_dir.join("session_tags.json");
-    
+
     if file_path.exists() {
         let content = fs::read_to_string(&file_path)
             .map_err(|e| format!("Failed to read session tags: {}", e))?;
@@ -1242,7 +1274,6 @@ async fn add_session_tag(session_tag: SessionTag, app: AppHandle) -> Result<(), 
     session_tags.push(session_tag);
     save_session_tags(session_tags, app).await
 }
-
 
 #[tauri::command]
 async fn update_tray_menu(
@@ -1319,11 +1350,11 @@ async fn write_excel_file(path: String, data: String) -> Result<(), String> {
     let decoded_data = general_purpose::STANDARD
         .decode(data)
         .map_err(|e| format!("Failed to decode base64 data: {}", e))?;
-    
+
     // Write the binary data to file
     fs::write(&path, decoded_data)
         .map_err(|e| format!("Failed to write Excel file to {}: {}", path, e))?;
-    
+
     Ok(())
 }
 
@@ -1346,12 +1377,12 @@ async fn set_dock_visibility(app: AppHandle, visible: bool) -> Result<(), String
         })
         .map_err(|e| format!("Failed to run on main thread: {}", e))?;
     }
-    
+
     #[cfg(not(target_os = "macos"))]
     {
         return Err("Dock visibility is only supported on macOS".to_string());
     }
-    
+
     Ok(())
 }
 
@@ -1359,7 +1390,7 @@ async fn set_dock_visibility(app: AppHandle, visible: bool) -> Result<(), String
 fn set_dock_visibility_native(visible: bool) {
     use cocoa::appkit::{NSApp, NSApplication, NSApplicationActivationPolicy};
     use cocoa::base::nil;
-    
+
     unsafe {
         let app = NSApp();
         if app != nil {
@@ -1368,8 +1399,211 @@ fn set_dock_visibility_native(visible: bool) {
             } else {
                 NSApplicationActivationPolicy::NSApplicationActivationPolicyAccessory
             };
-            
+
             app.setActivationPolicy_(policy);
         }
+    }
+}
+
+// Status bar visibility management using Carbon APIs
+//
+// Implementation Notes:
+// This feature uses Apple's Carbon SetSystemUIMode API, which is a pure C function
+// from the ApplicationServices framework. This approach is much safer than using
+// Objective-C APIs because:
+//
+// 1. No foreign exceptions: C APIs return error codes instead of throwing exceptions
+// 2. Direct system integration: Carbon APIs are lower-level and more stable
+// 3. Robust fallback system: Multiple approaches with retry mechanisms
+// 4. Comprehensive error handling: Detailed OSStatus code interpretation
+//
+// The implementation uses:
+// - Primary: SetSystemUIMode with K_UI_MODE_CONTENT_SUPPRESSED (hides menu bar, keeps dock)
+// - Fallback 1: Retry with delay for transient errors
+// - Fallback 2: Conservative two-step approach for hiding
+// - Detailed error reporting with manual recovery instructions
+#[tauri::command]
+async fn set_status_bar_visibility(_app: AppHandle, visible: bool) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        match set_system_ui_mode_safe(visible) {
+            Ok(_) => {
+                println!(
+                    "✅ Status bar visibility successfully set to: {}",
+                    if visible { "visible" } else { "hidden" }
+                );
+                Ok(())
+            }
+            Err(e) => {
+                eprintln!("❌ Failed to set status bar visibility: {}", e);
+                Err(format!("Failed to set status bar visibility: {}", e))
+            }
+        }
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        return Err("Status bar visibility is only supported on macOS".to_string());
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn set_system_ui_mode_safe(visible: bool) -> Result<(), String> {
+    use libc::{c_int, c_uint};
+    use std::thread;
+    use std::time::Duration;
+
+    // Carbon SetSystemUIMode constants
+    const K_UI_MODE_NORMAL: c_uint = 0; // Normal mode - menu bar visible
+    const K_UI_MODE_CONTENT_SUPPRESSED: c_uint = 1; // Menu bar hidden, dock visible
+    #[allow(dead_code)]
+    const K_UI_MODE_CONTENT_HIDDEN: c_uint = 2; // Menu bar hidden, dock auto-hide
+    #[allow(dead_code)]
+    const K_UI_MODE_ALL_HIDDEN: c_uint = 3; // Everything hidden
+
+    // OSStatus codes
+    const NO_ERR: c_int = 0;
+    const PARAM_ERR: c_int = -50;
+    const MEM_FULL_ERR: c_int = -108;
+
+    // SystemUIMode and SystemUIOptions are both UInt32 (c_uint)
+    type SystemUIMode = c_uint;
+    type SystemUIOptions = c_uint;
+    type OSStatus = c_int;
+
+    // External declaration for Carbon SetSystemUIMode function
+    // This is a C function from ApplicationServices framework
+    extern "C" {
+        fn SetSystemUIMode(inMode: SystemUIMode, inOptions: SystemUIOptions) -> OSStatus;
+    }
+
+    // Try the primary approach with Carbon SetSystemUIMode
+    let primary_result = unsafe {
+        let mode = if visible {
+            K_UI_MODE_NORMAL // Show menu bar
+        } else {
+            K_UI_MODE_CONTENT_SUPPRESSED // Hide menu bar but keep dock visible
+        };
+
+        let options: SystemUIOptions = 0; // No special options
+
+        println!(
+            "🔧 Carbon API: Setting SystemUIMode to {} ({})",
+            mode,
+            if visible {
+                "normal/visible"
+            } else {
+                "content suppressed/hidden"
+            }
+        );
+
+        // Call the Carbon function - this is a pure C API call
+        let result: OSStatus = SetSystemUIMode(mode, options);
+
+        if result == NO_ERR {
+            println!("✅ Carbon API: SetSystemUIMode succeeded");
+            Ok(())
+        } else {
+            let error_msg = format!(
+                "Carbon API failed with OSStatus: {} ({})",
+                result,
+                get_osstatus_description(result)
+            );
+            eprintln!("❌ Carbon API: {}", error_msg);
+            Err((result, error_msg))
+        }
+    };
+
+    // If primary approach succeeded, return success
+    if primary_result.is_ok() {
+        return Ok(());
+    }
+
+    // If primary approach failed, try fallback methods
+    let (status_code, error_msg) = primary_result.unwrap_err();
+
+    eprintln!("🔄 Primary method failed, attempting fallback approaches...");
+
+    // Fallback 1: Try with a small delay and retry
+    if status_code == PARAM_ERR || status_code == MEM_FULL_ERR {
+        println!("🔄 Fallback 1: Retrying after brief delay...");
+        thread::sleep(Duration::from_millis(100));
+
+        let retry_result = unsafe {
+            let mode = if visible {
+                K_UI_MODE_NORMAL
+            } else {
+                K_UI_MODE_CONTENT_SUPPRESSED
+            };
+            let result: OSStatus = SetSystemUIMode(mode, 0);
+
+            if result == NO_ERR {
+                println!("✅ Fallback 1: Retry succeeded");
+                Ok(())
+            } else {
+                Err(format!("Retry failed with OSStatus: {}", result))
+            }
+        };
+
+        if retry_result.is_ok() {
+            return Ok(());
+        }
+    }
+
+    // Fallback 2: For hiding, try a more conservative approach
+    if !visible {
+        println!("🔄 Fallback 2: Trying conservative hide approach...");
+
+        let conservative_result = unsafe {
+            // Try normal mode first, then content suppressed
+            SetSystemUIMode(K_UI_MODE_NORMAL, 0);
+            thread::sleep(Duration::from_millis(50));
+            let result: OSStatus = SetSystemUIMode(K_UI_MODE_CONTENT_SUPPRESSED, 0);
+
+            if result == NO_ERR {
+                println!("✅ Fallback 2: Conservative approach succeeded");
+                Ok(())
+            } else {
+                Err(format!(
+                    "Conservative approach failed with OSStatus: {}",
+                    result
+                ))
+            }
+        };
+
+        if conservative_result.is_ok() {
+            return Ok(());
+        }
+    }
+
+    // All methods failed - provide detailed error information
+    let detailed_error = format!(
+        "All status bar visibility methods failed. Primary error: {}. \
+         This might be due to system restrictions or macOS version compatibility. \
+         You can manually hide the menu bar using System Preferences > Dock & Menu Bar > 'Automatically hide and show the menu bar'.",
+        error_msg
+    );
+
+    eprintln!("❌ {}", detailed_error);
+    Err(detailed_error)
+}
+
+#[cfg(target_os = "macos")]
+fn get_osstatus_description(status: libc::c_int) -> &'static str {
+    match status {
+        0 => "No error - Success",
+        -50 => "Parameter error - Invalid parameters passed to function",
+        -108 => "Memory full error - Insufficient memory available",
+        -25291 => "Invalid system UI mode - The specified UI mode is not valid",
+        -25292 => {
+            "Operation not supported in current mode - Cannot change UI mode in current state"
+        }
+        -25293 => "System UI server not available - UI server is not responding",
+        -25294 => "System UI mode locked - UI mode changes are currently locked",
+        -128 => "User canceled - Operation was canceled by user",
+        -43 => "File not found - Required system component not found",
+        -5000 => "System policy error - Operation blocked by system policy",
+        -1 => "General error - Unspecified error occurred",
+        _ => "Unknown error - Undocumented error code",
     }
 }

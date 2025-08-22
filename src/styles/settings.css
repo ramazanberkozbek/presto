@@ -83,6 +83,41 @@
   box-shadow: 0 0 0 3px var(--input-focus-shadow);
 }
 
+/* Setting select dropdowns */
+.setting-item select,
+.setting-select {
+  padding: 0.75rem;
+  border: 2px solid var(--input-border);
+  border-radius: 8px;
+  font-size: 1rem;
+  background: var(--setting-item-bg);
+  color: var(--text-color);
+  transition: all 0.2s ease;
+  min-width: 200px;
+  cursor: pointer;
+}
+
+.setting-item select:focus,
+.setting-select:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px var(--input-focus-shadow);
+}
+
+.setting-item select:hover,
+.setting-select:hover {
+  border-color: var(--accent-color);
+}
+
+/* Setting labels for selects */
+.setting-item .setting-label {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
 /* Shortcut Items */
 .shortcut-item {
   display: flex;

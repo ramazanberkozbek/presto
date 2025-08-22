@@ -64,6 +64,16 @@ export class SettingsManager {
             console.log('📋 Raw loaded settings:', loadedSettings);
             // Merge loaded settings with defaults to ensure all fields exist
             this.settings = this.mergeWithDefaults(loadedSettings);
+
+            // Migrate old hide_status_bar setting to new status_bar_display setting
+            if (loadedSettings.hide_status_bar !== undefined && loadedSettings.status_bar_display === undefined) {
+                // If old setting existed but new one doesn't, migrate
+                this.settings.status_bar_display = loadedSettings.hide_status_bar ? 'icon-only' : 'default';
+                // Schedule save to persist the migrated setting
+                this.scheduleAutoSave();
+                console.log('🔄 Migrated hide_status_bar setting to status_bar_display:', this.settings.status_bar_display);
+            }
+
             console.log('📋 Final merged settings:', this.settings);
             this.populateSettingsUI();
         } catch (error) {
@@ -84,7 +94,8 @@ export class SettingsManager {
             advanced: { ...defaultSettings.advanced, ...loadedSettings.advanced },
             autostart: loadedSettings.autostart !== undefined ? loadedSettings.autostart : defaultSettings.autostart,
             analytics_enabled: loadedSettings.analytics_enabled !== undefined ? loadedSettings.analytics_enabled : defaultSettings.analytics_enabled,
-            hide_icon_on_close: loadedSettings.hide_icon_on_close !== undefined ? loadedSettings.hide_icon_on_close : defaultSettings.hide_icon_on_close
+            hide_icon_on_close: loadedSettings.hide_icon_on_close !== undefined ? loadedSettings.hide_icon_on_close : defaultSettings.hide_icon_on_close,
+            status_bar_display: loadedSettings.status_bar_display !== undefined ? loadedSettings.status_bar_display : defaultSettings.status_bar_display
         };
     }
 
@@ -120,7 +131,8 @@ export class SettingsManager {
             },
             autostart: false, // default to disabled
             analytics_enabled: true, // Analytics enabled by default
-            hide_icon_on_close: false // Hide icon on close disabled by default
+            hide_icon_on_close: false, // Hide icon on close disabled by default
+            status_bar_display: 'default' // Status bar display mode: 'default' or 'icon-only'
         };
     }
 
@@ -136,7 +148,7 @@ export class SettingsManager {
         document.getElementById('break-duration').value = this.settings.timer.break_duration;
         document.getElementById('long-break-duration').value = this.settings.timer.long_break_duration;
         document.getElementById('total-sessions').value = this.settings.timer.total_sessions;
-        
+
         // Populate max session time
         const maxSessionTimeField = document.getElementById('max-session-time');
         if (maxSessionTimeField) {
@@ -203,6 +215,9 @@ export class SettingsManager {
 
         // Populate hide icon on close setting
         this.loadHideIconOnCloseSetting();
+
+        // Populate status bar display setting
+        this.loadStatusBarDisplaySetting();
     }
 
     setupEventListeners() {
@@ -433,7 +448,7 @@ export class SettingsManager {
             this.settings.timer.break_duration = parseInt(document.getElementById('break-duration').value);
             this.settings.timer.long_break_duration = parseInt(document.getElementById('long-break-duration').value);
             this.settings.timer.total_sessions = parseInt(document.getElementById('total-sessions').value);
-            
+
             // Max session time setting
             const maxSessionTimeField = document.getElementById('max-session-time');
             if (maxSessionTimeField) {
@@ -917,6 +932,67 @@ export class SettingsManager {
             const checkbox = document.getElementById('hide-icon-on-close');
             if (checkbox) {
                 checkbox.checked = !enabled;
+            }
+        }
+    }
+
+    async loadStatusBarDisplaySetting() {
+        try {
+            // Get current status bar display setting from our stored settings
+            const statusBarDisplay = this.settings.status_bar_display || 'default';
+
+            const select = document.getElementById('status-bar-display');
+            if (select) {
+                select.value = statusBarDisplay;
+
+                // Setup event listener for the status bar display select
+                select.addEventListener('change', async (e) => {
+                    await this.updateStatusBarDisplay(e.target.value);
+                });
+            }
+        } catch (error) {
+            console.error('Failed to load status bar display setting:', error);
+            // Default to 'default' if we can't check the status
+            const select = document.getElementById('status-bar-display');
+            if (select) {
+                select.value = 'default';
+                select.addEventListener('change', async (e) => {
+                    await this.updateStatusBarDisplay(e.target.value);
+                });
+            }
+        }
+    }
+
+    async updateStatusBarDisplay(displayMode) {
+        try {
+            // Update our settings
+            this.settings.status_bar_display = displayMode;
+
+            // Apply the display mode immediately if timer exists
+            if (window.pomodoroTimer) {
+                await window.pomodoroTimer.updateTrayIcon();
+            }
+
+            // Show user feedback
+            if (displayMode === 'icon-only') {
+                console.log('Status bar display set to icon only');
+                NotificationUtils.showNotificationPing('✓ Status bar will show icon only', 'success');
+            } else {
+                console.log('Status bar display set to default (mm:ss)');
+                NotificationUtils.showNotificationPing('✓ Status bar will show timer (mm:ss)', 'success');
+            }
+
+            // Schedule auto-save to persist the setting
+            this.scheduleAutoSave();
+
+        } catch (error) {
+            console.error('Failed to update status bar display:', error);
+            NotificationUtils.showNotificationPing('❌ Failed to update status bar display: ' + error, 'error');
+
+            // Revert the select state on error
+            const select = document.getElementById('status-bar-display');
+            if (select) {
+                select.value = this.settings.status_bar_display || 'default';
             }
         }
     }

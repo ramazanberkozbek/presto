@@ -200,7 +200,7 @@ export class PomodoroTimer {
         window.addEventListener('sessionAdded', async (event) => {
             const { date } = event.detail;
             const today = new Date().toDateString();
-            
+
             // Only update dots if the session was added for today
             if (date === today) {
                 await this.updateProgressDots();
@@ -210,7 +210,7 @@ export class PomodoroTimer {
         window.addEventListener('sessionDeleted', async (event) => {
             const { date } = event.detail;
             const today = new Date().toDateString();
-            
+
             // Only update dots if the session was deleted from today
             if (date === today) {
                 await this.updateProgressDots();
@@ -220,7 +220,7 @@ export class PomodoroTimer {
         window.addEventListener('sessionUpdated', async (event) => {
             const { date } = event.detail;
             const today = new Date().toDateString();
-            
+
             // Only update dots if the session was updated for today
             if (date === today) {
                 await this.updateProgressDots();
@@ -769,14 +769,14 @@ export class PomodoroTimer {
         if (sessionElapsed >= this.maxSessionTime) {
             this.maxSessionTimeReached = true;
             this.pauseTimer();
-            
+
             // Show notification
             const maxTimeInMinutes = Math.floor(this.maxSessionTime / (60 * 1000));
             NotificationUtils.showNotificationPing(
                 `Session automatically paused after ${maxTimeInMinutes} minutes. Take a break! 🛑`,
                 'warning'
             );
-            
+
             // Show desktop notification if enabled
             NotificationUtils.showDesktopNotification(
                 'Session Time Limit Reached',
@@ -861,28 +861,28 @@ export class PomodoroTimer {
     adjustTimer(minutes) {
         // Convert minutes to seconds
         const adjustment = minutes * 60;
-        
+
         // Add the adjustment to the current time remaining
         this.timeRemaining += adjustment;
-        
+
         // Ensure we don't go below 0 seconds
         if (this.timeRemaining < 0) {
             this.timeRemaining = 0;
         }
-        
+
         // If timer is running, we need to update the accuracy tracking
         if (this.isRunning && this.timerStartTime) {
             // Calculate how much time should remain based on the adjustment
             const now = Date.now();
             const elapsedSinceStart = Math.floor((now - this.timerStartTime) / 1000);
-            
+
             // Update the timer duration to account for the adjustment
             this.timerDuration = elapsedSinceStart + this.timeRemaining;
         }
-        
+
         // Update the display immediately
         this.updateDisplay();
-        
+
         // Show notification
         const action = minutes > 0 ? 'added' : 'subtracted';
         const absMinutes = Math.abs(minutes);
@@ -914,7 +914,7 @@ export class PomodoroTimer {
 
     checkForMidnightReset() {
         const newDateString = new Date().toDateString();
-        
+
         if (newDateString !== this.currentDateString) {
             console.log('🌙 Date change detected:', this.currentDateString, '→', newDateString);
             this.currentDateString = newDateString;
@@ -930,10 +930,10 @@ export class PomodoroTimer {
 
         // Use enhanced loadSessionData with force reset to ensure clean state
         await this.loadSessionData(true);
-        
+
         // Update display to show the reset state
         this.updateDisplay();
-        
+
         // Save the reset state
         await this.saveSessionData();
 
@@ -952,7 +952,7 @@ export class PomodoroTimer {
 
         // Update all visual elements
         this.updateTrayIcon();
-        
+
         // Refresh navigation charts if available
         if (window.navigationManager) {
             try {
@@ -986,20 +986,20 @@ export class PomodoroTimer {
         // OVERTIME: If in overtime and continuous sessions, save session and skip double-counting
         if (this.timeRemaining < 0 && this.allowContinuousSessions) {
             shouldSaveSession = true;
-            
+
             // During overtime, if session was completed but not saved, now save it with overtime included
             if (this.sessionCompletedButNotSaved && this.currentMode === 'focus') {
                 // Calculate total time including overtime
                 const now = Date.now();
                 const totalElapsedTime = Math.floor((now - this.sessionStartTime) / 1000);
                 this.lastCompletedSessionTime = totalElapsedTime;
-                
+
                 // Only save if session lasted at least 1 minute
                 if (this.lastCompletedSessionTime > 60) {
                     await this.saveCompletedFocusSession();
                 }
             }
-            
+
             this.sessionCompletedButNotSaved = false;
 
             // Move to next mode as usual
@@ -1009,24 +1009,24 @@ export class PomodoroTimer {
                 } else {
                     this.currentMode = 'break';
                 }
-                
+
                 // Reset display state tracking when switching to break modes
                 this._lastLoggedState = null;
                 this._lastAutoPausedLogged = false;
                 this._lastPausedLogged = false;
             } else {
                 this.currentMode = 'focus';
-                
+
                 // Reset display state tracking when switching to focus mode
                 this._lastLoggedState = null;
                 this._lastAutoPausedLogged = false;
                 this._lastPausedLogged = false;
-                
+
                 // Restore TagManager display when returning to focus mode
                 if (window.tagManager) {
                     window.tagManager.updateStatusDisplay();
                 }
-                
+
                 if (this.completedPomodoros < this.totalSessions) {
                     this.currentSession = this.completedPomodoros + 1;
                 }
@@ -1037,14 +1037,14 @@ export class PomodoroTimer {
             if (shouldSaveSession) {
                 this.saveSessionData();
             }
-            
+
             // Reset session start time for next session (after saving)
             console.log('🔄 Resetting sessionStartTime after overtime skip:', {
                 beforeReset: this.sessionStartTime,
                 beforeResetISO: this.sessionStartTime ? new Date(this.sessionStartTime).toISOString() : null
             });
             this.sessionStartTime = null;
-            
+
             const messages = {
                 focus: 'Focus session skipped. Time for a break! 😌',
                 break: 'Break skipped. Ready to focus? 🍅',
@@ -1068,7 +1068,7 @@ export class PomodoroTimer {
                 const actualElapsedTime = this.currentSessionElapsedTime || (this.durations.focus - this.timeRemaining);
                 this.totalFocusTime += actualElapsedTime;
                 this.lastCompletedSessionTime = actualElapsedTime;
-                
+
                 // Preserve session start time for saving
                 console.log('Preserving session start time:', {
                     before: this.lastSessionStartTime,
@@ -1090,14 +1090,14 @@ export class PomodoroTimer {
             } else {
                 this.currentMode = 'break';
             }
-            
+
             // Reset display state tracking when switching to break modes
             this._lastLoggedState = null;
             this._lastAutoPausedLogged = false;
             this._lastPausedLogged = false;
         } else {
             this.currentMode = 'focus';
-            
+
             // Reset display state tracking when switching to focus mode
             this._lastLoggedState = null;
             this._lastAutoPausedLogged = false;
@@ -1118,14 +1118,14 @@ export class PomodoroTimer {
         if (shouldSaveSession) {
             this.saveSessionData();
         }
-        
+
         // Reset session start time for next session (after saving)
         console.log('🔄 Resetting sessionStartTime after normal skip:', {
             beforeReset: this.sessionStartTime,
             beforeResetISO: this.sessionStartTime ? new Date(this.sessionStartTime).toISOString() : null
         });
         this.sessionStartTime = null;
-        
+
         const messages = {
             focus: 'Focus session skipped. Time for a break! 😌',
             break: 'Break skipped. Ready to focus? 🍅',
@@ -1165,7 +1165,7 @@ export class PomodoroTimer {
 
             // Store the actual elapsed time for undo functionality
             this.lastCompletedSessionTime = actualElapsedTime;
-            
+
             // Preserve session start time for saving
             console.log('Preserving session start time (timer completion):', {
                 before: this.lastSessionStartTime,
@@ -1194,7 +1194,7 @@ export class PomodoroTimer {
                 } else {
                     this.currentMode = 'break';
                 }
-                
+
                 // Reset display state tracking when switching to break modes
                 this._lastLoggedState = null;
                 this._lastAutoPausedLogged = false;
@@ -1208,7 +1208,7 @@ export class PomodoroTimer {
             } else {
                 // Traditional behavior - go back to focus
                 this.currentMode = 'focus';
-                
+
                 // Reset display state tracking when switching to focus mode
                 this._lastLoggedState = null;
                 this._lastAutoPausedLogged = false;
@@ -1325,7 +1325,7 @@ export class PomodoroTimer {
 
             // Store the actual elapsed time for undo functionality
             this.lastCompletedSessionTime = actualElapsedTime;
-            
+
             // Preserve session start time for saving
             console.log('Preserving session start time (overtime):', {
                 before: this.lastSessionStartTime,
@@ -2174,7 +2174,7 @@ export class PomodoroTimer {
         // Use preserved session start time if available, otherwise fall back to calculating backwards
         let startHour, startMinute;
         const actualSessionStartTime = this.lastSessionStartTime;
-        
+
         console.log('Session saving debug:', {
             lastSessionStartTime: this.lastSessionStartTime,
             sessionStartTime: this.sessionStartTime,
@@ -2183,7 +2183,7 @@ export class PomodoroTimer {
             nowISO: now.toISOString(),
             nowLocal: now.toString()
         });
-        
+
         if (actualSessionStartTime) {
             const sessionStart = new Date(actualSessionStartTime);
             startHour = sessionStart.getHours();
@@ -2206,7 +2206,7 @@ export class PomodoroTimer {
 
         const endHour = now.getHours();
         const endMinute = now.getMinutes();
-        
+
         console.log('Final time values:', {
             startHour: startHour,
             startMinute: startMinute,
@@ -2218,7 +2218,7 @@ export class PomodoroTimer {
 
         // Get current tags from TagManager
         const currentTags = window.tagManager ? window.tagManager.getCurrentTags() : [];
-        
+
         const sessionData = {
             id: `timer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             session_type: 'focus',
@@ -2233,7 +2233,7 @@ export class PomodoroTimer {
         try {
             await window.sessionManager.addSession(sessionData);
             console.log('Timer session saved to SessionManager:', sessionData);
-            
+
             // Clear the preserved session start time after successful save
             this.lastSessionStartTime = null;
             console.log('Cleared lastSessionStartTime after successful save');
@@ -2244,10 +2244,10 @@ export class PomodoroTimer {
 
     async loadSessionData(forceReset = false) {
         const today = new Date().toDateString();
-        
+
         // Update current date string for midnight monitoring
         this.currentDateString = today;
-        
+
         try {
             const data = await invoke('load_session_data');
             if (data && data.date === today && !forceReset) {
@@ -2268,7 +2268,7 @@ export class PomodoroTimer {
         } catch (error) {
             console.error('Failed to load session data from Tauri, using localStorage:', error);
             const saved = localStorage.getItem('pomodoro-session');
-            
+
             if (saved) {
                 const data = JSON.parse(saved);
                 if (data.date === today && !forceReset) {
@@ -2361,28 +2361,12 @@ export class PomodoroTimer {
     // Update tray icon with timer information
     async updateTrayIcon() {
         try {
-            let displayMinutes, displaySeconds, isOvertime = false;
+            // Check status bar display setting
+            const settingsManager = window.settingsManager;
+            const statusBarDisplay = settingsManager ? settingsManager.settings.status_bar_display : 'default';
 
-            if (this.timeRemaining < 0 && this.allowContinuousSessions) {
-                // Show overtime in continuous sessions
-                isOvertime = true;
-                const overtimeSeconds = Math.abs(this.timeRemaining);
-                displayMinutes = Math.floor(overtimeSeconds / 60);
-                displaySeconds = overtimeSeconds % 60;
-            } else {
-                // Normal display or traditional mode
-                const absTime = Math.abs(this.timeRemaining);
-                displayMinutes = Math.floor(absTime / 60);
-                displaySeconds = absTime % 60;
-            }
-
-            const timerText = `${displayMinutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')}`;
-            const overtimePrefix = isOvertime ? '+' : '';
-            const fullTimerText = `${overtimePrefix}${timerText}`;
-
-            // Add session counter to timer text
-            const sessionCounter = `(${this.completedPomodoros}/${this.totalSessions})`;
-            const completeTimerText = `${fullTimerText} ${sessionCounter}`;
+            let displayText = '';
+            let modeIcon;
 
             // Define icons for different modes
             const modeIcons = {
@@ -2392,18 +2376,54 @@ export class PomodoroTimer {
             };
 
             // Show pause icon if timer is paused or auto-paused
-            let modeIcon;
             if (this.isPaused || this.isAutoPaused) {
                 modeIcon = '⏸️';
-            } else if (isOvertime) {
+            } else if (this.timeRemaining < 0 && this.allowContinuousSessions) {
                 // Show overtime indicator in tray
                 modeIcon = '⏰';
             } else {
                 modeIcon = modeIcons[this.currentMode] || '🧠';
             }
 
+            // Set display text based on status bar display mode
+            if (statusBarDisplay === 'icon-only') {
+                // Show only the mode icon in displayText, and pass empty string for modeIcon to avoid duplication
+                displayText = modeIcon;
+                modeIcon = ''; // Clear modeIcon to avoid showing it twice
+            } else {
+                // Default mode: show timer in mm:ss format
+                let displayMinutes, displaySeconds, isOvertime = false;
+
+                if (this.timeRemaining < 0 && this.allowContinuousSessions) {
+                    // Show overtime in continuous sessions
+                    isOvertime = true;
+                    const overtimeSeconds = Math.abs(this.timeRemaining);
+                    displayMinutes = Math.floor(overtimeSeconds / 60);
+                    displaySeconds = overtimeSeconds % 60;
+                } else {
+                    // Normal display or traditional mode
+                    const absTime = Math.abs(this.timeRemaining);
+                    displayMinutes = Math.floor(absTime / 60);
+                    displaySeconds = absTime % 60;
+                }
+
+                const timerText = `${displayMinutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')}`;
+                const overtimePrefix = isOvertime ? '+' : '';
+                const fullTimerText = `${overtimePrefix}${timerText}`;
+
+                // Show timer with session counter
+                const sessionCounter = `(${this.completedPomodoros}/${this.totalSessions})`;
+                const realText = `${fullTimerText} ${sessionCounter}`;
+
+                // Add invisible characters (zero-width spaces) to pad to maximum possible length
+                // Maximum length would be: "+99:99 (99/99)" = 14 characters
+                const maxLength = 14;
+                const padding = '\u200B'.repeat(maxLength - realText.length); // zero-width space
+                displayText = realText + padding;
+            }
+
             await invoke('update_tray_icon', {
-                timerText: completeTimerText,
+                timerText: displayText,
                 isRunning: this.isRunning,
                 sessionMode: this.currentMode,
                 currentSession: this.currentSession,
@@ -2430,7 +2450,7 @@ export class PomodoroTimer {
         }
 
         this.totalSessions = settings.timer.total_sessions;
-        
+
         // Update max session time (convert from minutes to milliseconds)
         this.maxSessionTime = (settings.timer.max_session_time || 120) * 60 * 1000;
 
