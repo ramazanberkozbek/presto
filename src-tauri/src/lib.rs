@@ -87,6 +87,8 @@ struct AppSettings {
     autostart: bool,
     #[serde(default = "default_analytics_enabled")]
     analytics_enabled: bool,
+    #[serde(default)]
+    hide_icon_on_close: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -174,6 +176,7 @@ impl Default for AppSettings {
             advanced: AdvancedSettings::default(),
             autostart: false,        // default to disabled
             analytics_enabled: true, // default to enabled
+            hide_icon_on_close: false, // default to disabled
         }
     }
 }
@@ -612,6 +615,22 @@ async fn update_tray_icon(
 #[tauri::command]
 async fn show_window(app: AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("main") {
+        // Check if hide_icon_on_close is enabled to restore dock visibility
+        match load_settings(app.clone()).await {
+            Ok(settings) => {
+                if settings.hide_icon_on_close {
+                    // Restore dock visibility when showing window
+                    #[cfg(target_os = "macos")]
+                    {
+                        let _ = set_dock_visibility(app.clone(), true).await;
+                    }
+                }
+            }
+            Err(_) => {
+                // Ignore error, just proceed with showing window
+            }
+        }
+        
         window
             .show()
             .map_err(|e| format!("Failed to show window: {}", e))?;
@@ -929,7 +948,8 @@ pub fn run() {
                 save_session_tags,
                 add_session_tag,
                 write_excel_file,
-                start_oauth_server
+                start_oauth_server,
+                set_dock_visibility
             ])
             .setup(|app| {
                 // Track app started event (if enabled)
@@ -1023,9 +1043,42 @@ pub fn run() {
                     .build(app)?;
 
                 if let Some(window) = app.get_webview_window("main") {
+                    let app_handle_for_close = app.handle().clone();
                     window.on_window_event(move |event| {
                         if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                            // Always prevent close
                             api.prevent_close();
+                            
+                            // Check if we should hide the app icon
+                            let app_handle_clone = app_handle_for_close.clone();
+                            tauri::async_runtime::spawn(async move {
+                                match load_settings(app_handle_clone.clone()).await {
+                                    Ok(settings) => {
+                                        if settings.hide_icon_on_close {
+                                            // Hide the window and set app as dock hidden
+                                            if let Some(window) = app_handle_clone.get_webview_window("main") {
+                                                let _ = window.hide();
+                                                // Use macOS specific API to hide from dock
+                                                #[cfg(target_os = "macos")]
+                                                {
+                                                    let _ = set_dock_visibility(app_handle_clone.clone(), false).await;
+                                                }
+                                            }
+                                        } else {
+                                            // Just hide the window without hiding from dock
+                                            if let Some(window) = app_handle_clone.get_webview_window("main") {
+                                                let _ = window.hide();
+                                            }
+                                        }
+                                    }
+                                    Err(_) => {
+                                        // Default behavior: just hide the window
+                                        if let Some(window) = app_handle_clone.get_webview_window("main") {
+                                            let _ = window.hide();
+                                        }
+                                    }
+                                }
+                            });
                         }
                     });
                 }
@@ -1282,4 +1335,41 @@ async fn start_oauth_server(window: tauri::Window) -> Result<u16, String> {
         let _ = window.emit("oauth-callback", url);
     })
     .map_err(|err| err.to_string())
+}
+
+#[tauri::command]
+async fn set_dock_visibility(app: AppHandle, visible: bool) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        app.run_on_main_thread(move || {
+            set_dock_visibility_native(visible);
+        })
+        .map_err(|e| format!("Failed to run on main thread: {}", e))?;
+    }
+    
+    #[cfg(not(target_os = "macos"))]
+    {
+        return Err("Dock visibility is only supported on macOS".to_string());
+    }
+    
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+fn set_dock_visibility_native(visible: bool) {
+    use cocoa::appkit::{NSApp, NSApplication, NSApplicationActivationPolicy};
+    use cocoa::base::nil;
+    
+    unsafe {
+        let app = NSApp();
+        if app != nil {
+            let policy = if visible {
+                NSApplicationActivationPolicy::NSApplicationActivationPolicyRegular
+            } else {
+                NSApplicationActivationPolicy::NSApplicationActivationPolicyAccessory
+            };
+            
+            app.setActivationPolicy_(policy);
+        }
+    }
 }

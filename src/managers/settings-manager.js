@@ -83,7 +83,8 @@ export class SettingsManager {
             appearance: { ...defaultSettings.appearance, ...loadedSettings.appearance },
             advanced: { ...defaultSettings.advanced, ...loadedSettings.advanced },
             autostart: loadedSettings.autostart !== undefined ? loadedSettings.autostart : defaultSettings.autostart,
-            analytics_enabled: loadedSettings.analytics_enabled !== undefined ? loadedSettings.analytics_enabled : defaultSettings.analytics_enabled
+            analytics_enabled: loadedSettings.analytics_enabled !== undefined ? loadedSettings.analytics_enabled : defaultSettings.analytics_enabled,
+            hide_icon_on_close: loadedSettings.hide_icon_on_close !== undefined ? loadedSettings.hide_icon_on_close : defaultSettings.hide_icon_on_close
         };
     }
 
@@ -118,7 +119,8 @@ export class SettingsManager {
                 debug_mode: false // Debug mode with 3-second timers
             },
             autostart: false, // default to disabled
-            analytics_enabled: true // Analytics enabled by default
+            analytics_enabled: true, // Analytics enabled by default
+            hide_icon_on_close: false // Hide icon on close disabled by default
         };
     }
 
@@ -198,6 +200,9 @@ export class SettingsManager {
 
         // Populate analytics setting
         this.loadAnalyticsSetting();
+
+        // Populate hide icon on close setting
+        this.loadHideIconOnCloseSetting();
     }
 
     setupEventListeners() {
@@ -854,6 +859,62 @@ export class SettingsManager {
 
             // Revert the checkbox state on error
             const checkbox = document.getElementById('analytics-enabled');
+            if (checkbox) {
+                checkbox.checked = !enabled;
+            }
+        }
+    }
+
+    async loadHideIconOnCloseSetting() {
+        try {
+            // Get current hide icon on close setting from our stored settings
+            const hideIconOnClose = this.settings.hide_icon_on_close;
+
+            const checkbox = document.getElementById('hide-icon-on-close');
+            if (checkbox) {
+                checkbox.checked = hideIconOnClose;
+
+                // Setup event listener for the hide icon on close checkbox
+                checkbox.addEventListener('change', async (e) => {
+                    await this.toggleHideIconOnClose(e.target.checked);
+                });
+            }
+        } catch (error) {
+            console.error('Failed to load hide icon on close setting:', error);
+            // Default to disabled if we can't check the status
+            const checkbox = document.getElementById('hide-icon-on-close');
+            if (checkbox) {
+                checkbox.checked = false;
+                checkbox.addEventListener('change', async (e) => {
+                    await this.toggleHideIconOnClose(e.target.checked);
+                });
+            }
+        }
+    }
+
+    async toggleHideIconOnClose(enabled) {
+        try {
+            // Update our settings
+            this.settings.hide_icon_on_close = enabled;
+
+            // Show user feedback
+            if (enabled) {
+                console.log('Hide icon on close enabled');
+                NotificationUtils.showNotificationPing('✓ Hide icon on close enabled - App will hide from dock when closed', 'success');
+            } else {
+                console.log('Hide icon on close disabled');
+                NotificationUtils.showNotificationPing('✓ Hide icon on close disabled - App will remain visible in dock', 'success');
+            }
+
+            // Schedule auto-save to persist the setting
+            this.scheduleAutoSave();
+
+        } catch (error) {
+            console.error('Failed to toggle hide icon on close:', error);
+            NotificationUtils.showNotificationPing('❌ Failed to toggle hide icon on close: ' + error, 'error');
+
+            // Revert the checkbox state on error
+            const checkbox = document.getElementById('hide-icon-on-close');
             if (checkbox) {
                 checkbox.checked = !enabled;
             }
