@@ -6,7 +6,7 @@ import { TeamManager } from './managers/team-manager.js';
 // Auth manager will be imported after Supabase is loaded
 import { PomodoroTimer } from './core/pomodoro-timer.js';
 import { NotificationUtils } from './utils/common-utils.js';
-// Removed unused import: updateNotification
+import { UpdateNotification } from './components/update-notification.js';
 
 // Global application state
 let timer = null;
@@ -1556,6 +1556,11 @@ async function initializeApplication() {
       window.updateManager.loadPreferences(); // Carica le preferenze salvate se supportato
     }
 
+    // Initialize Update Notification component
+    console.log('🔔 Initializing Update Notification...');
+    const updateNotification = new UpdateNotification();
+    window.updateNotification = updateNotification; // Make it globally available
+
     // Skip first run authentication - proceed directly with guest mode
     if (authManager.isFirstRun()) {
       console.log('👋 First run detected, proceeding as guest...');
@@ -1891,9 +1896,10 @@ function setupUpdateManagement() {
     }
   });
 
-  updateManager.on('checkError', () => {
+  updateManager.on('checkError', (event) => {
     if (updateStatus) {
-      updateStatus.innerHTML = '<span class="status-text error">Check failed</span>';
+      const errorMessage = event?.detail?.message || 'Check failed';
+      updateStatus.innerHTML = `<span class="status-text error">${errorMessage}</span>`;
     }
   });
 

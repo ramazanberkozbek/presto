@@ -357,10 +357,23 @@ export class UpdateNotification {
      */
     bindButtonEvents() {
         const buttons = this.container.querySelectorAll('[data-action]');
+        console.log('🔔 [UpdateNotification] Trovati', buttons.length, 'pulsanti con data-action');
         buttons.forEach(button => {
+            console.log('🔔 [UpdateNotification] Binding evento per pulsante:', button.dataset.action);
             button.addEventListener('click', (e) => {
-                const action = e.target.dataset.action;
-                this.handleAction(action);
+                // Trova il pulsante con data-action, anche se si clicca su un elemento figlio (come l'icona SVG)
+                let target = e.target;
+                while (target && !target.dataset.action) {
+                    target = target.parentElement;
+                }
+                
+                const action = target ? target.dataset.action : null;
+                console.log('🔔 [UpdateNotification] Target trovato:', target, 'Action:', action);
+                if (action) {
+                    this.handleAction(action);
+                } else {
+                    console.warn('🔔 [UpdateNotification] Nessuna azione trovata per questo click');
+                }
             });
         });
     }
@@ -369,6 +382,7 @@ export class UpdateNotification {
      * Handles button actions
      */
     handleAction(action) {
+        console.log('🔔 [UpdateNotification] Azione pulsante:', action);
         switch (action) {
             case 'download':
                 this.startDownload();
@@ -538,14 +552,15 @@ export class UpdateNotification {
         }
 
         // Verifica se siamo in modalità sviluppo senza test mode
-        const updateManager = getUpdateManager();
-        if (updateManager && updateManager.isDevelopmentMode && updateManager.isDevelopmentMode()) {
-            const hasTestMode = localStorage.getItem('presto_force_update_test') === 'true';
-            if (!hasTestMode) {
-                console.log('🔍 [UpdateNotification] Modalità sviluppo senza test mode - non mostro notifica');
-                return;
-            }
-        }
+        // RIMOSSO: Ora permettiamo la notifica anche in modalità sviluppo per GitHub releases
+        // const updateManager = getUpdateManager();
+        // if (updateManager && updateManager.isDevelopmentMode && updateManager.isDevelopmentMode()) {
+        //     const hasTestMode = localStorage.getItem('presto_force_update_test') === 'true';
+        //     if (!hasTestMode) {
+        //         console.log('🔍 [UpdateNotification] Modalità sviluppo senza test mode - non mostro notifica');
+        //         return;
+        //     }
+        // }
 
         // Don't show if this version has been skipped
         if (this.isVersionSkipped(updateInfo.version)) {
@@ -659,5 +674,5 @@ export class UpdateNotification {
     }
 }
 
-// Export singleton instance
-export const updateNotification = new UpdateNotification();
+// Export the class, not an instance - let main.js handle initialization
+// export const updateNotification = new UpdateNotification();
