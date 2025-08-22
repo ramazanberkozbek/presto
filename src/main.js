@@ -6,7 +6,7 @@ import { TeamManager } from './managers/team-manager.js';
 // Auth manager will be imported after Supabase is loaded
 import { PomodoroTimer } from './core/pomodoro-timer.js';
 import { NotificationUtils } from './utils/common-utils.js';
-// Removed unused import: updateNotification
+import { UpdateNotification } from './components/update-notification.js';
 
 // Global application state
 let timer = null;
@@ -299,31 +299,31 @@ async function initializeEarlyTheme() {
 
   // Helper function to check if Tauri is available and ready
   function isTauriReady() {
-    return typeof window !== 'undefined' && 
-           window.__TAURI__ && 
-           window.__TAURI__.core && 
-           typeof window.__TAURI__.core.invoke === 'function';
+    return typeof window !== 'undefined' &&
+      window.__TAURI__ &&
+      window.__TAURI__.core &&
+      typeof window.__TAURI__.core.invoke === 'function';
   }
 
   // Helper function to wait for Tauri to be ready (with timeout)
   function waitForTauri(maxWaitTime = 2000) {
     return new Promise((resolve) => {
       const startTime = Date.now();
-      
+
       const checkTauri = () => {
         if (isTauriReady()) {
           resolve(true);
           return;
         }
-        
+
         if (Date.now() - startTime > maxWaitTime) {
           resolve(false);
           return;
         }
-        
+
         setTimeout(checkTauri, 50);
       };
-      
+
       checkTauri();
     });
   }
@@ -331,10 +331,10 @@ async function initializeEarlyTheme() {
   try {
     // Wait for Tauri to be ready before trying to load settings
     const tauriReady = await waitForTauri();
-    
+
     if (tauriReady) {
       console.log('🎨 Tauri is ready, loading theme from settings...');
-      
+
       try {
         const { invoke } = window.__TAURI__.core;
         const savedSettings = await invoke('load_settings');
@@ -1467,19 +1467,19 @@ async function initializeApplication() {
     console.log('🚀 Application already fully initialized, skipping...');
     return;
   }
-  
+
   // Prevent concurrent initialization attempts
   if (window._appInitializing) {
     console.log('🚀 Application initialization already in progress, skipping...');
     return;
   }
-  
+
   // Set initialization flag early to prevent race conditions
   window._appInitializing = true;
-  
+
   try {
     console.log('🚀 Initializing Presto application...');
-    
+
     // Show loading state
     const loadingOverlay = document.createElement('div');
     loadingOverlay.id = 'app-loading';
@@ -1512,7 +1512,7 @@ async function initializeApplication() {
       if (stuckOverlay) {
         console.error('⚠️ Initialization timeout - removing loading overlay');
         stuckOverlay.remove();
-        
+
         // Show error message
         NotificationUtils.showNotificationPing('Initialization timed out. Please refresh! 🔄', 'error');
       }
@@ -1555,6 +1555,11 @@ async function initializeApplication() {
     if (window.updateManager.loadPreferences) {
       window.updateManager.loadPreferences(); // Carica le preferenze salvate se supportato
     }
+
+    // Initialize Update Notification component
+    console.log('🔔 Initializing Update Notification...');
+    const updateNotification = new UpdateNotification();
+    window.updateNotification = updateNotification; // Make it globally available
 
     // Skip first run authentication - proceed directly with guest mode
     if (authManager.isFirstRun()) {
@@ -1613,7 +1618,7 @@ async function initializeApplication() {
 
     // Clear safety timeout
     clearTimeout(safetyTimeout);
-    
+
     // Mark as fully initialized
     window._appFullyInitialized = true;
     window._appInitializing = false;
@@ -1629,21 +1634,21 @@ async function initializeApplication() {
 
   } catch (error) {
     console.error('❌ Failed to initialize application:', error);
-    
+
     // Clear safety timeout and remove loading overlay even on error
     clearTimeout(safetyTimeout);
     const loadingOverlayError = document.getElementById('app-loading');
     if (loadingOverlayError) {
       loadingOverlayError.remove();
     }
-    
+
     // Show error notification
     NotificationUtils.showNotificationPing('Failed to initialize app. Please refresh! 🔄', 'error');
-    
+
     // Reset initialization flags on error so user can retry
     window._appInitializing = false;
     window._appFullyInitialized = false;
-    
+
     // Show error screen instead of leaving user with blank screen
     const errorScreen = document.createElement('div');
     errorScreen.id = 'app-error';
@@ -1891,9 +1896,10 @@ function setupUpdateManagement() {
     }
   });
 
-  updateManager.on('checkError', () => {
+  updateManager.on('checkError', (event) => {
     if (updateStatus) {
-      updateStatus.innerHTML = '<span class="status-text error">Check failed</span>';
+      const errorMessage = event?.detail?.message || 'Check failed';
+      updateStatus.innerHTML = `<span class="status-text error">${errorMessage}</span>`;
     }
   });
 

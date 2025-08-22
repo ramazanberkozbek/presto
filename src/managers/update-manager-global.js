@@ -19,10 +19,8 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
         // Eventi personalizzati
         this.eventTarget = new EventTarget();
 
-        // Inizializza il controllo automatico solo se non siamo in dev mode
-        if (!this.isDevelopmentMode()) {
-            this.startAutoCheck();
-        }
+        // Inizializza il controllo automatico sempre (ora funziona anche in dev mode)
+        this.startAutoCheck();
 
         console.log('✅ UpdateManager v2 inizializzato (global)');
     }
@@ -99,15 +97,15 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
             if (window.__TAURI__?.app?.getVersion) {
                 return await window.__TAURI__.app.getVersion();
             }
-            
+
             if (window.__TAURI__?.core?.invoke) {
                 return await window.__TAURI__.core.invoke('plugin:app|version');
             }
 
             throw new Error('API versione non disponibile');
         } catch (error) {
-            console.warn('❌ Errore recupero versione:', error);
-            return '0.2.2'; // fallback
+            console.error('❌ Impossibile ottenere la versione dell\'app:', error);
+            throw new Error('Impossibile determinare la versione corrente dell\'applicazione');
         }
     }
 
@@ -142,7 +140,7 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
     enableTestMode() {
         localStorage.setItem('presto_force_update_test', 'true');
         console.warn('⚠️ MODALITÀ TEST AGGIORNAMENTI ATTIVATA');
-        
+
         if (!this.isDevelopmentMode() && this.autoCheck && !this.checkInterval) {
             this.startAutoCheck();
         }
@@ -156,7 +154,7 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
     disableTestMode() {
         localStorage.removeItem('presto_force_update_test');
         console.log('ℹ️ Modalità test aggiornamenti disattivata');
-        
+
         if (this.isDevelopmentMode()) {
             this.stopAutoCheck();
         }
@@ -245,16 +243,18 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
      * Avvia il controllo automatico degli aggiornamenti
      */
     startAutoCheck() {
-        if (this.autoCheck && !this.checkInterval && !this.isDevelopmentMode()) {
+        if (this.autoCheck && !this.checkInterval) {
             // Controlla ogni ora
             this.checkInterval = setInterval(() => {
+                console.log('🔄 Controllo automatico periodico degli aggiornamenti...');
                 this.checkForUpdates(false); // silent check
             }, 60 * 60 * 1000);
 
-            // Controllo iniziale dopo 30 secondi
+            // Controllo iniziale dopo 5 secondi
             setTimeout(() => {
-                this.checkForUpdates(false);
-            }, 30000);
+                console.log('🔄 Controllo automatico iniziale degli aggiornamenti...');
+                this.checkForUpdates(false); // silent - mostra il banner se c'è un aggiornamento
+            }, 5000);
 
             console.log('🔄 Controllo automatico aggiornamenti avviato');
         }
@@ -277,7 +277,7 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
     compareVersions(a, b) {
         const cleanA = a.replace(/^v/, '');
         const cleanB = b.replace(/^v/, '');
-        
+
         const aParts = cleanA.split('.').map(n => parseInt(n) || 0);
         const bParts = cleanB.split('.').map(n => parseInt(n) || 0);
 
@@ -290,6 +290,83 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
         }
 
         return 0;
+    }
+
+    /**
+     * Controlla solo la versione da GitHub senza tentare l'installazione (per modalità sviluppo)
+     */
+    async checkVersionFromGitHub(showDialog = true) {
+        try {
+            // Ottieni versione corrente
+            let currentVersion;
+            try {
+                currentVersion = await this.getAppVersion();
+                console.log(`📋 Versione corrente: ${currentVersion}`);
+            } catch (error) {
+                console.error('❌ Errore nel recupero della versione corrente:', error);
+                this.emit('checkError', { error: 'Impossibile determinare la versione corrente' });
+                if (showDialog) {
+                    alert('Impossibile verificare gli aggiornamenti: versione corrente non determinabile');
+                }
+                return false;
+            }
+
+            // Controlla ultima release su GitHub
+            const response = await fetch('https://api.github.com/repos/murdercode/presto/releases/latest');
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const githubRelease = await response.json();
+            const latestVersion = githubRelease.tag_name.replace(/^v/, '');
+
+            console.log(`📋 Ultima versione GitHub: ${latestVersion}`);
+
+            // Confronta versioni
+            if (this.compareVersions(latestVersion, currentVersion) <= 0) {
+                console.log('✅ Nessun aggiornamento disponibile');
+                this.updateAvailable = false;
+                this.currentUpdate = null;
+                this.emit('updateNotAvailable');
+
+                if (showDialog) {
+                    alert(`Nessun aggiornamento disponibile.\n\nVersione corrente: ${currentVersion}\nUltima versione: ${latestVersion}`);
+                }
+                return false;
+            }
+
+            // Aggiornamento disponibile
+            console.log(`🎉 Aggiornamento disponibile: ${latestVersion}`);
+            this.updateAvailable = true;
+            this.currentUpdate = {
+                version: latestVersion,
+                body: githubRelease.body || '',
+                date: githubRelease.published_at
+            };
+
+            // console.log('📢 Emetto evento updateAvailable con:', this.currentUpdate); // Debug rimosso
+            this.emit('updateAvailable', this.currentUpdate);
+
+            if (showDialog) {
+                const message = `🎉 Aggiornamento disponibile!\n\n` +
+                    `Versione corrente: ${currentVersion}\n` +
+                    `Nuova versione: ${latestVersion}\n\n` +
+                    `Nota: In modalità sviluppo, scarica manualmente da GitHub.`;
+                alert(message);
+            }
+
+            return true;
+
+        } catch (error) {
+            console.error('❌ Errore controllo versione GitHub:', error);
+            this.emit('checkError', { error: `Errore di rete: ${error.message}` });
+            if (showDialog) {
+                alert(`Errore nel controllo degli aggiornamenti:\n${error.message}`);
+            }
+            return false;
+        } finally {
+            this.isChecking = false;
+        }
     }
 
     /**
@@ -312,12 +389,9 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
             const hasTestMode = localStorage.getItem('presto_force_update_test') === 'true';
 
             if (isDevMode && !hasTestMode) {
-                console.warn('⚠️ Modalità sviluppo - controllo disabilitato');
-                this.emit('updateNotAvailable');
-                if (showDialog) {
-                    await this.showDevelopmentMessage();
-                }
-                return false;
+                console.log('🔍 Modalità sviluppo - controllo tramite GitHub API senza installazione');
+                // In modalità sviluppo facciamo solo il controllo della versione senza installazione
+                return await this.checkVersionFromGitHub(showDialog);
             }
 
             // Se è modalità test, simula un aggiornamento
@@ -329,8 +403,21 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
 
             // Controlla aggiornamenti reali
             // 1. Prima prova con l'API GitHub per avere info complete
-            const currentVersion = await this.getAppVersion();
-            console.log(`📋 Versione corrente: ${currentVersion}`);
+            let currentVersion;
+            try {
+                currentVersion = await this.getAppVersion();
+                console.log(`📋 Versione corrente: ${currentVersion}`);
+            } catch (versionError) {
+                console.error('❌ Impossibile ottenere la versione corrente:', versionError.message);
+                this.updateAvailable = false;
+                this.currentUpdate = null;
+                if (!silent) {
+                    this.eventTarget.dispatchEvent(new CustomEvent('checkError', {
+                        detail: { message: 'Impossibile verificare la versione corrente dell\'applicazione' }
+                    }));
+                }
+                return false;
+            }
 
             // Controlla GitHub API
             const response = await fetch('https://api.github.com/repos/StefanoNovelli/presto/releases/latest');
@@ -360,7 +447,7 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
                 if (tauriAPI) {
                     console.log('🔄 Usando API Tauri updater...');
                     const tauriUpdate = await tauriAPI.check();
-                    
+
                     if (tauriUpdate && tauriUpdate.available) {
                         console.log('✅ Aggiornamento confermato via Tauri API');
                         this.updateAvailable = true;
@@ -417,10 +504,10 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
      */
     async simulateUpdate() {
         console.log('🧪 Simulazione aggiornamento per test...');
-        
+
         const currentVersion = await this.getAppVersion();
         const simulatedNewVersion = this.incrementVersion(currentVersion);
-        
+
         const update = {
             version: simulatedNewVersion,
             date: new Date().toISOString(),
@@ -490,16 +577,16 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
             // Se supporta download automatico via Tauri
             if (this.currentUpdate.isAutoDownloadable && this.currentUpdate.source === 'tauri-api') {
                 console.log('📥 Download automatico via Tauri...');
-                
+
                 const tauriAPI = await this.getTauriUpdaterAPI();
                 if (tauriAPI && tauriAPI.downloadAndInstall) {
                     await tauriAPI.downloadAndInstall((progress) => {
                         console.log(`📥 Progresso download: ${progress}%`);
                         this.downloadProgress = progress;
-                        this.emit('downloadProgress', { 
+                        this.emit('downloadProgress', {
                             progress,
                             chunkLength: progress,
-                            contentLength: 100 
+                            contentLength: 100
                         });
                     });
 
@@ -511,10 +598,10 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
                     });
 
                     this.emit('downloadFinished');
-                    
+
                     // Installa e riavvia
                     this.emit('installFinished');
-                    
+
                     const shouldRestart = await this.askConfirmation(
                         'Aggiornamento scaricato e installato con successo!\n\nVuoi riavviare ora l\'applicazione?',
                         { title: 'Aggiornamento Completato' }
@@ -528,7 +615,7 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
                 // Download manuale
                 console.log('🌐 Reindirizzamento a download manuale...');
                 await this.openDownloadUrl(this.currentUpdate.downloadUrl);
-                
+
                 this.emit('downloadError', new Error('Download manuale richiesto'));
             }
 
@@ -546,15 +633,15 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
      */
     async simulateDownloadAndInstall() {
         console.log('🧪 Simulazione download...');
-        
+
         // Simula progresso download
         for (let i = 0; i <= 100; i += 10) {
             await new Promise(resolve => setTimeout(resolve, 100));
             this.downloadProgress = i;
-            this.emit('downloadProgress', { 
+            this.emit('downloadProgress', {
                 progress: i,
                 chunkLength: i,
-                contentLength: 100 
+                contentLength: 100
             });
         }
 
@@ -584,7 +671,7 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
      */
     setAutoCheck(enabled) {
         this.autoCheck = enabled;
-        
+
         if (enabled) {
             this.startAutoCheck();
         } else {
@@ -623,6 +710,7 @@ window.UpdateManagerV2 = class UpdateManagerV2 {
     }
 
     emit(event, data = null) {
+        // console.log(`📢 [UpdateManager] Emetto evento: ${event}`, data); // Debug rimosso
         this.eventTarget.dispatchEvent(new CustomEvent(event, { detail: data }));
     }
 
