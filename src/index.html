@@ -804,16 +804,18 @@
                   <span class="checkmark"></span>
                   Hide Icon on Close
                 </label>
-                <p class="setting-description">Hide the app icon from the dock when closing the window with X. The app will continue running in the system tray.</p>
+                <p class="setting-description">Hide the app icon from the dock when closing the window with X. The app
+                  will continue running in the system tray.</p>
               </div>
 
               <div class="setting-item">
-                <label class="checkbox-label">
-                  <input type="checkbox" id="hide-status-bar">
-                  <span class="checkmark"></span>
-                  Hide Status Bar
-                </label>
-                <p class="setting-description">Hide the status bar at the top of the screen when the app is focused. The status bar will be restored when switching to other apps.</p>
+                <label class="setting-label">Status Bar Display</label>
+                <select id="status-bar-display" class="setting-select">
+                  <option value="default">Default (mm:ss)</option>
+                  <option value="icon-only">Nessuno (solo icona)</option>
+                </select>
+                <p class="setting-description">Choose how the timer information is displayed in the system status
+                  bar/tray.</p>
               </div>
             </div>
 
