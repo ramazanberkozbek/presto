@@ -51,4 +51,6 @@ base64 = "0.21"
 core-graphics = "0.23"
 core-foundation = "0.9"
 libc = "0.2"
+cocoa = "0.25"
+objc = "0.2"
 
