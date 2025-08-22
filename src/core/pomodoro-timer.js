@@ -2380,9 +2380,15 @@ export class PomodoroTimer {
             const overtimePrefix = isOvertime ? '+' : '';
             const fullTimerText = `${overtimePrefix}${timerText}`;
 
-            // Add session counter to timer text
+            // Show real timer but add invisible padding characters to maintain fixed width
             const sessionCounter = `(${this.completedPomodoros}/${this.totalSessions})`;
-            const completeTimerText = `${fullTimerText} ${sessionCounter}`;
+            const realText = `${fullTimerText} ${sessionCounter}`;
+            
+            // Add invisible characters (zero-width spaces) to pad to maximum possible length
+            // Maximum length would be: "+99:99 (99/99)" = 14 characters
+            const maxLength = 14;
+            const padding = '\u200B'.repeat(maxLength - realText.length); // zero-width space
+            const completeTimerText = realText + padding;
 
             // Define icons for different modes
             const modeIcons = {

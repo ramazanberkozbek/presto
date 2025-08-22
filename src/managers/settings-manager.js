@@ -84,7 +84,8 @@ export class SettingsManager {
             advanced: { ...defaultSettings.advanced, ...loadedSettings.advanced },
             autostart: loadedSettings.autostart !== undefined ? loadedSettings.autostart : defaultSettings.autostart,
             analytics_enabled: loadedSettings.analytics_enabled !== undefined ? loadedSettings.analytics_enabled : defaultSettings.analytics_enabled,
-            hide_icon_on_close: loadedSettings.hide_icon_on_close !== undefined ? loadedSettings.hide_icon_on_close : defaultSettings.hide_icon_on_close
+            hide_icon_on_close: loadedSettings.hide_icon_on_close !== undefined ? loadedSettings.hide_icon_on_close : defaultSettings.hide_icon_on_close,
+            hide_status_bar: loadedSettings.hide_status_bar !== undefined ? loadedSettings.hide_status_bar : defaultSettings.hide_status_bar
         };
     }
 
@@ -120,7 +121,8 @@ export class SettingsManager {
             },
             autostart: false, // default to disabled
             analytics_enabled: true, // Analytics enabled by default
-            hide_icon_on_close: false // Hide icon on close disabled by default
+            hide_icon_on_close: false, // Hide icon on close disabled by default
+            hide_status_bar: false // Hide status bar disabled by default
         };
     }
 
@@ -203,6 +205,9 @@ export class SettingsManager {
 
         // Populate hide icon on close setting
         this.loadHideIconOnCloseSetting();
+
+        // Populate hide status bar setting
+        this.loadHideStatusBarSetting();
     }
 
     setupEventListeners() {
@@ -915,6 +920,65 @@ export class SettingsManager {
 
             // Revert the checkbox state on error
             const checkbox = document.getElementById('hide-icon-on-close');
+            if (checkbox) {
+                checkbox.checked = !enabled;
+            }
+        }
+    }
+
+    async loadHideStatusBarSetting() {
+        try {
+            // Get current hide status bar setting from our stored settings
+            const hideStatusBar = this.settings.hide_status_bar;
+
+            const checkbox = document.getElementById('hide-status-bar');
+            if (checkbox) {
+                checkbox.checked = hideStatusBar;
+
+                // Setup event listener for the hide status bar checkbox
+                checkbox.addEventListener('change', async (e) => {
+                    await this.toggleHideStatusBar(e.target.checked);
+                });
+            }
+        } catch (error) {
+            console.error('Failed to load hide status bar setting:', error);
+            // Default to disabled if we can't check the status
+            const checkbox = document.getElementById('hide-status-bar');
+            if (checkbox) {
+                checkbox.checked = false;
+                checkbox.addEventListener('change', async (e) => {
+                    await this.toggleHideStatusBar(e.target.checked);
+                });
+            }
+        }
+    }
+
+    async toggleHideStatusBar(enabled) {
+        try {
+            // Call the Tauri command to update the status bar visibility
+            await invoke('set_status_bar_visibility', { visible: !enabled });
+
+            // Update our settings
+            this.settings.hide_status_bar = enabled;
+
+            // Show user feedback
+            if (enabled) {
+                console.log('Hide status bar enabled');
+                NotificationUtils.showNotificationPing('✓ Status bar hidden - Will hide when app is focused', 'success');
+            } else {
+                console.log('Hide status bar disabled');
+                NotificationUtils.showNotificationPing('✓ Status bar visible - Will show when app is focused', 'success');
+            }
+
+            // Schedule auto-save to persist the setting
+            this.scheduleAutoSave();
+
+        } catch (error) {
+            console.error('Failed to toggle hide status bar:', error);
+            NotificationUtils.showNotificationPing('❌ Failed to toggle status bar visibility: ' + error, 'error');
+
+            // Revert the checkbox state on error
+            const checkbox = document.getElementById('hide-status-bar');
             if (checkbox) {
                 checkbox.checked = !enabled;
             }
