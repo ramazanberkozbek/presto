@@ -606,8 +606,12 @@
                   Desktop Notifications
                 </label>
                 <p class="setting-description">Show system notifications when timer completes. Browser permission will
-                  be
-                  requested when enabled.</p>
+                  be requested when enabled.<br>
+                  <strong>Note:</strong> On macOS, notifications may not work in development mode. Test with a production build for full functionality.</p>
+                <div id="notification-status" class="notification-status" style="margin-top: 8px; padding: 8px 12px; border-radius: 6px; font-size: 13px; display: none;">
+                  <span id="notification-status-text"></span>
+                  <button id="test-notifications-btn" style="margin-left: 8px; padding: 4px 8px; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">Test</button>
+                </div>
               </div>
 
               <div class="setting-item">

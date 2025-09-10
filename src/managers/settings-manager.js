@@ -174,11 +174,8 @@ export class SettingsManager {
         this.initializeTimerThemeSelector();
 
         // Populate notification settings
-        // Check current notification permission and adjust desktop notifications setting
-        const hasNotificationPermission = NotificationUtils.getNotificationPermission() === 'granted';
-        const desktopNotificationsEnabled = this.settings.notifications.desktop_notifications && hasNotificationPermission;
-
-        document.getElementById('desktop-notifications').checked = desktopNotificationsEnabled;
+        // Always show the user's setting preference, regardless of system permission
+        document.getElementById('desktop-notifications').checked = this.settings.notifications.desktop_notifications;
         document.getElementById('sound-notifications').checked = this.settings.notifications.sound_notifications;
         document.getElementById('auto-start-timer').checked = this.settings.notifications.auto_start_timer;
 
@@ -599,7 +596,10 @@ export class SettingsManager {
                 if (e.target.checked) {
                     try {
                         // Request notification permission when enabling
+                        console.log('🔔 Desktop notifications enabled, requesting permission...');
                         const permission = await NotificationUtils.requestNotificationPermission();
+                        console.log('🔔 Notification permission result:', permission);
+                        
                         if (permission !== 'granted') {
                             // Show warning but don't prevent saving the setting
                             const message = permission === 'unsupported'
@@ -607,6 +607,9 @@ export class SettingsManager {
                                 : 'Notification permission denied. Settings saved, but notifications won\'t work until permission is granted.';
                             NotificationUtils.showNotificationPing(message, 'warning');
                             // Don't uncheck the box - let the user's choice be saved
+                        } else {
+                            // Permission granted, show success message
+                            NotificationUtils.showNotificationPing('✓ Desktop notifications enabled!', 'success');
                         }
                     } catch (error) {
                         console.warn('Failed to request notification permission, but allowing setting to be saved:', error);
@@ -614,11 +617,17 @@ export class SettingsManager {
                         // This allows the setting to work when Tauri notifications are properly configured
                         NotificationUtils.showNotificationPing('Settings saved. Notifications will work when properly configured.', 'info');
                     }
+                } else {
+                    console.log('🔔 Desktop notifications disabled');
+                    NotificationUtils.showNotificationPing('Desktop notifications disabled', 'info');
                 }
                 // Always save the setting regardless of permission status
                 this.scheduleAutoSave();
             });
         }
+
+        // Initialize notification status display and test button
+        this.setupNotificationStatusDisplay();
 
         // Other notification checkboxes
         const checkboxFields = [
@@ -995,6 +1004,115 @@ export class SettingsManager {
                 select.value = this.settings.status_bar_display || 'default';
             }
         }
+    }
+
+    // Notification status display and debugging functions
+    async setupNotificationStatusDisplay() {
+        const statusDiv = document.getElementById('notification-status');
+        const statusText = document.getElementById('notification-status-text');
+        const testBtn = document.getElementById('test-notifications-btn');
+
+        if (!statusDiv || !statusText || !testBtn) {
+            console.warn('Notification status elements not found in DOM');
+            return;
+        }
+
+        // Show the status div
+        statusDiv.style.display = 'block';
+
+        // Update status on load
+        await this.updateNotificationStatus();
+
+        // Set up test button
+        testBtn.addEventListener('click', async () => {
+            if (window.pomodoroTimer && typeof window.pomodoroTimer.testNotification === 'function') {
+                await window.pomodoroTimer.testNotification();
+                // Update status after test
+                setTimeout(() => this.updateNotificationStatus(), 1000);
+            } else {
+                console.warn('Test notification function not available');
+                NotificationUtils.showNotificationPing('Test function not available. Try again after the timer is fully loaded.', 'warning');
+            }
+        });
+
+        // Update status when desktop notifications setting changes
+        const desktopNotificationsCheckbox = document.getElementById('desktop-notifications');
+        if (desktopNotificationsCheckbox) {
+            desktopNotificationsCheckbox.addEventListener('change', () => {
+                setTimeout(() => this.updateNotificationStatus(), 500);
+            });
+        }
+    }
+
+    async updateNotificationStatus() {
+        const statusDiv = document.getElementById('notification-status');
+        const statusText = document.getElementById('notification-status-text');
+
+        if (!statusDiv || !statusText) return;
+
+        let status = '';
+        let className = '';
+
+        try {
+            // Detect if we're in development mode
+            const isDevMode = window.location.protocol === 'tauri:' ? false : true;
+            
+            // Check if desktop notifications are enabled in settings
+            const isEnabledInSettings = document.getElementById('desktop-notifications')?.checked || false;
+
+            if (!isEnabledInSettings) {
+                status = '🔕 Disabled in settings';
+                className = 'status-disabled';
+            } else {
+                // Check Tauri notifications first
+                if (window.__TAURI__ && window.__TAURI__.notification) {
+                    try {
+                        const { isPermissionGranted } = window.__TAURI__.notification;
+                        const granted = await isPermissionGranted();
+                        if (granted) {
+                            if (isDevMode) {
+                                status = '⚠️ Dev mode - may not work on macOS';
+                                className = 'status-warning';
+                            } else {
+                                status = '✅ Tauri notifications ready';
+                                className = 'status-ready';
+                            }
+                        } else {
+                            status = '⚠️ Tauri permission needed';
+                            className = 'status-warning';
+                        }
+                    } catch (error) {
+                        status = '❌ Tauri error: ' + error.message;
+                        className = 'status-error';
+                    }
+                } else {
+                    // Check Web Notification API
+                    if ('Notification' in window) {
+                        const permission = Notification.permission;
+                        if (permission === 'granted') {
+                            status = '✅ Web notifications ready';
+                            className = 'status-ready';
+                        } else if (permission === 'denied') {
+                            status = '❌ Web notifications blocked';
+                            className = 'status-error';
+                        } else {
+                            status = '⚠️ Web permission needed';
+                            className = 'status-warning';
+                        }
+                    } else {
+                        status = '❌ Notifications not supported';
+                        className = 'status-error';
+                    }
+                }
+            }
+        } catch (error) {
+            status = '❌ Status check failed';
+            className = 'status-error';
+            console.error('Failed to check notification status:', error);
+        }
+
+        statusText.textContent = status;
+        statusDiv.className = `notification-status ${className}`;
     }
 
     // Theme management functions
