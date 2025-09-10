@@ -778,10 +778,12 @@ export class PomodoroTimer {
             );
 
             // Show desktop notification if enabled
-            NotificationUtils.showDesktopNotification(
-                'Session Time Limit Reached',
-                `Your session has been automatically paused after ${maxTimeInMinutes} minutes. Consider taking a break!`
-            );
+            if (this.enableDesktopNotifications) {
+                NotificationUtils.showDesktopNotification(
+                    'Session Time Limit Reached',
+                    `Your session has been automatically paused after ${maxTimeInMinutes} minutes. Consider taking a break!`
+                );
+            }
         }
     }
 
@@ -2297,56 +2299,222 @@ export class PomodoroTimer {
         }
     }
 
-    // Simple notification system
+    // Enhanced notification system with better error handling and debugging
     async showNotification() {
+        // Only show desktop notifications if the setting is enabled
+        if (!this.enableDesktopNotifications) {
+            console.log('🔔 Desktop notifications are disabled in settings');
+            return;
+        }
+
+        const messages = {
+            focus: 'Break time! Take a rest 😌',
+            break: 'Break over! Time to focus 🍅',
+            longBreak: 'Long break over! Ready for more focus? 🚀'
+        };
+
+        const notificationTitle = 'Presto - Pomodoro Timer';
+        const notificationBody = messages[this.currentMode];
+
+        console.log(`🔔 Attempting to show desktop notification: "${notificationBody}"`);
+
         try {
             // Check if we're in a Tauri context and use Tauri notifications
             if (window.__TAURI__ && window.__TAURI__.notification) {
+                console.log('🔔 Using Tauri notification system');
                 const { isPermissionGranted, requestPermission, sendNotification } = window.__TAURI__.notification;
 
                 // Check if permission is granted
                 let permissionGranted = await isPermissionGranted();
+                console.log(`🔔 Tauri notification permission status: ${permissionGranted}`);
 
                 // If not granted, request permission
                 if (!permissionGranted) {
+                    console.log('🔔 Requesting Tauri notification permission...');
                     const permission = await requestPermission();
                     permissionGranted = permission === 'granted';
+                    console.log(`🔔 Permission request result: ${permission} (granted: ${permissionGranted})`);
+                    
+                    if (!permissionGranted) {
+                        console.warn('❌ Tauri notification permission was denied');
+                        NotificationUtils.showNotificationPing('Desktop notifications are disabled. Enable them in system settings to get timer alerts! 🔔', 'warning', this.currentMode);
+                        return;
+                    }
                 }
 
                 // Send notification if permission is granted
                 if (permissionGranted) {
-                    const messages = {
-                        focus: 'Break time! Take a rest 😌',
-                        break: 'Break over! Time to focus 🍅',
-                        longBreak: 'Long break over! Ready for more focus? 🚀'
-                    };
-
+                    console.log('🔔 Sending Tauri notification...');
                     await sendNotification({
-                        title: 'Presto - Pomodoro Timer',
-                        body: messages[this.currentMode],
+                        title: notificationTitle,
+                        body: notificationBody,
                         icon: '/assets/tauri.svg'
                     });
+                    console.log('✅ Tauri notification sent successfully');
+                } else {
+                    console.warn('❌ Tauri notification permission not available');
+                    this.fallbackToWebNotifications(notificationTitle, notificationBody);
                 }
             } else {
-                // Fallback to Web Notification API
-                if ('Notification' in window && Notification.permission === 'granted') {
-                    const messages = {
-                        focus: 'Break time! Take a rest 😌',
-                        break: 'Break over! Time to focus 🍅',
-                        longBreak: 'Long break over! Ready for more focus? 🚀'
-                    };
-
-                    NotificationUtils.showDesktopNotification('Presto - Pomodoro Timer', messages[this.currentMode]);
-                }
+                console.log('🔔 Tauri not available, falling back to Web Notification API');
+                this.fallbackToWebNotifications(notificationTitle, notificationBody);
             }
         } catch (error) {
-            console.error('Failed to show notification:', error);
-            // Fallback to in-app notification
-            this.showNotificationPing(
-                this.currentMode === 'focus' ? 'Break time! Take a rest 😌' :
-                    this.currentMode === 'break' ? 'Break over! Time to focus 🍅' :
-                        'Long break over! Ready for more focus? 🚀'
-            );
+            console.error('❌ Failed to show Tauri notification:', error);
+            console.log('🔄 Attempting fallback to Web Notification API...');
+            this.fallbackToWebNotifications(notificationTitle, notificationBody);
+        }
+    }
+
+    // Fallback to Web Notification API with improved error handling
+    async fallbackToWebNotifications(title, body) {
+        try {
+            if ('Notification' in window) {
+                console.log(`🔔 Web Notification API available, permission: ${Notification.permission}`);
+                
+                if (Notification.permission === 'granted') {
+                    console.log('🔔 Sending Web notification...');
+                    NotificationUtils.showDesktopNotification(title, body);
+                    console.log('✅ Web notification sent successfully');
+                } else if (Notification.permission === 'default') {
+                    console.log('🔔 Requesting Web notification permission...');
+                    const permission = await Notification.requestPermission();
+                    console.log(`🔔 Web permission request result: ${permission}`);
+                    
+                    if (permission === 'granted') {
+                        NotificationUtils.showDesktopNotification(title, body);
+                        console.log('✅ Web notification sent after permission granted');
+                    } else {
+                        console.warn('❌ Web notification permission was denied');
+                        NotificationUtils.showNotificationPing('Desktop notifications are disabled. Enable them in your browser to get timer alerts! 🔔', 'warning', this.currentMode);
+                    }
+                } else {
+                    console.warn('❌ Web notification permission was previously denied');
+                    NotificationUtils.showNotificationPing('Desktop notifications are disabled. Enable them in your browser settings to get timer alerts! 🔔', 'warning', this.currentMode);
+                }
+            } else {
+                console.warn('❌ Web Notification API not supported');
+                this.fallbackToInAppNotification(body);
+            }
+        } catch (error) {
+            console.error('❌ Failed to show Web notification:', error);
+            this.fallbackToInAppNotification(body);
+        }
+    }
+
+    // Final fallback to in-app notification
+    fallbackToInAppNotification(message) {
+        console.log('🔔 Using in-app notification as final fallback');
+        NotificationUtils.showNotificationPing(message, 'info', this.currentMode);
+    }
+
+    // Test notification function for debugging
+    // Usage: Open browser console and type: window.pomodoroTimer.testNotification()
+    async testNotification() {
+        console.log('🧪 Testing notification system...');
+        console.log('📝 Instructions: This will test the notification system and show debug info in the console');
+        console.log(`🔧 Current settings: desktop notifications = ${this.enableDesktopNotifications}`);
+        
+        // Detect if we're in development mode
+        const isDevMode = window.location.protocol === 'tauri:' ? false : true;
+        const bundleId = 'com.presto.app';
+        
+        console.log(`🔧 Environment: ${isDevMode ? 'Development (tauri dev)' : 'Production (built app)'}`);
+        console.log(`🔧 Bundle ID: ${bundleId}`);
+        
+        if (isDevMode) {
+            console.log('⚠️  IMPORTANT: You\'re running in development mode (tauri dev)');
+            console.log('⚠️  On macOS, Tauri notifications often don\'t work in dev mode due to:');
+            console.log('   1. Tauri uses Terminal.app for dev mode, which may not have notification permissions');
+            console.log('   2. Bundle identifier is handled differently in dev vs production');
+            console.log('   3. macOS requires proper app bundle registration for notifications');
+            console.log('');
+            console.log('🔧 To test notifications properly:');
+            console.log('   1. Run: npm run tauri build');
+            console.log('   2. Install the built app from src-tauri/target/release/bundle/');
+            console.log('   3. Test notifications in the installed production app');
+            console.log('');
+            console.log('🔧 For dev mode, check Terminal.app permissions:');
+            console.log('   - System Preferences > Notifications & Focus > Terminal');
+            console.log('   - Make sure "Allow Notifications" is enabled');
+            console.log('');
+        }
+        
+        // Show in-app notification first
+        NotificationUtils.showNotificationPing('Testing notification system... 🧪', 'info', this.currentMode);
+        
+        // Test desktop notification
+        const originalSetting = this.enableDesktopNotifications;
+        this.enableDesktopNotifications = true; // Temporarily enable for testing
+        
+        try {
+            await this.showNotification();
+            console.log('✅ Test notification API call completed - check console logs above for detailed debug info');
+            console.log('🔍 Look for messages starting with 🔔 for notification flow details');
+            
+            if (isDevMode) {
+                console.log('');
+                console.log('⚠️  If you see "✅ Tauri notification sent successfully" but no notification appeared:');
+                console.log('   - This is NORMAL in development mode on macOS');
+                console.log('   - Test with a production build to verify notifications work');
+                console.log('');
+                console.log('🔄 Trying Web Notification API as fallback...');
+                await this.testWebNotificationFallback();
+            }
+        } catch (error) {
+            console.error('❌ Test notification failed:', error);
+            console.log('💡 Troubleshooting steps:');
+            if (isDevMode) {
+                console.log('   1. This is likely due to dev mode limitations on macOS');
+                console.log('   2. Check Terminal.app notification permissions in System Preferences');
+                console.log('   3. Test with a production build: npm run tauri build');
+            } else {
+                console.log('   1. Check if notifications are enabled in System Preferences > Notifications');
+                console.log('   2. Look for "presto" or "com.presto.app" in the notifications list');
+                console.log('   3. Ensure "Allow Notifications" is enabled for the app');
+            }
+        } finally {
+            // Restore original setting
+            this.enableDesktopNotifications = originalSetting;
+        }
+    }
+
+    // Test Web Notification API fallback
+    async testWebNotificationFallback() {
+        try {
+            if ('Notification' in window) {
+                console.log('🌐 Web Notification API available');
+                console.log(`🌐 Current permission: ${Notification.permission}`);
+                
+                if (Notification.permission === 'default') {
+                    console.log('🌐 Requesting Web notification permission...');
+                    const permission = await Notification.requestPermission();
+                    console.log(`🌐 Permission result: ${permission}`);
+                }
+                
+                if (Notification.permission === 'granted') {
+                    console.log('🌐 Sending Web notification...');
+                    const notification = new Notification('Presto - Test Web Notification', {
+                        body: 'This is a fallback Web notification test',
+                        icon: '/assets/tauri.svg'
+                    });
+                    
+                    notification.onshow = () => console.log('✅ Web notification displayed');
+                    notification.onerror = (error) => console.error('❌ Web notification error:', error);
+                    
+                    // Auto-close after 5 seconds
+                    setTimeout(() => {
+                        notification.close();
+                        console.log('🌐 Web notification closed automatically');
+                    }, 5000);
+                } else {
+                    console.log('❌ Web notification permission denied');
+                }
+            } else {
+                console.log('❌ Web Notification API not available');
+            }
+        } catch (error) {
+            console.error('❌ Web notification test failed:', error);
         }
     }
 

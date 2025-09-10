@@ -189,3 +189,72 @@
     box-shadow: 0 3px 14px rgba(0, 0, 0, 0.09);
   }
 }
+
+/* Notification status indicator styles */
+.notification-status {
+  border-left: 3px solid #ccc;
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+}
+
+.notification-status.status-ready {
+  border-left-color: #4CAF50;
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #2E7D32;
+}
+
+.notification-status.status-warning {
+  border-left-color: #FF9800;
+  background-color: rgba(255, 152, 0, 0.1);
+  color: #E65100;
+}
+
+.notification-status.status-error {
+  border-left-color: #F44336;
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #C62828;
+}
+
+.notification-status.status-disabled {
+  border-left-color: #9E9E9E;
+  background-color: rgba(158, 158, 158, 0.1);
+  color: #616161;
+}
+
+#test-notifications-btn {
+  background: var(--button-primary);
+  color: var(--button-text);
+  border: 1px solid var(--border);
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+#test-notifications-btn:hover {
+  background: var(--button-primary-hover);
+  transform: translateY(-1px);
+}
+
+#test-notifications-btn:active {
+  transform: translateY(0);
+}
+
+/* Dark theme adjustments for notification status */
+[data-theme="dark"] .notification-status.status-ready {
+  background-color: rgba(76, 175, 80, 0.15);
+  color: #81C784;
+}
+
+[data-theme="dark"] .notification-status.status-warning {
+  background-color: rgba(255, 152, 0, 0.15);
+  color: #FFB74D;
+}
+
+[data-theme="dark"] .notification-status.status-error {
+  background-color: rgba(244, 67, 54, 0.15);
+  color: #E57373;
+}
+
+[data-theme="dark"] .notification-status.status-disabled {
+  background-color: rgba(158, 158, 158, 0.15);
+  color: #BDBDBD;
+}
