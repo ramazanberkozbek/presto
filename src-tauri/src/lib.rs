@@ -968,19 +968,19 @@ pub fn run() {
                 });
 
                 let show_item =
-                    MenuItem::with_id(app, "show", "Mostra Presto", true, None::<&str>)?;
+                    MenuItem::with_id(app, "show", "Show Presto", true, None::<&str>)?;
                 let start_session_item = MenuItem::with_id(
                     app,
                     "start_session",
-                    "Inizia sessione",
+                    "Start Session",
                     false,
                     None::<&str>,
                 )?;
-                let pause_item = MenuItem::with_id(app, "pause", "Pausa", false, None::<&str>)?;
+                let pause_item = MenuItem::with_id(app, "pause", "Pause", false, None::<&str>)?;
                 let skip_item =
-                    MenuItem::with_id(app, "skip", "Salta sessione", false, None::<&str>)?;
-                let cancel_item = MenuItem::with_id(app, "cancel", "Annulla", false, None::<&str>)?;
-                let quit_item = MenuItem::with_id(app, "quit", "Esci", true, None::<&str>)?;
+                    MenuItem::with_id(app, "skip", "Skip Session", false, None::<&str>)?;
+                let cancel_item = MenuItem::with_id(app, "cancel", "Cancel", false, None::<&str>)?;
+                let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
                 let menu = Menu::with_items(
                     app,
                     &[
@@ -1285,43 +1285,43 @@ async fn update_tray_menu(
     let tray = app.tray_by_id("main");
 
     if let Some(tray) = tray {
-        let show_item = MenuItem::with_id(&app, "show", "Mostra Presto", true, None::<&str>)
+        let show_item = MenuItem::with_id(&app, "show", "Show Presto", true, None::<&str>)
             .map_err(|e| format!("Failed to create show item: {}", e))?;
 
-        // Inizia sessione: abilitato solo se non è in esecuzione
+        // Start Session: enabled only if not running
         let start_session_item = MenuItem::with_id(
             &app,
             "start_session",
-            "Inizia sessione",
+            "Start Session",
             !is_running,
             None::<&str>,
         )
         .map_err(|e| format!("Failed to create start session item: {}", e))?;
 
-        // Pausa: abilitata solo se è in esecuzione e non in pausa
+        // Pause: enabled only if running and not paused
         let pause_item = MenuItem::with_id(
             &app,
             "pause",
-            "Pausa",
+            "Pause",
             is_running && !is_paused,
             None::<&str>,
         )
         .map_err(|e| format!("Failed to create pause item: {}", e))?;
 
-        // Skip: abilitato solo se è in esecuzione
-        let skip_item = MenuItem::with_id(&app, "skip", "Salta sessione", is_running, None::<&str>)
+        // Skip: enabled only if running
+        let skip_item = MenuItem::with_id(&app, "skip", "Skip Session", is_running, None::<&str>)
             .map_err(|e| format!("Failed to create skip item: {}", e))?;
 
-        // Annulla: abilitato se è in modalità focus, disabilitato in break/longBreak (undo)
+        // Cancel: enabled if in focus mode, disabled in break/longBreak (undo)
         let cancel_text = if current_mode == "focus" {
-            "Annulla"
+            "Cancel"
         } else {
-            "Annulla ultima"
+            "Cancel Last"
         };
         let cancel_item = MenuItem::with_id(&app, "cancel", cancel_text, true, None::<&str>)
             .map_err(|e| format!("Failed to create cancel item: {}", e))?;
 
-        let quit_item = MenuItem::with_id(&app, "quit", "Esci", true, None::<&str>)
+        let quit_item = MenuItem::with_id(&app, "quit", "Quit", true, None::<&str>)
             .map_err(|e| format!("Failed to create quit item: {}", e))?;
 
         let new_menu = Menu::with_items(
