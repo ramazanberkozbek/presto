@@ -1268,17 +1268,23 @@ async function updateUserAvatarUI() {
     if (signInBtn) signInBtn.style.display = 'none';
 
   } else {
-    // Guest mode or not authenticated - show user icon
+    // Guest mode - show nice avatar with initial
     avatarImg.style.display = 'none';
     avatarFallback.style.display = 'flex';
-    if (guestIcon) guestIcon.style.display = 'block';
+    
+    // Show "P" initial for Presto instead of guest icon
+    if (guestIcon) guestIcon.style.display = 'none';
+    if (userInitial) {
+      userInitial.textContent = 'R';
+      userInitial.style.display = 'block';
+    }
 
-    if (userName) userName.textContent = 'Guest';
-    if (userStatus) userStatus.textContent = 'Sync your data and access your sessions across devices.';
+    if (userName) userName.textContent = 'Ramazan Berk Özbek';
+    if (userStatus) userStatus.textContent = 'All data stored locally';
 
     // Hide sign out, show sign in
     if (signOutBtn) signOutBtn.style.display = 'none';
-    if (signInBtn) signInBtn.style.display = 'flex';
+    if (signInBtn) signInBtn.style.display = 'none'; // Hide sign in too - no need!
   }
 }
 
@@ -1370,25 +1376,10 @@ function setupUserAvatarEventListeners() {
   if (avatarBtn && dropdown) {
     avatarBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      console.log('🖱️ Avatar clicked! Auth state:', {
-        isAuthenticated: window.authManager?.isAuthenticated(),
-        isGuest: window.authManager?.isGuestMode(),
-        user: window.authManager?.getCurrentUser()?.email
-      });
+      console.log('🖱️ Avatar clicked!');
 
-      // If user is not authenticated and not in guest mode, show auth screen
-      if (!window.authManager || (!window.authManager.isAuthenticated() && !window.authManager.isGuestMode())) {
-        localStorage.removeItem('presto-auth-seen');
-        showAuthScreen();
-        return;
-      }
-
-      // For both authenticated users and guests, show the dropdown
-      // Guests will see "Sign In" option, authenticated users will see "Sign Out"
-
-      // Toggle dropdown
+      // Simply toggle dropdown - no auth screen
       const isVisible = dropdown.style.display === 'block';
-      console.log('🔽 Toggling dropdown. Currently visible:', isVisible);
 
       if (isVisible) {
         dropdown.style.display = 'none';
@@ -1425,17 +1416,7 @@ function setupUserAvatarEventListeners() {
     });
   }
 
-  // Sign in handler
-  if (signInBtn) {
-    signInBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      dropdown.style.display = 'none';
-
-      // Clear the first run flag temporarily to show auth screen
-      localStorage.removeItem('presto-auth-seen');
-      showAuthScreen();
-    });
-  }
+  // Sign in handler removed - we don't show sign in button anymore
 
   // Listen for auth state changes
   if (window.authManager) {
