@@ -6,7 +6,7 @@ export class NotificationUtils {
     static maxSimultaneousNotifications = 3;
     static lastNotificationTimes = new Map(); // Track last notification times to prevent spam
 
-    static showNotificationPing(message, type = null, timerState = null) {
+    static showNotificationPing(message, type = null, timerState = null, icon = null) {
         // Prevent spam notifications - check if the same message was shown recently
         const now = Date.now();
         const lastTime = this.lastNotificationTimes.get(message);
@@ -85,8 +85,18 @@ export class NotificationUtils {
         notification.setAttribute('role', 'alert');
         notification.setAttribute('aria-live', 'polite');
 
-        // Contenuto semplice e pulito
-        notification.textContent = message;
+        // Add icon if provided
+        if (icon) {
+            const iconElement = document.createElement('i');
+            iconElement.className = `ph ph-${icon}`;
+            iconElement.style.cssText = 'margin-right: 8px; font-size: 18px;';
+            notification.appendChild(iconElement);
+        }
+
+        // Add message text
+        const textSpan = document.createElement('span');
+        textSpan.textContent = message;
+        notification.appendChild(textSpan);
 
         // Add unique ID for tracking
         const notificationId = `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;

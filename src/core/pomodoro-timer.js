@@ -528,7 +528,7 @@ export class PomodoroTimer {
         this.stopSmartPauseCountdown();
 
         // Show auto-pause notification
-        NotificationUtils.showNotificationPing('Timer auto-paused due to inactivity 💤', 'warning', this.currentMode);
+        NotificationUtils.showNotificationPing('Timer auto-paused due to inactivity', 'warning', this.currentMode, 'moon');
 
         // Update UI to show auto-pause state
         this.updateDisplay();
@@ -573,7 +573,7 @@ export class PomodoroTimer {
         this._justResumedFromAutoPause = false;
 
         // Show resume notification after UI update
-        NotificationUtils.showNotificationPing('Timer resumed - you\'re back! 🎯', 'info', this.currentMode);
+        NotificationUtils.showNotificationPing('Timer resumed - you\'re back!', 'info', this.currentMode, 'arrow-clockwise');
 
         // Restart smart pause monitoring by setting new timeout
         if (this.smartPauseEnabled && this.currentMode === 'focus') {
@@ -684,7 +684,7 @@ export class PomodoroTimer {
             if (this.enableSoundNotifications) {
                 NotificationUtils.playNotificationSound();
             }
-            NotificationUtils.showNotificationPing('Timer started! 🍅', 'info', this.currentMode);
+            NotificationUtils.showNotificationPing('Timer started!', 'info', this.currentMode, 'play-circle');
 
             // Start smart pause monitoring if enabled
             if (this.smartPauseEnabled && this.currentMode === 'focus') {
@@ -732,12 +732,12 @@ export class PomodoroTimer {
             // Warning when less than 2 minutes remaining
             if (this.timeRemaining <= 120 && this.timeRemaining > 0 && oldTimeRemaining > 120 && this.currentMode === 'focus') {
                 this.addWarningClass();
-                NotificationUtils.showNotificationPing('2 minutes remaining! 🔥', 'warning', this.currentMode);
+                NotificationUtils.showNotificationPing('2 minutes remaining!', 'warning', this.currentMode, 'clock');
             }
 
             // Final warning at 30 seconds
             if (this.timeRemaining <= 30 && this.timeRemaining > 0 && oldTimeRemaining > 30) {
-                NotificationUtils.showNotificationPing('30 seconds left! ⏰', 'warning', this.currentMode);
+                NotificationUtils.showNotificationPing('30 seconds left!', 'warning', this.currentMode, 'timer');
             }
 
             // Check if timer should complete
@@ -773,8 +773,10 @@ export class PomodoroTimer {
             // Show notification
             const maxTimeInMinutes = Math.floor(this.maxSessionTime / (60 * 1000));
             NotificationUtils.showNotificationPing(
-                `Session automatically paused after ${maxTimeInMinutes} minutes. Take a break! 🛑`,
-                'warning'
+                `Session automatically paused after ${maxTimeInMinutes} minutes. Take a break!`,
+                'warning',
+                null,
+                'stop-circle'
             );
 
             // Show desktop notification if enabled
@@ -810,7 +812,7 @@ export class PomodoroTimer {
 
             this.updateButtons();
             this.updateDisplay();
-            NotificationUtils.showNotificationPing('Timer paused ⏸️');
+            NotificationUtils.showNotificationPing('Timer paused', null, null, 'pause-circle');
 
             // Update tray menu
             this.updateTrayMenu();
@@ -849,7 +851,7 @@ export class PomodoroTimer {
         this.timeRemaining = this.durations[this.currentMode];
         this.updateDisplay();
         this.updateButtons();
-        NotificationUtils.showNotificationPing('Session deleted ❌', 'warning');
+        NotificationUtils.showNotificationPing('Session deleted', 'warning', null, 'x-circle');
 
         // Update tray menu
         this.updateTrayMenu();
@@ -942,13 +944,17 @@ export class PomodoroTimer {
         // Show user notification about the reset
         if (previousPomodoros > 0) {
             NotificationUtils.showNotificationPing(
-                `New day! Yesterday's ${previousPomodoros} sessions have been saved. Fresh start! 🌅`,
-                'info'
+                `New day! Yesterday's ${previousPomodoros} sessions have been saved. Fresh start!`,
+                'info',
+                null,
+                'sun-horizon'
             );
         } else {
             NotificationUtils.showNotificationPing(
-                'Good morning! Ready for a productive new day? 🌅',
-                'info'
+                'Good morning! Ready for a productive new day?',
+                'info',
+                null,
+                'sun'
             );
         }
 
@@ -1048,11 +1054,21 @@ export class PomodoroTimer {
             this.sessionStartTime = null;
 
             const messages = {
-                focus: 'Focus session skipped. Time for a break! 😌',
-                break: 'Break skipped. Ready to focus? 🍅',
-                longBreak: 'Long break skipped. Time to get back to work! 🚀'
+                focus: 'Focus session skipped. Time for a break!',
+                break: 'Break skipped. Ready to focus?',
+                longBreak: 'Long break skipped. Time to get back to work!'
             };
-            NotificationUtils.showNotificationPing(messages[this.currentMode] || 'Session skipped 📤', 'info', this.currentMode);
+            const icons = {
+                focus: 'coffee',
+                break: 'brain',
+                longBreak: 'rocket'
+            };
+            NotificationUtils.showNotificationPing(
+                messages[this.currentMode] || 'Session skipped', 
+                'info', 
+                this.currentMode,
+                icons[this.currentMode] || 'arrow-right'
+            );
             if (this.autoStartTimer) {
                 setTimeout(() => {
                     this.startTimer();
@@ -1129,11 +1145,21 @@ export class PomodoroTimer {
         this.sessionStartTime = null;
 
         const messages = {
-            focus: 'Focus session skipped. Time for a break! 😌',
-            break: 'Break skipped. Ready to focus? 🍅',
-            longBreak: 'Long break skipped. Time to get back to work! 🚀'
+            focus: 'Focus session skipped. Time for a break!',
+            break: 'Break skipped. Ready to focus?',
+            longBreak: 'Long break skipped. Time to get back to work!'
         };
-        NotificationUtils.showNotificationPing(messages[this.currentMode] || 'Session skipped 📤', 'info', this.currentMode);
+        const icons = {
+            focus: 'coffee',
+            break: 'brain',
+            longBreak: 'rocket'
+        };
+        NotificationUtils.showNotificationPing(
+            messages[this.currentMode] || 'Session skipped', 
+            'info', 
+            this.currentMode,
+            icons[this.currentMode] || 'arrow-right'
+        );
         if (this.autoStartTimer) {
             setTimeout(() => {
                 this.startTimer();
@@ -1256,25 +1282,38 @@ export class PomodoroTimer {
 
         // Show completion message
         let completionMessage;
+        let completionIcon;
         if (this.allowContinuousSessions) {
             // Messages for continuous sessions
             const continuousMessages = {
-                focus: 'Pomodoro completed! Continue working or take a break? 🍅',
-                break: 'Break time completed! Continue resting or ready to focus? ☕',
-                longBreak: 'Long break completed! Continue resting or ready to work? 🌙'
+                focus: 'Pomodoro completed! Continue working or take a break?',
+                break: 'Break time completed! Continue resting or ready to focus?',
+                longBreak: 'Long break completed! Continue resting or ready to work?'
+            };
+            const continuousIcons = {
+                focus: 'check-circle',
+                break: 'check-circle',
+                longBreak: 'check-circle'
             };
             completionMessage = continuousMessages[this.currentMode];
+            completionIcon = continuousIcons[this.currentMode];
         } else {
             // Messages for traditional mode
             const traditionalMessages = {
-                focus: this.currentMode === 'longBreak' ? 'Great work! Take a long break 🎉' : 'Pomodoro completed! Take a short break 😌',
-                break: 'Break over! Ready to focus? 🍅',
-                longBreak: 'Long break over! Time to get back to work 🚀'
+                focus: this.currentMode === 'longBreak' ? 'Great work! Take a long break' : 'Pomodoro completed! Take a short break',
+                break: 'Break over! Ready to focus?',
+                longBreak: 'Long break over! Time to get back to work'
+            };
+            const traditionalIcons = {
+                focus: 'party',
+                break: 'brain',
+                longBreak: 'rocket'
             };
             completionMessage = traditionalMessages[this.currentMode] || traditionalMessages.focus;
+            completionIcon = traditionalIcons[this.currentMode] || 'check-circle';
         }
 
-        NotificationUtils.showNotificationPing(completionMessage, 'success', this.currentMode);
+        NotificationUtils.showNotificationPing(completionMessage, 'success', this.currentMode, completionIcon);
 
         // Stop the timer after session completion
         this.isRunning = false;
@@ -1367,13 +1406,19 @@ export class PomodoroTimer {
 
         // Show completion message for continuous sessions
         const continuousMessages = {
-            focus: 'Pomodoro completed! You can continue working or take a break 🍅⏰',
-            break: 'Break time completed! You can continue resting or start focusing ☕⏰',
-            longBreak: 'Long break completed! You can continue resting or start working 🌙⏰'
+            focus: 'Pomodoro completed! You can continue working or take a break',
+            break: 'Break time completed! You can continue resting or start focusing',
+            longBreak: 'Long break completed! You can continue resting or start working'
+        };
+        const continuousIcons = {
+            focus: 'check-circle',
+            break: 'check-circle',
+            longBreak: 'check-circle'
         };
 
         const completionMessage = continuousMessages[this.currentMode];
-        NotificationUtils.showNotificationPing(completionMessage, 'success', this.currentMode);
+        const completionIcon = continuousIcons[this.currentMode];
+        NotificationUtils.showNotificationPing(completionMessage, 'success', this.currentMode, completionIcon);
 
         // Update tray icon to show completion but keep running
         this.updateTrayIcon();
@@ -1660,9 +1705,10 @@ export class PomodoroTimer {
 
         // Show notification
         const message = newState
-            ? 'Smart Pause enabled! Timer will auto-pause during inactivity 🧠'
-            : 'Smart Pause disabled 💡';
-        NotificationUtils.showNotificationPing(message, 'info');
+            ? 'Smart Pause enabled! Timer will auto-pause during inactivity'
+            : 'Smart Pause disabled';
+        const icon = newState ? 'brain' : 'lightbulb';
+        NotificationUtils.showNotificationPing(message, 'info', null, icon);
     }
 
     // Enable/disable auto-start timer
@@ -1690,9 +1736,10 @@ export class PomodoroTimer {
 
         // Show notification
         const message = newState
-            ? 'Auto-start enabled! Sessions will start automatically ⚡'
-            : 'Auto-start disabled 🛑';
-        NotificationUtils.showNotificationPing(message, 'info');
+            ? 'Auto-start enabled! Sessions will start automatically'
+            : 'Auto-start disabled';
+        const icon = newState ? 'lightning' : 'stop-circle';
+        NotificationUtils.showNotificationPing(message, 'info', null, icon);
     }
 
     // Enable/disable continuous sessions
@@ -1724,9 +1771,10 @@ export class PomodoroTimer {
 
         // Show notification
         const message = newState
-            ? 'Continuous Sessions enabled! Sessions will continue beyond timer ♾️'
-            : 'Continuous Sessions disabled ⏹️';
-        NotificationUtils.showNotificationPing(message, 'info');
+            ? 'Continuous Sessions enabled! Sessions will continue beyond timer'
+            : 'Continuous Sessions disabled';
+        const icon = newState ? 'infinity' : 'square';
+        NotificationUtils.showNotificationPing(message, 'info', null, icon);
     }
 
     updateButtons() {
@@ -1802,7 +1850,7 @@ export class PomodoroTimer {
     // Undo the last completed session
     async undoLastSession() {
         if (this.completedPomodoros === 0) {
-            NotificationUtils.showNotificationPing('No sessions to undo! 🤷‍♂️', 'warning');
+            NotificationUtils.showNotificationPing('No sessions to undo!', 'warning', null, 'warning-circle');
             return;
         }
 
@@ -1849,7 +1897,7 @@ export class PomodoroTimer {
         this.updateTrayIcon();
 
         // Show undo notification
-        NotificationUtils.showNotificationPing('Last session undone! Back to focus mode 🔄', 'info', this.currentMode);
+        NotificationUtils.showNotificationPing('Last session undone! Back to focus mode', 'info', this.currentMode, 'arrow-counter-clockwise');
 
         // Update tray menu
         this.updateTrayMenu();
@@ -2020,7 +2068,7 @@ export class PomodoroTimer {
             this.createHistoryModal(history);
         } catch (error) {
             console.error('Failed to load history:', error);
-            NotificationUtils.showNotificationPing('Failed to load history 😞');
+            NotificationUtils.showNotificationPing('Failed to load history', null, null, 'warning-circle');
         }
     }
 
@@ -2337,7 +2385,7 @@ export class PomodoroTimer {
                     
                     if (!permissionGranted) {
                         console.warn('❌ Tauri notification permission was denied');
-                        NotificationUtils.showNotificationPing('Desktop notifications are disabled. Enable them in system settings to get timer alerts! 🔔', 'warning', this.currentMode);
+                        NotificationUtils.showNotificationPing('Desktop notifications are disabled. Enable them in system settings to get timer alerts!', 'warning', this.currentMode, 'bell-slash');
                         return;
                     }
                 }
@@ -2386,11 +2434,11 @@ export class PomodoroTimer {
                         console.log('✅ Web notification sent after permission granted');
                     } else {
                         console.warn('❌ Web notification permission was denied');
-                        NotificationUtils.showNotificationPing('Desktop notifications are disabled. Enable them in your browser to get timer alerts! 🔔', 'warning', this.currentMode);
+                        NotificationUtils.showNotificationPing('Desktop notifications are disabled. Enable them in your browser to get timer alerts!', 'warning', this.currentMode, 'bell-slash');
                     }
                 } else {
                     console.warn('❌ Web notification permission was previously denied');
-                    NotificationUtils.showNotificationPing('Desktop notifications are disabled. Enable them in your browser settings to get timer alerts! 🔔', 'warning', this.currentMode);
+                    NotificationUtils.showNotificationPing('Desktop notifications are disabled. Enable them in your browser settings to get timer alerts!', 'warning', this.currentMode, 'bell-slash');
                 }
             } else {
                 console.warn('❌ Web Notification API not supported');
@@ -2441,7 +2489,7 @@ export class PomodoroTimer {
         }
         
         // Show in-app notification first
-        NotificationUtils.showNotificationPing('Testing notification system... 🧪', 'info', this.currentMode);
+        NotificationUtils.showNotificationPing('Testing notification system...', 'info', this.currentMode, 'test-tube');
         
         // Test desktop notification
         const originalSetting = this.enableDesktopNotifications;

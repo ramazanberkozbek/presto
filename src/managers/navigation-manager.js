@@ -43,16 +43,30 @@ export class NavigationManager {
     }
 
     async handleNavClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
         const view = e.currentTarget.dataset.view;
-        await this.switchView(view);
+        if (view) {
+            await this.switchView(view);
+        }
     }
 
     async switchView(view) {
-        // Update active button
+        if (!view) {
+            console.warn('No view specified for switchView');
+            return;
+        }
+
+        // Update active button - ensure all are deactivated first
         document.querySelectorAll('.sidebar-icon, .sidebar-icon-large').forEach(btn => {
             btn.classList.remove('active');
         });
-        document.querySelector(`[data-view="${view}"]`).classList.add('active');
+        
+        // Find and activate the target button
+        const targetButton = document.querySelector(`[data-view="${view}"]`);
+        if (targetButton) {
+            targetButton.classList.add('active');
+        }
 
         // Hide all views
         document.querySelectorAll('.view-container').forEach(container => {
@@ -60,7 +74,13 @@ export class NavigationManager {
         });
 
         // Show selected view
-        document.getElementById(`${view}-view`).classList.remove('hidden');
+        const targetView = document.getElementById(`${view}-view`);
+        if (!targetView) {
+            console.error(`View element not found: ${view}-view`);
+            return;
+        }
+        
+        targetView.classList.remove('hidden');
         this.currentView = view;
 
         // Handle background based on view

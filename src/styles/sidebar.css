@@ -65,6 +65,9 @@
   justify-content: center;
   transition: all 0.3s ease;
   position: relative;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 .sidebar-icon-large {
@@ -80,16 +83,21 @@
   justify-content: center;
   transition: all 0.3s ease;
   position: relative;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 .sidebar-icon svg {
   width: 24px;
   height: 24px;
+  pointer-events: none;
 }
 
 .sidebar-icon-large svg {
   width: 26px;
   height: 26px;
+  pointer-events: none;
 }
 
 /* Sidebar icon theme states */
@@ -98,16 +106,15 @@
 }
 
 .sidebar.focus .sidebar-icon:hover {
-  background: var(--focus-secondary-btn);
   color: var(--focus-timer-color);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--focus-timer-color) 20%, transparent);
+  transform: scale(1.1);
+  opacity: 0.8;
 }
 
 .sidebar.focus .sidebar-icon.active {
-  background: var(--focus-primary-btn);
-  color: #000;
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--focus-timer-color) 30%, transparent);
+  color: var(--focus-timer-color);
+  transform: scale(1.15);
+  opacity: 1;
 }
 
 .sidebar.break .sidebar-icon {
@@ -115,16 +122,15 @@
 }
 
 .sidebar.break .sidebar-icon:hover {
-  background: var(--break-secondary-btn);
   color: var(--break-timer-color);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--break-timer-color) 20%, transparent);
+  transform: scale(1.1);
+  opacity: 0.8;
 }
 
 .sidebar.break .sidebar-icon.active {
-  background: var(--break-primary-btn);
-  color: #000;
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--break-timer-color) 30%, transparent);
+  color: var(--break-timer-color);
+  transform: scale(1.15);
+  opacity: 1;
 }
 
 .sidebar.longBreak .sidebar-icon {
@@ -132,16 +138,15 @@
 }
 
 .sidebar.longBreak .sidebar-icon:hover {
-  background: var(--long-break-secondary-btn);
   color: var(--long-break-timer-color);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--long-break-timer-color) 20%, transparent);
+  transform: scale(1.1);
+  opacity: 0.8;
 }
 
 .sidebar.longBreak .sidebar-icon.active {
-  background: var(--long-break-primary-btn);
-  color: #000;
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--long-break-timer-color) 30%, transparent);
+  color: var(--long-break-timer-color);
+  transform: scale(1.15);
+  opacity: 1;
 }
 
 /* Large settings icon theme states */
@@ -150,16 +155,15 @@
 }
 
 .sidebar.focus .sidebar-icon-large:hover {
-  background: var(--focus-secondary-btn);
   color: var(--focus-timer-color);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--focus-timer-color) 20%, transparent);
+  transform: scale(1.1);
+  opacity: 0.8;
 }
 
 .sidebar.focus .sidebar-icon-large.active {
-  background: var(--focus-primary-btn);
   color: var(--focus-timer-color);
-  box-shadow: 0 6px 20px color-mix(in srgb, var(--focus-timer-color) 30%, transparent);
+  transform: scale(1.15);
+  opacity: 1;
 }
 
 .sidebar.break .sidebar-icon-large {
@@ -167,16 +171,15 @@
 }
 
 .sidebar.break .sidebar-icon-large:hover {
-  background: var(--break-secondary-btn);
   color: var(--break-timer-color);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--break-timer-color) 20%, transparent);
+  transform: scale(1.1);
+  opacity: 0.8;
 }
 
 .sidebar.break .sidebar-icon-large.active {
-  background: var(--break-primary-btn);
   color: var(--break-timer-color);
-  box-shadow: 0 6px 20px color-mix(in srgb, var(--break-timer-color) 30%, transparent);
+  transform: scale(1.15);
+  opacity: 1;
 }
 
 .sidebar.longBreak .sidebar-icon-large {
@@ -184,16 +187,33 @@
 }
 
 .sidebar.longBreak .sidebar-icon-large:hover {
-  background: var(--long-break-secondary-btn);
   color: var(--long-break-timer-color);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--long-break-timer-color) 20%, transparent);
+  transform: scale(1.1);
+  opacity: 0.8;
 }
 
 .sidebar.longBreak .sidebar-icon-large.active {
-  background: var(--long-break-primary-btn);
   color: var(--long-break-timer-color);
-  box-shadow: 0 6px 20px color-mix(in srgb, var(--long-break-timer-color) 30%, transparent);
+  transform: scale(1.15);
+  opacity: 1;
+}
+
+/* Prevent stuck active/pressed state on all sidebar buttons */
+.sidebar-icon:active:not(.active),
+.sidebar-icon-large:active:not(.active) {
+  transform: scale(0.95);
+  opacity: 0.6;
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
+.sidebar-icon:focus,
+.sidebar-icon-large:focus {
+  outline: none;
+}
+
+.sidebar-icon:focus:not(.active),
+.sidebar-icon-large:focus:not(.active) {
+  opacity: 0.8;
 }
 
 /* User Avatar Styles */
