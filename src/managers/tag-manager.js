@@ -171,7 +171,7 @@ class TagManager {
 
             tagItem.innerHTML = `
                 <div class="tag-item-icon">
-                    ${tag.icon.startsWith('ri-') ? `<i class="${tag.icon}"></i>` : tag.icon}
+                    ${tag.icon.startsWith('ri-') || tag.icon.startsWith('ph-') ? `<i class="${tag.icon.startsWith('ph-') ? 'ph ' + tag.icon : tag.icon}"></i>` : tag.icon}
                 </div>
                 <div class="tag-item-name">${tag.name}</div>
                 <div class="tag-item-delete ri-delete-bin-line" data-tag-id="${tag.id}"></div>
@@ -327,8 +327,12 @@ class TagManager {
             iconDisplay.className = this.selectedIcon;
             iconDisplay.textContent = '';
             iconDisplay.style.fontFamily = 'remixicon';
+        } else if (this.selectedIcon.startsWith('ph-')) {
+            iconDisplay.className = 'ph ' + this.selectedIcon;
+            iconDisplay.textContent = '';
+            iconDisplay.style.fontFamily = 'Phosphor';
         } else {
-            // For emoji
+            // For emoji or other text
             iconDisplay.className = '';
             iconDisplay.textContent = this.selectedIcon;
             iconDisplay.style.fontFamily = 'inherit';
@@ -402,8 +406,12 @@ class TagManager {
                 this.statusIcon.className = tag.icon;
                 this.statusIcon.style.fontFamily = 'remixicon';
                 this.statusIcon.textContent = '';
+            } else if (tag.icon.startsWith('ph-')) {
+                this.statusIcon.className = 'ph ' + tag.icon;
+                this.statusIcon.style.fontFamily = 'Phosphor';
+                this.statusIcon.textContent = '';
             } else {
-                // For emoji, we need to handle differently
+                // For emoji or other text, we need to handle differently
                 this.statusIcon.style.fontFamily = 'inherit';
                 this.statusIcon.textContent = tag.icon;
                 this.statusIcon.className = '';

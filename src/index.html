@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:wght@400;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet" />
+  <link href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css" rel="stylesheet" />
   <link rel="stylesheet" href="styles/main.css" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Presto</title>
@@ -124,11 +125,12 @@
                     <div class="icon-option" data-icon="ri-brain-line"><i class="ri-brain-line"></i></div>
                     <div class="icon-option" data-icon="ri-focus-3-line"><i class="ri-focus-3-line"></i></div>
                     <div class="icon-option" data-icon="ri-lightbulb-line"><i class="ri-lightbulb-line"></i></div>
-                    <div class="emoji-option" data-icon="🧠">🧠</div>
-                    <div class="emoji-option" data-icon="💪">💪</div>
-                    <div class="emoji-option" data-icon="🎯">🎯</div>
-                    <div class="emoji-option" data-icon="⚡">⚡</div>
-                    <div class="emoji-option" data-icon="🔥">🔥</div>
+                    <div class="icon-option" data-icon="ph-brain"><i class="ph ph-brain"></i></div>
+                    <div class="icon-option" data-icon="ph-github-logo"><i class="ph ph-github-logo"></i></div>
+                    <div class="icon-option" data-icon="ph-apple-logo"><i class="ph ph-apple-logo"></i></div>
+                    <div class="icon-option" data-icon="ph-crown-simple"><i class="ph ph-crown-simple"></i></div>
+                    <div class="icon-option" data-icon="ph-atom"><i class="ph ph-atom"></i></div>
+                    <div class="icon-option" data-icon="ph-student"><i class="ph ph-student"></i></div>
                   </div>
                 </div>
                 <input type="text" placeholder="New tag..." id="new-tag-name">
@@ -838,7 +840,7 @@
             </div>
 
             <div class="settings-section">
-              <h3>🔧 Developer Tools</h3>
+              <h3><i class="ph ph-wrench"></i> Developer Tools</h3>
 
               <div class="setting-item">
                 <label class="checkbox-label">
@@ -852,12 +854,12 @@
             </div>
 
             <div class="settings-section danger-zone">
-              <h3>⚠️ Danger Zone</h3>
+              <h3><i class="ph ph-warning"></i> Danger Zone</h3>
               <p class="settings-description">These actions are irreversible and will permanently delete your data.</p>
 
               <div class="danger-actions">
                 <button class="btn-danger" id="reset-all-data-btn">
-                  🗑️ Reset All Data
+                  <i class="ph ph-trash"></i> Reset All Data
                 </button>
                 <p class="danger-description">
                   This will permanently delete all your Pomodoro sessions, tasks, statistics, and reset all settings to
@@ -978,7 +980,7 @@
           <!-- Settings Actions -->
           <div class="settings-actions setting-item">
             <div class="auto-save-info">
-              <span class="auto-save-text">✓ Settings are saved automatically</span>
+              <span class="auto-save-text"><i class="ph ph-check"></i> Settings are saved automatically</span>
             </div>
             <button class="btn-secondary">Reset to Defaults</button>
           </div>
