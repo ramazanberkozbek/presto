@@ -314,6 +314,29 @@
   margin-bottom: 4px;
 }
 
+.edit-name-btn {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--focus-timer-color);
+  opacity: 0.6;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.edit-name-btn:hover {
+  opacity: 1;
+  background: color-mix(in srgb, var(--focus-timer-color) 10%, transparent);
+}
+
+.edit-name-btn i {
+  font-size: 14px;
+}
+
 .user-status {
   display: block;
   font-size: 12px;

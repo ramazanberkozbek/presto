@@ -1272,14 +1272,17 @@ async function updateUserAvatarUI() {
     avatarImg.style.display = 'none';
     avatarFallback.style.display = 'flex';
     
-    // Show "P" initial for Presto instead of guest icon
+    // Load saved name from localStorage or use default
+    const savedName = localStorage.getItem('presto-user-name') || 'Ramazan Berk Özbek';
+    
+    // Show initial from saved name instead of guest icon
     if (guestIcon) guestIcon.style.display = 'none';
     if (userInitial) {
-      userInitial.textContent = 'R';
+      userInitial.textContent = savedName.charAt(0).toUpperCase();
       userInitial.style.display = 'block';
     }
 
-    if (userName) userName.textContent = 'Ramazan Berk Özbek';
+    if (userName) userName.textContent = savedName;
     if (userStatus) userStatus.textContent = 'All data stored locally';
 
     // Hide sign out, show sign in
@@ -1295,6 +1298,77 @@ function testImageLoad(url) {
     img.onload = () => resolve();
     img.onerror = () => reject(new Error('Image failed to load'));
     img.src = url;
+  });
+}
+
+// Edit user name functionality
+function setupNameEditing() {
+  const editNameBtn = document.getElementById('edit-name-btn');
+  const userName = document.getElementById('user-name');
+  
+  if (!editNameBtn || !userName) return;
+  
+  editNameBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    
+    // Get current name
+    const currentName = userName.textContent;
+    
+    // Create input field
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentName;
+    input.style.cssText = `
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--focus-timer-color);
+      background: color-mix(in srgb, var(--focus-timer-color) 10%, transparent);
+      border: 1px solid var(--focus-timer-color);
+      border-radius: 4px;
+      padding: 4px 8px;
+      width: 100%;
+      box-sizing: border-box;
+      font-family: inherit;
+    `;
+    
+    // Replace name with input
+    userName.style.display = 'none';
+    userName.parentElement.insertBefore(input, userName);
+    input.focus();
+    input.select();
+    
+    // Function to save the name
+    const saveName = () => {
+      const newName = input.value.trim();
+      if (newName) {
+        userName.textContent = newName;
+        localStorage.setItem('presto-user-name', newName);
+        
+        // Update avatar initial
+        const userInitial = document.getElementById('user-initial');
+        if (userInitial) {
+          userInitial.textContent = newName.charAt(0).toUpperCase();
+        }
+        
+        NotificationUtils.showNotificationPing(`Name updated to "${newName}" 👤`, null, 'focus');
+      }
+      
+      input.remove();
+      userName.style.display = 'block';
+    };
+    
+    // Save on Enter
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        saveName();
+      } else if (e.key === 'Escape') {
+        input.remove();
+        userName.style.display = 'block';
+      }
+    });
+    
+    // Save on blur
+    input.addEventListener('blur', saveName);
   });
 }
 
@@ -1432,6 +1506,9 @@ function setupUserAvatarEventListeners() {
       positionDropdown(avatarBtn, dropdown);
     }
   });
+
+  // Setup name editing functionality
+  setupNameEditing();
 
   // Mark listeners as setup
   window.avatarListenersSetup = true;

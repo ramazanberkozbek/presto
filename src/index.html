@@ -47,7 +47,12 @@
         <!-- User dropdown menu -->
         <div class="user-dropdown" id="user-dropdown" style="display: none;">
           <div class="user-dropdown-header" id="user-dropdown-header">
-            <span class="user-name" id="user-name">Guest</span>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+              <span class="user-name" id="user-name">Guest</span>
+              <button class="edit-name-btn" id="edit-name-btn" title="Edit name">
+                <i class="ri-edit-line"></i>
+              </button>
+            </div>
             <span class="user-status" id="user-status">Guest Mode</span>
           </div>
           <div class="user-dropdown-actions">
