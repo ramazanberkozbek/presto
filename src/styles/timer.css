@@ -527,3 +527,49 @@
     transform: scale(1.02);
   }
 }
+/* Dark Mode Specific Styles */
+[data-theme="dark"] .selected-icon-btn i,
+[data-theme="dark"] .selected-icon-btn i.ph {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .tag-item-icon i,
+[data-theme="dark"] .tag-item-icon i.ph {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] #status-icon,
+[data-theme="dark"] #status-icon.ph {
+  color: inherit;
+}
+
+/* Auto theme - follows system preference */
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] .selected-icon-btn i,
+  [data-theme="auto"] .selected-icon-btn i.ph {
+    color: #e2e8f0;
+  }
+
+  [data-theme="auto"] .tag-item-icon i,
+  [data-theme="auto"] .tag-item-icon i.ph {
+    color: #e2e8f0;
+  }
+
+  [data-theme="auto"] #status-icon,
+  [data-theme="auto"] #status-icon.ph {
+    color: inherit;
+  }
+}
+
+/* Dark mode for icon options in dropdown */
+[data-theme="dark"] .icon-option i,
+[data-theme="dark"] .icon-option i.ph {
+  color: #e2e8f0;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] .icon-option i,
+  [data-theme="auto"] .icon-option i.ph {
+    color: #e2e8f0;
+  }
+}
