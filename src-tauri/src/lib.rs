@@ -574,11 +574,12 @@ async fn update_tray_icon(
         *result_guard = (|| -> Result<(), String> {
             if let Some(tray) = app_clone.tray_by_id("main") {
                 // Use the provided mode_icon or fallback to default icons
+                // Using simple text-based icons for better cross-platform support
                 let icon = mode_icon.unwrap_or_else(|| match session_mode.as_str() {
-                    "focus" => "🧠".to_string(),
-                    "break" => "☕".to_string(),
-                    "longBreak" => "🌙".to_string(),
-                    _ => "⏱️".to_string(),
+                    "focus" => "◉".to_string(),        // Focus indicator (filled circle)
+                    "break" => "☼".to_string(),        // Break indicator (sun - daytime rest)
+                    "longBreak" => "☾".to_string(),    // Long break indicator (moon - night rest)
+                    _ => "∞".to_string(),              // Timer fallback (infinity)
                 });
 
                 let status = if is_running { "Running" } else { "Paused" };

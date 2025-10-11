@@ -2536,21 +2536,21 @@ export class PomodoroTimer {
             let displayText = '';
             let modeIcon;
 
-            // Define icons for different modes
+            // Define icons for different modes (text-based for better cross-platform support)
             const modeIcons = {
-                focus: '🧠',
-                break: '☕',
-                longBreak: '🌙'
+                focus: '◉',      // Focus indicator (filled circle)
+                break: '☼',      // Break indicator (sun - daytime rest)
+                longBreak: '☾'   // Long break indicator (moon - night rest)
             };
 
             // Show pause icon if timer is paused or auto-paused
             if (this.isPaused || this.isAutoPaused) {
-                modeIcon = '⏸️';
+                modeIcon = '⏸';
             } else if (this.timeRemaining < 0 && this.allowContinuousSessions) {
                 // Show overtime indicator in tray
-                modeIcon = '⏰';
+                modeIcon = '∞';  // Infinity - time continues
             } else {
-                modeIcon = modeIcons[this.currentMode] || '🧠';
+                modeIcon = modeIcons[this.currentMode] || '◉';
             }
 
             // Set display text based on status bar display mode
