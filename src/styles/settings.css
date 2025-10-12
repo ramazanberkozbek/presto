@@ -80,7 +80,6 @@
 .setting-item input[type="number"]:focus {
   outline: none;
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px var(--input-focus-shadow);
 }
 
 /* Setting select dropdowns */
@@ -101,7 +100,6 @@
 .setting-select:focus {
   outline: none;
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px var(--input-focus-shadow);
 }
 
 .setting-item select:hover,
@@ -165,7 +163,6 @@
 .shortcut-input:focus {
   outline: none;
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px var(--input-focus-shadow);
 }
 
 .shortcut-input.recording {
@@ -233,7 +230,6 @@
 
 .setting-item input[type="range"]::-webkit-slider-thumb:hover {
   transform: scale(1.1);
-  box-shadow: 0 2px 8px var(--input-focus-shadow);
 }
 
 .setting-item input[type="range"]::-moz-range-thumb {
@@ -351,7 +347,6 @@
 .btn-danger:hover {
   background: var(--focus-timer-color);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px var(--focus-bg-alpha);
 }
 
 .danger-description {
@@ -371,7 +366,7 @@
   padding: 1.5rem 2rem;
   background: var(--card-bg);
   border-radius: 16px;
-  box-shadow: 0 2px 12px var(--shared-border);
+  border: 1px solid var(--shared-border);
 }
 
 
@@ -700,7 +695,6 @@
     border-right: none;
     border-bottom: 1px solid var(--shared-border);
     padding: 1rem 0;
-    box-shadow: 0 2px 10px var(--shared-border);
   }
 
   .settings-sidebar h2 {
@@ -1027,13 +1021,11 @@
 .timer-theme-option:hover {
   border-color: var(--setting-item-hover-border);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px var(--shared-border);
 }
 
 .timer-theme-option.active {
   border-color: var(--accent-color);
   background: var(--input-focus-shadow);
-  box-shadow: 0 4px 12px var(--input-focus-shadow);
 }
 
 .timer-theme-option.active::before {

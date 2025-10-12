@@ -17,10 +17,13 @@
   -webkit-text-size-adjust: 100%;
 
   /* Base Application Colors (non-timer specific) */
-  --body-bg: #f6f6f6;
   --accent-color: #2c3e50;
   --text-light: #7f8c8d;
   --warning-color: #e67e22;
+  
+  /* Border colors */
+  --shared-border: #2c3e50;
+  --input-border: #2c3e50;
 
   /* Smart indicator colors */
   --smart-indicator-active: #3b82f6;
@@ -35,10 +38,13 @@
   background-color: #1b1b1b;
 
   /* Base Application Colors - dark versions */
-  --body-bg: #1b1b1b;
   --accent-color: #f8fafc;
   --text-light: #94a3b8;
   --warning-color: #f59e0b;
+  
+  /* Border colors for dark theme */
+  --shared-border: #374151;
+  --input-border: #374151;
 
   /* Smart indicator colors for dark theme */
   --smart-indicator-active: #60a5fa;
@@ -54,10 +60,13 @@
     background-color: #0f172a;
 
     /* Base Application Colors - dark versions for auto mode */
-    --body-bg: #0f172a;
     --accent-color: #f8fafc;
     --text-light: #94a3b8;
     --warning-color: #f59e0b;
+    
+    /* Border colors for auto dark theme */
+    --shared-border: #374151;
+    --input-border: #374151;
 
     /* Smart indicator colors for auto dark theme */
     --smart-indicator-active: #60a5fa;
