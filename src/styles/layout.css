@@ -3,6 +3,11 @@ body {
   transition: background-color 0.3s ease;
   margin: 0;
   padding: 0;
+  overscroll-behavior: none;
+}
+
+html {
+  overscroll-behavior: none;
 }
 
 /* Timer view specific - prevent scrolling */
@@ -56,6 +61,7 @@ body.longBreak {
   margin-left: 80px;
   /* Account for sidebar width */
   box-sizing: border-box;
+  overscroll-behavior: none;
 }
 
 .view-container {
