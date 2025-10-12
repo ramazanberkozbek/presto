@@ -8,7 +8,6 @@
   border-radius: 20px;
   padding: 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 10px 30px var(--shared-border);
 }
 
 .calendar-header {
@@ -130,7 +129,6 @@
   border-radius: 20px;
   padding: 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 10px 30px var(--shared-border);
 }
 
 .day-stats {
@@ -166,7 +164,6 @@
   background: var(--card-bg);
   border-radius: 20px;
   padding: 2rem;
-  box-shadow: 0 10px 30px var(--shared-border);
 }
 
 .week-chart {
@@ -189,7 +186,6 @@
 
 .week-bar:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px var(--focus-bg-alpha);
 }
 
 .week-bar-label {
@@ -222,7 +218,6 @@
   padding: 0.75rem 1rem;
   background: var(--card-bg);
   border-radius: 12px;
-  box-shadow: 0 2px 8px var(--shared-border);
 }
 
 .week-display {
@@ -261,7 +256,6 @@
   background: var(--card-bg);
   border-radius: 15px;
   padding: 1.5rem;
-  box-shadow: 0 4px 20px var(--shared-border);
 }
 
 .focus-summary-card h3 {
@@ -336,7 +330,6 @@
   background: var(--card-bg);
   border-radius: 15px;
   padding: 1.25rem;
-  box-shadow: 0 4px 20px var(--shared-border);
 }
 
 .weekly-chart-card h3 {
@@ -371,7 +364,6 @@
 
 .week-day-bar:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px var(--focus-bg-alpha);
 }
 
 .week-day-bar-value {
@@ -400,7 +392,6 @@
   background: var(--card-bg);
   border-radius: 15px;
   padding: 1.25rem;
-  box-shadow: 0 4px 20px var(--shared-border);
   flex: 1;
   overflow: visible;
   /* Allow tooltips to show outside the card */
@@ -451,7 +442,6 @@
 
 .hour-bar:hover {
   transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 16px var(--shared-border);
   z-index: 10;
 }
 
@@ -508,7 +498,6 @@
   white-space: nowrap;
   z-index: 10000;
   pointer-events: none;
-  box-shadow: 0 4px 12px var(--shared-border);
   min-width: 120px;
   text-align: center;
   opacity: 0;
@@ -548,7 +537,6 @@
   background: var(--card-bg);
   border-radius: 15px;
   padding: 1.5rem;
-  box-shadow: 0 4px 20px var(--shared-border);
   height: fit-content;
 }
 
@@ -600,13 +588,11 @@
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px var(--shared-border);
 }
 
 .add-session-btn:hover {
   background: var(--focus-timer-color);
   transform: scale(1.1);
-  box-shadow: 0 4px 8px var(--shared-border);
 }
 
 .add-session-btn:active {
@@ -625,7 +611,6 @@
   border-radius: 12px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 4px 12px var(--shared-border);
 }
 
 .sessions-header {
@@ -662,7 +647,6 @@
 .filter-select:focus {
   outline: none;
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px var(--focus-bg-alpha);
 }
 
 .export-btn {
