@@ -219,6 +219,13 @@
   font-weight: 500;
   color: #374151;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tag-legend-name i {
+  font-size: 16px;
 }
 
 .tag-legend-stats {

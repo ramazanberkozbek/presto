@@ -219,8 +219,8 @@ export class TagStatistics {
             const legendItem = document.createElement('div');
             legendItem.className = 'tag-legend-item';
             
-            const iconHtml = stat.tag.icon.startsWith('ri-') 
-                ? `<i class="${stat.tag.icon}"></i>`
+            const iconHtml = stat.tag.icon.startsWith('ri-') || stat.tag.icon.startsWith('ph-')
+                ? `<i class="${stat.tag.icon.startsWith('ph-') ? 'ph ' + stat.tag.icon : stat.tag.icon}"></i>`
                 : stat.tag.icon;
 
             legendItem.innerHTML = `

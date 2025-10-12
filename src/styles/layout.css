@@ -132,7 +132,7 @@ body.longBreak {
   margin: 0;
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--text-color);
+  color: #1f2937;
 }
 
 .modal-close-btn {
@@ -142,12 +142,12 @@ body.longBreak {
   padding: 0.25rem;
   border-radius: 4px;
   transition: all 0.2s ease;
-  color: var(--text-light);
+  color: #6b7280;
 }
 
 .modal-close-btn:hover {
   background: #e9ecef;
-  color: var(--text-color);
+  color: #1f2937;
 }
 
 .modal-close-btn svg {
@@ -168,7 +168,7 @@ body.longBreak {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: var(--text-color);
+  color: #1f2937;
   font-size: 0.9rem;
 }
 
@@ -181,6 +181,7 @@ body.longBreak {
   font-size: 0.9rem;
   transition: all 0.2s ease;
   background: white;
+  color: #1f2937;
   box-sizing: border-box;
 }
 
@@ -303,5 +304,141 @@ body.longBreak {
 
   .modal-actions button {
     width: 100%;
+  }
+}
+
+/* Dark Theme Support for Session Modal */
+[data-theme="dark"] .session-modal {
+  background: #1e293b;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .modal-header {
+  background: #0f172a;
+  border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .modal-header h3 {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .modal-close-btn {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .modal-close-btn:hover {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .session-form {
+  background: #1e293b;
+}
+
+[data-theme="dark"] .form-group label {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group select {
+  background: #334155;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .form-group input:focus,
+[data-theme="dark"] .form-group select:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+[data-theme="dark"] .modal-actions {
+  border-top-color: #334155;
+}
+
+[data-theme="dark"] .btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+[data-theme="dark"] .btn-primary:hover {
+  background: #2563eb;
+}
+
+[data-theme="dark"] .btn-secondary {
+  background: #374151;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+  background: #4b5563;
+}
+
+/* Auto Theme Dark Mode Support for Session Modal */
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] .session-modal {
+    background: #1e293b;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  }
+
+  [data-theme="auto"] .modal-header {
+    background: #0f172a;
+    border-bottom-color: #334155;
+  }
+
+  [data-theme="auto"] .modal-header h3 {
+    color: #f1f5f9;
+  }
+
+  [data-theme="auto"] .modal-close-btn {
+    color: #94a3b8;
+  }
+
+  [data-theme="auto"] .modal-close-btn:hover {
+    background: #334155;
+    color: #f1f5f9;
+  }
+
+  [data-theme="auto"] .session-form {
+    background: #1e293b;
+  }
+
+  [data-theme="auto"] .form-group label {
+    color: #f1f5f9;
+  }
+
+  [data-theme="auto"] .form-group input,
+  [data-theme="auto"] .form-group select {
+    background: #334155;
+    border-color: #475569;
+    color: #f1f5f9;
+  }
+
+  [data-theme="auto"] .form-group input:focus,
+  [data-theme="auto"] .form-group select:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+  }
+
+  [data-theme="auto"] .modal-actions {
+    border-top-color: #334155;
+  }
+
+  [data-theme="auto"] .btn-primary {
+    background: #3b82f6;
+    color: white;
+  }
+
+  [data-theme="auto"] .btn-primary:hover {
+    background: #2563eb;
+  }
+
+  [data-theme="auto"] .btn-secondary {
+    background: #374151;
+    color: #f1f5f9;
+  }
+
+  [data-theme="auto"] .btn-secondary:hover {
+    background: #4b5563;
   }
 }

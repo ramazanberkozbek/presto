@@ -1663,17 +1663,24 @@ true // All sessions are focus sessions now
         if (tags.length === 0) {
             tagsHtml = '<span class="text-muted">-</span>';
         } else if (tags.length === 1) {
-            // Single tag - show normally
-            tagsHtml = `<span class="session-tag">${tags[0].name}</span>`;
+            // Single tag - show with icon
+            const tag = tags[0];
+            const iconHtml = tag.icon.startsWith('ri-') || tag.icon.startsWith('ph-') 
+                ? `<i class="${tag.icon.startsWith('ph-') ? 'ph ' + tag.icon : tag.icon}"></i>` 
+                : tag.icon;
+            tagsHtml = `<span class="session-tag">${iconHtml} ${tag.name}</span>`;
         } else {
-            // Multiple tags - show first + count indicator with tooltip
+            // Multiple tags - show first with icon + count indicator with tooltip
             const firstTag = tags[0];
             const remainingCount = tags.length - 1;
             const allTagNames = tags.map(tag => tag.name).join(', ');
+            const iconHtml = firstTag.icon.startsWith('ri-') || firstTag.icon.startsWith('ph-') 
+                ? `<i class="${firstTag.icon.startsWith('ph-') ? 'ph ' + firstTag.icon : firstTag.icon}"></i>` 
+                : firstTag.icon;
             
             tagsHtml = `
                 <div class="session-tags-compact" title="${allTagNames}">
-                    <span class="session-tag">${firstTag.name}</span>
+                    <span class="session-tag">${iconHtml} ${firstTag.name}</span>
                     <span class="session-tag-count">+${remainingCount}</span>
                 </div>
             `;
@@ -1877,6 +1884,7 @@ true // All sessions are focus sessions now
             // Generate default filename
             const today = new Date();
             const dateStr = today.toISOString().split('T')[0];
+            const currentPeriod = this.selectedDate ? 'selected-date' : 'today';
             const defaultFilename = `presto-session-history-${currentPeriod}-${dateStr}.xlsx`;
 
             // Check if we're in Tauri environment

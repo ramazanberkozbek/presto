@@ -212,7 +212,10 @@ export class PomodoroTimer {
             const today = new Date().toDateString();
 
             // Only update dots if the session was deleted from today
-            if (date === today) {
+            // date might come as dateString or Date object
+            const sessionDate = typeof date === 'string' ? date : new Date(date).toDateString();
+            if (sessionDate === today) {
+                console.log('🗑️ Session deleted for today, updating progress dots');
                 await this.updateProgressDots();
             }
         });
@@ -1005,6 +1008,8 @@ export class PomodoroTimer {
                 // Only save if session lasted at least 1 minute
                 if (this.lastCompletedSessionTime > 60) {
                     await this.saveCompletedFocusSession();
+                    // Update progress dots AFTER saving session
+                    await this.updateProgressDots();
                 }
             }
 
@@ -1185,8 +1190,7 @@ export class PomodoroTimer {
 
         if (this.currentMode === 'focus') {
             this.completedPomodoros++;
-            await this.updateProgressDots();
-
+            
             // Calculate actual elapsed time for focus sessions
             const actualElapsedTime = this.currentSessionElapsedTime || (this.durations.focus - this.timeRemaining);
             this.totalFocusTime += actualElapsedTime;
@@ -1255,6 +1259,8 @@ export class PomodoroTimer {
         // Save completed focus session to SessionManager as individual session BEFORE resetting sessionStartTime
         if (this.lastCompletedSessionTime > 0 && this.completedPomodoros > 0) {
             await this.saveCompletedFocusSession();
+            // Update progress dots AFTER saving session so SessionManager has correct count
+            await this.updateProgressDots();
         }
 
         // Reset session tracking for next session
@@ -1358,7 +1364,6 @@ export class PomodoroTimer {
         // Update completed sessions count for focus sessions
         if (this.currentMode === 'focus') {
             this.completedPomodoros++;
-            await this.updateProgressDots();
 
             // Calculate actual elapsed time for focus sessions
             const actualElapsedTime = this.currentSessionElapsedTime || this.durations.focus;
@@ -1928,6 +1933,12 @@ export class PomodoroTimer {
 
         // Get actual completed sessions count from SessionManager
         const actualCompletedSessions = await this.getCompletedSessionsToday();
+        
+        console.log('🔄 Updating progress dots:', {
+            totalDots: this.totalSessions,
+            completedSessions: actualCompletedSessions,
+            currentMode: this.currentMode
+        });
 
         // Update each dot based on actual completed sessions and current session
         dots.forEach((dot, index) => {
@@ -2205,7 +2216,13 @@ export class PomodoroTimer {
         try {
             const today = new Date(); // Pass Date object instead of string
             const todaySessions = await window.sessionManager.getSessionsForDate(today);
-            return todaySessions ? todaySessions.length : 0;
+            const sessionCount = todaySessions ? todaySessions.length : 0;
+            console.log('📊 Getting completed sessions for today:', {
+                date: today.toDateString(),
+                sessionCount: sessionCount,
+                sessions: todaySessions
+            });
+            return sessionCount;
         } catch (error) {
             console.error('Failed to get completed sessions from SessionManager:', error);
             return this.completedPomodoros; // Fallback to internal counter
