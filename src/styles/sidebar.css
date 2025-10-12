@@ -15,24 +15,21 @@
   align-items: center;
   padding: 1.5rem 0;
   z-index: 1000;
-  box-shadow: 2px 0 20px color-mix(in srgb, var(--focus-color) 10%, transparent);
   transition: all 0.3s ease;
+  border-right: 1px solid var(--shared-border);
 }
 
 /* Sidebar theme states */
 .sidebar.focus {
   background: var(--focus-bg);
-  box-shadow: 2px 0 20px color-mix(in srgb, var(--focus-color) 15%, transparent);
 }
 
 .sidebar.break {
   background: var(--break-bg);
-  box-shadow: 2px 0 20px color-mix(in srgb, var(--break-color) 15%, transparent);
 }
 
 .sidebar.longBreak {
   background: var(--long-break-bg);
-  box-shadow: 2px 0 20px color-mix(in srgb, var(--long-break-color) 15%, transparent);
 }
 
 .sidebar-icons {
