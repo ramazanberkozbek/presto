@@ -204,6 +204,9 @@ export class PomodoroTimer {
             // Only update dots if the session was added for today
             if (date === today) {
                 await this.updateProgressDots();
+                // Update tray menu and icon to reflect new session count
+                this.updateTrayMenu();
+                this.updateTrayIcon();
             }
         });
 
@@ -215,8 +218,10 @@ export class PomodoroTimer {
             // date might come as dateString or Date object
             const sessionDate = typeof date === 'string' ? date : new Date(date).toDateString();
             if (sessionDate === today) {
-                console.log('🗑️ Session deleted for today, updating progress dots');
                 await this.updateProgressDots();
+                // Update tray menu and icon to reflect deleted session
+                this.updateTrayMenu();
+                this.updateTrayIcon();
             }
         });
 
@@ -227,6 +232,9 @@ export class PomodoroTimer {
             // Only update dots if the session was updated for today
             if (date === today) {
                 await this.updateProgressDots();
+                // Update tray menu and icon to reflect updated session
+                this.updateTrayMenu();
+                this.updateTrayIcon();
             }
         });
     }
@@ -359,10 +367,15 @@ export class PomodoroTimer {
     // Update tray menu based on current timer state
     async updateTrayMenu() {
         try {
+            // Get actual completed sessions for today
+            const completedSessions = await this.getCompletedSessionsToday();
+            
             await invoke('update_tray_menu', {
                 isRunning: this.isRunning,
                 isPaused: this.isPaused,
-                currentMode: this.currentMode
+                currentMode: this.currentMode,
+                completedSessions: completedSessions,
+                totalSessions: this.totalSessions
             });
         } catch (error) {
             console.error('Failed to update tray menu:', error);
@@ -1187,8 +1200,10 @@ export class PomodoroTimer {
 
         // Track completion state
         let shouldChangeMode = true;
+        let wasFocusSession = false; // Track if this was a focus session
 
         if (this.currentMode === 'focus') {
+            wasFocusSession = true; // Mark as focus session for later use
             this.completedPomodoros++;
             
             // Calculate actual elapsed time for focus sessions
@@ -1257,7 +1272,8 @@ export class PomodoroTimer {
         }
 
         // Save completed focus session to SessionManager as individual session BEFORE resetting sessionStartTime
-        if (this.lastCompletedSessionTime > 0 && this.completedPomodoros > 0) {
+        // ONLY save if this was a FOCUS session (not break or longBreak)
+        if (wasFocusSession && this.lastCompletedSessionTime > 0 && this.completedPomodoros > 0) {
             await this.saveCompletedFocusSession();
             // Update progress dots AFTER saving session so SessionManager has correct count
             await this.updateProgressDots();
@@ -1933,12 +1949,6 @@ export class PomodoroTimer {
 
         // Get actual completed sessions count from SessionManager
         const actualCompletedSessions = await this.getCompletedSessionsToday();
-        
-        console.log('🔄 Updating progress dots:', {
-            totalDots: this.totalSessions,
-            completedSessions: actualCompletedSessions,
-            currentMode: this.currentMode
-        });
 
         // Update each dot based on actual completed sessions and current session
         dots.forEach((dot, index) => {
@@ -2216,12 +2226,14 @@ export class PomodoroTimer {
         try {
             const today = new Date(); // Pass Date object instead of string
             const todaySessions = await window.sessionManager.getSessionsForDate(today);
-            const sessionCount = todaySessions ? todaySessions.length : 0;
-            console.log('📊 Getting completed sessions for today:', {
-                date: today.toDateString(),
-                sessionCount: sessionCount,
-                sessions: todaySessions
-            });
+            
+            // Filter to only count FOCUS sessions (exclude breaks)
+            const focusSessions = todaySessions ? todaySessions.filter(session => {
+                const sessionType = session.session_type || session.type;
+                return sessionType === 'focus' || sessionType === 'custom';
+            }) : [];
+            
+            const sessionCount = focusSessions.length;
             return sessionCount;
         } catch (error) {
             console.error('Failed to get completed sessions from SessionManager:', error);
@@ -2644,8 +2656,9 @@ export class PomodoroTimer {
                 const overtimePrefix = isOvertime ? '+' : '';
                 const fullTimerText = `${overtimePrefix}${timerText}`;
 
-                // Show timer with session counter
-                const sessionCounter = `(${this.completedPomodoros}/${this.totalSessions})`;
+                // Show timer with session counter - use actual completed sessions from SessionManager
+                const actualCompletedSessions = await this.getCompletedSessionsToday();
+                const sessionCounter = `(${actualCompletedSessions}/${this.totalSessions})`;
                 const realText = `${fullTimerText} ${sessionCounter}`;
 
                 // Add invisible characters (zero-width spaces) to pad to maximum possible length

@@ -1282,11 +1282,20 @@ async fn update_tray_menu(
     is_running: bool,
     is_paused: bool,
     current_mode: String,
+    completed_sessions: Option<i32>,
+    total_sessions: Option<i32>,
 ) -> Result<(), String> {
     let tray = app.tray_by_id("main");
 
     if let Some(tray) = tray {
-        let show_item = MenuItem::with_id(&app, "show", "Show Presto", true, None::<&str>)
+        // Create session progress text if available
+        let session_progress = if let (Some(completed), Some(total)) = (completed_sessions, total_sessions) {
+            format!(" ({}/{})", completed, total)
+        } else {
+            String::new()
+        };
+        
+        let show_item = MenuItem::with_id(&app, "show", &format!("Show Presto{}", session_progress), true, None::<&str>)
             .map_err(|e| format!("Failed to create show item: {}", e))?;
 
         // Start Session: enabled only if not running
