@@ -1653,7 +1653,13 @@ async function initializeApplication() {
     console.log('📊 Initializing Session Manager...');
     sessionManager = new SessionManager(navigation);
     window.sessionManager = sessionManager;
+    
+    await sessionManager.init();
 
+    // Update progress dots now that SessionManager is ready with data
+    if (timer) {
+        await timer.updateProgressDots();
+    }
 
     // Update Manager already initialized earlier
 

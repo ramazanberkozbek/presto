@@ -110,7 +110,6 @@ export class PomodoroTimer {
         // Generate initial progress dots
         this.generateProgressDots();
         this.updateDisplay();
-        await this.updateProgressDots();
         this.updateStopUndoButton(); // Initialize stop/undo button state
         this.updateSkipIcon(); // Initialize skip button icon
         this.updateSmartIndicator(); // Initialize smart pause indicator
@@ -120,7 +119,6 @@ export class PomodoroTimer {
             window.navigationManager.addTooltipEvents(this.smartIndicator);
         }
         this.setupEventListeners();
-        await this.loadSessionData();
         await this.loadTasks();
 
         // Initialize task input if it exists
@@ -1941,6 +1939,13 @@ export class PomodoroTimer {
 
     // Progress dots update
     async updateProgressDots() {
+        // Skip if SessionManager is not ready yet (during initialization)
+        if (!window.sessionManager) {
+            console.log('⏸️ Progress dots update skipped - SessionManager not ready');
+            return; // Don't update dots until SessionManager is available
+        }
+
+        console.log('🔄 Updating progress dots with SessionManager data...');
         const dots = this.progressDots.querySelectorAll('.dot');
 
         // Remove any existing overflow indicators
@@ -1969,6 +1974,10 @@ export class PomodoroTimer {
             overflowIndicator.textContent = `+${overflowCount}`;
             this.progressDots.appendChild(overflowIndicator);
         }
+
+        // Show progress dots with fade-in animation (loaded state)
+        console.log(`✅ Progress dots updated: ${actualCompletedSessions}/${this.totalSessions} sessions`);
+        this.progressDots.classList.add('loaded');
     }
 
     // Task Management

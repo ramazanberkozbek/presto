@@ -11,7 +11,6 @@ export class SessionManager {
         this.selectedDate = null;
         this.sessions = []; // Local session storage for backward compatibility
         this.isUsingTauri = !!invoke; // Check if Tauri is available
-        this.init();
     }
 
     async init() {
