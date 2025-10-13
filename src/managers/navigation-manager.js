@@ -10,6 +10,10 @@ export class NavigationManager {
         this.tooltipTimeout = null; // Track timeout for debounced tooltip removal
         this.tagStatistics = new TagStatistics(); // Initialize tag statistics utility
         
+        // Time period management
+        this.currentPeriod = 'weekly'; // 'daily', 'weekly', 'monthly', 'yearly'
+        this.currentDate = new Date();
+        
         // Apply timer-active class on initial load since default view is timer
         document.body.classList.add('timer-active');
         document.documentElement.classList.add('timer-active');
@@ -37,6 +41,9 @@ export class NavigationManager {
 
         // Initialize calendar
         await this.initCalendar();
+        
+        // Initialize time period selector
+        this.initTimePeriodSelector();
         
         // Initialize sessions table
         await this.initSessionsTable();
@@ -1931,5 +1938,279 @@ true // All sessions are focus sessions now
             console.error('Error exporting sessions:', error);
             alert('Failed to export sessions. Please try again.');
         }
+    }
+
+    // ========================================
+    // TIME PERIOD MANAGEMENT
+    // ========================================
+
+    initTimePeriodSelector() {
+        const periodButtons = document.querySelectorAll('.period-btn');
+        
+        periodButtons.forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const period = btn.dataset.period;
+                await this.switchPeriod(period);
+            });
+        });
+
+        // Initialize navigators for each period
+        this.initPeriodNavigators();
+    }
+
+    initPeriodNavigators() {
+        // Daily navigator
+        const prevDayBtn = document.getElementById('prev-day');
+        const nextDayBtn = document.getElementById('next-day');
+        
+        if (prevDayBtn) {
+            prevDayBtn.addEventListener('click', () => this.navigatePeriod(-1));
+        }
+        if (nextDayBtn) {
+            nextDayBtn.addEventListener('click', () => this.navigatePeriod(1));
+        }
+
+        // Weekly navigator (already initialized in initCalendar, but update references)
+        const prevWeekBtn = document.getElementById('prev-week');
+        const nextWeekBtn = document.getElementById('next-week');
+        
+        if (prevWeekBtn) {
+            prevWeekBtn.addEventListener('click', () => this.navigatePeriod(-1));
+        }
+        if (nextWeekBtn) {
+            nextWeekBtn.addEventListener('click', () => this.navigatePeriod(1));
+        }
+
+        // Monthly navigator
+        const prevMonthBtn = document.getElementById('prev-month-period');
+        const nextMonthBtn = document.getElementById('next-month-period');
+        
+        if (prevMonthBtn) {
+            prevMonthBtn.addEventListener('click', () => this.navigatePeriod(-1));
+        }
+        if (nextMonthBtn) {
+            nextMonthBtn.addEventListener('click', () => this.navigatePeriod(1));
+        }
+
+        // Yearly navigator
+        const prevYearBtn = document.getElementById('prev-year');
+        const nextYearBtn = document.getElementById('next-year');
+        
+        if (prevYearBtn) {
+            prevYearBtn.addEventListener('click', () => this.navigatePeriod(-1));
+        }
+        if (nextYearBtn) {
+            nextYearBtn.addEventListener('click', () => this.navigatePeriod(1));
+        }
+    }
+
+    async switchPeriod(period) {
+        // Update active button
+        document.querySelectorAll('.period-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.period === period) {
+                btn.classList.add('active');
+            }
+        });
+
+        // Update current period
+        this.currentPeriod = period;
+
+        // Show/hide appropriate navigator
+        this.updateNavigatorDisplay();
+
+        // Update period display
+        this.updatePeriodDisplay();
+
+        // Refresh data based on period
+        await this.refreshDataForPeriod();
+    }
+
+    updateNavigatorDisplay() {
+        // Hide all navigators
+        const navigators = document.querySelectorAll('.navigator-content');
+        navigators.forEach(nav => nav.classList.add('hidden'));
+
+        // Show current period's navigator
+        const currentNav = document.getElementById(`${this.currentPeriod}-navigator`);
+        if (currentNav) {
+            currentNav.classList.remove('hidden');
+        }
+    }
+
+    updatePeriodDisplay() {
+        const date = this.currentDate;
+
+        switch (this.currentPeriod) {
+            case 'daily':
+                this.updateDailyDisplay(date);
+                break;
+            case 'weekly':
+                this.updateWeekDisplay();
+                break;
+            case 'monthly':
+                this.updateMonthlyDisplay(date);
+                break;
+            case 'yearly':
+                this.updateYearlyDisplay(date);
+                break;
+        }
+    }
+
+    updateDailyDisplay(date) {
+        const dayDisplay = document.getElementById('day-display');
+        if (dayDisplay) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            dayDisplay.textContent = date.toLocaleDateString('en-US', options);
+        }
+    }
+
+    updateMonthlyDisplay(date) {
+        const monthDisplay = document.getElementById('month-display');
+        if (monthDisplay) {
+            const options = { year: 'numeric', month: 'long' };
+            monthDisplay.textContent = date.toLocaleDateString('en-US', options);
+        }
+    }
+
+    updateYearlyDisplay(date) {
+        const yearDisplay = document.getElementById('year-display');
+        if (yearDisplay) {
+            yearDisplay.textContent = date.getFullYear();
+        }
+    }
+
+    navigatePeriod(direction) {
+        // direction: -1 for previous, 1 for next
+        const newDate = new Date(this.currentDate);
+
+        switch (this.currentPeriod) {
+            case 'daily':
+                newDate.setDate(newDate.getDate() + direction);
+                break;
+            case 'weekly':
+                newDate.setDate(newDate.getDate() + (direction * 7));
+                break;
+            case 'monthly':
+                newDate.setMonth(newDate.getMonth() + direction);
+                break;
+            case 'yearly':
+                newDate.setFullYear(newDate.getFullYear() + direction);
+                break;
+        }
+
+        this.currentDate = newDate;
+        this.updatePeriodDisplay();
+        this.refreshDataForPeriod();
+    }
+
+    async refreshDataForPeriod() {
+        // Refresh all data visualizations based on current period
+        switch (this.currentPeriod) {
+            case 'daily':
+                await this.refreshDailyData();
+                break;
+            case 'weekly':
+                await this.refreshWeeklyData();
+                break;
+            case 'monthly':
+                await this.refreshMonthlyData();
+                break;
+            case 'yearly':
+                await this.refreshYearlyData();
+                break;
+        }
+    }
+
+    async refreshDailyData() {
+        // Update for single day view
+        await this.updateSelectedDayDetails(this.currentDate);
+        await this.updateFocusSummaryForPeriod();
+        this.updateDailyChart();
+        await this.updateTagUsageChart();
+    }
+
+    async refreshWeeklyData() {
+        // Update for weekly view (existing functionality)
+        this.selectedWeek = this.getWeekStart(this.currentDate);
+        this.updateWeekDisplay();
+        await this.updateFocusSummary();
+        await this.updateWeeklySessionsChart();
+        this.updateDailyChart();
+        await this.updateTagUsageChart();
+    }
+
+    async refreshMonthlyData() {
+        // Update for monthly view
+        this.displayMonth = new Date(this.currentDate);
+        await this.updateCalendar();
+        await this.updateFocusSummaryForPeriod();
+        await this.updateMonthlyChart();
+        await this.updateTagUsageChart();
+    }
+
+    async refreshYearlyData() {
+        // Update for yearly view
+        await this.updateFocusSummaryForPeriod();
+        await this.updateYearlyChart();
+        await this.updateTagUsageChart();
+    }
+
+    async updateFocusSummaryForPeriod() {
+        // This will be similar to updateFocusSummary but adapt to current period
+        // For now, reuse existing logic
+        await this.updateFocusSummary();
+    }
+
+    async updateMonthlyChart() {
+        // Create a monthly chart (to be implemented)
+        // This could show daily averages across the month
+        console.log('Monthly chart update - to be implemented');
+    }
+
+    async updateYearlyChart() {
+        // Create a yearly chart (to be implemented)
+        // This could show monthly totals across the year
+        console.log('Yearly chart update - to be implemented');
+    }
+
+    getPeriodDateRange() {
+        const date = this.currentDate;
+        let startDate, endDate;
+
+        switch (this.currentPeriod) {
+            case 'daily':
+                startDate = new Date(date);
+                startDate.setHours(0, 0, 0, 0);
+                endDate = new Date(date);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+            
+            case 'weekly':
+                startDate = this.getWeekStart(date);
+                endDate = new Date(startDate);
+                endDate.setDate(endDate.getDate() + 6);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+            
+            case 'monthly':
+                startDate = new Date(date.getFullYear(), date.getMonth(), 1);
+                endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+            
+            case 'yearly':
+                startDate = new Date(date.getFullYear(), 0, 1);
+                endDate = new Date(date.getFullYear(), 11, 31);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+            
+            default:
+                startDate = date;
+                endDate = date;
+        }
+
+        return { startDate, endDate };
     }
 }

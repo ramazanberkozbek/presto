@@ -219,13 +219,63 @@
     <div class="view-container view-section hidden" id="calendar-view">
       <h1>Calendar & Statistics</h1>
 
-      <!-- Week Selector -->
-      <div class="week-selector">
-        <button id="prev-week" class="nav-btn">&lt;</button>
-        <div class="week-display">
-          <span id="week-range">10 Jun - 16 Jun 2025</span>
+      <!-- Time Period Selector -->
+      <div class="time-period-selector">
+        <button class="period-btn" data-period="daily">
+          <i class="ri-calendar-2-line"></i>
+          <span>Daily</span>
+        </button>
+        <button class="period-btn active" data-period="weekly">
+          <i class="ri-calendar-line"></i>
+          <span>Weekly</span>
+        </button>
+        <button class="period-btn" data-period="monthly">
+          <i class="ri-calendar-event-line"></i>
+          <span>Monthly</span>
+        </button>
+        <button class="period-btn" data-period="yearly">
+          <i class="ri-calendar-check-line"></i>
+          <span>Yearly</span>
+        </button>
+      </div>
+
+      <!-- Period Navigator (Dynamic based on selected period) -->
+      <div class="period-navigator">
+        <!-- Daily Navigator -->
+        <div class="navigator-content daily-navigator hidden" id="daily-navigator">
+          <button id="prev-day" class="nav-btn">&lt;</button>
+          <div class="period-display">
+            <span id="day-display">Monday, 13 October 2025</span>
+          </div>
+          <button id="next-day" class="nav-btn">&gt;</button>
         </div>
-        <button id="next-week" class="nav-btn">&gt;</button>
+
+        <!-- Weekly Navigator -->
+        <div class="navigator-content weekly-navigator" id="weekly-navigator">
+          <button id="prev-week" class="nav-btn">&lt;</button>
+          <div class="period-display">
+            <span id="week-range">10 Jun - 16 Jun 2025</span>
+          </div>
+          <button id="next-week" class="nav-btn">&gt;</button>
+        </div>
+
+        <!-- Monthly Navigator -->
+        <div class="navigator-content monthly-navigator hidden" id="monthly-navigator">
+          <button id="prev-month-period" class="nav-btn">&lt;</button>
+          <div class="period-display">
+            <span id="month-display">October 2025</span>
+          </div>
+          <button id="next-month-period" class="nav-btn">&gt;</button>
+        </div>
+
+        <!-- Yearly Navigator -->
+        <div class="navigator-content yearly-navigator hidden" id="yearly-navigator">
+          <button id="prev-year" class="nav-btn">&lt;</button>
+          <div class="period-display">
+            <span id="year-display">2025</span>
+          </div>
+          <button id="next-year" class="nav-btn">&gt;</button>
+        </div>
       </div>
 
       <!-- Two Column Layout -->
