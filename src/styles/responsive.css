@@ -179,6 +179,55 @@
     font-size: 1rem;
   }
 
+  /* Focus Trend mobile */
+  .focus-trend-card {
+    padding: 1rem;
+  }
+
+  .focus-trend-card h3 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .trend-comparison-text {
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  .trend-days-container {
+    gap: 1rem;
+  }
+
+  .trend-day-header {
+    margin-bottom: 0.25rem;
+  }
+
+  .trend-day-label {
+    font-size: 0.875rem;
+  }
+
+  .trend-day-time {
+    font-size: 0.825rem;
+  }
+
+  .trend-day-date {
+    font-size: 0.75rem;
+  }
+
+  .trend-bar-bg {
+    height: 20px;
+  }
+
+  .trend-comparison-dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .dot-tooltip {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+  }
+
   .distribution-legend {
     gap: 1rem;
   }

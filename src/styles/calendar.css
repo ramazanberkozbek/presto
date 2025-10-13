@@ -659,6 +659,173 @@
   display: none;
 }
 
+/* ========================================
+   FOCUS TREND CARD
+   ======================================== */
+
+.focus-trend-card {
+  background: var(--card-bg);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px var(--shared-border);
+}
+
+.focus-trend-card.hidden {
+  display: none;
+}
+
+.focus-trend-card h3 {
+  margin: 0 0 0.75rem 0;
+  color: var(--accent-color);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.trend-comparison-text {
+  font-size: 0.9rem;
+  color: #999999;
+  margin-bottom: 1.25rem;
+  font-weight: 400;
+}
+
+.trend-days-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.trend-day {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.trend-day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.trend-day-label {
+  font-size: 11px;
+  color: #666666;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.trend-day-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.trend-day-time {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #222222;
+}
+
+.trend-day-date {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #666666;
+}
+
+/* Progress Bar Container */
+.trend-bar-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.trend-bar-bg {
+  position: relative;
+  width: 100%;
+  height: 22px;
+  background: #F0F0F0;
+  border-radius: 14px;
+  overflow: visible;
+}
+
+.trend-bar-fill {
+  height: 100%;
+  border-radius: 14px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 0;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Color gradients for different time periods */
+.trend-bar-fill.trend-current {
+  background: linear-gradient(90deg, #48C9A8 0%, #5DD9B8 100%);
+}
+
+.trend-bar-fill.trend-previous {
+  background: linear-gradient(90deg, #6FB98F 0%, #7FC99C 100%);
+}
+
+.trend-bar-fill.trend-older {
+  background: linear-gradient(90deg, #7FC99C 0%, #8FDAA8 100%);
+}
+
+/* White Comparison Dot */
+.trend-comparison-dot {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background: #FFFFFF;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15), 0 0 0 2px rgba(72, 201, 168, 0.3);
+  z-index: 3;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  display: none;
+}
+
+.trend-comparison-dot:hover {
+  transform: translate(-50%, -50%) scale(1.4);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(72, 201, 168, 0.4);
+}
+
+.trend-comparison-dot:hover .dot-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.dot-tooltip {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333333;
+  color: #FFFFFF;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.dot-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: #333333;
+}
+
 /* Focus Summary Card */
 .focus-summary-card {
   background: var(--card-bg);
@@ -1296,6 +1463,70 @@
    THEME SUPPORT - TIME PERIOD SELECTOR
    ======================================== */
 
+/* === GENERAL DARK MODE SUPPORT FOR FOCUS TREND === */
+[data-theme="dark"] .focus-trend-card {
+  background: var(--card-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .trend-day-label {
+  color: #999999;
+}
+
+[data-theme="dark"] .trend-day-time {
+  color: #E0E0E0;
+}
+
+[data-theme="dark"] .trend-day-date {
+  color: #999999;
+}
+
+[data-theme="dark"] .trend-bar-bg {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .dot-tooltip {
+  background: #444444;
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .dot-tooltip::after {
+  border-top-color: #444444;
+}
+
+/* Auto Theme Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] .focus-trend-card {
+    background: var(--card-bg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  [data-theme="auto"] .trend-day-label {
+    color: #999999;
+  }
+
+  [data-theme="auto"] .trend-day-time {
+    color: #E0E0E0;
+  }
+
+  [data-theme="auto"] .trend-day-date {
+    color: #999999;
+  }
+
+  [data-theme="auto"] .trend-bar-bg {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  [data-theme="auto"] .dot-tooltip {
+    background: #444444;
+    color: #FFFFFF;
+  }
+
+  [data-theme="auto"] .dot-tooltip::after {
+    border-top-color: #444444;
+  }
+}
+
 /* === DAILY FOCUS DISTRIBUTION - THEME SUPPORT === */
 
 /* Espresso Dark Mode */
@@ -1311,6 +1542,15 @@
 :root[data-timer-theme="espresso"][data-theme="dark"] .timeline-no-data {
   background: var(--setting-item-bg);
   color: var(--text-light);
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .focus-trend-card {
+  background: var(--card-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .trend-bar-bg {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* Pipboy Theme */
@@ -1339,6 +1579,42 @@
   box-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
 }
 
+:root[data-timer-theme="pipboy"] .focus-trend-card {
+  background: var(--card-bg);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 255, 65, 0.2);
+}
+
+:root[data-timer-theme="pipboy"] .focus-trend-card h3 {
+  color: var(--focus-color);
+  text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+}
+
+:root[data-timer-theme="pipboy"] .trend-bar-bg {
+  background: rgba(0, 255, 65, 0.1);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+}
+
+:root[data-timer-theme="pipboy"] .trend-bar-fill {
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.5), 0 2px 8px rgba(0, 255, 65, 0.3);
+}
+
+:root[data-timer-theme="pipboy"] .trend-bar-fill.trend-current {
+  background: linear-gradient(90deg, #00FF41 0%, #00FF65 100%);
+}
+
+:root[data-timer-theme="pipboy"] .trend-bar-fill.trend-previous {
+  background: linear-gradient(90deg, rgba(0, 255, 65, 0.8) 0%, rgba(0, 255, 65, 0.9) 100%);
+}
+
+:root[data-timer-theme="pipboy"] .trend-bar-fill.trend-older {
+  background: linear-gradient(90deg, rgba(0, 255, 65, 0.6) 0%, rgba(0, 255, 65, 0.7) 100%);
+}
+
+:root[data-timer-theme="pipboy"] .trend-comparison-dot {
+  box-shadow: 0 0 8px rgba(0, 255, 65, 0.6), 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
 /* Pommodore64 Theme */
 :root[data-timer-theme="pommodore64"] .daily-focus-distribution-card {
   background: var(--card-bg);
@@ -1359,6 +1635,30 @@
 
 :root[data-timer-theme="pommodore64"] .timeline-bar-segment {
   border-radius: 0;
+}
+
+:root[data-timer-theme="pommodore64"] .focus-trend-card {
+  background: var(--card-bg);
+  border: 3px solid var(--shared-border);
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
+  border-radius: 0;
+}
+
+:root[data-timer-theme="pommodore64"] .trend-bar-bg {
+  background: var(--setting-item-bg);
+  border-radius: 0;
+  border: 2px solid var(--shared-border);
+}
+
+:root[data-timer-theme="pommodore64"] .trend-bar-fill {
+  border-radius: 0;
+}
+
+:root[data-timer-theme="pommodore64"] .trend-comparison-dot {
+  border-radius: 0;
+  width: 12px;
+  height: 12px;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
 }
 
 /* === TIME PERIOD SELECTOR === */

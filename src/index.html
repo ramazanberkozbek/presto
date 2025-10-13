@@ -221,11 +221,11 @@
 
       <!-- Time Period Selector -->
       <div class="time-period-selector">
-        <button class="period-btn" data-period="daily">
+        <button class="period-btn active" data-period="daily">
           <i class="ri-calendar-2-line"></i>
           <span>Daily</span>
         </button>
-        <button class="period-btn active" data-period="weekly">
+        <button class="period-btn" data-period="weekly">
           <i class="ri-calendar-line"></i>
           <span>Weekly</span>
         </button>
@@ -242,7 +242,7 @@
       <!-- Period Navigator (Dynamic based on selected period) -->
       <div class="period-navigator">
         <!-- Daily Navigator -->
-        <div class="navigator-content daily-navigator hidden" id="daily-navigator">
+        <div class="navigator-content daily-navigator" id="daily-navigator">
           <button id="prev-day" class="nav-btn">&lt;</button>
           <div class="period-display">
             <span id="day-display">Monday, 13 October 2025</span>
@@ -251,7 +251,7 @@
         </div>
 
         <!-- Weekly Navigator -->
-        <div class="navigator-content weekly-navigator" id="weekly-navigator">
+        <div class="navigator-content weekly-navigator hidden" id="weekly-navigator">
           <button id="prev-week" class="nav-btn">&lt;</button>
           <div class="period-display">
             <span id="week-range">10 Jun - 16 Jun 2025</span>
@@ -284,7 +284,7 @@
         <div class="calendar-left-column">
           
           <!-- Daily Focus Time Distribution (Only shown in daily view) -->
-          <div class="daily-focus-distribution-card hidden" id="daily-focus-distribution">
+          <div class="daily-focus-distribution-card" id="daily-focus-distribution">
             <div class="distribution-header">
               <h3>Odaklanılan Zaman Dağılımı</h3>
               <div class="total-focus-time">
@@ -354,6 +354,66 @@
               <div class="legend-item">
                 <span class="legend-dot break"></span>
                 <span>Mola</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Focus Trend Card -->
+          <div class="focus-trend-card" id="focus-trend-card">
+            <h3>Odaklanma Trendi</h3>
+            <div class="trend-comparison-text" id="trend-comparison-text">
+              Analiz edilecek veri yok
+            </div>
+            <div class="trend-days-container">
+              <div class="trend-day">
+                <div class="trend-day-header">
+                  <div class="trend-day-label">Bugün (bu ana kadar)</div>
+                  <div class="trend-day-meta">
+                    <span class="trend-day-time" id="trend-today">0 S</span>
+                    <span class="trend-day-date" id="trend-today-date">13 Eki</span>
+                  </div>
+                </div>
+                <div class="trend-bar-wrapper">
+                  <div class="trend-bar-bg">
+                    <div class="trend-bar-fill trend-current" id="trend-today-fill"></div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="trend-day">
+                <div class="trend-day-header">
+                  <div class="trend-day-label">Dün</div>
+                  <div class="trend-day-meta">
+                    <span class="trend-day-time" id="trend-yesterday">0 S</span>
+                    <span class="trend-day-date" id="trend-yesterday-date">12 Eki</span>
+                  </div>
+                </div>
+                <div class="trend-bar-wrapper">
+                  <div class="trend-bar-bg">
+                    <div class="trend-bar-fill trend-previous" id="trend-yesterday-fill"></div>
+                    <div class="trend-comparison-dot" id="trend-yesterday-dot">
+                      <div class="dot-tooltip" id="trend-yesterday-tooltip">0 S</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="trend-day">
+                <div class="trend-day-header">
+                  <div class="trend-day-label">Evvelki Gün</div>
+                  <div class="trend-day-meta">
+                    <span class="trend-day-time" id="trend-day-before">0 S</span>
+                    <span class="trend-day-date" id="trend-day-before-date">11 Eki</span>
+                  </div>
+                </div>
+                <div class="trend-bar-wrapper">
+                  <div class="trend-bar-bg">
+                    <div class="trend-bar-fill trend-older" id="trend-day-before-fill"></div>
+                    <div class="trend-comparison-dot" id="trend-day-before-dot">
+                      <div class="dot-tooltip" id="trend-day-before-tooltip">0 S</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

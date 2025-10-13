@@ -11,7 +11,7 @@ export class NavigationManager {
         this.tagStatistics = new TagStatistics(); // Initialize tag statistics utility
         
         // Time period management
-        this.currentPeriod = 'weekly'; // 'daily', 'weekly', 'monthly', 'yearly'
+        this.currentPeriod = 'daily'; // 'daily', 'weekly', 'monthly', 'yearly'
         this.currentDate = new Date();
         
         // Apply timer-active class on initial load since default view is timer
@@ -113,8 +113,10 @@ export class NavigationManager {
             await this.updateFocusSummary();
             await this.updateWeeklySessionsChart();
             this.updateDailyChart();
+            this.updateDailyFocusDistribution(); // Update daily focus distribution
             await this.updateTagUsageChart(); // Update tag usage pie chart
             await this.updateSelectedDayDetails();
+            await this.updateFocusTrend(); // Add focus trend update
             await this.initSessionsTable(); // Initialize sessions table when viewing calendar
         } else if (view === 'settings') {
             // Settings view will be handled by SettingsManager
@@ -872,7 +874,9 @@ true // All sessions are focus sessions now
         await this.updateFocusSummary();
         await this.updateWeeklySessionsChart();
         this.updateDailyChart();
+        this.updateDailyFocusDistribution(); // Update daily focus distribution
         await this.updateTagUsageChart();
+        await this.updateFocusTrend(date); // Add focus trend update
         
         // Update session history table for selected date
         await this.populateSessionsTableForDate(date);
@@ -2030,6 +2034,16 @@ true // All sessions are focus sessions now
             }
         }
 
+        // Show/hide focus trend card
+        const focusTrendCard = document.getElementById('focus-trend-card');
+        if (focusTrendCard) {
+            if (period === 'daily') {
+                focusTrendCard.classList.remove('hidden');
+            } else {
+                focusTrendCard.classList.add('hidden');
+            }
+        }
+
         // Show/hide appropriate navigator
         this.updateNavigatorDisplay();
 
@@ -2211,6 +2225,7 @@ true // All sessions are focus sessions now
         await this.updateFocusSummaryForPeriod();
         this.updateDailyChart();
         await this.updateTagUsageChart();
+        await this.updateFocusTrend(this.currentDate); // Add focus trend update
         
         // Show/hide daily distribution
         this.updateDailyFocusDistribution();
@@ -2382,25 +2397,17 @@ true // All sessions are focus sessions now
         if (!container) return;
         
         // Minimum scale is always 25 minutes (0, 5, 10, 15, 20, 25)
-        // If maxValue > 25, scale up intelligently
+        // Maximum for hourly data should be 60 minutes (1 hour)
         let niceMax;
         if (maxValue <= 25) {
             niceMax = 25;
         } else if (maxValue <= 30) {
             niceMax = 30;
-        } else if (maxValue <= 60) {
-            niceMax = 60;
-        } else if (maxValue <= 90) {
-            niceMax = 90;
-        } else if (maxValue <= 120) {
-            niceMax = 120;
-        } else if (maxValue <= 150) {
-            niceMax = 150;
-        } else if (maxValue <= 180) {
-            niceMax = 180;
+        } else if (maxValue <= 45) {
+            niceMax = 45;
         } else {
-            // Round to nearest 30
-            niceMax = Math.ceil(maxValue / 30) * 30;
+            // Max out at 60 minutes (1 hour max per hour slot)
+            niceMax = 60;
         }
         
         // Create 6 labels from niceMax to 0 (top to bottom)
@@ -2515,4 +2522,185 @@ true // All sessions are focus sessions now
             container.appendChild(bar);
         });
     }
+
+    // Update Focus Trend Card
+    async updateFocusTrend(date = this.currentDate) {
+        const trendCard = document.getElementById('focus-trend-card');
+        const comparisonText = document.getElementById('trend-comparison-text');
+        
+        // Time displays
+        const trendToday = document.getElementById('trend-today');
+        const trendYesterday = document.getElementById('trend-yesterday');
+        const trendDayBefore = document.getElementById('trend-day-before');
+        
+        // Date displays
+        const trendTodayDate = document.getElementById('trend-today-date');
+        const trendYesterdayDate = document.getElementById('trend-yesterday-date');
+        const trendDayBeforeDate = document.getElementById('trend-day-before-date');
+        
+        // Bar fills
+        const todayFill = document.getElementById('trend-today-fill');
+        const yesterdayFill = document.getElementById('trend-yesterday-fill');
+        const dayBeforeFill = document.getElementById('trend-day-before-fill');
+        
+        // Comparison dots
+        const yesterdayDot = document.getElementById('trend-yesterday-dot');
+        const yesterdayTooltip = document.getElementById('trend-yesterday-tooltip');
+        const dayBeforeDot = document.getElementById('trend-day-before-dot');
+        const dayBeforeTooltip = document.getElementById('trend-day-before-tooltip');
+
+        if (!trendCard || !window.sessionManager) {
+            return;
+        }
+
+        // Helper function to get total focus time for a date
+        const getTotalFocusTime = (targetDate) => {
+            const sessions = window.sessionManager.getSessionsForDate(targetDate);
+            const totalMinutes = sessions.reduce((sum, session) => {
+                if (session.session_type === 'focus' || session.session_type === 'custom') {
+                    return sum + (session.duration || 0);
+                }
+                return sum;
+            }, 0);
+            return totalMinutes;
+        };
+
+        // Helper function to get focus time up to current hour for a date
+        const getFocusTimeUpToCurrentHour = (targetDate) => {
+            const currentHour = new Date().getHours();
+            const currentMinute = new Date().getMinutes();
+            const sessions = window.sessionManager.getSessionsForDate(targetDate);
+            
+            const totalMinutes = sessions.reduce((sum, session) => {
+                if (session.session_type === 'focus' || session.session_type === 'custom') {
+                    const sessionDate = new Date(session.start_time);
+                    const sessionHour = sessionDate.getHours();
+                    const sessionMinute = sessionDate.getMinutes();
+                    
+                    // Only count sessions that started before or at current time
+                    if (sessionHour < currentHour || (sessionHour === currentHour && sessionMinute <= currentMinute)) {
+                        return sum + (session.duration || 0);
+                    }
+                }
+                return sum;
+            }, 0);
+            return totalMinutes;
+        };
+
+        // Helper function to format time
+        const formatTime = (minutes) => {
+            if (minutes === 0) return '0 S';
+            if (minutes < 60) {
+                return `${minutes} D`;
+            }
+            const hours = Math.floor(minutes / 60);
+            const remainingMinutes = minutes % 60;
+            if (remainingMinutes === 0) {
+                return `${hours} S`;
+            }
+            return `${hours} S ${remainingMinutes} D`;
+        };
+
+        // Helper function to format date (Turkish short month)
+        const formatDate = (date) => {
+            const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+            return `${date.getDate()} ${months[date.getMonth()]}`;
+        };
+
+        // Calculate dates
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const dayBefore = new Date(today);
+        dayBefore.setDate(dayBefore.getDate() - 2);
+
+        // Get focus times
+        const todayTotal = getTotalFocusTime(today);
+        const yesterdayTotal = getTotalFocusTime(yesterday);
+        const dayBeforeTotal = getTotalFocusTime(dayBefore);
+        
+        // Get focus times up to current hour for comparison
+        const yesterdaySameTimeTotal = getFocusTimeUpToCurrentHour(yesterday);
+        const dayBeforeSameTimeTotal = getFocusTimeUpToCurrentHour(dayBefore);
+
+        // Update text displays
+        trendToday.textContent = formatTime(todayTotal);
+        trendYesterday.textContent = formatTime(yesterdayTotal);
+        trendDayBefore.textContent = formatTime(dayBeforeTotal);
+
+        // Update dates
+        if (trendTodayDate) trendTodayDate.textContent = formatDate(today);
+        if (trendYesterdayDate) trendYesterdayDate.textContent = formatDate(yesterday);
+        if (trendDayBeforeDate) trendDayBeforeDate.textContent = formatDate(dayBefore);
+
+        // Calculate comparison text
+        const hasData = todayTotal > 0 || yesterdayTotal > 0 || dayBeforeTotal > 0;
+        if (hasData && comparisonText) {
+            const diff = todayTotal - yesterdayTotal;
+            if (diff > 0) {
+                comparisonText.textContent = `Dünden ${diff} dakika daha fazla çalıştın`;
+                comparisonText.style.color = '#48C9A8';
+            } else if (diff < 0) {
+                comparisonText.textContent = `Dünden ${Math.abs(diff)} dakika daha az çalıştın`;
+                comparisonText.style.color = '#48C9A8';
+            } else {
+                comparisonText.textContent = `Dünle aynı`;
+                comparisonText.style.color = '#48C9A8';
+            }
+        } else if (comparisonText) {
+            comparisonText.textContent = 'Analiz edilecek veri yok';
+            comparisonText.style.color = '#48C9A8';
+        }
+
+        // Calculate bar widths and dot positions
+        // Minimum is 25 minutes, bars scale proportionally
+        const minBarMinutes = 25;
+        const maxMinutes = Math.max(todayTotal, yesterdayTotal, dayBeforeTotal, minBarMinutes);
+        
+        // Calculate percentages
+        const todayPercent = (todayTotal / maxMinutes) * 100;
+        const yesterdayPercent = (yesterdayTotal / maxMinutes) * 100;
+        const dayBeforePercent = (dayBeforeTotal / maxMinutes) * 100;
+        
+        // Calculate dot positions (percentage of the ENTIRE bar background for that day)
+        // This positions the dot relative to the background container, not just the filled portion
+        const yesterdayDotPercent = yesterdayTotal > 0 ? (yesterdaySameTimeTotal / maxMinutes) * 100 : 0;
+        const dayBeforeDotPercent = dayBeforeTotal > 0 ? (dayBeforeSameTimeTotal / maxMinutes) * 100 : 0;
+
+        // Update bars
+        if (todayFill) {
+            todayFill.style.width = `${Math.max(todayPercent, 0)}%`;
+        }
+        if (yesterdayFill) {
+            yesterdayFill.style.width = `${Math.max(yesterdayPercent, 0)}%`;
+        }
+        if (dayBeforeFill) {
+            dayBeforeFill.style.width = `${Math.max(dayBeforePercent, 0)}%`;
+        }
+
+        // Update dots - positioned on the bar showing "at this same time yesterday/day before"
+        // If no work was done, show dot at the start (0%) to indicate comparison point
+        if (yesterdayDot && yesterdayTooltip) {
+            // Always show dot, even if no work was done (position at 0%)
+            yesterdayDot.style.left = `${yesterdayDotPercent}%`;
+            yesterdayDot.style.display = 'block';
+            yesterdayTooltip.textContent = formatTime(yesterdaySameTimeTotal);
+        }
+
+        if (dayBeforeDot && dayBeforeTooltip) {
+            // Always show dot, even if no work was done (position at 0%)
+            dayBeforeDot.style.left = `${dayBeforeDotPercent}%`;
+            dayBeforeDot.style.display = 'block';
+            dayBeforeTooltip.textContent = formatTime(dayBeforeSameTimeTotal);
+        }
+
+        // Show the card if we're in daily view
+        const isDaily = this.currentPeriod === 'daily';
+        if (isDaily) {
+            trendCard.classList.remove('hidden');
+        } else {
+            trendCard.classList.add('hidden');
+        }
+    }
 }
+
