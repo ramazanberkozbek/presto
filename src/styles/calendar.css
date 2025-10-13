@@ -399,6 +399,266 @@
   gap: 1rem;
 }
 
+/* ========================================
+   DAILY FOCUS TIME DISTRIBUTION
+   ======================================== */
+
+.daily-focus-distribution-card {
+  background: var(--card-bg);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px var(--shared-border);
+}
+
+.daily-focus-distribution-card.hidden {
+  display: none;
+}
+
+.distribution-header {
+  margin-bottom: 1.5rem;
+}
+
+.distribution-header h3 {
+  margin: 0 0 0.75rem 0;
+  color: var(--accent-color);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.total-focus-time {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.total-focus-time .label {
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.total-focus-time .value {
+  color: var(--focus-color);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+/* Timeline Distribution */
+.timeline-distribution {
+  margin-bottom: 1rem;
+}
+
+/* Timeline Content - Main container */
+.timeline-content {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Y-axis (left side) - Time duration labels */
+.timeline-y-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  min-width: 50px;
+  text-align: right;
+  font-size: 0.7rem;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.timeline-y-label {
+  line-height: 1;
+}
+
+/* Timeline bars wrapper - contains grid and bars */
+.timeline-bars-wrapper {
+  flex: 1;
+  position: relative;
+  background: var(--setting-item-bg);
+  border-radius: 8px;
+  overflow: visible; /* Allow tooltip to overflow */
+}
+
+/* Grid lines (background) */
+.timeline-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.75rem 0.5rem;
+  pointer-events: none;
+}
+
+.timeline-grid-line {
+  width: 100%;
+  height: 1px;
+  background: var(--shared-border);
+  opacity: 0.3;
+}
+
+/* Timeline bars container */
+.timeline-bars {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 2px;
+  height: 150px;
+  align-items: end;
+  padding: 0.75rem 0.5rem;
+  position: relative;
+}
+
+.timeline-bar {
+  height: 100%;
+  border-radius: 3px 3px 0 0;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.timeline-bar:hover {
+  transform: scale(1.08);
+  z-index: 10;
+}
+
+/* Empty bar (no data) */
+.timeline-bar.empty {
+  background: var(--input-border);
+  opacity: 0.3;
+}
+
+/* Bar with focus time */
+.timeline-bar-segment {
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+.timeline-bar-segment.focus {
+  background: var(--focus-color);
+}
+
+.timeline-bar-segment.break {
+  background: var(--break-color);
+}
+
+/* No data message - centered in wrapper */
+.timeline-no-data {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-light);
+  font-style: italic;
+  z-index: 1;
+}
+
+.timeline-no-data i {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.4;
+}
+
+.timeline-no-data span {
+  font-size: 0.95rem;
+  opacity: 0.7;
+}
+
+/* X-axis (bottom) - Hour labels */
+.timeline-x-axis {
+  padding-left: 50px; /* Align with Y-axis width */
+  padding-left: calc(50px + 0.75rem); /* Y-axis width + gap */
+}
+
+.timeline-x-labels {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 2px;
+  font-size: 0.65rem;
+  color: var(--text-light);
+  font-weight: 500;
+  padding: 0 0.5rem;
+  text-align: center;
+}
+
+.timeline-x-labels span {
+  display: block;
+}
+
+/* Distribution Legend */
+.distribution-legend {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.distribution-legend .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--shared-text);
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.legend-dot.focus {
+  background: var(--focus-color);
+}
+
+.legend-dot.break {
+  background: var(--break-color);
+}
+
+/* Tooltip for timeline bars */
+.timeline-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: var(--shared-text);
+  color: var(--card-bg);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10000;
+  line-height: 1.5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.timeline-bar:hover .timeline-tooltip {
+  opacity: 1;
+}
+
+/* Make sure empty bars don't show tooltip */
+.timeline-bar.empty .timeline-tooltip {
+  display: none;
+}
+
 /* Focus Summary Card */
 .focus-summary-card {
   background: var(--card-bg);
@@ -1035,6 +1295,73 @@
 /* ========================================
    THEME SUPPORT - TIME PERIOD SELECTOR
    ======================================== */
+
+/* === DAILY FOCUS DISTRIBUTION - THEME SUPPORT === */
+
+/* Espresso Dark Mode */
+:root[data-timer-theme="espresso"][data-theme="dark"] .daily-focus-distribution-card {
+  background: var(--card-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .timeline-bars {
+  background: var(--setting-item-bg);
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .timeline-no-data {
+  background: var(--setting-item-bg);
+  color: var(--text-light);
+}
+
+/* Pipboy Theme */
+:root[data-timer-theme="pipboy"] .daily-focus-distribution-card {
+  background: var(--card-bg);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 255, 65, 0.2);
+}
+
+:root[data-timer-theme="pipboy"] .distribution-header h3 {
+  color: var(--focus-color);
+  text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+}
+
+:root[data-timer-theme="pipboy"] .timeline-bars {
+  background: rgba(0, 255, 65, 0.05);
+  border: 1px solid rgba(0, 255, 65, 0.2);
+}
+
+:root[data-timer-theme="pipboy"] .timeline-bar.empty {
+  background: rgba(0, 255, 65, 0.1);
+}
+
+:root[data-timer-theme="pipboy"] .timeline-bar-segment.focus {
+  background: var(--focus-color);
+  box-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+}
+
+/* Pommodore64 Theme */
+:root[data-timer-theme="pommodore64"] .daily-focus-distribution-card {
+  background: var(--card-bg);
+  border: 3px solid var(--shared-border);
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
+  border-radius: 0;
+}
+
+:root[data-timer-theme="pommodore64"] .timeline-bars {
+  background: var(--setting-item-bg);
+  border-radius: 0;
+  border: 2px solid var(--shared-border);
+}
+
+:root[data-timer-theme="pommodore64"] .timeline-bar {
+  border-radius: 0;
+}
+
+:root[data-timer-theme="pommodore64"] .timeline-bar-segment {
+  border-radius: 0;
+}
+
+/* === TIME PERIOD SELECTOR === */
 
 /* === ESPRESSO THEME === */
 

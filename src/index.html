@@ -282,6 +282,82 @@
       <div class="calendar-main-layout">
         <!-- Left Column: Statistics and Daily Chart -->
         <div class="calendar-left-column">
+          
+          <!-- Daily Focus Time Distribution (Only shown in daily view) -->
+          <div class="daily-focus-distribution-card hidden" id="daily-focus-distribution">
+            <div class="distribution-header">
+              <h3>Odaklanılan Zaman Dağılımı</h3>
+              <div class="total-focus-time">
+                <span class="label">Toplam odaklanılan zaman:</span>
+                <span class="value" id="daily-total-focus">0 saat</span>
+              </div>
+            </div>
+            
+            <div class="timeline-distribution" id="timeline-distribution">
+              <!-- Timeline container with Y-axis and bars -->
+              <div class="timeline-content">
+                <!-- Y-axis labels (left side) -->
+                <div class="timeline-y-axis" id="timeline-y-axis">
+                  <!-- Will be filled by JavaScript -->
+                </div>
+                
+                <!-- Timeline bars container -->
+                <div class="timeline-bars-wrapper">
+                  <!-- Grid lines background -->
+                  <div class="timeline-grid" id="timeline-grid">
+                    <!-- Will be filled by JavaScript -->
+                  </div>
+                  
+                  <!-- 24 hours timeline bars -->
+                  <div class="timeline-bars" id="timeline-bars">
+                    <!-- Will be filled by JavaScript with hourly bars -->
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Time labels (bottom) -->
+              <div class="timeline-x-axis">
+                <div class="timeline-x-labels">
+                  <span>0</span>
+                  <span>1</span>
+                  <span>2</span>
+                  <span>3</span>
+                  <span>4</span>
+                  <span>5</span>
+                  <span>6</span>
+                  <span>7</span>
+                  <span>8</span>
+                  <span>9</span>
+                  <span>10</span>
+                  <span>11</span>
+                  <span>12</span>
+                  <span>13</span>
+                  <span>14</span>
+                  <span>15</span>
+                  <span>16</span>
+                  <span>17</span>
+                  <span>18</span>
+                  <span>19</span>
+                  <span>20</span>
+                  <span>21</span>
+                  <span>22</span>
+                  <span>23</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="distribution-legend">
+              <div class="legend-item">
+                <span class="legend-dot focus"></span>
+                <span>Odaklanma</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-dot break"></span>
+                <span>Mola</span>
+              </div>
+            </div>
+          </div>
+
           <!-- Focus Time Summary Card -->
           <div class="focus-summary-card">
             <h3>Focus Weekly Summary</h3>

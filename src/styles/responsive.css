@@ -36,6 +36,24 @@
     font-size: 0.9rem;
   }
 
+  /* Daily focus distribution responsive */
+  .timeline-bars {
+    height: 120px;
+  }
+
+  .timeline-y-axis {
+    min-width: 45px;
+    font-size: 0.65rem;
+  }
+
+  .timeline-x-labels {
+    font-size: 0.6rem;
+  }
+
+  .timeline-x-axis {
+    padding-left: calc(45px + 0.75rem);
+  }
+
   /* Calendar layout adjustments for tablets and small desktops */
   .calendar-main-layout {
     grid-template-columns: 1fr;
@@ -114,6 +132,59 @@
     width: 36px;
     height: 36px;
     font-size: 1rem;
+  }
+
+  /* Daily focus distribution mobile */
+  .daily-focus-distribution-card {
+    padding: 1rem;
+  }
+
+  .timeline-content {
+    gap: 0.5rem;
+  }
+
+  .timeline-bars {
+    height: 100px;
+  }
+
+  .timeline-y-axis {
+    min-width: 35px;
+    font-size: 0.6rem;
+    padding: 0.5rem 0;
+  }
+
+  .timeline-x-labels {
+    font-size: 0.55rem;
+  }
+
+  .timeline-x-axis {
+    padding-left: calc(35px + 0.5rem);
+  }
+
+  .distribution-header h3 {
+    font-size: 1rem;
+  }
+
+  .total-focus-time {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .total-focus-time .label {
+    font-size: 0.85rem;
+  }
+
+  .total-focus-time .value {
+    font-size: 1rem;
+  }
+
+  .distribution-legend {
+    gap: 1rem;
+  }
+
+  .distribution-legend .legend-item {
+    font-size: 0.75rem;
   }
 
   /* Adjust container for mobile layout */

@@ -1957,6 +1957,9 @@ true // All sessions are focus sessions now
 
         // Initialize navigators for each period
         this.initPeriodNavigators();
+        
+        // Initial button state update
+        this.updateNavigatorButtons();
     }
 
     initPeriodNavigators() {
@@ -2017,11 +2020,24 @@ true // All sessions are focus sessions now
         // Update current period
         this.currentPeriod = period;
 
+        // Show/hide daily distribution card
+        const dailyDistCard = document.getElementById('daily-focus-distribution');
+        if (dailyDistCard) {
+            if (period === 'daily') {
+                dailyDistCard.classList.remove('hidden');
+            } else {
+                dailyDistCard.classList.add('hidden');
+            }
+        }
+
         // Show/hide appropriate navigator
         this.updateNavigatorDisplay();
 
         // Update period display
         this.updatePeriodDisplay();
+
+        // Update navigator buttons state
+        this.updateNavigatorButtons();
 
         // Refresh data based on period
         await this.refreshDataForPeriod();
@@ -2084,6 +2100,8 @@ true // All sessions are focus sessions now
     navigatePeriod(direction) {
         // direction: -1 for previous, 1 for next
         const newDate = new Date(this.currentDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
         switch (this.currentPeriod) {
             case 'daily':
@@ -2100,9 +2118,73 @@ true // All sessions are focus sessions now
                 break;
         }
 
+        // Don't allow navigation to future dates
+        if (direction > 0) {
+            newDate.setHours(0, 0, 0, 0);
+            if (newDate > today) {
+                // Don't navigate - stay at current date
+                return;
+            }
+        }
+
         this.currentDate = newDate;
         this.updatePeriodDisplay();
         this.refreshDataForPeriod();
+        this.updateNavigatorButtons();
+    }
+
+    updateNavigatorButtons() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        let nextDate = new Date(this.currentDate);
+        nextDate.setHours(0, 0, 0, 0);
+        
+        // Calculate what the next date would be
+        switch (this.currentPeriod) {
+            case 'daily':
+                nextDate.setDate(nextDate.getDate() + 1);
+                break;
+            case 'weekly':
+                nextDate.setDate(nextDate.getDate() + 7);
+                break;
+            case 'monthly':
+                nextDate.setMonth(nextDate.getMonth() + 1);
+                break;
+            case 'yearly':
+                nextDate.setFullYear(nextDate.getFullYear() + 1);
+                break;
+        }
+        
+        // Get the appropriate next button based on current period
+        let nextBtn;
+        switch (this.currentPeriod) {
+            case 'daily':
+                nextBtn = document.getElementById('next-day');
+                break;
+            case 'weekly':
+                nextBtn = document.getElementById('next-week');
+                break;
+            case 'monthly':
+                nextBtn = document.getElementById('next-month-period');
+                break;
+            case 'yearly':
+                nextBtn = document.getElementById('next-year');
+                break;
+        }
+        
+        // Disable next button if it would go to the future
+        if (nextBtn) {
+            if (nextDate > today) {
+                nextBtn.disabled = true;
+                nextBtn.style.opacity = '0.5';
+                nextBtn.style.cursor = 'not-allowed';
+            } else {
+                nextBtn.disabled = false;
+                nextBtn.style.opacity = '1';
+                nextBtn.style.cursor = 'pointer';
+            }
+        }
     }
 
     async refreshDataForPeriod() {
@@ -2129,6 +2211,12 @@ true // All sessions are focus sessions now
         await this.updateFocusSummaryForPeriod();
         this.updateDailyChart();
         await this.updateTagUsageChart();
+        
+        // Show/hide daily distribution
+        this.updateDailyFocusDistribution();
+        
+        // Update navigator buttons
+        this.updateNavigatorButtons();
     }
 
     async refreshWeeklyData() {
@@ -2139,6 +2227,9 @@ true // All sessions are focus sessions now
         await this.updateWeeklySessionsChart();
         this.updateDailyChart();
         await this.updateTagUsageChart();
+        
+        // Update navigator buttons
+        this.updateNavigatorButtons();
     }
 
     async refreshMonthlyData() {
@@ -2148,6 +2239,9 @@ true // All sessions are focus sessions now
         await this.updateFocusSummaryForPeriod();
         await this.updateMonthlyChart();
         await this.updateTagUsageChart();
+        
+        // Update navigator buttons
+        this.updateNavigatorButtons();
     }
 
     async refreshYearlyData() {
@@ -2155,6 +2249,9 @@ true // All sessions are focus sessions now
         await this.updateFocusSummaryForPeriod();
         await this.updateYearlyChart();
         await this.updateTagUsageChart();
+        
+        // Update navigator buttons
+        this.updateNavigatorButtons();
     }
 
     async updateFocusSummaryForPeriod() {
@@ -2212,5 +2309,210 @@ true // All sessions are focus sessions now
         }
 
         return { startDate, endDate };
+    }
+
+    // ========================================
+    // DAILY FOCUS TIME DISTRIBUTION
+    // ========================================
+
+    updateDailyFocusDistribution() {
+        const timelineBars = document.getElementById('timeline-bars');
+        const totalFocusEl = document.getElementById('daily-total-focus');
+        const yAxisEl = document.getElementById('timeline-y-axis');
+        const gridEl = document.getElementById('timeline-grid');
+        
+        if (!timelineBars || !totalFocusEl) return;
+
+        // Get sessions for current date
+        if (!window.sessionManager) {
+            this.showNoDataMessage(timelineBars);
+            this.renderYAxis(yAxisEl, 0);
+            this.renderGrid(gridEl);
+            totalFocusEl.textContent = '0 saat';
+            return;
+        }
+
+        const sessions = window.sessionManager.getSessionsForDate(this.currentDate);
+        
+        if (!sessions || sessions.length === 0) {
+            this.showNoDataMessage(timelineBars);
+            this.renderYAxis(yAxisEl, 0);
+            this.renderGrid(gridEl);
+            totalFocusEl.textContent = '0 saat';
+            return;
+        }
+
+        // Create 24-hour timeline data
+        const hourlyData = this.createHourlyDistribution(sessions);
+        
+        // Find max value for Y-axis (in minutes)
+        const maxValue = Math.max(...hourlyData.map(d => d.total), 1);
+        
+        // Calculate total focus time (from hourly data for accuracy)
+        let totalFocusMinutes = 0;
+        hourlyData.forEach(hour => {
+            totalFocusMinutes += hour.focus;
+        });
+        
+        const totalHours = Math.floor(totalFocusMinutes / 60);
+        const remainingMinutes = Math.round(totalFocusMinutes % 60);
+        
+        if (totalHours > 0) {
+            totalFocusEl.textContent = `${totalHours} saat ${remainingMinutes} dakika`;
+        } else {
+            totalFocusEl.textContent = `${Math.round(totalFocusMinutes)} dakika`;
+        }
+
+        // Render Y-axis, grid, and timeline bars
+        this.renderYAxis(yAxisEl, maxValue);
+        this.renderGrid(gridEl);
+        this.renderTimelineBars(timelineBars, hourlyData);
+    }
+
+    showNoDataMessage(container) {
+        container.innerHTML = `
+            <div class="timeline-no-data">
+                <i class="ri-bar-chart-line"></i>
+                <span>Veri yok</span>
+            </div>
+        `;
+    }
+
+    renderYAxis(container, maxValue) {
+        if (!container) return;
+        
+        // Minimum scale is always 25 minutes (0, 5, 10, 15, 20, 25)
+        // If maxValue > 25, scale up intelligently
+        let niceMax;
+        if (maxValue <= 25) {
+            niceMax = 25;
+        } else if (maxValue <= 30) {
+            niceMax = 30;
+        } else if (maxValue <= 60) {
+            niceMax = 60;
+        } else if (maxValue <= 90) {
+            niceMax = 90;
+        } else if (maxValue <= 120) {
+            niceMax = 120;
+        } else if (maxValue <= 150) {
+            niceMax = 150;
+        } else if (maxValue <= 180) {
+            niceMax = 180;
+        } else {
+            // Round to nearest 30
+            niceMax = Math.ceil(maxValue / 30) * 30;
+        }
+        
+        // Create 6 labels from niceMax to 0 (top to bottom)
+        const steps = 5;
+        const stepValue = niceMax / steps;
+        const labels = [];
+        
+        // Start from max (top) and go down to 0 (bottom)
+        for (let i = steps; i >= 0; i--) {
+            const value = Math.round(stepValue * i);
+            labels.push(value);
+        }
+        
+        container.innerHTML = labels.map(value => 
+            `<div class="timeline-y-label">${value} dk</div>`
+        ).join('');
+        
+        // Store max value for bar scaling
+        container.dataset.maxValue = niceMax;
+    }
+
+    renderGrid(container) {
+        if (!container) return;
+        
+        // Create 5 horizontal grid lines
+        const lines = Array.from({ length: 6 }, () => 
+            '<div class="timeline-grid-line"></div>'
+        ).join('');
+        
+        container.innerHTML = lines;
+    }
+
+    createHourlyDistribution(sessions) {
+        // Initialize 24 hours with empty data
+        const hourlyData = Array.from({ length: 24 }, (_, i) => ({
+            hour: i,
+            focus: 0,
+            break: 0,
+            total: 0
+        }));
+
+        // Aggregate session data by hour
+        sessions.forEach(session => {
+            if (!session.created_at || !session.duration) return;
+
+            const sessionDate = new Date(session.created_at);
+            const hour = sessionDate.getHours();
+            const durationMinutes = session.duration; // duration is already in minutes
+
+            if (session.session_type === 'focus' || session.session_type === 'custom') {
+                hourlyData[hour].focus += durationMinutes;
+            } else if (session.session_type === 'break') {
+                hourlyData[hour].break += durationMinutes;
+            }
+
+            hourlyData[hour].total += durationMinutes;
+        });
+
+        return hourlyData;
+    }
+
+    renderTimelineBars(container, hourlyData) {
+        // Get max value from Y-axis for proper scaling
+        const yAxis = document.getElementById('timeline-y-axis');
+        const maxValue = yAxis && yAxis.dataset.maxValue ? 
+            parseFloat(yAxis.dataset.maxValue) : 
+            Math.max(...hourlyData.map(d => d.total), 1);
+
+        container.innerHTML = '';
+
+        hourlyData.forEach(data => {
+            const bar = document.createElement('div');
+            bar.className = 'timeline-bar';
+
+            if (data.total === 0) {
+                bar.classList.add('empty');
+            } else {
+                const focusHeight = (data.focus / maxValue) * 100;
+                const breakHeight = (data.break / maxValue) * 100;
+
+                if (data.focus > 0) {
+                    const focusSegment = document.createElement('div');
+                    focusSegment.className = 'timeline-bar-segment focus';
+                    focusSegment.style.height = `${focusHeight}%`;
+                    bar.appendChild(focusSegment);
+                }
+
+                if (data.break > 0) {
+                    const breakSegment = document.createElement('div');
+                    breakSegment.className = 'timeline-bar-segment break';
+                    breakSegment.style.height = `${breakHeight}%`;
+                    bar.appendChild(breakSegment);
+                }
+
+                // Add tooltip
+                const tooltip = document.createElement('div');
+                tooltip.className = 'timeline-tooltip';
+                
+                const tooltipLines = [];
+                
+                if (data.focus > 0) {
+                    tooltipLines.push(`${Math.round(data.focus)} dakika`);
+                }
+                if (data.break > 0) {
+                    tooltipLines.push(`Mola: ${Math.round(data.break)} dk`);
+                }
+                
+                tooltip.innerHTML = tooltipLines.join('<br>');
+                bar.appendChild(tooltip);
+            }
+
+            container.appendChild(bar);
+        });
     }
 }
