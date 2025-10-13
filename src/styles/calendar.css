@@ -551,6 +551,12 @@
   background: var(--break-color);
 }
 
+/* Empty remaining segment (kalan boş kısım - 0 dakika çalışılan yerlerle aynı renk) */
+.timeline-bar-segment.empty-remaining {
+  background: var(--input-border);
+  opacity: 0.3;
+}
+
 /* No data message - centered in wrapper */
 .timeline-no-data {
   position: absolute;
@@ -1494,6 +1500,12 @@
   border-top-color: #444444;
 }
 
+/* Dark mode for timeline empty-remaining segment */
+[data-theme="dark"] .timeline-bar-segment.empty-remaining {
+  background: var(--input-border);
+  opacity: 0.3;
+}
+
 /* Auto Theme Dark Mode Support */
 @media (prefers-color-scheme: dark) {
   [data-theme="auto"] .focus-trend-card {
@@ -1524,6 +1536,12 @@
 
   [data-theme="auto"] .dot-tooltip::after {
     border-top-color: #444444;
+  }
+
+  /* Auto theme dark mode for timeline empty-remaining segment */
+  [data-theme="auto"] .timeline-bar-segment.empty-remaining {
+    background: var(--input-border);
+    opacity: 0.3;
   }
 }
 

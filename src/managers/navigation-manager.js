@@ -207,6 +207,11 @@ export class NavigationManager {
         const weeklyFocusTimeEl = document.getElementById('weekly-focus-time');
         const weeklyFocusChangeEl = document.getElementById('weekly-focus-change');
 
+        // If elements don't exist (card removed), skip update silently
+        if (!totalFocusWeekEl && !avgFocusDayEl && !weeklySessionsEl && !weeklyFocusTimeEl) {
+            return;
+        }
+
         // Calculate weekly data and comparisons
         let avgFocus = 0;
         let weeklyFocusTime = 0;
@@ -291,18 +296,34 @@ export class NavigationManager {
         const avgFocusChange = this.calculatePercentageChange(avgFocus, previousWeekAvgFocus);
         const weeklySessionsChange = this.calculatePercentageChange(weeklySessions, previousWeeklySessions);
 
-        // Update UI
-        totalFocusWeekEl.textContent = TimeUtils.formatTime(weeklyFocusTime);
-        this.updateChangeElement(totalFocusChangeEl, weeklyFocusChange);
+        // Update UI (only if elements exist)
+        if (totalFocusWeekEl) {
+            totalFocusWeekEl.textContent = TimeUtils.formatTime(weeklyFocusTime);
+        }
+        if (totalFocusChangeEl) {
+            this.updateChangeElement(totalFocusChangeEl, weeklyFocusChange);
+        }
 
-        avgFocusDayEl.textContent = TimeUtils.formatTime(avgFocus);
-        this.updateChangeElement(avgFocusChangeEl, avgFocusChange);
+        if (avgFocusDayEl) {
+            avgFocusDayEl.textContent = TimeUtils.formatTime(avgFocus);
+        }
+        if (avgFocusChangeEl) {
+            this.updateChangeElement(avgFocusChangeEl, avgFocusChange);
+        }
 
-        weeklySessionsEl.textContent = weeklySessions.toString();
-        this.updateChangeElement(weeklySessionsChangeEl, weeklySessionsChange);
+        if (weeklySessionsEl) {
+            weeklySessionsEl.textContent = weeklySessions.toString();
+        }
+        if (weeklySessionsChangeEl) {
+            this.updateChangeElement(weeklySessionsChangeEl, weeklySessionsChange);
+        }
 
-        weeklyFocusTimeEl.textContent = TimeUtils.formatTime(weeklyFocusTime);
-        this.updateChangeElement(weeklyFocusChangeEl, weeklyFocusChange);
+        if (weeklyFocusTimeEl) {
+            weeklyFocusTimeEl.textContent = TimeUtils.formatTime(weeklyFocusTime);
+        }
+        if (weeklyFocusChangeEl) {
+            this.updateChangeElement(weeklyFocusChangeEl, weeklyFocusChange);
+        }
     }
 
     calculatePercentageChange(current, previous) {
@@ -465,6 +486,12 @@ export class NavigationManager {
 
     async updateWeeklySessionsChart() {
         const weeklyChart = document.getElementById('weekly-chart');
+        
+        // If element doesn't exist (card removed), skip update silently
+        if (!weeklyChart) {
+            return;
+        }
+        
         weeklyChart.innerHTML = '';
 
         const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -2396,28 +2423,27 @@ true // All sessions are focus sessions now
     renderYAxis(container, maxValue) {
         if (!container) return;
         
-        // Minimum scale is always 25 minutes (0, 5, 10, 15, 20, 25)
-        // Maximum for hourly data should be 60 minutes (1 hour)
+        // Determine step size based on max value
+        // If max is 25 or above, always show full scale: 0, 10, 20, 30, 40, 50, 60
+        // If max is under 25, use 5-minute steps: 0, 5, 10, 15, 20, 25
         let niceMax;
-        if (maxValue <= 25) {
-            niceMax = 25;
-        } else if (maxValue <= 30) {
-            niceMax = 30;
-        } else if (maxValue <= 45) {
-            niceMax = 45;
-        } else {
-            // Max out at 60 minutes (1 hour max per hour slot)
+        let stepValue;
+        
+        if (maxValue >= 25) {
+            // Use 10-minute increments for 25+ minutes
+            stepValue = 10;
+            // Always show full scale up to 60
             niceMax = 60;
+        } else {
+            // Use 5-minute increments for under 25 minutes
+            stepValue = 5;
+            // Always show up to 25 for consistency
+            niceMax = 25;
         }
         
-        // Create 6 labels from niceMax to 0 (top to bottom)
-        const steps = 5;
-        const stepValue = niceMax / steps;
+        // Create labels from niceMax to 0 (top to bottom)
         const labels = [];
-        
-        // Start from max (top) and go down to 0 (bottom)
-        for (let i = steps; i >= 0; i--) {
-            const value = Math.round(stepValue * i);
+        for (let value = niceMax; value >= 0; value -= stepValue) {
             labels.push(value);
         }
         
@@ -2485,9 +2511,18 @@ true // All sessions are focus sessions now
             if (data.total === 0) {
                 bar.classList.add('empty');
             } else {
+                // Calculate heights as percentage of maxValue
+                const totalHeight = (data.total / maxValue) * 100;
                 const focusHeight = (data.focus / maxValue) * 100;
                 const breakHeight = (data.break / maxValue) * 100;
+                
+                // Calculate remaining empty space (up to 60 minutes)
+                const remainingHeight = 100 - totalHeight;
 
+                // Note: flex-direction: column-reverse in CSS makes last element appear at bottom
+                // So we add in reverse order: empty-remaining last (will be at top)
+                
+                // Add focus segment first (will be at bottom with column-reverse)
                 if (data.focus > 0) {
                     const focusSegment = document.createElement('div');
                     focusSegment.className = 'timeline-bar-segment focus';
@@ -2495,11 +2530,20 @@ true // All sessions are focus sessions now
                     bar.appendChild(focusSegment);
                 }
 
+                // Add break segment (will be in middle with column-reverse)
                 if (data.break > 0) {
                     const breakSegment = document.createElement('div');
                     breakSegment.className = 'timeline-bar-segment break';
                     breakSegment.style.height = `${breakHeight}%`;
                     bar.appendChild(breakSegment);
+                }
+
+                // Add remaining/empty segment last (will be at top with column-reverse)
+                if (remainingHeight > 0) {
+                    const emptySegment = document.createElement('div');
+                    emptySegment.className = 'timeline-bar-segment empty-remaining';
+                    emptySegment.style.height = `${remainingHeight}%`;
+                    bar.appendChild(emptySegment);
                 }
 
                 // Add tooltip
