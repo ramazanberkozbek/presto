@@ -378,25 +378,27 @@
 
 /* Two Column Layout */
 .calendar-main-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 1.25rem;
-  max-width: 1000px;
+  max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
 }
 
 .calendar-left-column {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 1rem;
   overflow: visible;
   /* Allow tooltips to show outside */
 }
 
-.calendar-right-column {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+/* On larger screens, allow cards to sit side by side */
+@media (min-width: 1200px) {
+  .calendar-left-column {
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  }
 }
 
 /* ========================================
@@ -519,11 +521,22 @@
   border-radius: 3px 3px 0 0;
   position: relative;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, z-index 0.3s ease;
   display: flex;
   flex-direction: column-reverse;
   justify-content: flex-start;
   align-items: stretch;
+}
+
+/* Invisible hover area - larger hit zone for easier hovering */
+.timeline-bar::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  z-index: -1;
 }
 
 .timeline-bar:hover {
@@ -540,7 +553,7 @@
 /* Bar with focus time */
 .timeline-bar-segment {
   width: 100%;
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease;
 }
 
 .timeline-bar-segment.focus {
@@ -654,6 +667,7 @@
   z-index: 10000;
   line-height: 1.5;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  will-change: opacity;
 }
 
 .timeline-bar:hover .timeline-tooltip {
@@ -830,6 +844,217 @@
   transform: translateX(-50%);
   border: 4px solid transparent;
   border-top-color: #333333;
+}
+
+/* ========================================
+   WEEKLY FOCUS TIME DISTRIBUTION
+   ======================================== */
+
+.weekly-focus-distribution-card {
+  background: var(--card-bg);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px var(--shared-border);
+  display: none; /* Hidden by default, shown only in weekly view */
+  /* Allow other cards to sit beside it on larger screens */
+  max-width: 100%;
+}
+
+.weekly-focus-distribution-card.active {
+  display: block;
+}
+
+/* Weekly Chart Container */
+.weekly-chart-container {
+  margin-top: 1.5rem;
+}
+
+.weekly-chart-content {
+  display: flex;
+  gap: 0.75rem;
+  min-height: 240px;
+  position: relative;
+}
+
+/* Y-axis Labels (Left side) */
+.weekly-y-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-right: 0.5rem;
+  min-width: 32px;
+  padding-bottom: 24px; /* Space for X-axis labels */
+  padding-top: 1rem; /* Push labels down to align with bars */
+}
+
+.weekly-y-axis span {
+  font-size: 11px;
+  color: #999999;
+  text-align: right;
+  line-height: 1;
+  user-select: none;
+}
+
+/* Bars Wrapper (contains grid and bars) */
+.weekly-bars-wrapper {
+  flex: 1;
+  position: relative;
+  background: #F5F5F5;
+  border-radius: 8px;
+  padding: 1rem 0.75rem 0 0.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* Align bars to bottom */
+}
+
+/* Grid Lines Background */
+.weekly-grid {
+  position: absolute;
+  top: 1rem;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.weekly-grid-line {
+  height: 1px;
+  background: #E8E8E8;
+  width: 100%;
+}
+
+/* Weekly Bars Container */
+.weekly-bars {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 100%;
+  min-height: 200px;
+  gap: 0.5rem;
+  padding-bottom: 24px; /* Space for X-axis labels */
+  position: relative;
+}
+
+/* Individual Day Bar */
+.weekly-bar {
+  flex: 1;
+  max-width: 50px;
+  background: linear-gradient(180deg, #4A9B7F 0%, #5DB08F 100%);
+  border-radius: 8px 8px 0 0;
+  min-height: 3px;
+  position: relative;
+  transition: filter 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+              transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: visible;
+  will-change: transform;
+}
+
+/* Invisible hover area - larger hit zone for easier hovering */
+.weekly-bar::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  z-index: -1;
+}
+
+.weekly-bar:hover {
+  filter: brightness(1.15);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Today's bar - more vibrant */
+.weekly-bar.today {
+  background: linear-gradient(180deg, #48C9A8 0%, #5DD9B8 100%);
+  box-shadow: 0 2px 6px rgba(72, 201, 168, 0.3);
+}
+
+/* Hover Indicator Circle on top of bar */
+.weekly-bar-indicator {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%) scale(0);
+  width: 14px;
+  height: 14px;
+  background: #5FE6C9;
+  border: 2px solid #FFFFFF;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.weekly-bar:hover .weekly-bar-indicator {
+  transform: translateX(-50%) scale(1);
+}
+
+/* Tooltip on hover */
+.weekly-bar-tooltip {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #FFFFFF;
+  color: #333333;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 100;
+  will-change: opacity;
+}
+
+.weekly-bar-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #FFFFFF;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.05));
+}
+
+.weekly-bar:hover .weekly-bar-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* X-axis Labels (Day names) */
+.weekly-x-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  padding-left: calc(32px + 0.75rem); /* Match Y-axis width + gap */
+  padding-right: 0.75rem;
+}
+
+.weekly-x-axis span {
+  flex: 1;
+  max-width: 50px;
+  text-align: center;
+  font-size: 12px;
+  color: #999999;
+  font-weight: 500;
+  user-select: none;
 }
 
 /* Focus Summary Card */
@@ -1113,79 +1338,6 @@
   background: var(--break-color);
 }
 
-/* Mini Calendar Container */
-.mini-calendar-container {
-  background: var(--card-bg);
-  border-radius: 15px;
-  padding: 1.5rem;
-  height: fit-content;
-}
-
-.mini-calendar-container .calendar-header h3 {
-  margin: 0;
-  color: var(--accent-color);
-  font-weight: 600;
-  font-size: 1.1rem;
-}
-
-/* Selected Day Details */
-.selected-day-details {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--shared-border);
-}
-
-.selected-day-details h4 {
-  margin: 0 0 0.75rem 0;
-  color: var(--accent-color);
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
-/* Sessions Header Styles */
-.sessions-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-}
-
-.sessions-header h4 {
-  margin: 0;
-  color: var(--accent-color);
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
-.add-session-btn {
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 50%;
-  background: var(--setting-item-bg);
-  color: var(--shared-text);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-}
-
-.add-session-btn:hover {
-  background: var(--setting-item-hover-bg);
-  transform: scale(1.1);
-}
-
-.add-session-btn:active {
-  transform: scale(0.95);
-}
-
-.add-session-btn svg {
-  width: 16px;
-  height: 16px;
-  stroke-width: 2.5;
-}
-
 /* Sessions History Table */
 .sessions-history-card {
   background: var(--card-bg);
@@ -1194,6 +1346,7 @@
   margin-bottom: 1.5rem;
 }
 
+/* Sessions Header Styles */
 .sessions-header {
   display: flex;
   align-items: center;
@@ -1500,6 +1653,34 @@
   border-top-color: #444444;
 }
 
+/* Dark Mode - Weekly Focus Distribution */
+[data-theme="dark"] .weekly-focus-distribution-card {
+  background: var(--card-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .weekly-bars-wrapper {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .weekly-grid-line {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .weekly-y-axis span,
+[data-theme="dark"] .weekly-x-axis span {
+  color: #999999;
+}
+
+[data-theme="dark"] .weekly-bar-tooltip {
+  background: #444444;
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .weekly-bar-tooltip::after {
+  border-top-color: #444444;
+}
+
 /* Dark mode for timeline empty-remaining segment */
 [data-theme="dark"] .timeline-bar-segment.empty-remaining {
   background: var(--input-border);
@@ -1511,6 +1692,34 @@
   [data-theme="auto"] .focus-trend-card {
     background: var(--card-bg);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Weekly Focus Distribution - Auto Dark Mode */
+  [data-theme="auto"] .weekly-focus-distribution-card {
+    background: var(--card-bg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  [data-theme="auto"] .weekly-bars-wrapper {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  [data-theme="auto"] .weekly-grid-line {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  [data-theme="auto"] .weekly-y-axis span,
+  [data-theme="auto"] .weekly-x-axis span {
+    color: #999999;
+  }
+
+  [data-theme="auto"] .weekly-bar-tooltip {
+    background: #444444;
+    color: #FFFFFF;
+  }
+
+  [data-theme="auto"] .weekly-bar-tooltip::after {
+    border-top-color: #444444;
   }
 
   [data-theme="auto"] .trend-day-label {
@@ -1571,6 +1780,21 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
+/* Espresso - Weekly Focus Distribution */
+:root[data-timer-theme="espresso"][data-theme="dark"] .weekly-focus-distribution-card {
+  background: var(--card-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .weekly-bars-wrapper {
+  background: var(--setting-item-bg);
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .weekly-bar-tooltip {
+  background: #444444;
+  color: #FFFFFF;
+}
+
 /* Pipboy Theme */
 :root[data-timer-theme="pipboy"] .daily-focus-distribution-card {
   background: var(--card-bg);
@@ -1629,6 +1853,54 @@
   background: linear-gradient(90deg, rgba(0, 255, 65, 0.6) 0%, rgba(0, 255, 65, 0.7) 100%);
 }
 
+/* Pipboy - Weekly Focus Distribution */
+:root[data-timer-theme="pipboy"] .weekly-focus-distribution-card {
+  background: var(--card-bg);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 255, 65, 0.2);
+}
+
+:root[data-timer-theme="pipboy"] .weekly-focus-distribution-card h3 {
+  color: var(--focus-color);
+  text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+}
+
+:root[data-timer-theme="pipboy"] .weekly-bars-wrapper {
+  background: rgba(0, 255, 65, 0.05);
+  border: 1px solid rgba(0, 255, 65, 0.2);
+}
+
+:root[data-timer-theme="pipboy"] .weekly-bar {
+  background: linear-gradient(180deg, #00FF41 0%, #00FF65 100%);
+  box-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+}
+
+:root[data-timer-theme="pipboy"] .weekly-bar.today {
+  background: linear-gradient(180deg, #00FF65 0%, #00FF89 100%);
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.7);
+}
+
+:root[data-timer-theme="pipboy"] .weekly-bar-indicator {
+  background: #00FF89;
+  border-color: #00FF41;
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.8);
+}
+
+:root[data-timer-theme="pipboy"] .weekly-grid-line {
+  background: rgba(0, 255, 65, 0.2);
+}
+
+:root[data-timer-theme="pipboy"] .weekly-y-axis span,
+:root[data-timer-theme="pipboy"] .weekly-x-axis span {
+  color: var(--focus-color);
+  text-shadow: 0 0 3px rgba(0, 255, 65, 0.3);
+}
+
+/* Pommodore64 Theme */
+:root[data-timer-theme="pommodore64"] .daily-focus-distribution-card {
+  background: linear-gradient(90deg, rgba(0, 255, 65, 0.6) 0%, rgba(0, 255, 65, 0.7) 100%);
+}
+
 :root[data-timer-theme="pipboy"] .trend-comparison-dot {
   box-shadow: 0 0 8px rgba(0, 255, 65, 0.6), 0 2px 6px rgba(0, 0, 0, 0.2);
 }
@@ -1677,6 +1949,34 @@
   width: 12px;
   height: 12px;
   box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
+}
+
+/* Pommodore64 - Weekly Focus Distribution */
+:root[data-timer-theme="pommodore64"] .weekly-focus-distribution-card {
+  background: var(--card-bg);
+  border: 3px solid var(--shared-border);
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
+  border-radius: 0;
+}
+
+:root[data-timer-theme="pommodore64"] .weekly-bars-wrapper {
+  background: var(--setting-item-bg);
+  border-radius: 0;
+  border: 2px solid var(--shared-border);
+}
+
+:root[data-timer-theme="pommodore64"] .weekly-bar {
+  border-radius: 0;
+}
+
+:root[data-timer-theme="pommodore64"] .weekly-bar-indicator {
+  border-radius: 0;
+  border-width: 3px;
+}
+
+:root[data-timer-theme="pommodore64"] .weekly-bar-tooltip {
+  border-radius: 0;
+  border: 2px solid var(--shared-border);
 }
 
 /* === TIME PERIOD SELECTOR === */

@@ -1,6 +1,7 @@
 // Navigation Manager for Sidebar
 import { TimeUtils } from '../utils/common-utils.js';
 import { TagStatistics } from '../utils/tag-statistics.js';
+import { BarChart } from '../components/bar-chart.js';
 
 export class NavigationManager {
     constructor() {
@@ -13,6 +14,31 @@ export class NavigationManager {
         // Time period management
         this.currentPeriod = 'daily'; // 'daily', 'weekly', 'monthly', 'yearly'
         this.currentDate = new Date();
+        
+        // Initialize bar chart components
+        this.dailyBarChart = new BarChart({
+            containerId: 'daily-focus-distribution',
+            barsContainerId: 'timeline-bars',
+            yAxisId: 'timeline-y-axis',
+            gridId: 'timeline-grid',
+            totalDisplayId: 'daily-total-focus',
+            maxValue: 60,           // Max 60 minutes per hour
+            useFixedMax: true,      // Always show 0-60 scale
+            barMaxWidth: 30,        // Thinner bars for 24 hours
+            xAxisLabels: Array.from({length: 24}, (_, i) => i.toString())
+        });
+
+        this.weeklyBarChart = new BarChart({
+            containerId: 'weekly-focus-distribution',
+            barsContainerId: 'weekly-bars',
+            yAxisId: 'weekly-y-axis',
+            gridId: 'weekly-grid',
+            totalDisplayId: 'weekly-total-focus',
+            useFixedMax: false,     // Dynamic scale based on data
+            barMaxWidth: 50,        // Wider bars for 7 days
+            minScale: 20,
+            xAxisLabels: ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt']
+        });
         
         // Apply timer-active class on initial load since default view is timer
         document.body.classList.add('timer-active');
@@ -136,6 +162,15 @@ export class NavigationManager {
         const currentMonthEl = document.getElementById('current-month');
         const prevBtn = document.getElementById('prev-month');
         const nextBtn = document.getElementById('next-month');
+        
+        // Calendar has been removed from the UI, skip initialization
+        if (!calendarGrid || !currentMonthEl || !prevBtn || !nextBtn) {
+            // Initialize dates for other features
+            this.currentDate = new Date();
+            this.displayMonth = new Date(this.currentDate);
+            this.selectedWeek = this.getWeekStart(this.currentDate);
+            return;
+        }
 
         // Week selector elements
         const weekRangeEl = document.getElementById('week-range');
@@ -165,6 +200,7 @@ export class NavigationManager {
             await this.updateWeeklySessionsChart();
             this.updateDailyChart();
             await this.updateTagUsageChart();
+            this.updateWeeklyFocusDistribution(); // Add weekly distribution update
         });
 
         nextWeekBtn.addEventListener('click', async () => {
@@ -174,6 +210,7 @@ export class NavigationManager {
             await this.updateWeeklySessionsChart();
             this.updateDailyChart();
             await this.updateTagUsageChart();
+            this.updateWeeklyFocusDistribution(); // Add weekly distribution update
         });
 
         // Initial updates will be handled by switchView when calendar is shown
@@ -357,7 +394,10 @@ export class NavigationManager {
 
     async updateDailyChart() {
         const dailyChart = document.getElementById('daily-chart');
-        if (!dailyChart) return;
+        
+        if (!dailyChart) {
+            return;
+        }
 
         dailyChart.innerHTML = '';
 
@@ -734,6 +774,9 @@ export class NavigationManager {
         const selectedDayTitle = document.getElementById('selected-day-title');
         const timelineTrack = document.getElementById('timeline-track');
         const timelineHours = document.getElementById('timeline-hours');
+        
+        // Calendar details have been removed from the UI, skip update
+        if (!selectedDayTitle || !timelineTrack || !timelineHours) return;
 
         // Format date for display
         const dateStr = date.toLocaleDateString('en-US', {
@@ -802,6 +845,9 @@ true // All sessions are focus sessions now
     async updateCalendar() {
         const calendarGrid = document.getElementById('calendar-grid');
         const currentMonthEl = document.getElementById('current-month');
+        
+        // Calendar has been removed from the UI, skip update
+        if (!calendarGrid || !currentMonthEl) return;
 
         // Update month display
         const monthNames = [
@@ -889,12 +935,17 @@ true // All sessions are focus sessions now
 
     async selectDay(date) {
         // Remove previous selection
-        document.querySelectorAll('.calendar-day').forEach(day => {
-            day.classList.remove('selected');
-        });
+        const calendarDays = document.querySelectorAll('.calendar-day');
+        if (calendarDays.length > 0) {
+            calendarDays.forEach(day => {
+                day.classList.remove('selected');
+            });
 
-        // Add selection to clicked day
-        event.currentTarget.classList.add('selected');
+            // Add selection to clicked day
+            if (event && event.currentTarget) {
+                event.currentTarget.classList.add('selected');
+            }
+        }
 
         this.selectedDate = date;
         await this.updateSelectedDayDetails(date);
@@ -2061,6 +2112,16 @@ true // All sessions are focus sessions now
             }
         }
 
+        // Show/hide weekly distribution card
+        const weeklyDistCard = document.getElementById('weekly-focus-distribution');
+        if (weeklyDistCard) {
+            if (period === 'weekly') {
+                weeklyDistCard.classList.add('active');
+            } else {
+                weeklyDistCard.classList.remove('active');
+            }
+        }
+
         // Show/hide focus trend card
         const focusTrendCard = document.getElementById('focus-trend-card');
         if (focusTrendCard) {
@@ -2270,6 +2331,9 @@ true // All sessions are focus sessions now
         this.updateDailyChart();
         await this.updateTagUsageChart();
         
+        // Update weekly focus distribution
+        this.updateWeeklyFocusDistribution();
+        
         // Update navigator buttons
         this.updateNavigatorButtons();
     }
@@ -2358,112 +2422,30 @@ true // All sessions are focus sessions now
     // ========================================
 
     updateDailyFocusDistribution() {
-        const timelineBars = document.getElementById('timeline-bars');
-        const totalFocusEl = document.getElementById('daily-total-focus');
-        const yAxisEl = document.getElementById('timeline-y-axis');
-        const gridEl = document.getElementById('timeline-grid');
-        
-        if (!timelineBars || !totalFocusEl) return;
-
-        // Get sessions for current date
         if (!window.sessionManager) {
-            this.showNoDataMessage(timelineBars);
-            this.renderYAxis(yAxisEl, 0);
-            this.renderGrid(gridEl);
-            totalFocusEl.textContent = '0 saat';
+            this.dailyBarChart.render([]);
             return;
         }
 
         const sessions = window.sessionManager.getSessionsForDate(this.currentDate);
         
         if (!sessions || sessions.length === 0) {
-            this.showNoDataMessage(timelineBars);
-            this.renderYAxis(yAxisEl, 0);
-            this.renderGrid(gridEl);
-            totalFocusEl.textContent = '0 saat';
+            this.dailyBarChart.render([]);
             return;
         }
 
         // Create 24-hour timeline data
         const hourlyData = this.createHourlyDistribution(sessions);
         
-        // Find max value for Y-axis (in minutes)
-        const maxValue = Math.max(...hourlyData.map(d => d.total), 1);
-        
-        // Calculate total focus time (from hourly data for accuracy)
-        let totalFocusMinutes = 0;
-        hourlyData.forEach(hour => {
-            totalFocusMinutes += hour.focus;
-        });
-        
-        const totalHours = Math.floor(totalFocusMinutes / 60);
-        const remainingMinutes = Math.round(totalFocusMinutes % 60);
-        
-        if (totalHours > 0) {
-            totalFocusEl.textContent = `${totalHours} saat ${remainingMinutes} dakika`;
-        } else {
-            totalFocusEl.textContent = `${Math.round(totalFocusMinutes)} dakika`;
-        }
+        // Convert to bar chart data format
+        const chartData = hourlyData.map((hour, index) => ({
+            label: index.toString(),
+            value: hour.focus, // Only focus time, no breaks
+            isActive: index === new Date().getHours() // Highlight current hour
+        }));
 
-        // Render Y-axis, grid, and timeline bars
-        this.renderYAxis(yAxisEl, maxValue);
-        this.renderGrid(gridEl);
-        this.renderTimelineBars(timelineBars, hourlyData);
-    }
-
-    showNoDataMessage(container) {
-        container.innerHTML = `
-            <div class="timeline-no-data">
-                <i class="ri-bar-chart-line"></i>
-                <span>Veri yok</span>
-            </div>
-        `;
-    }
-
-    renderYAxis(container, maxValue) {
-        if (!container) return;
-        
-        // Determine step size based on max value
-        // If max is 25 or above, always show full scale: 0, 10, 20, 30, 40, 50, 60
-        // If max is under 25, use 5-minute steps: 0, 5, 10, 15, 20, 25
-        let niceMax;
-        let stepValue;
-        
-        if (maxValue >= 25) {
-            // Use 10-minute increments for 25+ minutes
-            stepValue = 10;
-            // Always show full scale up to 60
-            niceMax = 60;
-        } else {
-            // Use 5-minute increments for under 25 minutes
-            stepValue = 5;
-            // Always show up to 25 for consistency
-            niceMax = 25;
-        }
-        
-        // Create labels from niceMax to 0 (top to bottom)
-        const labels = [];
-        for (let value = niceMax; value >= 0; value -= stepValue) {
-            labels.push(value);
-        }
-        
-        container.innerHTML = labels.map(value => 
-            `<div class="timeline-y-label">${value} dk</div>`
-        ).join('');
-        
-        // Store max value for bar scaling
-        container.dataset.maxValue = niceMax;
-    }
-
-    renderGrid(container) {
-        if (!container) return;
-        
-        // Create 5 horizontal grid lines
-        const lines = Array.from({ length: 6 }, () => 
-            '<div class="timeline-grid-line"></div>'
-        ).join('');
-        
-        container.innerHTML = lines;
+        // Render using component
+        this.dailyBarChart.render(chartData);
     }
 
     createHourlyDistribution(sessions) {
@@ -2475,99 +2457,45 @@ true // All sessions are focus sessions now
             total: 0
         }));
 
-        // Aggregate session data by hour
+        // Aggregate session data by distributing across hours
         sessions.forEach(session => {
-            if (!session.created_at || !session.duration) return;
+            if (!session.start_time || !session.end_time || !session.duration) return;
 
-            const sessionDate = new Date(session.created_at);
-            const hour = sessionDate.getHours();
-            const durationMinutes = session.duration; // duration is already in minutes
-
-            if (session.session_type === 'focus' || session.session_type === 'custom') {
-                hourlyData[hour].focus += durationMinutes;
-            } else if (session.session_type === 'break') {
-                hourlyData[hour].break += durationMinutes;
+            const [startHour, startMinute] = session.start_time.split(':').map(Number);
+            const [endHour, endMinute] = session.end_time.split(':').map(Number);
+            
+            const startTotalMinutes = startHour * 60 + startMinute;
+            const endTotalMinutes = endHour * 60 + endMinute;
+            
+            // Distribute session time across all affected hours
+            for (let hour = startHour; hour <= endHour; hour++) {
+                const hourStartMinutes = hour * 60;
+                const hourEndMinutes = (hour + 1) * 60;
+                
+                const sessionStartInHour = Math.max(startTotalMinutes, hourStartMinutes);
+                const sessionEndInHour = Math.min(endTotalMinutes, hourEndMinutes);
+                
+                if (sessionEndInHour > sessionStartInHour) {
+                    const minutesInThisHour = sessionEndInHour - sessionStartInHour;
+                    
+                    if (session.session_type === 'focus' || session.session_type === 'custom') {
+                        hourlyData[hour].focus += minutesInThisHour;
+                    } else if (session.session_type === 'break') {
+                        hourlyData[hour].break += minutesInThisHour;
+                    }
+                    
+                    hourlyData[hour].total += minutesInThisHour;
+                }
             }
-
-            hourlyData[hour].total += durationMinutes;
         });
 
         return hourlyData;
     }
 
-    renderTimelineBars(container, hourlyData) {
-        // Get max value from Y-axis for proper scaling
-        const yAxis = document.getElementById('timeline-y-axis');
-        const maxValue = yAxis && yAxis.dataset.maxValue ? 
-            parseFloat(yAxis.dataset.maxValue) : 
-            Math.max(...hourlyData.map(d => d.total), 1);
+    // ========================================
+    // FOCUS TREND CARD
+    // ========================================
 
-        container.innerHTML = '';
-
-        hourlyData.forEach(data => {
-            const bar = document.createElement('div');
-            bar.className = 'timeline-bar';
-
-            if (data.total === 0) {
-                bar.classList.add('empty');
-            } else {
-                // Calculate heights as percentage of maxValue
-                const totalHeight = (data.total / maxValue) * 100;
-                const focusHeight = (data.focus / maxValue) * 100;
-                const breakHeight = (data.break / maxValue) * 100;
-                
-                // Calculate remaining empty space (up to 60 minutes)
-                const remainingHeight = 100 - totalHeight;
-
-                // Note: flex-direction: column-reverse in CSS makes last element appear at bottom
-                // So we add in reverse order: empty-remaining last (will be at top)
-                
-                // Add focus segment first (will be at bottom with column-reverse)
-                if (data.focus > 0) {
-                    const focusSegment = document.createElement('div');
-                    focusSegment.className = 'timeline-bar-segment focus';
-                    focusSegment.style.height = `${focusHeight}%`;
-                    bar.appendChild(focusSegment);
-                }
-
-                // Add break segment (will be in middle with column-reverse)
-                if (data.break > 0) {
-                    const breakSegment = document.createElement('div');
-                    breakSegment.className = 'timeline-bar-segment break';
-                    breakSegment.style.height = `${breakHeight}%`;
-                    bar.appendChild(breakSegment);
-                }
-
-                // Add remaining/empty segment last (will be at top with column-reverse)
-                if (remainingHeight > 0) {
-                    const emptySegment = document.createElement('div');
-                    emptySegment.className = 'timeline-bar-segment empty-remaining';
-                    emptySegment.style.height = `${remainingHeight}%`;
-                    bar.appendChild(emptySegment);
-                }
-
-                // Add tooltip
-                const tooltip = document.createElement('div');
-                tooltip.className = 'timeline-tooltip';
-                
-                const tooltipLines = [];
-                
-                if (data.focus > 0) {
-                    tooltipLines.push(`${Math.round(data.focus)} dakika`);
-                }
-                if (data.break > 0) {
-                    tooltipLines.push(`Mola: ${Math.round(data.break)} dk`);
-                }
-                
-                tooltip.innerHTML = tooltipLines.join('<br>');
-                bar.appendChild(tooltip);
-            }
-
-            container.appendChild(bar);
-        });
-    }
-
-    // Update Focus Trend Card
     async updateFocusTrend(date = this.currentDate) {
         const trendCard = document.getElementById('focus-trend-card');
         const comparisonText = document.getElementById('trend-comparison-text');
@@ -2738,13 +2666,65 @@ true // All sessions are focus sessions now
             dayBeforeTooltip.textContent = formatTime(dayBeforeSameTimeTotal);
         }
 
-        // Show the card if we're in daily view
+        // Show the card only if:
+        // 1. We're in daily view AND
+        // 2. The selected date is TODAY (not a past date)
         const isDaily = this.currentPeriod === 'daily';
-        if (isDaily) {
+        const selectedDate = new Date(date);
+        const todayDate = new Date();
+        
+        // Compare dates (ignore time)
+        const isToday = selectedDate.toDateString() === todayDate.toDateString();
+        
+        if (isDaily && isToday) {
             trendCard.classList.remove('hidden');
         } else {
             trendCard.classList.add('hidden');
         }
     }
+
+    // Update Weekly Focus Distribution
+    // ========================================
+    // WEEKLY FOCUS TIME DISTRIBUTION
+    // ========================================
+
+    updateWeeklyFocusDistribution() {
+        if (!window.sessionManager) {
+            this.weeklyBarChart.render([]);
+            return;
+        }
+
+        // Get week start (Sunday)
+        const weekStart = this.getWeekStart(this.selectedWeek || this.currentDate);
+        
+        // Create array of 7 days starting from Sunday
+        const weekData = [];
+
+        for (let i = 0; i < 7; i++) {
+            const dayDate = new Date(weekStart);
+            dayDate.setDate(dayDate.getDate() + i);
+            
+            const sessions = window.sessionManager.getSessionsForDate(dayDate);
+            const focusMinutes = sessions.reduce((sum, session) => {
+                if (session.session_type === 'focus' || session.session_type === 'custom') {
+                    return sum + (session.duration || 0);
+                }
+                return sum;
+            }, 0);
+            
+            weekData.push({
+                label: ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'][i],
+                value: focusMinutes,
+                isActive: this.isSameDay(dayDate, new Date())
+            });
+        }
+
+        // Render using component
+        this.weeklyBarChart.render(weekData);
+    }
+
 }
+
+
+
 

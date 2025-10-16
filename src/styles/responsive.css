@@ -56,22 +56,18 @@
 
   /* Calendar layout adjustments for tablets and small desktops */
   .calendar-main-layout {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
     max-width: 800px;
   }
 
-  .daily-chart {
-    height: 70px;
+  .calendar-left-column {
+    grid-template-columns: 1fr !important;
   }
 
   #calendar-view {
     padding: 1.5rem !important;
   }
 
-  .calendar-container,
-  .mini-calendar-container,
-  .daily-chart-card {
+  .calendar-container {
     padding: 1.25rem;
   }
 }
@@ -126,6 +122,32 @@
   /* Daily focus distribution mobile */
   .daily-focus-distribution-card {
     padding: 1rem;
+  }
+
+  /* Weekly focus distribution mobile */
+  .weekly-focus-distribution-card {
+    padding: 1rem;
+  }
+
+  .weekly-chart-content {
+    min-height: 180px;
+  }
+
+  .weekly-bars {
+    gap: 0.25rem;
+  }
+
+  .weekly-bar {
+    max-width: 40px;
+  }
+
+  .weekly-y-axis {
+    min-width: 28px;
+    font-size: 10px;
+  }
+
+  .weekly-x-axis span {
+    font-size: 11px;
   }
 
   .timeline-content {
@@ -377,10 +399,6 @@
   .day-stats {
     grid-template-columns: 1fr;
     gap: 1rem;
-  }
-
-  .daily-chart {
-    height: 60px;
   }
 }
 
