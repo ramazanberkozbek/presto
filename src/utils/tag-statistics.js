@@ -195,11 +195,18 @@ export class TagStatistics {
         legendContainer.innerHTML = '';
 
         if (!stats || stats.length === 0 || totalDuration === 0) {
-            // Show placeholder
+            // Show placeholder with Phosphor icon and stronger text style
             chartContainer.innerHTML = `
-                <div class="pie-chart-placeholder">
-                    <i class="ri-pie-chart-line"></i>
-                    <span>No data available</span>
+                <div class="pie-chart-placeholder" role="img" aria-label="No data" style="display:flex;flex-direction:column;align-items:center;justify-content:center;color:#374151;">
+                    <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
+                        <!-- Inline SVG pie chart icon (more explicit than relying on icon fonts) -->
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 12A9 9 0 1 1 12 3" />
+                            <path d="M12 12V3" />
+                            <path d="M12 12h8" stroke-opacity="0.6" />
+                        </svg>
+                    </div>
+                    <span style="margin-top:8px;color:#111827;font-weight:600;font-size:14px;">No data available</span>
                 </div>
             `;
             return;
