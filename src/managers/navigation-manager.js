@@ -73,6 +73,9 @@ export class NavigationManager {
             comparisonTextId: 'weekly-trend-comparison-text'
         });
 
+        // Placeholder for Peak Focus Time component (initialized lazily)
+        this.weeklyPeakFocus = null;
+
         // Initialize Focus Trend component for monthly view
         this.monthlyFocusTrend = new FocusTrend({
             containerId: 'monthly-focus-trend',
@@ -122,6 +125,16 @@ export class NavigationManager {
         
         // Initialize sessions table
         await this.initSessionsTable();
+
+        // Ensure initial period matches any active period button in the DOM
+        // and trigger the period switch so period-specific components (like
+        // the weekly PeakFocusTime) are initialized on first load.
+        const activePeriodBtn = document.querySelector('.period-btn.active');
+        if (activePeriodBtn && activePeriodBtn.dataset && activePeriodBtn.dataset.period) {
+            this.currentPeriod = activePeriodBtn.dataset.period;
+        }
+        // Trigger the UI/data refresh for the current period
+        await this.switchPeriod(this.currentPeriod);
     }
 
     async handleNavClick(e) {
@@ -759,6 +772,67 @@ export class NavigationManager {
                 weeklyChart.appendChild(dayBar);
             });
         }
+    }
+
+    // Compute weekly peak focus: averages per hour over last 7 days and peak hour
+    computeWeeklyPeakFocus() {
+        const averages = new Array(24).fill(0);
+        if (!window.sessionManager) {
+            return { averages, peakHour: 0, peakValue: 0 };
+        }
+
+        // Sum minutes per hour across last 7 days (including today backward)
+        for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
+            const date = new Date(this.currentDate);
+            date.setDate(this.currentDate.getDate() - dayOffset);
+
+            const sessions = window.sessionManager.getSessionsForDate(date) || [];
+
+            sessions.forEach(session => {
+                // consider focus/custom sessions only
+                const type = session.session_type || session.type;
+                if (type !== 'focus' && type !== 'custom') return;
+                if (!session.start_time || !session.end_time) return;
+
+                const [sh, sm] = session.start_time.split(':').map(Number);
+                const [eh, em] = session.end_time.split(':').map(Number);
+                let startMin = sh * 60 + sm;
+                let endMin = eh * 60 + em;
+
+                // normalize if session ends past midnight (endMin < startMin)
+                if (endMin <= startMin) endMin = startMin; // guard - assume no cross-midnight
+
+                // iterate over hours covered
+                let cur = startMin;
+                while (cur < endMin) {
+                    const hour = Math.floor(cur / 60);
+                    const hourStart = hour * 60;
+                    const hourEnd = hourStart + 60;
+                    const segEnd = Math.min(endMin, hourEnd);
+                    const segStart = Math.max(cur, hourStart);
+                    const minutes = Math.max(0, segEnd - segStart);
+                    if (hour >= 0 && hour < 24) averages[hour] += minutes;
+                    cur = segEnd;
+                }
+            });
+        }
+
+        // Convert totals to averages per day (divide by 7)
+        for (let h = 0; h < 24; h++) {
+            averages[h] = averages[h] / 7;
+        }
+
+        // Find peak hour (highest average). If multiple, pick first
+        let peakHour = 0;
+        let peakValue = averages[0];
+        for (let h = 1; h < 24; h++) {
+            if (averages[h] > peakValue) {
+                peakValue = averages[h];
+                peakHour = h;
+            }
+        }
+
+        return { averages, peakHour, peakValue };
     }
 
     async updateTagUsageChart() {
@@ -2181,6 +2255,16 @@ true // All sessions are focus sessions now
             }
         }
 
+        // Show/hide weekly peak focus card (only visible in weekly period)
+        const weeklyPeakCard = document.getElementById('weekly-peak-focus');
+        if (weeklyPeakCard) {
+            if (period === 'weekly') {
+                weeklyPeakCard.classList.add('active');
+            } else {
+                weeklyPeakCard.classList.remove('active');
+            }
+        }
+
         // Show/hide monthly focus trend card
         const monthlyTrendCard = document.getElementById('monthly-focus-trend');
         if (monthlyTrendCard) {
@@ -2440,8 +2524,28 @@ true // All sessions are focus sessions now
     // Update yearly focus trend as well
     this.updateYearlyFocusTrend();
         
+        // Ensure PeakFocusTime component exists and render
+        await this.ensureWeeklyPeakFocusInitialized();
+        if (this.weeklyPeakFocus) {
+            const peakResult = this.computeWeeklyPeakFocus();
+            this.weeklyPeakFocus.render(peakResult);
+        }
+        
         // Update navigator buttons
         this.updateNavigatorButtons();
+    }
+
+    // Lazy initialize PeakFocusTime component via dynamic import
+    async ensureWeeklyPeakFocusInitialized() {
+        if (this.weeklyPeakFocus) return;
+        try {
+            const module = await import('../components/peak-focus-time.js');
+            const PeakFocusTime = module.PeakFocusTime;
+            this.weeklyPeakFocus = new PeakFocusTime({ containerId: 'weekly-peak-focus' });
+        } catch (e) {
+            console.warn('Failed to initialize PeakFocusTime component:', e);
+            this.weeklyPeakFocus = null;
+        }
     }
 
     async refreshMonthlyData() {

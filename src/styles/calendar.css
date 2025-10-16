@@ -376,6 +376,9 @@
   text-align: center;
 }
 
+/* NOTE: Specific ID overrides removed. Use the card class below for styling and
+   visibility (.weekly-peak-focus-card and .weekly-peak-focus-card.active) */
+
 /* Two Column Layout */
 .calendar-main-layout {
   display: flex;
@@ -898,6 +901,34 @@
   /* Allow other cards to sit beside it on larger screens */
   max-width: 100%;
 }
+
+/* Weekly Peak Focus Card */
+.weekly-peak-focus-card {
+  background: var(--card-bg);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  display: none; /* hidden by default, show only when .active is present */
+}
+.weekly-peak-focus-card.active {
+  display: block;
+}
+.weekly-peak-focus-card h3 {
+  margin: 0 0 0.75rem 0;
+  color: var(--accent-color);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+.weekly-peak-focus-card .peak-subheader {
+  color: var(--text-light);
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+}
+.weekly-peak-focus-card .peak-subheader .peak-time {
+  color: var(--accent-color);
+  font-weight: 700;
+}
+
 
 .weekly-focus-distribution-card.active {
   display: block;
