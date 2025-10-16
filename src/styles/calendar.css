@@ -1112,6 +1112,32 @@
   display: block;
 }
 
+/* Monthly focus trend (hidden by default, shown only in monthly view) */
+.monthly-focus-trend-card {
+  display: none;
+  background: var(--card-bg);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.monthly-focus-trend-card.active {
+  display: block;
+}
+
+/* Yearly focus trend (hidden by default, shown only in yearly view) */
+.yearly-focus-trend-card {
+  display: none;
+  background: var(--card-bg);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.yearly-focus-trend-card.active {
+  display: block;
+}
+
 /* ========================================
    MONTHLY FOCUS TIME DISTRIBUTION
    ======================================== */

@@ -69,8 +69,24 @@ export class NavigationManager {
         this.weeklyFocusTrend = new FocusTrend({
             containerId: 'weekly-focus-trend',
             type: 'weekly',
-            title: 'Odaklanma Trendi',
+            title: 'Haftalık Odaklanma Trendi',
             comparisonTextId: 'weekly-trend-comparison-text'
+        });
+
+        // Initialize Focus Trend component for monthly view
+        this.monthlyFocusTrend = new FocusTrend({
+            containerId: 'monthly-focus-trend',
+            type: 'monthly',
+            title: 'Aylık Odaklanma Trendi',
+            comparisonTextId: 'monthly-trend-comparison-text'
+        });
+
+        // Initialize Focus Trend component for yearly view
+        this.yearlyFocusTrend = new FocusTrend({
+            containerId: 'yearly-focus-trend',
+            type: 'yearly',
+            title: 'Yıllık Odaklanma Trendi',
+            comparisonTextId: 'yearly-trend-comparison-text'
         });
         
         // Apply timer-active class on initial load since default view is timer
@@ -2165,6 +2181,16 @@ true // All sessions are focus sessions now
             }
         }
 
+        // Show/hide monthly focus trend card
+        const monthlyTrendCard = document.getElementById('monthly-focus-trend');
+        if (monthlyTrendCard) {
+            if (period === 'monthly') {
+                monthlyTrendCard.classList.add('active');
+            } else {
+                monthlyTrendCard.classList.remove('active');
+            }
+        }
+
         // Show/hide monthly distribution card
         const monthlyDistCard = document.getElementById('monthly-focus-distribution');
         if (monthlyDistCard) {
@@ -2182,6 +2208,16 @@ true // All sessions are focus sessions now
                 yearlyDistCard.classList.add('active');
             } else {
                 yearlyDistCard.classList.remove('active');
+            }
+        }
+
+        // Show/hide yearly focus trend card
+        const yearlyTrendCard = document.getElementById('yearly-focus-trend');
+        if (yearlyTrendCard) {
+            if (period === 'yearly') {
+                yearlyTrendCard.classList.add('active');
+            } else {
+                yearlyTrendCard.classList.remove('active');
             }
         }
 
@@ -2415,8 +2451,107 @@ true // All sessions are focus sessions now
         // Update monthly focus distribution
         this.updateMonthlyFocusDistribution();
         
+        // Update monthly focus trend
+        this.updateMonthlyFocusTrend();
+        
         // Update navigator buttons
         this.updateNavigatorButtons();
+    }
+
+    // MONTHLY FOCUS TREND
+    // ========================================
+    updateMonthlyFocusTrend() {
+        if (!window.sessionManager) {
+            this.monthlyFocusTrend.render([]);
+            return;
+        }
+
+        const current = new Date(this.currentDate);
+
+        // Helper to get month start
+        const getMonthStart = (date) => new Date(date.getFullYear(), date.getMonth(), 1);
+
+        // This month, last month, month before
+        const thisMonthStart = getMonthStart(current);
+        const lastMonthStart = new Date(thisMonthStart.getFullYear(), thisMonthStart.getMonth() - 1, 1);
+        const twoMonthsStart = new Date(thisMonthStart.getFullYear(), thisMonthStart.getMonth() - 2, 1);
+
+        const getMonthTotal = (monthStart) => {
+            const year = monthStart.getFullYear();
+            const month = monthStart.getMonth();
+            const lastDay = new Date(year, month + 1, 0).getDate();
+            let total = 0;
+            for (let d = 1; d <= lastDay; d++) {
+                const day = new Date(year, month, d);
+                const sessions = window.sessionManager.getSessionsForDate(day) || [];
+                total += sessions.reduce((sum, s) => {
+                    if (s.session_type === 'focus' || s.session_type === 'custom') return sum + (s.duration || 0);
+                    return sum;
+                }, 0);
+            }
+            return total;
+        };
+
+        const thisMonthTotal = getMonthTotal(thisMonthStart);
+        const lastMonthTotal = getMonthTotal(lastMonthStart);
+        const twoMonthsTotal = getMonthTotal(twoMonthsStart);
+
+        // For comparison up-to-current-day: compute totals up to today's date in previous months
+        const today = new Date();
+        const currentDayOfMonth = today.getDate();
+
+        const getUpToDayTotal = (monthStart, upToDay) => {
+            const year = monthStart.getFullYear();
+            const month = monthStart.getMonth();
+            const lastDay = new Date(year, month + 1, 0).getDate();
+            const dayLimit = Math.min(upToDay, lastDay);
+            let total = 0;
+            for (let d = 1; d <= dayLimit; d++) {
+                const day = new Date(year, month, d);
+                const sessions = window.sessionManager.getSessionsForDate(day) || [];
+                total += sessions.reduce((sum, s) => {
+                    if (s.session_type === 'focus' || s.session_type === 'custom') return sum + (s.duration || 0);
+                    return sum;
+                }, 0);
+            }
+            return total;
+        };
+
+        const lastMonthUpToToday = getUpToDayTotal(lastMonthStart, currentDayOfMonth);
+        const twoMonthsUpToToday = getUpToDayTotal(twoMonthsStart, currentDayOfMonth);
+
+        // Prepare data for component (percentages will be handled by component using max value)
+        const maxTotal = Math.max(thisMonthTotal, lastMonthTotal, twoMonthsTotal, 1);
+
+        const data = [
+            {
+                label: 'Bu Ay',
+                time: this.formatTimeForTrend(thisMonthTotal),
+                date: `${thisMonthStart.getMonth() + 1}/${thisMonthStart.getFullYear()}`,
+                value: thisMonthTotal,
+                percentage: (thisMonthTotal / maxTotal) * 100
+            },
+            {
+                label: 'Geçen Ay',
+                time: this.formatTimeForTrend(lastMonthTotal),
+                date: `${lastMonthStart.getMonth() + 1}/${lastMonthStart.getFullYear()}`,
+                value: lastMonthTotal,
+                percentage: (lastMonthTotal / maxTotal) * 100,
+                comparisonPercentage: (lastMonthUpToToday / maxTotal) * 100,
+                comparisonTooltip: this.formatTimeForTrend(lastMonthUpToToday)
+            },
+            {
+                label: 'Evvelki Ay',
+                time: this.formatTimeForTrend(twoMonthsTotal),
+                date: `${twoMonthsStart.getMonth() + 1}/${twoMonthsStart.getFullYear()}`,
+                value: twoMonthsTotal,
+                percentage: (twoMonthsTotal / maxTotal) * 100,
+                comparisonPercentage: (twoMonthsUpToToday / maxTotal) * 100,
+                comparisonTooltip: this.formatTimeForTrend(twoMonthsUpToToday)
+            }
+        ];
+
+        this.monthlyFocusTrend.render(data);
     }
 
     async refreshYearlyData() {
@@ -2428,8 +2563,100 @@ true // All sessions are focus sessions now
         // Update yearly focus distribution
         this.updateYearlyFocusDistribution();
         
+        // Update yearly focus trend
+        this.updateYearlyFocusTrend();
+        
         // Update navigator buttons
         this.updateNavigatorButtons();
+    }
+
+    // YEARLY FOCUS TREND
+    // ========================================
+    updateYearlyFocusTrend() {
+        if (!window.sessionManager) {
+            this.yearlyFocusTrend.render([]);
+            return;
+        }
+
+        const currentYearStart = new Date(this.currentDate.getFullYear(), 0, 1);
+        const lastYearStart = new Date(this.currentDate.getFullYear() - 1, 0, 1);
+        const twoYearsStart = new Date(this.currentDate.getFullYear() - 2, 0, 1);
+
+        const getYearTotal = (yearStart) => {
+            const year = yearStart.getFullYear();
+            let total = 0;
+            for (let month = 0; month < 12; month++) {
+                const monthEnd = new Date(year, month + 1, 0).getDate();
+                for (let d = 1; d <= monthEnd; d++) {
+                    const day = new Date(year, month, d);
+                    const sessions = window.sessionManager.getSessionsForDate(day) || [];
+                    total += sessions.reduce((sum, s) => {
+                        if (s.session_type === 'focus' || s.session_type === 'custom') return sum + (s.duration || 0);
+                        return sum;
+                    }, 0);
+                }
+            }
+            return total;
+        };
+
+        const thisYearTotal = getYearTotal(currentYearStart);
+        const lastYearTotal = getYearTotal(lastYearStart);
+        const twoYearsTotal = getYearTotal(twoYearsStart);
+
+        // Calculate up-to-this-day comparisons (same day-of-year)
+        const today = new Date();
+        const startOfYear = new Date(today.getFullYear(), 0, 1);
+        const dayOfYear = Math.floor((today - startOfYear) / (24 * 60 * 60 * 1000)) + 1; // 1-based
+
+        const getUpToDayOfYearTotal = (yearStart, upToDay) => {
+            const year = yearStart.getFullYear();
+            let total = 0;
+            const limitDate = new Date(year, 0, upToDay);
+            for (let d = 1; d <= upToDay; d++) {
+                const day = new Date(year, 0, d);
+                const sessions = window.sessionManager.getSessionsForDate(day) || [];
+                total += sessions.reduce((sum, s) => {
+                    if (s.session_type === 'focus' || s.session_type === 'custom') return sum + (s.duration || 0);
+                    return sum;
+                }, 0);
+            }
+            return total;
+        };
+
+        const lastYearUpToNow = getUpToDayOfYearTotal(lastYearStart, dayOfYear);
+        const twoYearsUpToNow = getUpToDayOfYearTotal(twoYearsStart, dayOfYear);
+
+        const maxTotal = Math.max(thisYearTotal, lastYearTotal, twoYearsTotal, 1);
+
+        const data = [
+            {
+                label: 'Bu Yıl (tam)',
+                time: this.formatTimeForTrend(thisYearTotal),
+                date: `${currentYearStart.getFullYear()}`,
+                value: thisYearTotal,
+                percentage: (thisYearTotal / maxTotal) * 100
+            },
+            {
+                label: 'Geçen Yıl',
+                time: this.formatTimeForTrend(lastYearTotal),
+                date: `${lastYearStart.getFullYear()}`,
+                value: lastYearTotal,
+                percentage: (lastYearTotal / maxTotal) * 100,
+                comparisonPercentage: (lastYearUpToNow / maxTotal) * 100,
+                comparisonTooltip: this.formatTimeForTrend(lastYearUpToNow)
+            },
+            {
+                label: 'Evvelki Yıl',
+                time: this.formatTimeForTrend(twoYearsTotal),
+                date: `${twoYearsStart.getFullYear()}`,
+                value: twoYearsTotal,
+                percentage: (twoYearsTotal / maxTotal) * 100,
+                comparisonPercentage: (twoYearsUpToNow / maxTotal) * 100,
+                comparisonTooltip: this.formatTimeForTrend(twoYearsUpToNow)
+            }
+        ];
+
+        this.yearlyFocusTrend.render(data);
     }
 
     async updateFocusSummaryForPeriod() {
@@ -3096,7 +3323,7 @@ true // All sessions are focus sessions now
         // Prepare data for component
         const data = [
             {
-                label: 'Bu Hafta (şu ana kadar)',
+                label: 'Bu Hafta',
                 time: this.formatTimeForTrend(thisWeekTotal),
                 date: formatWeekDate(thisWeekStart),
                 value: thisWeekTotal,
