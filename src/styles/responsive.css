@@ -150,6 +150,65 @@
     font-size: 11px;
   }
 
+  /* Monthly distribution mobile */
+  .monthly-focus-distribution-card {
+    padding: 1rem;
+  }
+
+  .monthly-chart-content {
+    min-height: 180px;
+  }
+
+  .monthly-bars-wrapper {
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+
+  .monthly-bars {
+    gap: 3px;
+    min-width: max-content;
+  }
+
+  .monthly-bar {
+    max-width: 10px;
+    min-width: 4px;
+  }
+
+  .monthly-y-axis {
+    min-width: 28px;
+    font-size: 10px;
+  }
+
+  .monthly-x-axis span {
+    font-size: 10px;
+  }
+
+  .monthly-x-axis > div {
+    min-width: max-content;
+  }
+
+  /* Yearly distribution mobile */
+  .yearly-chart-content {
+    min-height: 180px;
+  }
+
+  .yearly-bars {
+    gap: 0.25rem;
+  }
+
+  .yearly-bar {
+    max-width: 45px;
+  }
+
+  .yearly-y-axis {
+    min-width: 28px;
+    font-size: 10px;
+  }
+
+  .yearly-x-axis span {
+    font-size: 11px;
+  }
+
   .timeline-content {
     gap: 0.5rem;
   }

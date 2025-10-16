@@ -176,8 +176,14 @@ export class BarChart {
         if (!container) return;
 
         // Create 6 horizontal grid lines
+        // Determine grid line class based on container ID
+        const gridLineClass = container.id.includes('timeline') ? 'timeline-grid-line' :
+                             container.id.includes('monthly') ? 'monthly-grid-line' :
+                             container.id.includes('yearly') ? 'yearly-grid-line' :
+                             'weekly-grid-line';
+        
         const lines = Array.from({ length: 6 }, () => 
-            '<div class="weekly-grid-line"></div>'
+            `<div class="${gridLineClass}"></div>`
         ).join('');
 
         container.innerHTML = lines;
@@ -194,14 +200,24 @@ export class BarChart {
         const actualMax = yAxis && yAxis.dataset.maxValue ? 
             parseFloat(yAxis.dataset.maxValue) : scaleMax;
 
+        // Determine bar class based on container ID
+        const barClass = container.id.includes('timeline') ? 'timeline-bar' :
+                        container.id.includes('monthly') ? 'monthly-bar' :
+                        container.id.includes('yearly') ? 'yearly-bar' :
+                        'weekly-bar';
+        
+        const indicatorClass = barClass + '-indicator';
+        const tooltipClass = barClass + '-tooltip';
+
         container.innerHTML = '';
 
         data.forEach((item, index) => {
             const bar = document.createElement('div');
-            bar.className = 'weekly-bar';
+            bar.className = barClass;
 
             if (item.isActive) {
-                bar.classList.add('today');
+                // Use 'current' class for yearly, 'today' for others
+                bar.classList.add(container.id.includes('yearly') ? 'current' : 'today');
             }
 
             // Calculate height as percentage
@@ -215,12 +231,12 @@ export class BarChart {
 
             // Add hover indicator circle
             const indicator = document.createElement('div');
-            indicator.className = 'weekly-bar-indicator';
+            indicator.className = indicatorClass;
             bar.appendChild(indicator);
 
             // Add tooltip
             const tooltip = document.createElement('div');
-            tooltip.className = 'weekly-bar-tooltip';
+            tooltip.className = tooltipClass;
             tooltip.textContent = this.config.tooltipFormat(item.value);
             bar.appendChild(tooltip);
 

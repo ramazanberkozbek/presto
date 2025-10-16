@@ -403,6 +403,100 @@
             </div>
           </div>
 
+          <!-- Weekly Focus Trend (Only shown in weekly view) -->
+          <div class="weekly-focus-trend-card" id="weekly-focus-trend">
+            <!-- Will be filled by FocusTrend component -->
+          </div>
+
+          <!-- Monthly Focus Time Distribution (Only shown in monthly view) -->
+          <div class="monthly-focus-distribution-card" id="monthly-focus-distribution">
+            <div class="distribution-header">
+              <h3>Odaklanılan Zaman Dağılımı</h3>
+              <div class="total-focus-time">
+                <span class="label">Toplam odaklanılan zaman:</span>
+                <span class="value" id="monthly-total-focus">0 saat 0 dk</span>
+              </div>
+            </div>
+            
+            <div class="monthly-chart-container">
+              <!-- Chart area with Y-axis and bars -->
+              <div class="monthly-chart-content">
+                <!-- Y-axis labels (left side) -->
+                <div class="monthly-y-axis" id="monthly-y-axis">
+                  <!-- Will be filled by JavaScript -->
+                </div>
+                
+                <!-- Chart bars container -->
+                <div class="monthly-bars-wrapper">
+                  <!-- Grid lines background -->
+                  <div class="monthly-grid" id="monthly-grid">
+                    <!-- Will be filled by JavaScript -->
+                  </div>
+                  
+                  <!-- Monthly bars (28-31 days) -->
+                  <div class="monthly-bars" id="monthly-bars">
+                    <!-- Will be filled by JavaScript with daily bars -->
+                  </div>
+                </div>
+              </div>
+              
+              <!-- X-axis labels (dates) -->
+              <div class="monthly-x-axis" id="monthly-x-axis">
+                <!-- Will be filled by JavaScript with dates (e.g., 7/1, 7/8, etc.) -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Yearly Focus Time Distribution (Only shown in yearly view) -->
+          <div class="yearly-focus-distribution-card" id="yearly-focus-distribution">
+            <div class="distribution-header">
+              <h3>Odaklanılan Zaman Dağılımı</h3>
+              <div class="total-focus-time">
+                <span class="label">Toplam odaklanılan zaman:</span>
+                <span class="value" id="yearly-total-focus">0 saat 0 dk</span>
+              </div>
+            </div>
+            
+            <div class="yearly-chart-container">
+              <!-- Chart area with Y-axis and bars -->
+              <div class="yearly-chart-content">
+                <!-- Y-axis labels (left side) -->
+                <div class="yearly-y-axis" id="yearly-y-axis">
+                  <!-- Will be filled by JavaScript -->
+                </div>
+                
+                <!-- Chart bars container -->
+                <div class="yearly-bars-wrapper">
+                  <!-- Grid lines background -->
+                  <div class="yearly-grid" id="yearly-grid">
+                    <!-- Will be filled by JavaScript -->
+                  </div>
+                  
+                  <!-- Yearly bars (12 months) -->
+                  <div class="yearly-bars" id="yearly-bars">
+                    <!-- Will be filled by JavaScript with monthly bars -->
+                  </div>
+                </div>
+              </div>
+              
+              <!-- X-axis labels (months) -->
+              <div class="yearly-x-axis" id="yearly-x-axis">
+                <span>Oca</span>
+                <span>Şub</span>
+                <span>Mar</span>
+                <span>Nis</span>
+                <span>May</span>
+                <span>Haz</span>
+                <span>Tem</span>
+                <span>Ağu</span>
+                <span>Eyl</span>
+                <span>Eki</span>
+                <span>Kas</span>
+                <span>Ara</span>
+              </div>
+            </div>
+          </div>
+
           <!-- Focus Trend Card -->
           <div class="focus-trend-card" id="focus-trend-card">
             <h3>Odaklanma Trendi</h3>
@@ -415,7 +509,6 @@
                   <div class="trend-day-label">Bugün (bu ana kadar)</div>
                   <div class="trend-day-meta">
                     <span class="trend-day-time" id="trend-today">0 S</span>
-                    <span class="trend-day-date" id="trend-today-date">13 Eki</span>
                   </div>
                 </div>
                 <div class="trend-bar-wrapper">
@@ -430,13 +523,13 @@
                   <div class="trend-day-label">Dün</div>
                   <div class="trend-day-meta">
                     <span class="trend-day-time" id="trend-yesterday">0 S</span>
-                    <span class="trend-day-date" id="trend-yesterday-date">12 Eki</span>
                   </div>
                 </div>
                 <div class="trend-bar-wrapper">
                   <div class="trend-bar-bg">
                     <div class="trend-bar-fill trend-previous" id="trend-yesterday-fill"></div>
                     <div class="trend-comparison-dot" id="trend-yesterday-dot">
+                      <div class="trend-comparison-dot-inner"></div>
                       <div class="dot-tooltip" id="trend-yesterday-tooltip">0 S</div>
                     </div>
                   </div>
@@ -448,13 +541,13 @@
                   <div class="trend-day-label">Evvelki Gün</div>
                   <div class="trend-day-meta">
                     <span class="trend-day-time" id="trend-day-before">0 S</span>
-                    <span class="trend-day-date" id="trend-day-before-date">11 Eki</span>
                   </div>
                 </div>
                 <div class="trend-bar-wrapper">
                   <div class="trend-bar-bg">
                     <div class="trend-bar-fill trend-older" id="trend-day-before-fill"></div>
                     <div class="trend-comparison-dot" id="trend-day-before-dot">
+                      <div class="trend-comparison-dot-inner"></div>
                       <div class="dot-tooltip" id="trend-day-before-tooltip">0 S</div>
                     </div>
                   </div>

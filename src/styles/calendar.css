@@ -479,7 +479,7 @@
 .timeline-bars-wrapper {
   flex: 1;
   position: relative;
-  background: var(--setting-item-bg);
+  background: #F5F5F5;
   border-radius: 8px;
   overflow: visible; /* Allow tooltip to overflow */
 }
@@ -501,8 +501,7 @@
 .timeline-grid-line {
   width: 100%;
   height: 1px;
-  background: var(--shared-border);
-  opacity: 0.3;
+  background: #E8E8E8;
 }
 
 /* Timeline bars container */
@@ -544,10 +543,69 @@
   z-index: 10;
 }
 
+/* Hover Indicator Circle on top of bar */
+.timeline-bar-indicator {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%) scale(0);
+  width: 12px;
+  height: 12px;
+  background: #5FE6C9;
+  border: 2px solid #FFFFFF;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.timeline-bar:hover .timeline-bar-indicator {
+  transform: translateX(-50%) scale(1);
+}
+
+/* Tooltip on hover */
+.timeline-bar-tooltip {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #FFFFFF;
+  color: #333333;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 100;
+  will-change: opacity;
+}
+
+.timeline-bar-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #FFFFFF;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.05));
+}
+
+.timeline-bar:hover .timeline-bar-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
 /* Empty bar (no data) */
 .timeline-bar.empty {
-  background: var(--input-border);
-  opacity: 0.3;
+  background: #F0F0F0;
+  opacity: 0.5;
 }
 
 /* Bar with focus time */
@@ -557,17 +615,18 @@
 }
 
 .timeline-bar-segment.focus {
-  background: var(--focus-color);
+  background: linear-gradient(180deg, #4A9B7F 0%, #5DB08F 100%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .timeline-bar-segment.break {
   background: var(--break-color);
 }
 
-/* Empty remaining segment (kalan boş kısım - 0 dakika çalışılan yerlerle aynı renk) */
+/* Empty remaining segment (kalan boş kısım) */
 .timeline-bar-segment.empty-remaining {
-  background: var(--input-border);
-  opacity: 0.3;
+  background: #F0F0F0;
+  opacity: 0.5;
 }
 
 /* No data message - centered in wrapper */
@@ -646,37 +705,6 @@
 
 .legend-dot.break {
   background: var(--break-color);
-}
-
-/* Tooltip for timeline bars */
-.timeline-tooltip {
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%) translateY(-8px);
-  background: var(--shared-text);
-  color: var(--card-bg);
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  z-index: 10000;
-  line-height: 1.5;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  will-change: opacity;
-}
-
-.timeline-bar:hover .timeline-tooltip {
-  opacity: 1;
-}
-
-/* Make sure empty bars don't show tooltip */
-.timeline-bar.empty .timeline-tooltip {
-  display: none;
 }
 
 /* ========================================
@@ -792,23 +820,33 @@
 }
 
 /* White Comparison Dot */
+
 .trend-comparison-dot {
   position: absolute;
   top: 50%;
+  transform: translate(-50%, -50%);
+  width: 22px;
+  height: 22px;
+  z-index: 4;
+  cursor: pointer;
+  display: block;
+  background: transparent;
+}
+
+.trend-comparison-dot-inner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   transform: translate(-50%, -50%);
   width: 10px;
   height: 10px;
   background: #FFFFFF;
   border-radius: 50%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15), 0 0 0 2px rgba(72, 201, 168, 0.3);
-  z-index: 3;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-  display: none;
+  pointer-events: none;
 }
 
-.trend-comparison-dot:hover {
-  transform: translate(-50%, -50%) scale(1.4);
+.trend-comparison-dot:hover .trend-comparison-dot-inner {
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(72, 201, 168, 0.4);
 }
 
@@ -1050,6 +1088,440 @@
 .weekly-x-axis span {
   flex: 1;
   max-width: 50px;
+  text-align: center;
+  font-size: 12px;
+  color: #999999;
+  font-weight: 500;
+  user-select: none;
+}
+
+/* ========================================
+   WEEKLY FOCUS TREND
+   ======================================== */
+
+.weekly-focus-trend-card {
+  background: var(--card-bg);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px var(--shared-border);
+  display: none; /* Hidden by default, shown only in weekly view */
+}
+
+.weekly-focus-trend-card.active {
+  display: block;
+}
+
+/* ========================================
+   MONTHLY FOCUS TIME DISTRIBUTION
+   ======================================== */
+
+.monthly-focus-distribution-card {
+  background: var(--card-bg);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px var(--shared-border);
+  display: none; /* Hidden by default, shown only in monthly view */
+  max-width: 100%;
+}
+
+.monthly-focus-distribution-card.active {
+  display: block;
+}
+
+/* Monthly Chart Container */
+.monthly-chart-container {
+  margin-top: 1.5rem;
+}
+
+.monthly-chart-content {
+  display: flex;
+  gap: 0.75rem;
+  min-height: 240px;
+  position: relative;
+}
+
+/* Y-axis Labels (Left side) */
+.monthly-y-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-right: 0.5rem;
+  min-width: 32px;
+  padding-bottom: 24px; /* Space for X-axis labels */
+  padding-top: 1rem; /* Push labels down to align with bars */
+}
+
+.monthly-y-axis span {
+  font-size: 11px;
+  color: #999999;
+  text-align: right;
+  line-height: 1;
+  user-select: none;
+}
+
+/* Bars Wrapper (contains grid and bars) */
+.monthly-bars-wrapper {
+  flex: 1;
+  position: relative;
+  background: #F5F5F5;
+  border-radius: 8px;
+  padding: 1rem 0.5rem 0 0.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* Align bars to bottom */
+}
+
+/* Grid Lines Background */
+.monthly-grid {
+  position: absolute;
+  top: 1rem;
+  left: 0.5rem;
+  right: 0.5rem;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.monthly-grid-line {
+  height: 1px;
+  background: #E8E8E8;
+  width: 100%;
+}
+
+/* Monthly Bars Container */
+.monthly-bars {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 100%;
+  min-height: 200px;
+  gap: 6px;
+  padding-bottom: 24px; /* Space for X-axis labels */
+  position: relative;
+}
+
+/* Individual Day Bar (thinner than weekly) */
+.monthly-bar {
+  flex: 1;
+  max-width: 12px;
+  min-width: 6px;
+  background: linear-gradient(180deg, #4A9B7F 0%, #5DB08F 100%);
+  border-radius: 6px 6px 0 0;
+  min-height: 3px;
+  position: relative;
+  transition: filter 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+              transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: visible;
+  will-change: transform;
+}
+
+/* Invisible hover area - larger hit zone for easier hovering */
+.monthly-bar::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  right: -6px;
+  bottom: -6px;
+  z-index: -1;
+}
+
+.monthly-bar:hover {
+  filter: brightness(1.15);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Today's bar - more vibrant */
+.monthly-bar.today {
+  background: linear-gradient(180deg, #48C9A8 0%, #5DD9B8 100%);
+  box-shadow: 0 2px 6px rgba(72, 201, 168, 0.3);
+}
+
+/* Hover Indicator Circle on top of bar */
+.monthly-bar-indicator {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%) scale(0);
+  width: 12px;
+  height: 12px;
+  background: #5FE6C9;
+  border: 2px solid #FFFFFF;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.monthly-bar:hover .monthly-bar-indicator {
+  transform: translateX(-50%) scale(1);
+}
+
+/* Tooltip on hover */
+.monthly-bar-tooltip {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #FFFFFF;
+  color: #333333;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 100;
+  will-change: opacity;
+}
+
+.monthly-bar-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #FFFFFF;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.05));
+}
+
+.monthly-bar:hover .monthly-bar-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* X-axis Labels (Date labels) */
+.monthly-x-axis {
+  margin-top: 0.5rem;
+  padding-left: calc(32px + 0.75rem); /* Match Y-axis width + gap */
+  padding-right: 0.5rem;
+}
+
+.monthly-x-axis span {
+  font-size: 11px;
+  color: #999999;
+  font-weight: 500;
+  user-select: none;
+  text-align: center;
+}
+
+/* ========================================
+   YEARLY FOCUS TIME DISTRIBUTION
+   ======================================== */
+
+.yearly-focus-distribution-card {
+  background: var(--card-bg);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px var(--shared-border);
+  display: none; /* Hidden by default, shown only in yearly view */
+  max-width: 100%;
+}
+
+.yearly-focus-distribution-card.active {
+  display: block;
+}
+
+/* Yearly Chart Container */
+.yearly-chart-container {
+  margin-top: 1.5rem;
+}
+
+.yearly-chart-content {
+  display: flex;
+  gap: 0.75rem;
+  min-height: 240px;
+  position: relative;
+}
+
+/* Y-axis Labels (Left side) */
+.yearly-y-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-right: 0.5rem;
+  min-width: 32px;
+  padding-bottom: 24px; /* Space for X-axis labels */
+  padding-top: 1rem; /* Push labels down to align with bars */
+}
+
+.yearly-y-axis span {
+  font-size: 11px;
+  color: #999999;
+  text-align: right;
+  line-height: 1;
+  user-select: none;
+}
+
+/* Bars Wrapper (contains grid and bars) */
+.yearly-bars-wrapper {
+  flex: 1;
+  position: relative;
+  background: #F5F5F5;
+  border-radius: 8px;
+  padding: 1rem 0.75rem 0 0.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* Align bars to bottom */
+}
+
+/* Grid Lines Background */
+.yearly-grid {
+  position: absolute;
+  top: 1rem;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.yearly-grid-line {
+  height: 1px;
+  background: #E8E8E8;
+  width: 100%;
+}
+
+/* Yearly Bars Container (12 months) */
+.yearly-bars {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 100%;
+  min-height: 200px;
+  gap: 0.5rem;
+  padding-bottom: 24px; /* Space for X-axis labels */
+  position: relative;
+}
+
+/* Individual Month Bar */
+.yearly-bar {
+  flex: 1;
+  max-width: 60px;
+  background: linear-gradient(180deg, #4A9B7F 0%, #5DB08F 100%);
+  border-radius: 8px 8px 0 0;
+  min-height: 3px;
+  position: relative;
+  transition: filter 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+              transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: visible;
+  will-change: transform;
+}
+
+/* Invisible hover area - larger hit zone for easier hovering */
+.yearly-bar::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  z-index: -1;
+}
+
+.yearly-bar:hover {
+  filter: brightness(1.15);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Current month - more vibrant */
+.yearly-bar.current {
+  background: linear-gradient(180deg, #48C9A8 0%, #5DD9B8 100%);
+  box-shadow: 0 2px 6px rgba(72, 201, 168, 0.3);
+}
+
+/* Hover Indicator Circle on top of bar */
+.yearly-bar-indicator {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%) scale(0);
+  width: 14px;
+  height: 14px;
+  background: #5FE6C9;
+  border: 2px solid #FFFFFF;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.yearly-bar:hover .yearly-bar-indicator {
+  transform: translateX(-50%) scale(1);
+}
+
+/* Tooltip on hover */
+.yearly-bar-tooltip {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #FFFFFF;
+  color: #333333;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 100;
+  will-change: opacity;
+}
+
+.yearly-bar-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #FFFFFF;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.05));
+}
+
+.yearly-bar:hover .yearly-bar-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* X-axis Labels (Month names) */
+.yearly-x-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  padding-left: calc(32px + 0.75rem); /* Match Y-axis width + gap */
+  padding-right: 0.75rem;
+}
+
+.yearly-x-axis span {
+  flex: 1;
+  max-width: 60px;
   text-align: center;
   font-size: 12px;
   color: #999999;
@@ -1659,6 +2131,11 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
+[data-theme="dark"] .weekly-focus-trend-card {
+  background: var(--card-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
 [data-theme="dark"] .weekly-bars-wrapper {
   background: rgba(255, 255, 255, 0.05);
 }
@@ -1681,10 +2158,71 @@
   border-top-color: #444444;
 }
 
-/* Dark mode for timeline empty-remaining segment */
+/* Dark mode for monthly distribution */
+[data-theme="dark"] .monthly-focus-distribution-card {
+  background: var(--card-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .monthly-bars-wrapper {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .monthly-grid-line {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .monthly-y-axis span,
+[data-theme="dark"] .monthly-x-axis span {
+  color: #999999;
+}
+
+[data-theme="dark"] .monthly-bar-tooltip {
+  background: #444444;
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .monthly-bar-tooltip::after {
+  border-top-color: #444444;
+}
+
+/* Dark mode for yearly distribution */
+[data-theme="dark"] .yearly-focus-distribution-card {
+  background: var(--card-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .yearly-bars-wrapper {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .yearly-grid-line {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .yearly-y-axis span,
+[data-theme="dark"] .yearly-x-axis span {
+  color: #999999;
+}
+
+[data-theme="dark"] .yearly-bar-tooltip {
+  background: #444444;
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .yearly-bar-tooltip::after {
+  border-top-color: #444444;
+}
+
+/* Dark mode for timeline bars */
+[data-theme="dark"] .timeline-bar.empty {
+  background: rgba(255, 255, 255, 0.05);
+  opacity: 0.5;
+}
+
 [data-theme="dark"] .timeline-bar-segment.empty-remaining {
-  background: var(--input-border);
-  opacity: 0.3;
+  background: rgba(255, 255, 255, 0.05);
+  opacity: 0.5;
 }
 
 /* Auto Theme Dark Mode Support */
@@ -1696,6 +2234,11 @@
   
   /* Weekly Focus Distribution - Auto Dark Mode */
   [data-theme="auto"] .weekly-focus-distribution-card {
+    background: var(--card-bg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  [data-theme="auto"] .weekly-focus-trend-card {
     background: var(--card-bg);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   }
@@ -1719,6 +2262,62 @@
   }
 
   [data-theme="auto"] .weekly-bar-tooltip::after {
+    border-top-color: #444444;
+  }
+
+  /* Monthly Focus Distribution - Auto Dark Mode */
+  [data-theme="auto"] .monthly-focus-distribution-card {
+    background: var(--card-bg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  [data-theme="auto"] .monthly-bars-wrapper {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  [data-theme="auto"] .monthly-grid-line {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  [data-theme="auto"] .monthly-y-axis span,
+  [data-theme="auto"] .monthly-x-axis span {
+    color: #999999;
+  }
+
+  [data-theme="auto"] .monthly-bar-tooltip {
+    background: #444444;
+    color: #FFFFFF;
+  }
+
+  [data-theme="auto"] .monthly-bar-tooltip::after {
+    border-top-color: #444444;
+  }
+
+  /* Yearly Focus Distribution - Auto Dark Mode */
+  [data-theme="auto"] .yearly-focus-distribution-card {
+    background: var(--card-bg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  [data-theme="auto"] .yearly-bars-wrapper {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  [data-theme="auto"] .yearly-grid-line {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  [data-theme="auto"] .yearly-y-axis span,
+  [data-theme="auto"] .yearly-x-axis span {
+    color: #999999;
+  }
+
+  [data-theme="auto"] .yearly-bar-tooltip {
+    background: #444444;
+    color: #FFFFFF;
+  }
+
+  [data-theme="auto"] .yearly-bar-tooltip::after {
     border-top-color: #444444;
   }
 
@@ -1747,10 +2346,15 @@
     border-top-color: #444444;
   }
 
-  /* Auto theme dark mode for timeline empty-remaining segment */
+  /* Auto theme dark mode for timeline bars */
+  [data-theme="auto"] .timeline-bar.empty {
+    background: rgba(255, 255, 255, 0.05);
+    opacity: 0.5;
+  }
+
   [data-theme="auto"] .timeline-bar-segment.empty-remaining {
-    background: var(--input-border);
-    opacity: 0.3;
+    background: rgba(255, 255, 255, 0.05);
+    opacity: 0.5;
   }
 }
 
@@ -1790,6 +2394,14 @@
   background: var(--setting-item-bg);
 }
 
+:root[data-timer-theme="espresso"][data-theme="dark"] .monthly-bars-wrapper {
+  background: var(--setting-item-bg);
+}
+
+:root[data-timer-theme="espresso"][data-theme="dark"] .yearly-bars-wrapper {
+  background: var(--setting-item-bg);
+}
+
 :root[data-timer-theme="espresso"][data-theme="dark"] .weekly-bar-tooltip {
   background: #444444;
   color: #FFFFFF;
@@ -1813,12 +2425,18 @@
 }
 
 :root[data-timer-theme="pipboy"] .timeline-bar.empty {
-  background: rgba(0, 255, 65, 0.1);
+  background: rgba(0, 255, 65, 0.05);
+  opacity: 0.5;
 }
 
 :root[data-timer-theme="pipboy"] .timeline-bar-segment.focus {
-  background: var(--focus-color);
+  background: linear-gradient(180deg, #00FF41 0%, #00FF65 100%);
   box-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+}
+
+:root[data-timer-theme="pipboy"] .timeline-bar-segment.empty-remaining {
+  background: rgba(0, 255, 65, 0.05);
+  opacity: 0.5;
 }
 
 :root[data-timer-theme="pipboy"] .focus-trend-card {
@@ -1892,6 +2510,92 @@
 
 :root[data-timer-theme="pipboy"] .weekly-y-axis span,
 :root[data-timer-theme="pipboy"] .weekly-x-axis span {
+  color: var(--focus-color);
+  text-shadow: 0 0 3px rgba(0, 255, 65, 0.3);
+}
+
+/* Pipboy - Monthly Focus Distribution */
+:root[data-timer-theme="pipboy"] .monthly-focus-distribution-card {
+  background: var(--card-bg);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 255, 65, 0.2);
+}
+
+:root[data-timer-theme="pipboy"] .monthly-focus-distribution-card h3 {
+  color: var(--focus-color);
+  text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+}
+
+:root[data-timer-theme="pipboy"] .monthly-bars-wrapper {
+  background: rgba(0, 255, 65, 0.05);
+  border: 1px solid rgba(0, 255, 65, 0.2);
+}
+
+:root[data-timer-theme="pipboy"] .monthly-bar {
+  background: linear-gradient(180deg, #00FF41 0%, #00FF65 100%);
+  box-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+}
+
+:root[data-timer-theme="pipboy"] .monthly-bar.today {
+  background: linear-gradient(180deg, #00FF65 0%, #00FF89 100%);
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.7);
+}
+
+:root[data-timer-theme="pipboy"] .monthly-bar-indicator {
+  background: #00FF89;
+  border-color: #00FF41;
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.8);
+}
+
+:root[data-timer-theme="pipboy"] .monthly-grid-line {
+  background: rgba(0, 255, 65, 0.2);
+}
+
+:root[data-timer-theme="pipboy"] .monthly-y-axis span,
+:root[data-timer-theme="pipboy"] .monthly-x-axis span {
+  color: var(--focus-color);
+  text-shadow: 0 0 3px rgba(0, 255, 65, 0.3);
+}
+
+/* Pipboy - Yearly Focus Distribution */
+:root[data-timer-theme="pipboy"] .yearly-focus-distribution-card {
+  background: var(--card-bg);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 255, 65, 0.2);
+}
+
+:root[data-timer-theme="pipboy"] .yearly-focus-distribution-card h3 {
+  color: var(--focus-color);
+  text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+}
+
+:root[data-timer-theme="pipboy"] .yearly-bars-wrapper {
+  background: rgba(0, 255, 65, 0.05);
+  border: 1px solid rgba(0, 255, 65, 0.2);
+}
+
+:root[data-timer-theme="pipboy"] .yearly-bar {
+  background: linear-gradient(180deg, #00FF41 0%, #00FF65 100%);
+  box-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+}
+
+:root[data-timer-theme="pipboy"] .yearly-bar.current {
+  background: linear-gradient(180deg, #00FF65 0%, #00FF89 100%);
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.7);
+}
+
+:root[data-timer-theme="pipboy"] .yearly-bar-indicator {
+  background: #00FF89;
+  border-color: #00FF41;
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.8);
+}
+
+:root[data-timer-theme="pipboy"] .yearly-grid-line {
+  background: rgba(0, 255, 65, 0.2);
+}
+
+:root[data-timer-theme="pipboy"] .yearly-y-axis span,
+:root[data-timer-theme="pipboy"] .yearly-x-axis span {
   color: var(--focus-color);
   text-shadow: 0 0 3px rgba(0, 255, 65, 0.3);
 }
@@ -1975,6 +2679,62 @@
 }
 
 :root[data-timer-theme="pommodore64"] .weekly-bar-tooltip {
+  border-radius: 0;
+  border: 2px solid var(--shared-border);
+}
+
+/* Pommodore64 - Monthly Focus Distribution */
+:root[data-timer-theme="pommodore64"] .monthly-focus-distribution-card {
+  background: var(--card-bg);
+  border: 3px solid var(--shared-border);
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
+  border-radius: 0;
+}
+
+:root[data-timer-theme="pommodore64"] .monthly-bars-wrapper {
+  background: var(--setting-item-bg);
+  border-radius: 0;
+  border: 2px solid var(--shared-border);
+}
+
+:root[data-timer-theme="pommodore64"] .monthly-bar {
+  border-radius: 0;
+}
+
+:root[data-timer-theme="pommodore64"] .monthly-bar-indicator {
+  border-radius: 0;
+  border-width: 3px;
+}
+
+:root[data-timer-theme="pommodore64"] .monthly-bar-tooltip {
+  border-radius: 0;
+  border: 2px solid var(--shared-border);
+}
+
+/* Pommodore64 - Yearly Focus Distribution */
+:root[data-timer-theme="pommodore64"] .yearly-focus-distribution-card {
+  background: var(--card-bg);
+  border: 3px solid var(--shared-border);
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
+  border-radius: 0;
+}
+
+:root[data-timer-theme="pommodore64"] .yearly-bars-wrapper {
+  background: var(--setting-item-bg);
+  border-radius: 0;
+  border: 2px solid var(--shared-border);
+}
+
+:root[data-timer-theme="pommodore64"] .yearly-bar {
+  border-radius: 0;
+}
+
+:root[data-timer-theme="pommodore64"] .yearly-bar-indicator {
+  border-radius: 0;
+  border-width: 3px;
+}
+
+:root[data-timer-theme="pommodore64"] .yearly-bar-tooltip {
   border-radius: 0;
   border: 2px solid var(--shared-border);
 }

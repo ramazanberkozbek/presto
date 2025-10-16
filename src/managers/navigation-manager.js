@@ -2,6 +2,7 @@
 import { TimeUtils } from '../utils/common-utils.js';
 import { TagStatistics } from '../utils/tag-statistics.js';
 import { BarChart } from '../components/bar-chart.js';
+import { FocusTrend } from '../components/focus-trend.js';
 
 export class NavigationManager {
     constructor() {
@@ -38,6 +39,38 @@ export class NavigationManager {
             barMaxWidth: 50,        // Wider bars for 7 days
             minScale: 20,
             xAxisLabels: ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt']
+        });
+
+        this.monthlyBarChart = new BarChart({
+            containerId: 'monthly-focus-distribution',
+            barsContainerId: 'monthly-bars',
+            yAxisId: 'monthly-y-axis',
+            gridId: 'monthly-grid',
+            totalDisplayId: 'monthly-total-focus',
+            useFixedMax: false,     // Dynamic scale based on data
+            barMaxWidth: 12,        // Thin bars for 30+ days
+            minScale: 50,           // Higher minimum scale for monthly view
+            xAxisLabels: []         // Will be populated dynamically based on month
+        });
+
+        this.yearlyBarChart = new BarChart({
+            containerId: 'yearly-focus-distribution',
+            barsContainerId: 'yearly-bars',
+            yAxisId: 'yearly-y-axis',
+            gridId: 'yearly-grid',
+            totalDisplayId: 'yearly-total-focus',
+            useFixedMax: false,     // Dynamic scale based on data
+            barMaxWidth: 60,        // Wider bars for 12 months
+            minScale: 100,          // Higher minimum scale for yearly view
+            xAxisLabels: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
+        });
+
+        // Initialize Focus Trend component for weekly view
+        this.weeklyFocusTrend = new FocusTrend({
+            containerId: 'weekly-focus-trend',
+            type: 'weekly',
+            title: 'Odaklanma Trendi',
+            comparisonTextId: 'weekly-trend-comparison-text'
         });
         
         // Apply timer-active class on initial load since default view is timer
@@ -2122,6 +2155,36 @@ true // All sessions are focus sessions now
             }
         }
 
+        // Show/hide weekly focus trend card
+        const weeklyTrendCard = document.getElementById('weekly-focus-trend');
+        if (weeklyTrendCard) {
+            if (period === 'weekly') {
+                weeklyTrendCard.classList.add('active');
+            } else {
+                weeklyTrendCard.classList.remove('active');
+            }
+        }
+
+        // Show/hide monthly distribution card
+        const monthlyDistCard = document.getElementById('monthly-focus-distribution');
+        if (monthlyDistCard) {
+            if (period === 'monthly') {
+                monthlyDistCard.classList.add('active');
+            } else {
+                monthlyDistCard.classList.remove('active');
+            }
+        }
+
+        // Show/hide yearly distribution card
+        const yearlyDistCard = document.getElementById('yearly-focus-distribution');
+        if (yearlyDistCard) {
+            if (period === 'yearly') {
+                yearlyDistCard.classList.add('active');
+            } else {
+                yearlyDistCard.classList.remove('active');
+            }
+        }
+
         // Show/hide focus trend card
         const focusTrendCard = document.getElementById('focus-trend-card');
         if (focusTrendCard) {
@@ -2334,6 +2397,9 @@ true // All sessions are focus sessions now
         // Update weekly focus distribution
         this.updateWeeklyFocusDistribution();
         
+        // Update weekly focus trend
+        this.updateWeeklyFocusTrend();
+        
         // Update navigator buttons
         this.updateNavigatorButtons();
     }
@@ -2346,6 +2412,9 @@ true // All sessions are focus sessions now
         await this.updateMonthlyChart();
         await this.updateTagUsageChart();
         
+        // Update monthly focus distribution
+        this.updateMonthlyFocusDistribution();
+        
         // Update navigator buttons
         this.updateNavigatorButtons();
     }
@@ -2355,6 +2424,9 @@ true // All sessions are focus sessions now
         await this.updateFocusSummaryForPeriod();
         await this.updateYearlyChart();
         await this.updateTagUsageChart();
+        
+        // Update yearly focus distribution
+        this.updateYearlyFocusDistribution();
         
         // Update navigator buttons
         this.updateNavigatorButtons();
@@ -2422,30 +2494,140 @@ true // All sessions are focus sessions now
     // ========================================
 
     updateDailyFocusDistribution() {
-        if (!window.sessionManager) {
-            this.dailyBarChart.render([]);
+        const timelineBars = document.getElementById('timeline-bars');
+        const yAxisContainer = document.getElementById('timeline-y-axis');
+        const gridContainer = document.getElementById('timeline-grid');
+        const totalDisplay = document.getElementById('daily-total-focus');
+
+        if (!timelineBars || !window.sessionManager) {
             return;
         }
 
         const sessions = window.sessionManager.getSessionsForDate(this.currentDate);
         
         if (!sessions || sessions.length === 0) {
-            this.dailyBarChart.render([]);
+            this.showDailyNoDataMessage(timelineBars);
+            if (yAxisContainer) this.renderDailyYAxis(yAxisContainer, 60);
+            if (gridContainer) this.renderDailyGrid(gridContainer);
+            if (totalDisplay) totalDisplay.textContent = '0 saat 0 dk';
             return;
         }
 
         // Create 24-hour timeline data
         const hourlyData = this.createHourlyDistribution(sessions);
         
-        // Convert to bar chart data format
-        const chartData = hourlyData.map((hour, index) => ({
-            label: index.toString(),
-            value: hour.focus, // Only focus time, no breaks
-            isActive: index === new Date().getHours() // Highlight current hour
-        }));
+        // Calculate total focus time
+        const totalFocus = hourlyData.reduce((sum, hour) => sum + hour.focus, 0);
+        
+        // Update total display
+        if (totalDisplay) {
+            const hours = Math.floor(totalFocus / 60);
+            const mins = Math.round(totalFocus % 60);
+            totalDisplay.textContent = hours > 0 ? `${hours} saat ${mins} dk` : `${mins} dakika`;
+        }
 
-        // Render using component
-        this.dailyBarChart.render(chartData);
+        // Find max value for scaling
+        const maxMinutes = Math.max(...hourlyData.map(h => h.total), 1);
+        const scaleMax = maxMinutes > 60 ? 60 : 60; // Always use 60-minute scale
+
+        // Render Y-axis and grid
+        if (yAxisContainer) this.renderDailyYAxis(yAxisContainer, scaleMax);
+        if (gridContainer) this.renderDailyGrid(gridContainer);
+
+        // Render bars
+        this.renderDailyTimelineBars(timelineBars, hourlyData, scaleMax);
+    }
+
+    showDailyNoDataMessage(container) {
+        container.innerHTML = `
+            <div class="timeline-no-data">
+                <i class="ri-bar-chart-line"></i>
+                <span>Veri yok</span>
+            </div>
+        `;
+    }
+
+    renderDailyYAxis(container, maxValue) {
+        const labels = [60, 50, 40, 30, 20, 10, 0];
+        container.innerHTML = labels.map(value => 
+            `<span class="timeline-y-label">${value === 0 ? '0 dk' : value}</span>`
+        ).join('');
+    }
+
+    renderDailyGrid(container) {
+        const lines = Array.from({ length: 7 }, () => 
+            '<div class="timeline-grid-line"></div>'
+        ).join('');
+        container.innerHTML = lines;
+    }
+
+    renderDailyTimelineBars(container, hourlyData, scaleMax) {
+        container.innerHTML = '';
+
+        hourlyData.forEach((hour, index) => {
+            const bar = document.createElement('div');
+            bar.className = 'timeline-bar';
+            
+            if (hour.total === 0) {
+                bar.classList.add('empty');
+            }
+
+            // Calculate heights
+            const focusPercent = (hour.focus / scaleMax) * 100;
+            const breakPercent = (hour.break / scaleMax) * 100;
+            const emptyPercent = 100 - focusPercent - breakPercent;
+
+            // Focus segment
+            if (hour.focus > 0) {
+                const focusSegment = document.createElement('div');
+                focusSegment.className = 'timeline-bar-segment focus';
+                focusSegment.style.height = `${focusPercent}%`;
+                bar.appendChild(focusSegment);
+            }
+
+            // Break segment
+            if (hour.break > 0) {
+                const breakSegment = document.createElement('div');
+                breakSegment.className = 'timeline-bar-segment break';
+                breakSegment.style.height = `${breakPercent}%`;
+                bar.appendChild(breakSegment);
+            }
+
+            // Empty segment (remaining space up to 60 minutes)
+            if (emptyPercent > 0) {
+                const emptySegment = document.createElement('div');
+                emptySegment.className = 'timeline-bar-segment empty-remaining';
+                emptySegment.style.height = `${emptyPercent}%`;
+                bar.appendChild(emptySegment);
+            }
+
+            // Add hover indicator
+            const indicator = document.createElement('div');
+            indicator.className = 'timeline-bar-indicator';
+            bar.appendChild(indicator);
+
+            // Add tooltip
+            const tooltip = document.createElement('div');
+            tooltip.className = 'timeline-bar-tooltip';
+            
+            let tooltipText = '';
+            if (hour.focus > 0) {
+                const focusHours = Math.floor(hour.focus / 60);
+                const focusMins = Math.round(hour.focus % 60);
+                tooltipText = focusHours > 0 ? `${focusHours} S ${focusMins} D` : `${focusMins} D`;
+            }
+            if (hour.break > 0) {
+                const breakHours = Math.floor(hour.break / 60);
+                const breakMins = Math.round(hour.break % 60);
+                const breakText = breakHours > 0 ? `${breakHours} S ${breakMins} D` : `${breakMins} D`;
+                tooltipText += tooltipText ? ` + ${breakText} (mola)` : `${breakText} (mola)`;
+            }
+            
+            tooltip.textContent = tooltipText || '0 D';
+            bar.appendChild(tooltip);
+
+            container.appendChild(bar);
+        });
     }
 
     createHourlyDistribution(sessions) {
@@ -2723,8 +2905,301 @@ true // All sessions are focus sessions now
         this.weeklyBarChart.render(weekData);
     }
 
+    // MONTHLY FOCUS TIME DISTRIBUTION
+    // ========================================
+
+    updateMonthlyFocusDistribution() {
+        if (!window.sessionManager) {
+            this.monthlyBarChart.render([]);
+            return;
+        }
+
+        // Get the current month's start and end dates
+        const monthStart = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
+        const monthEnd = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 0);
+        const daysInMonth = monthEnd.getDate();
+        
+        // Create array for all days in the month
+        const monthData = [];
+        const xAxisLabels = [];
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dayDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), day);
+            
+            const sessions = window.sessionManager.getSessionsForDate(dayDate);
+            const focusMinutes = sessions.reduce((sum, session) => {
+                if (session.session_type === 'focus' || session.session_type === 'custom') {
+                    return sum + (session.duration || 0);
+                }
+                return sum;
+            }, 0);
+            
+            monthData.push({
+                label: `${this.currentDate.getMonth() + 1}/${day}`,
+                value: focusMinutes,
+                isActive: this.isSameDay(dayDate, new Date())
+            });
+        }
+
+        // Generate X-axis labels (show dates at intervals)
+        // For ~30 days, show ~5 labels: 1st, 8th, 16th, 24th, last
+        const labelPositions = [1, 8, 16, 24, daysInMonth];
+        for (let i = 0; i < daysInMonth; i++) {
+            const day = i + 1;
+            if (labelPositions.includes(day)) {
+                xAxisLabels.push(`${this.currentDate.getMonth() + 1}/${day}`);
+            } else {
+                xAxisLabels.push(''); // Empty label for other positions
+            }
+        }
+
+        // Update component's X-axis labels and render
+        this.monthlyBarChart.config.xAxisLabels = xAxisLabels;
+        this.monthlyBarChart.render(monthData);
+        
+        // Render X-axis labels manually since we have dynamic positioning
+        this.renderMonthlyXAxisLabels(xAxisLabels, daysInMonth);
+    }
+
+    renderMonthlyXAxisLabels(labels, totalDays) {
+        const xAxisContainer = document.getElementById('monthly-x-axis');
+        if (!xAxisContainer) return;
+
+        xAxisContainer.innerHTML = '';
+        
+        // Show labels at key positions: 1st, 8th, 16th, 24th, last day
+        const labelDays = [1, 8, 16, 24, totalDays];
+        
+        // Create a wrapper that matches the bars grid
+        const wrapper = document.createElement('div');
+        wrapper.style.display = 'grid';
+        wrapper.style.gridTemplateColumns = `repeat(${totalDays}, 1fr)`;
+        wrapper.style.gap = '6px'; // Same as bars gap
+        wrapper.style.width = '100%';
+        
+        // Create all grid items (one for each day)
+        for (let day = 1; day <= totalDays; day++) {
+            const span = document.createElement('span');
+            span.style.textAlign = 'center';
+            span.style.fontSize = '11px';
+            span.style.color = '#999999';
+            span.style.fontWeight = '500';
+            
+            // Only show label for specific days
+            if (labelDays.includes(day)) {
+                span.textContent = `${this.currentDate.getMonth() + 1}/${day}`;
+            } else {
+                span.innerHTML = '&nbsp;'; // Empty but maintains grid position
+            }
+            
+            wrapper.appendChild(span);
+        }
+        
+        xAxisContainer.appendChild(wrapper);
+    }
+
+    // YEARLY FOCUS TIME DISTRIBUTION
+    // ========================================
+
+    updateYearlyFocusDistribution() {
+        if (!window.sessionManager) {
+            this.yearlyBarChart.render([]);
+            return;
+        }
+
+        // Get all months in the current year
+        const year = this.currentDate.getFullYear();
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        
+        // Create array for all 12 months
+        const yearData = [];
+
+        for (let month = 0; month < 12; month++) {
+            // Get first and last day of the month
+            const monthStart = new Date(year, month, 1);
+            const monthEnd = new Date(year, month + 1, 0);
+            
+            let totalMinutes = 0;
+            
+            // Aggregate all sessions in this month
+            for (let day = 1; day <= monthEnd.getDate(); day++) {
+                const dayDate = new Date(year, month, day);
+                const sessions = window.sessionManager.getSessionsForDate(dayDate);
+                
+                totalMinutes += sessions.reduce((sum, session) => {
+                    if (session.session_type === 'focus' || session.session_type === 'custom') {
+                        return sum + (session.duration || 0);
+                    }
+                    return sum;
+                }, 0);
+            }
+            
+            yearData.push({
+                label: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'][month],
+                value: totalMinutes,
+                isActive: month === currentMonth && year === currentYear // Highlight current month
+            });
+        }
+
+        // Render using component
+        this.yearlyBarChart.render(yearData);
+    }
+
+    // WEEKLY FOCUS TREND
+    // ========================================
+
+    updateWeeklyFocusTrend() {
+        if (!window.sessionManager) {
+            this.weeklyFocusTrend.render([]);
+            return;
+        }
+
+        // Get current week, last week, and week before
+        const thisWeekStart = this.getWeekStart(this.currentDate);
+        const lastWeekStart = new Date(thisWeekStart);
+        lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+        const weekBeforeStart = new Date(thisWeekStart);
+        weekBeforeStart.setDate(weekBeforeStart.getDate() - 14);
+
+        // Calculate total minutes for each week
+        const thisWeekTotal = this.getWeekTotalMinutes(thisWeekStart);
+        const lastWeekTotal = this.getWeekTotalMinutes(lastWeekStart);
+        const weekBeforeTotal = this.getWeekTotalMinutes(weekBeforeStart);
+
+        // Calculate "up to this point" for last week (same day/time comparison)
+        const now = new Date();
+        const currentDayOfWeek = now.getDay(); // 0 = Sunday, 6 = Saturday
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        
+        // Calculate minutes elapsed in current week up to now
+        const elapsedMinutesThisWeek = (currentDayOfWeek * 24 * 60) + (currentHour * 60) + currentMinute;
+        
+        // Get last week's total up to the same point in time
+        const lastWeekUpToNow = this.getWeekTotalUpToPoint(lastWeekStart, currentDayOfWeek, currentHour, currentMinute);
+        const weekBeforeUpToNow = this.getWeekTotalUpToPoint(weekBeforeStart, currentDayOfWeek, currentHour, currentMinute);
+
+        // Find max for percentage calculation
+        const maxTotal = Math.max(thisWeekTotal, lastWeekTotal, weekBeforeTotal, 1);
+
+        // Format dates for display
+        const formatWeekDate = (weekStart) => {
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            const startDay = weekStart.getDate();
+            const endDay = weekEnd.getDate();
+            const month = weekEnd.toLocaleDateString('tr-TR', { month: 'short' });
+            return `${startDay}-${endDay} ${month}`;
+        };
+
+        // Prepare data for component
+        const data = [
+            {
+                label: 'Bu Hafta (şu ana kadar)',
+                time: this.formatTimeForTrend(thisWeekTotal),
+                date: formatWeekDate(thisWeekStart),
+                value: thisWeekTotal,
+                percentage: (thisWeekTotal / maxTotal) * 100,
+            },
+            {
+                label: 'Geçen Hafta',
+                time: this.formatTimeForTrend(lastWeekTotal),
+                date: formatWeekDate(lastWeekStart),
+                value: lastWeekTotal,
+                percentage: (lastWeekTotal / maxTotal) * 100,
+                comparisonPercentage: (lastWeekUpToNow / maxTotal) * 100,
+                comparisonTooltip: this.formatTimeForTrend(lastWeekUpToNow)
+            },
+            {
+                label: 'Evvelki Hafta',
+                time: this.formatTimeForTrend(weekBeforeTotal),
+                date: formatWeekDate(weekBeforeStart),
+                value: weekBeforeTotal,
+                percentage: (weekBeforeTotal / maxTotal) * 100,
+                comparisonPercentage: (weekBeforeUpToNow / maxTotal) * 100,
+                comparisonTooltip: this.formatTimeForTrend(weekBeforeUpToNow)
+            }
+        ];
+
+        // Render using component
+        this.weeklyFocusTrend.render(data);
+    }
+
+    getWeekTotalMinutes(weekStart) {
+        let total = 0;
+        for (let i = 0; i < 7; i++) {
+            const dayDate = new Date(weekStart);
+            dayDate.setDate(dayDate.getDate() + i);
+            const sessions = window.sessionManager.getSessionsForDate(dayDate);
+            total += sessions.reduce((sum, session) => {
+                if (session.session_type === 'focus' || session.session_type === 'custom') {
+                    return sum + (session.duration || 0);
+                }
+                return sum;
+            }, 0);
+        }
+        return total;
+    }
+
+    getWeekTotalUpToPoint(weekStart, dayOfWeek, hour, minute) {
+        let total = 0;
+        
+        // Add full days before current day
+        for (let i = 0; i < dayOfWeek; i++) {
+            const dayDate = new Date(weekStart);
+            dayDate.setDate(dayDate.getDate() + i);
+            const sessions = window.sessionManager.getSessionsForDate(dayDate);
+            total += sessions.reduce((sum, session) => {
+                if (session.session_type === 'focus' || session.session_type === 'custom') {
+                    return sum + (session.duration || 0);
+                }
+                return sum;
+            }, 0);
+        }
+        
+        // Add partial day up to current hour/minute
+        const currentDayDate = new Date(weekStart);
+        currentDayDate.setDate(currentDayDate.getDate() + dayOfWeek);
+        const sessions = window.sessionManager.getSessionsForDate(currentDayDate);
+        
+        const currentTimeInMinutes = hour * 60 + minute;
+        
+        sessions.forEach(session => {
+            if (session.session_type === 'focus' || session.session_type === 'custom') {
+                if (!session.start_time || !session.end_time) return;
+                
+                const [startHour, startMinute] = session.start_time.split(':').map(Number);
+                const [endHour, endMinute] = session.end_time.split(':').map(Number);
+                
+                const sessionStart = startHour * 60 + startMinute;
+                const sessionEnd = endHour * 60 + endMinute;
+                
+                // Only count sessions that started before current time
+                if (sessionStart < currentTimeInMinutes) {
+                    const effectiveEnd = Math.min(sessionEnd, currentTimeInMinutes);
+                    const duration = Math.max(0, effectiveEnd - sessionStart);
+                    total += duration;
+                }
+            }
+        });
+        
+        return total;
+    }
+
+    formatTimeForTrend(minutes) {
+        if (minutes === 0) return '0 S';
+        const hours = Math.floor(minutes / 60);
+        const mins = Math.round(minutes % 60);
+        if (hours > 0 && mins > 0) {
+            return `${hours} S ${mins} D`;
+        } else if (hours > 0) {
+            return `${hours} S`;
+        } else {
+            return `${mins} D`;
+        }
+    }
+
 }
-
-
 
 
