@@ -835,6 +835,71 @@ export class NavigationManager {
         return { averages, peakHour, peakValue };
     }
 
+    // Compute monthly peak focus: average minutes per hour across the selected month
+    // The averages are computed by summing minutes in each hour across every day of the month
+    // and dividing by the number of days in that month (even if some days have no data).
+    computeMonthlyPeakFocus() {
+        const averages = new Array(24).fill(0);
+        if (!window.sessionManager) {
+            return { averages, peakHour: 0, peakValue: 0 };
+        }
+
+    const current = this.displayMonth ? new Date(this.displayMonth) : new Date(this.currentDate);
+    const year = current.getFullYear();
+    const month = current.getMonth();
+        const lastDay = new Date(year, month + 1, 0).getDate();
+
+        // Sum minutes per hour across all days of the month
+        for (let d = 1; d <= lastDay; d++) {
+            const date = new Date(year, month, d);
+            const sessions = window.sessionManager.getSessionsForDate(date) || [];
+
+            sessions.forEach(session => {
+                const type = session.session_type || session.type;
+                if (type !== 'focus' && type !== 'custom') return;
+                if (!session.start_time || !session.end_time) return;
+
+                const [sh, sm] = session.start_time.split(':').map(Number);
+                const [eh, em] = session.end_time.split(':').map(Number);
+                let startMin = sh * 60 + sm;
+                let endMin = eh * 60 + em;
+
+                // normalize if session ends past midnight (endMin <= startMin)
+                if (endMin <= startMin) endMin = startMin; // same handling as weekly
+
+                // iterate over hours covered
+                let cur = startMin;
+                while (cur < endMin) {
+                    const hour = Math.floor(cur / 60);
+                    const hourStart = hour * 60;
+                    const hourEnd = hourStart + 60;
+                    const segEnd = Math.min(endMin, hourEnd);
+                    const segStart = Math.max(cur, hourStart);
+                    const minutes = Math.max(0, segEnd - segStart);
+                    if (hour >= 0 && hour < 24) averages[hour] += minutes;
+                    cur = segEnd;
+                }
+            });
+        }
+
+        // Convert totals to averages per day (divide by number of days in the month)
+        for (let h = 0; h < 24; h++) {
+            averages[h] = averages[h] / lastDay;
+        }
+
+        // Find peak hour (highest average). If multiple, pick first
+        let peakHour = 0;
+        let peakValue = averages[0];
+        for (let h = 1; h < 24; h++) {
+            if (averages[h] > peakValue) {
+                peakValue = averages[h];
+                peakHour = h;
+            }
+        }
+
+        return { averages, peakHour, peakValue };
+    }
+
     async updateTagUsageChart() {
         try {
             // Get all available tags
@@ -2285,6 +2350,16 @@ true // All sessions are focus sessions now
             }
         }
 
+        // Show/hide monthly peak focus card (only visible in monthly period)
+        const monthlyPeakCard = document.getElementById('monthly-peak-focus');
+        if (monthlyPeakCard) {
+            if (period === 'monthly') {
+                monthlyPeakCard.classList.add('active');
+            } else {
+                monthlyPeakCard.classList.remove('active');
+            }
+        }
+
         // Show/hide yearly focus trend card
         const yearlyTrendCard = document.getElementById('yearly-focus-trend');
         if (yearlyTrendCard) {
@@ -2505,6 +2580,13 @@ true // All sessions are focus sessions now
         
         // Update navigator buttons
         this.updateNavigatorButtons();
+        
+        // Ensure PeakFocusTime component exists for monthly and render
+        await this.ensureMonthlyPeakFocusInitialized();
+        if (this.monthlyPeakFocus) {
+            const peakResult = this.computeMonthlyPeakFocus();
+            this.monthlyPeakFocus.render(peakResult);
+        }
     }
 
     async refreshWeeklyData() {
@@ -2545,6 +2627,19 @@ true // All sessions are focus sessions now
         } catch (e) {
             console.warn('Failed to initialize PeakFocusTime component:', e);
             this.weeklyPeakFocus = null;
+        }
+    }
+
+    // Lazy initialize Monthly PeakFocusTime component via dynamic import
+    async ensureMonthlyPeakFocusInitialized() {
+        if (this.monthlyPeakFocus) return;
+        try {
+            const module = await import('../components/peak-focus-time.js');
+            const PeakFocusTime = module.PeakFocusTime;
+            this.monthlyPeakFocus = new PeakFocusTime({ containerId: 'monthly-peak-focus' });
+        } catch (e) {
+            console.warn('Failed to initialize Monthly PeakFocusTime component:', e);
+            this.monthlyPeakFocus = null;
         }
     }
 
@@ -2787,12 +2882,8 @@ true // All sessions are focus sessions now
     }
 
     showDailyNoDataMessage(container) {
-        container.innerHTML = `
-            <div class="timeline-no-data">
-                <i class="ri-bar-chart-line"></i>
-                <span>Veri yok</span>
-            </div>
-        `;
+        // Do not show a "No data" label; keep the area empty so grid lines remain visible.
+        container.innerHTML = '';
     }
 
     renderDailyYAxis(container, maxValue) {

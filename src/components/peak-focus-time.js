@@ -72,8 +72,9 @@ export class PeakFocusTime {
         const x = (i) => this.padding.left + (i / 23) * innerW;
         const y = (v) => this.padding.top + innerH - (v / yMax) * innerH;
 
-        // gridlines and left-side labels according to ticks
-        ticks.forEach((t) => {
+        // gridlines and left-side labels according to ticks (render from top -> bottom)
+        for (let i = ticks.length - 1; i >= 0; i--) {
+            const t = ticks[i];
             const yy = y(t);
             const line = document.createElementNS(svg.namespaceURI, 'line');
             line.setAttribute('x1', this.padding.left);
@@ -94,7 +95,7 @@ export class PeakFocusTime {
             ty.setAttribute('font-size', '11');
             ty.textContent = `${t}`;
             svg.appendChild(ty);
-        });
+        }
 
         // unit label on the left
         const unitLabel = document.createElementNS(svg.namespaceURI, 'text');
@@ -120,18 +121,20 @@ export class PeakFocusTime {
         const peakStartIndex = Math.max(0, peakHour - 1);
         const peakEndIndex = Math.min(23, peakHour + 1);
 
-        // vertical dashed line at peak
-        const peakX = x(peakHour);
-        const vline = document.createElementNS(svg.namespaceURI, 'line');
-        vline.setAttribute('x1', peakX);
-        vline.setAttribute('x2', peakX);
-    // extend dashed line from top of inner chart to baseline so it goes both up and down
-    vline.setAttribute('y1', this.padding.top);
-    vline.setAttribute('y2', this.height - this.padding.bottom);
-        vline.setAttribute('stroke', '#CCCCCC');
-        vline.setAttribute('stroke-width', '1.5');
-        vline.setAttribute('stroke-dasharray', '6 4');
-        svg.appendChild(vline);
+        // vertical dashed line at peak (only when there's a meaningful peak)
+        if (peakValue > 0) {
+            const peakX = x(peakHour);
+            const vline = document.createElementNS(svg.namespaceURI, 'line');
+            vline.setAttribute('x1', peakX);
+            vline.setAttribute('x2', peakX);
+            // extend dashed line from top of inner chart to baseline so it goes both up and down
+            vline.setAttribute('y1', this.padding.top);
+            vline.setAttribute('y2', this.height - this.padding.bottom);
+            vline.setAttribute('stroke', '#CCCCCC');
+            vline.setAttribute('stroke-width', '1.5');
+            vline.setAttribute('stroke-dasharray', '6 4');
+            svg.appendChild(vline);
+        }
 
         // Hover interactivity: create small hidden dots and labels for each hour and hit areas
         const hourDots = [];
@@ -209,7 +212,8 @@ export class PeakFocusTime {
         }
 
         // Only draw a visible dot at the peak hour (remove other dots as requested)
-        if (peakHour >= 0 && peakHour <= 23) {
+        // If peakValue is 0, there is no meaningful peak to show.
+        if (peakValue > 0 && peakHour >= 0 && peakHour <= 23) {
             const val = averages[peakHour];
             const cx = x(peakHour);
             const cy = y(val);
@@ -235,8 +239,26 @@ export class PeakFocusTime {
             hit.setAttribute('height', innerH);
             hit.setAttribute('fill', 'transparent');
             hit.style.cursor = 'pointer';
-            hit.addEventListener('mouseenter', (e) => this.showTooltip(e, peakHour, val, container));
-            hit.addEventListener('mouseleave', () => this.hideTooltip());
+            hit.addEventListener('mouseenter', (e) => {
+                // show the hover dot and label for the peak hour
+                if (hourDots && hourLabels) {
+                    hourDots.forEach((d, idx) => d.setAttribute('opacity', idx === peakHour ? '1' : '0'));
+                    hourLabels.forEach((lbl, idx) => {
+                        if (idx === peakHour) {
+                            lbl.textContent = `${Math.round(val)} D`;
+                            lbl.setAttribute('opacity', '1');
+                        } else {
+                            lbl.setAttribute('opacity', '0');
+                        }
+                    });
+                }
+            });
+            hit.addEventListener('mouseleave', () => {
+                if (hourDots && hourLabels) {
+                    hourDots.forEach(d => d.setAttribute('opacity', '0'));
+                    hourLabels.forEach(lbl => lbl.setAttribute('opacity', '0'));
+                }
+            });
             group.appendChild(hit);
 
             svg.appendChild(group);

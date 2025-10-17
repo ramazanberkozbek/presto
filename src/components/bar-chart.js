@@ -120,12 +120,8 @@ export class BarChart {
      * Show "no data" message
      */
     showNoData(container) {
-        container.innerHTML = `
-            <div class="timeline-no-data">
-                <i class="ri-bar-chart-line"></i>
-                <span>Veri yok</span>
-            </div>
-        `;
+        // Render an empty placeholder (no text) so grid lines remain visible.
+        container.innerHTML = '';
     }
 
     /**

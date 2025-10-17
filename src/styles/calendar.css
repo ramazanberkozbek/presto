@@ -913,6 +913,18 @@
 .weekly-peak-focus-card.active {
   display: block;
 }
+
+/* Monthly Peak Focus Card */
+.monthly-peak-focus-card {
+  background: var(--card-bg);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  display: none; /* hidden by default, show only when .active */
+}
+.monthly-peak-focus-card.active {
+  display: block;
+}
 .weekly-peak-focus-card h3 {
   margin: 0 0 0.75rem 0;
   color: var(--accent-color);
