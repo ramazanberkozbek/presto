@@ -31,7 +31,25 @@ export class TagStatistics {
     getTagUsageStatistics(sessions, tags, startDate, endDate) {
         // Filter sessions within the date range
         const filteredSessions = sessions.filter(session => {
-            const sessionDate = new Date(session.date || session.created_at);
+            // session.date may be a YYYY-MM-DD string (no time) or an ISO string.
+            let rawDate = session.date || session.created_at;
+            let sessionDate;
+
+            if (!rawDate) {
+                // fallback to created_at or skip
+                return false;
+            }
+
+            // If the value looks like YYYY-MM-DD, parse as local date at midnight
+            const ymdMatch = typeof rawDate === 'string' && rawDate.match(/^\d{4}-\d{2}-\d{2}$/);
+            if (ymdMatch) {
+                const [y, m, d] = rawDate.split('-').map(Number);
+                sessionDate = new Date(y, m - 1, d);
+            } else {
+                // Otherwise rely on Date constructor (handles ISO with time)
+                sessionDate = new Date(rawDate);
+            }
+
             return sessionDate >= startDate && sessionDate <= endDate;
         });
 
@@ -122,6 +140,38 @@ export class TagStatistics {
         endOfWeek.setHours(23, 59, 59, 999);
 
         return this.getTagUsageStatistics(sessions, tags, startOfWeek, endOfWeek);
+    }
+
+    /**
+     * Get tag statistics for the month containing `date` (defaults to now)
+     * @param {Array} sessions
+     * @param {Array} tags
+     * @param {Date} date
+     */
+    getMonthTagStats(sessions, tags, date = new Date()) {
+        const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+        startOfMonth.setHours(0, 0, 0, 0);
+
+        const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        endOfMonth.setHours(23, 59, 59, 999);
+
+        return this.getTagUsageStatistics(sessions, tags, startOfMonth, endOfMonth);
+    }
+
+    /**
+     * Get tag statistics for the given year (defaults to current year)
+     * @param {Array} sessions
+     * @param {Array} tags
+     * @param {number} year
+     */
+    getYearTagStats(sessions, tags, year = (new Date()).getFullYear()) {
+        const startOfYear = new Date(year, 0, 1);
+        startOfYear.setHours(0,0,0,0);
+
+        const endOfYear = new Date(year, 11, 31);
+        endOfYear.setHours(23,59,59,999);
+
+        return this.getTagUsageStatistics(sessions, tags, startOfYear, endOfYear);
     }
 
     /**

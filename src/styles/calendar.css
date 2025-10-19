@@ -1721,6 +1721,8 @@
   color: var(--accent-color);
   font-weight: 600;
   white-space: nowrap;
+  /* Ensure hovering over the label doesn't block the parent bar hover */
+  pointer-events: none;
 }
 
 .week-days-labels {

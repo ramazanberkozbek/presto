@@ -62,7 +62,8 @@ export class NavigationManager {
             useFixedMax: false,     // Dynamic scale based on data
             barMaxWidth: 60,        // Wider bars for 12 months
             minScale: 100,          // Higher minimum scale for yearly view
-            xAxisLabels: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
+            // Start week on Monday to match TimeUtils.getWeekStart
+            xAxisLabels: ['Pzt', 'Sal', '\u00c7ar', 'Per', 'Cum', 'Cmt', 'Paz']
         });
 
         // Initialize Focus Trend component for weekly view
@@ -935,12 +936,13 @@ export class NavigationManager {
                 }
             }
 
-                // Build start/end without mutating the original date object
+                // Build start/end for the whole week (do not mutate original week start)
                 const startDate = new Date(startOfWeek);
                 startDate.setHours(0, 0, 0, 0);
                 const endDate = new Date(startOfWeek);
+                endDate.setDate(endDate.getDate() + 6); // include full week
                 endDate.setHours(23, 59, 59, 999);
-                // Get tag statistics for the specific date
+                // Get tag statistics for the specific week
                 const tagStatsData = this.tagStatistics.getTagUsageStatistics(sessions, tags, startDate, endDate);
             // Render the pie chart (only when weekly)
             this.tagStatistics.renderTagPieChart('tag-pie-chart', 'tag-legend', tagStatsData);
@@ -1601,7 +1603,9 @@ true // All sessions are focus sessions now
 
     addTooltipEvents(element) {
         element.addEventListener('mouseenter', (e) => {
-            const tooltipText = e.target.dataset.tooltip;
+            // Use currentTarget so child elements don't block tooltip retrieval
+            const el = e.currentTarget;
+            const tooltipText = el.dataset.tooltip;
             if (!tooltipText) return;
 
             // Clear any pending tooltip removal
@@ -1618,8 +1622,8 @@ true // All sessions are focus sessions now
             tooltipElement.className = 'custom-tooltip';
             tooltipElement.textContent = tooltipText;
 
-            // Position tooltip above the element
-            const rect = e.target.getBoundingClientRect();
+            // Position tooltip above the element (use the element's bounding rect)
+            const rect = el.getBoundingClientRect();
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
             const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
 
@@ -1666,10 +1670,14 @@ true // All sessions are focus sessions now
             });
         });
 
-        element.addEventListener('mouseleave', () => {
+        element.addEventListener('mouseleave', (e) => {
             // Add slight delay to prevent flicker when moving between adjacent elements
+            const el = e.currentTarget;
             this.tooltipTimeout = setTimeout(() => {
-                this.removeTooltip();
+                // Only remove tooltip if we're no longer inside the element
+                if (!el.matches(':hover')) {
+                    this.removeTooltip();
+                }
             }, 50);
         });
     }
@@ -2427,6 +2435,26 @@ true // All sessions are focus sessions now
             }
         }
 
+        // Monthly tag usage card (only visible in monthly period)
+        const tagUsageMonthCard = document.querySelector('.tag-usage-month-card');
+        if (tagUsageMonthCard) {
+            if (period === 'monthly') {
+                tagUsageMonthCard.classList.remove('hidden');
+            } else {
+                tagUsageMonthCard.classList.add('hidden');
+            }
+        }
+
+        // Yearly tag usage card (only visible in yearly period)
+        const tagUsageYearCard = document.querySelector('.tag-usage-year-card');
+        if (tagUsageYearCard) {
+            if (period === 'yearly') {
+                tagUsageYearCard.classList.remove('hidden');
+            } else {
+                tagUsageYearCard.classList.add('hidden');
+            }
+        }
+
         // Show/hide appropriate navigator
         this.updateNavigatorDisplay();
 
@@ -2634,7 +2662,12 @@ true // All sessions are focus sessions now
             const sessions = window.sessionManager ? window.sessionManager.getSessionsForDate(date) : [];
 
             // If no sessions, we'll still call render to show placeholder / empty slices
-            const tagStatsData = this.tagStatistics.getTagUsageStatistics(sessions, tags, new Date(date.setHours(0,0,0,0)), new Date(date.setHours(23,59,59,999)));
+            // Build start/end without mutating the provided date
+            const startDate = new Date(date);
+            startDate.setHours(0, 0, 0, 0);
+            const endDate = new Date(date);
+            endDate.setHours(23, 59, 59, 999);
+            const tagStatsData = this.tagStatistics.getTagUsageStatistics(sessions, tags, startDate, endDate);
 
             // Render into daily containers
             this.tagStatistics.renderTagPieChart('tag-pie-chart-day', 'tag-legend-day', tagStatsData);
@@ -2642,6 +2675,81 @@ true // All sessions are focus sessions now
             console.error('Error updating daily tag usage chart:', error);
             const chartContainer = document.getElementById('tag-pie-chart-day');
             const legendContainer = document.getElementById('tag-legend-day');
+            if (chartContainer) chartContainer.innerHTML = `<div class="pie-chart-placeholder"><i class="ri-price-tag-line"></i><span>Error loading data</span></div>`;
+            if (legendContainer) legendContainer.innerHTML = '';
+        }
+    }
+
+    async updateMonthlyTagUsageChart(date = this.currentDate) {
+        try {
+            // Build start and end of the month
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const startDate = new Date(year, month, 1, 0, 0, 0, 0);
+            const endDate = new Date(year, month + 1, 0, 23, 59, 59, 999);
+
+            // Collect tags and sessions for the month
+            const tags = window.tagManager ? window.tagManager.tags : [];
+            const sessions = [];
+
+            for (let d = 1; d <= endDate.getDate(); d++) {
+                const dayDate = new Date(year, month, d);
+                if (window.sessionManager) {
+                    const dailySessions = window.sessionManager.getSessionsForDate(dayDate) || [];
+                    const focusSessions = dailySessions
+                        .filter(s => {
+                            const sessionType = s.session_type || s.type;
+                            return sessionType === 'focus' || sessionType === 'custom';
+                        })
+                        .map(session => ({ ...session, date: dayDate.toISOString().split('T')[0] }));
+                    sessions.push(...focusSessions);
+                }
+            }
+
+            const tagStatsData = this.tagStatistics.getTagUsageStatistics(sessions, tags, startDate, endDate);
+            this.tagStatistics.renderTagPieChart('tag-pie-chart-month', 'tag-legend-month', tagStatsData);
+        } catch (error) {
+            console.error('Error updating monthly tag usage chart:', error);
+            const chartContainer = document.getElementById('tag-pie-chart-month');
+            const legendContainer = document.getElementById('tag-legend-month');
+            if (chartContainer) chartContainer.innerHTML = `<div class="pie-chart-placeholder"><i class="ri-price-tag-line"></i><span>Error loading data</span></div>`;
+            if (legendContainer) legendContainer.innerHTML = '';
+        }
+    }
+
+    async updateYearlyTagUsageChart(date = this.currentDate) {
+        try {
+            const year = date.getFullYear();
+            const startDate = new Date(year, 0, 1, 0, 0, 0, 0);
+            const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+
+            const tags = window.tagManager ? window.tagManager.tags : [];
+            const sessions = [];
+
+            // Iterate through each day of the year
+            for (let m = 0; m < 12; m++) {
+                const daysInMonth = new Date(year, m + 1, 0).getDate();
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const dayDate = new Date(year, m, d);
+                    if (window.sessionManager) {
+                        const dailySessions = window.sessionManager.getSessionsForDate(dayDate) || [];
+                        const focusSessions = dailySessions
+                            .filter(s => {
+                                const sessionType = s.session_type || s.type;
+                                return sessionType === 'focus' || sessionType === 'custom';
+                            })
+                            .map(session => ({ ...session, date: dayDate.toISOString().split('T')[0] }));
+                        sessions.push(...focusSessions);
+                    }
+                }
+            }
+
+            const tagStatsData = this.tagStatistics.getTagUsageStatistics(sessions, tags, startDate, endDate);
+            this.tagStatistics.renderTagPieChart('tag-pie-chart-year', 'tag-legend-year', tagStatsData);
+        } catch (error) {
+            console.error('Error updating yearly tag usage chart:', error);
+            const chartContainer = document.getElementById('tag-pie-chart-year');
+            const legendContainer = document.getElementById('tag-legend-year');
             if (chartContainer) chartContainer.innerHTML = `<div class="pie-chart-placeholder"><i class="ri-price-tag-line"></i><span>Error loading data</span></div>`;
             if (legendContainer) legendContainer.innerHTML = '';
         }
@@ -2710,6 +2818,12 @@ true // All sessions are focus sessions now
     // Update yearly focus trend too
     this.updateYearlyFocusTrend();
         await this.updateTagUsageChart();
+        // Also update monthly tag usage chart when in monthly view
+        try {
+            await this.updateMonthlyTagUsageChart();
+        } catch (e) {
+            console.warn('Failed to update monthly tag usage chart:', e);
+        }
         
         // Update monthly focus distribution
         this.updateMonthlyFocusDistribution();
@@ -2822,6 +2936,12 @@ true // All sessions are focus sessions now
         await this.updateFocusSummaryForPeriod();
         await this.updateYearlyChart();
         await this.updateTagUsageChart();
+        // Also update yearly tag usage chart when in yearly view
+        try {
+            await this.updateYearlyTagUsageChart();
+        } catch (e) {
+            console.warn('Failed to update yearly tag usage chart:', e);
+        }
         
         // Update yearly focus distribution
         this.updateYearlyFocusDistribution();

@@ -392,13 +392,14 @@
               
               <!-- X-axis labels (day names) -->
               <div class="weekly-x-axis">
-                <span>Paz</span>
+                <!-- Start on Monday to match weekStart (Pzt = Pazartesi) -->
                 <span>Pzt</span>
                 <span>Sal</span>
                 <span>Çar</span>
                 <span>Per</span>
                 <span>Cum</span>
                 <span>Cmt</span>
+                <span>Paz</span>
               </div>
             </div>
           </div>
@@ -603,6 +604,36 @@
                 </div>
               </div>
               <div class="tag-legend" id="tag-legend">
+                <!-- Legend items will be populated by JavaScript -->
+              </div>
+            </div>
+          </div>
+          <!-- Tag Usage Pie Chart (Monthly) -->
+          <div class="tag-usage-month-card tag-usage-card hidden">
+            <h3>Tag Usage This Month</h3>
+            <div class="tag-chart-container">
+              <div class="tag-pie-chart" id="tag-pie-chart-month">
+                <div class="pie-chart-placeholder">
+                  <i class="ri-price-tag-line"></i>
+                  <span>No data available</span>
+                </div>
+              </div>
+              <div class="tag-legend" id="tag-legend-month">
+                <!-- Legend items will be populated by JavaScript -->
+              </div>
+            </div>
+          </div>
+          <!-- Tag Usage Pie Chart (Yearly) -->
+          <div class="tag-usage-year-card tag-usage-card hidden">
+            <h3>Tag Usage This Year</h3>
+            <div class="tag-chart-container">
+              <div class="tag-pie-chart" id="tag-pie-chart-year">
+                <div class="pie-chart-placeholder">
+                  <i class="ri-price-tag-line"></i>
+                  <span>No data available</span>
+                </div>
+              </div>
+              <div class="tag-legend" id="tag-legend-year">
                 <!-- Legend items will be populated by JavaScript -->
               </div>
             </div>
