@@ -199,8 +199,8 @@ export class TagStatistics {
             chartContainer.innerHTML = `
                 <div class="pie-chart-placeholder" role="img" aria-label="No data" style="display:flex;flex-direction:column;align-items:center;justify-content:center;color:#374151;">
                     <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
-                        <!-- Inline SVG pie chart icon (more explicit than relying on icon fonts) -->
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <!-- Inline SVG pie chart icon (stroke set to white for visibility on dark placeholder) -->
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M21 12A9 9 0 1 1 12 3" />
                             <path d="M12 12V3" />
                             <path d="M12 12h8" stroke-opacity="0.6" />
@@ -237,7 +237,7 @@ export class TagStatistics {
                         ${iconHtml} ${stat.tag.name}
                     </div>
                     <div class="tag-legend-stats">
-                        <span class="tag-legend-time">${this.formatDuration(stat.duration)}</span>
+                        <span class="tag-legend-time"> ${this.formatDuration(stat.duration)}</span>
                         <span class="tag-legend-percent">${stat.percentage.toFixed(1)}%</span>
                     </div>
                 </div>
@@ -261,7 +261,7 @@ export class TagStatistics {
                         <i class="ri-more-line"></i> ${remainingStats.length} others
                     </div>
                     <div class="tag-legend-stats">
-                        <span class="tag-legend-time">${this.formatDuration(remainingDuration)}</span>
+                        <span class="tag-legend-time"> ${this.formatDuration(remainingDuration)}</span>
                         <span class="tag-legend-percent">${remainingPercentage.toFixed(1)}%</span>
                     </div>
                 </div>

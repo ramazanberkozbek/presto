@@ -198,13 +198,9 @@ export class NavigationManager {
         if (view === 'calendar') {
             await this.updateCalendar();
             this.updateWeekDisplay();
-            await this.updateFocusSummary();
-            await this.updateWeeklySessionsChart();
-            this.updateDailyChart();
-            this.updateDailyFocusDistribution(); // Update daily focus distribution
-            await this.updateTagUsageChart(); // Update tag usage pie chart
+            // Refresh all period-specific data (daily/weekly/monthly/yearly)
+            await this.refreshDataForPeriod();
             await this.updateSelectedDayDetails();
-            await this.updateFocusTrend(); // Add focus trend update
             await this.initSessionsTable(); // Initialize sessions table when viewing calendar
         } else if (view === 'settings') {
             // Settings view will be handled by SettingsManager
@@ -939,8 +935,13 @@ export class NavigationManager {
                 }
             }
 
-            // Get tag statistics for current week
-            const tagStatsData = this.tagStatistics.getCurrentWeekTagStats(sessions, tags);
+                // Build start/end without mutating the original date object
+                const startDate = new Date(startOfWeek);
+                startDate.setHours(0, 0, 0, 0);
+                const endDate = new Date(startOfWeek);
+                endDate.setHours(23, 59, 59, 999);
+                // Get tag statistics for the specific date
+                const tagStatsData = this.tagStatistics.getTagUsageStatistics(sessions, tags, startDate, endDate);
             // Render the pie chart (only when weekly)
             this.tagStatistics.renderTagPieChart('tag-pie-chart', 'tag-legend', tagStatsData);
             
@@ -954,7 +955,7 @@ export class NavigationManager {
             if (chartContainer) {
                 chartContainer.innerHTML = `
                     <div class="pie-chart-placeholder">
-                        <i class="ri-pie-chart-line"></i>
+                        <i class="ri-price-tag-line"></i>
                         <span>Error loading data</span>
                     </div>
                 `;
@@ -1027,6 +1028,13 @@ true // All sessions are focus sessions now
 
             // Initialize timeline interactions
             this.initializeTimelineInteractions();
+
+            // Also update the daily tag usage chart for this selected date
+            try {
+                await this.updateDailyTagUsageChart(date);
+            } catch (e) {
+                console.warn('Failed to update daily tag usage chart for selected day:', e);
+            }
 
         } catch (error) {
             console.error('Failed to load session details:', error);
@@ -2399,12 +2407,23 @@ true // All sessions are focus sessions now
         }
 
         // Show/hide Tag Usage card (only visible in weekly period)
-        const tagUsageCard = document.querySelector('.tag-usage-card');
+        // Weekly tag usage card
+        const tagUsageCard = document.querySelector('.tag-usage-week-card');
         if (tagUsageCard) {
             if (period === 'weekly') {
                 tagUsageCard.classList.remove('hidden');
             } else {
                 tagUsageCard.classList.add('hidden');
+            }
+        }
+
+        // Daily tag usage card (only visible in daily period)
+        const tagUsageDayCard = document.querySelector('.tag-usage-day-card');
+        if (tagUsageDayCard) {
+            if (period === 'daily') {
+                tagUsageDayCard.classList.remove('hidden');
+            } else {
+                tagUsageDayCard.classList.add('hidden');
             }
         }
 
@@ -2588,7 +2607,8 @@ true // All sessions are focus sessions now
         await this.updateSelectedDayDetails(this.currentDate);
         await this.updateFocusSummaryForPeriod();
         this.updateDailyChart();
-        await this.updateTagUsageChart();
+        // Update daily tag usage chart for the selected date
+        await this.updateDailyTagUsageChart(this.currentDate);
         await this.updateFocusTrend(this.currentDate); // Add focus trend update
     // Ensure yearly focus trend updates too
     this.updateYearlyFocusTrend();
@@ -2604,6 +2624,26 @@ true // All sessions are focus sessions now
         if (this.monthlyPeakFocus) {
             const peakResult = this.computeMonthlyPeakFocus();
             this.monthlyPeakFocus.render(peakResult);
+        }
+    }
+
+    async updateDailyTagUsageChart(date = this.currentDate) {
+        try {
+            // Collect tags and sessions for the specific date
+            const tags = window.tagManager ? window.tagManager.tags : [];
+            const sessions = window.sessionManager ? window.sessionManager.getSessionsForDate(date) : [];
+
+            // If no sessions, we'll still call render to show placeholder / empty slices
+            const tagStatsData = this.tagStatistics.getTagUsageStatistics(sessions, tags, new Date(date.setHours(0,0,0,0)), new Date(date.setHours(23,59,59,999)));
+
+            // Render into daily containers
+            this.tagStatistics.renderTagPieChart('tag-pie-chart-day', 'tag-legend-day', tagStatsData);
+        } catch (error) {
+            console.error('Error updating daily tag usage chart:', error);
+            const chartContainer = document.getElementById('tag-pie-chart-day');
+            const legendContainer = document.getElementById('tag-legend-day');
+            if (chartContainer) chartContainer.innerHTML = `<div class="pie-chart-placeholder"><i class="ri-price-tag-line"></i><span>Error loading data</span></div>`;
+            if (legendContainer) legendContainer.innerHTML = '';
         }
     }
 
@@ -2867,10 +2907,21 @@ true // All sessions are focus sessions now
         const sessions = window.sessionManager.getSessionsForDate(this.currentDate);
         
         if (!sessions || sessions.length === 0) {
-            this.showDailyNoDataMessage(timelineBars);
+            // When there are no sessions for the day, render 24 hoverable columns
+            // with zero heights so the user can still interact with the timeline.
+            const hourlyData = this.createHourlyDistribution([]); // creates 24 empty hours
+
+            // Update total display
+            if (totalDisplay) totalDisplay.textContent = '0 saat 0 dk';
+
+            // Render Y-axis and grid (60-minute scale)
             if (yAxisContainer) this.renderDailyYAxis(yAxisContainer, 60);
             if (gridContainer) this.renderDailyGrid(gridContainer);
-            if (totalDisplay) totalDisplay.textContent = '0 saat 0 dk';
+
+            // Render zero-height bars (scaleMax = 60 minutes)
+            const scaleMax = 60;
+            this.renderDailyTimelineBars(timelineBars, hourlyData, scaleMax);
+
             return;
         }
 

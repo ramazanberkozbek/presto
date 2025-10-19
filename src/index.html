@@ -576,12 +576,29 @@
             </div>
           </div>
           <!-- Tag Usage Pie Chart -->
-          <div class="tag-usage-card">
+          <!-- Tag Usage Pie Chart (Daily) -->
+          <div class="tag-usage-day-card tag-usage-card hidden">
+            <h3>Tag Usage This Day</h3>
+            <div class="tag-chart-container">
+              <div class="tag-pie-chart" id="tag-pie-chart-day">
+                <div class="pie-chart-placeholder">
+                  <i class="ri-price-tag-line"></i>
+                  <span>No data available</span>
+                </div>
+              </div>
+              <div class="tag-legend" id="tag-legend-day">
+                <!-- Legend items will be populated by JavaScript -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Tag Usage Pie Chart (Weekly) -->
+          <div class="tag-usage-week-card tag-usage-card">
             <h3>Tag Usage This Week</h3>
             <div class="tag-chart-container">
               <div class="tag-pie-chart" id="tag-pie-chart">
                 <div class="pie-chart-placeholder">
-                  <i class="ri-pie-chart-line"></i>
+                  <i class="ri-price-tag-line"></i>
                   <span>No data available</span>
                 </div>
               </div>

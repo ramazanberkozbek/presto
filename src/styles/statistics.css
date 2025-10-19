@@ -140,33 +140,61 @@
 
 /* Tag Usage Pie Chart Styles */
 .tag-usage-card {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 24px;
-  border: 1px solid #e5e7eb;
+  --card-bg: white;
+  background: var(--card-bg);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 6px 20px rgba(16,24,40,0.04);
+  transition: transform .12s ease, box-shadow .12s ease;
+  width: 100%;
+  box-sizing: border-box;
+  justify-self: stretch;
+  /* layout as two rows: header (auto) and content (fills remaining space) */
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.tag-usage-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(16,24,40,0.06);
 }
 
 .tag-usage-card h3 {
-  margin: 0 0 20px 0;
-  color: #374151;
-  font-size: 1.1rem;
-  font-weight: 600;
+  margin: 0 0 14px 0;
+  color: #111827;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .tag-chart-container {
-  display: flex;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 18px 28px;
   align-items: center;
-  gap: 24px;
-  min-height: 200px;
+  min-height: 180px;
+  /* allow container to expand inside the card so children can be vertically centered */
+  flex: 1 1 auto;
+  justify-items: center; /* center content in each grid cell */
 }
 
 .tag-pie-chart {
   position: relative;
-  width: 200px;
-  height: 200px;
+  width: 180px;
+  height: 180px;
   border-radius: 50%;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: conic-gradient(#e5e7eb 0deg 360deg);
+  border: 6px solid rgba(255,255,255,0.8);
+  /* ensure the pie is centered in its grid cell both vertically and horizontally */
+  align-self: center;
+  justify-self: center;
 }
 
 .pie-chart-placeholder {
@@ -176,56 +204,72 @@
   justify-content: center;
   width: 100%;
   height: 100%;
-  color: #9ca3af;
-  border: 2px dashed #d1d5db;
+  color: #ffffff;
   border-radius: 50%;
+  /* darker placeholder for better contrast */
+  background: linear-gradient(180deg, rgba(16,28,50,0.96), rgba(28,44,78,0.96));
 }
 
 .pie-chart-placeholder i {
-  font-size: 48px;
-  margin-bottom: 8px;
+  font-size: 36px;
+  margin-bottom: 6px;
+  color: rgba(255,255,255,0.9);
 }
 
 .pie-chart-placeholder span {
-  font-size: 14px;
+  font-size: 13px;
   text-align: center;
+  color: rgba(255,255,255,0.92);
 }
 
 .tag-legend {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  max-height: 200px;
+  overflow: auto;
+  padding-right: 6px;
 }
 
 .tag-legend-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  padding: 8px 6px;
+  border-radius: 8px;
+}
+
+.tag-legend-item:hover {
+  background: rgba(15,23,42,0.03);
 }
 
 .tag-legend-color {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%; /* make marker circular */
   flex-shrink: 0;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.06) inset;
 }
 
 .tag-legend-info {
   flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .tag-legend-name {
-  font-weight: 500;
-  color: #374151;
-  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 13px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 6px; 
 }
 
 .tag-legend-name i {
-  font-size: 16px;
+  font-size: 20px;
 }
 
 .tag-legend-stats {
@@ -236,35 +280,64 @@
 }
 
 .tag-legend-time {
-  color: #6b7280;
-  font-size: 13px;
+  color: #64748b;
+  font-size: 16px;
+  margin-left: 12px;
 }
 
 .tag-legend-percent {
-  color: #9ca3af;
-  font-size: 12px;
-  font-weight: 500;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 700;
+  background: rgba(15,23,42,0.06);
+  padding: 6px 8px;
+  border-radius: 999px;
 }
 
 .tag-legend-others {
-  opacity: 0.8;
-  border-top: 1px solid #f3f4f6;
+  opacity: 0.95;
+  border-top: 1px dashed rgba(15,23,42,0.04);
   padding-top: 8px;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .tag-legend-others .tag-legend-name {
   font-style: italic;
   font-size: 13px;
+  color: #475569;
 }
 
-/* Pie chart segments */
+/* Pie chart segments (left for advanced/custom rendering) */
 .pie-segment {
   position: absolute;
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%);
+}
+
+/* Responsive: stack chart and legend on small screens */
+@media (max-width: 880px) {
+  .tag-chart-container {
+    grid-template-columns: 1fr;
+    grid-auto-rows: min-content;
+    justify-items: center;
+  }
+  .tag-pie-chart {
+    width: 160px;
+    height: 160px;
+  }
+  .tag-legend {
+    max-height: none;
+    width: 100%;
+  }
+}
+
+/* Ensure tag usage cards inside the calendar left column align like other cards */
+.calendar-left-column .tag-usage-card {
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  justify-self: stretch;
 }
 
 /* Dark theme styles for tag usage chart */
