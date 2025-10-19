@@ -3609,31 +3609,33 @@ true // All sessions are focus sessions now
             return `${date.getDate()} ${months[date.getMonth()]}`;
         };
 
-        // Calculate dates
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        const dayBefore = new Date(today);
-        dayBefore.setDate(dayBefore.getDate() - 2);
+    // Calculate base dates relative to the selected date
+    const baseDate = new Date(date);
+    const today = new Date(baseDate);
+    const yesterday = new Date(baseDate);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const dayBefore = new Date(baseDate);
+    dayBefore.setDate(dayBefore.getDate() - 2);
 
-        // Get focus times
-        const todayTotal = getTotalFocusTime(today);
-        const yesterdayTotal = getTotalFocusTime(yesterday);
-        const dayBeforeTotal = getTotalFocusTime(dayBefore);
-        
-        // Get focus times up to current hour for comparison
-        const yesterdaySameTimeTotal = getFocusTimeUpToCurrentHour(yesterday);
-        const dayBeforeSameTimeTotal = getFocusTimeUpToCurrentHour(dayBefore);
+    // Get focus times for the selected base date and previous days
+    const todayTotal = getTotalFocusTime(today);
+    const yesterdayTotal = getTotalFocusTime(yesterday);
+    const dayBeforeTotal = getTotalFocusTime(dayBefore);
+
+    // Get focus times up to current hour for comparison only when baseDate is today
+    const isViewingToday = this.isSameDay(baseDate, new Date());
+    const yesterdaySameTimeTotal = isViewingToday ? getFocusTimeUpToCurrentHour(yesterday) : 0;
+    const dayBeforeSameTimeTotal = isViewingToday ? getFocusTimeUpToCurrentHour(dayBefore) : 0;
 
         // Update text displays
         trendToday.textContent = formatTime(todayTotal);
         trendYesterday.textContent = formatTime(yesterdayTotal);
         trendDayBefore.textContent = formatTime(dayBeforeTotal);
 
-        // Update dates
-        if (trendTodayDate) trendTodayDate.textContent = formatDate(today);
-        if (trendYesterdayDate) trendYesterdayDate.textContent = formatDate(yesterday);
-        if (trendDayBeforeDate) trendDayBeforeDate.textContent = formatDate(dayBefore);
+    // Update dates (show labels based on selected base date)
+    if (trendTodayDate) trendTodayDate.textContent = formatDate(today);
+    if (trendYesterdayDate) trendYesterdayDate.textContent = formatDate(yesterday);
+    if (trendDayBeforeDate) trendDayBeforeDate.textContent = formatDate(dayBefore);
 
         // Calculate comparison text
         const hasData = todayTotal > 0 || yesterdayTotal > 0 || dayBeforeTotal > 0;
@@ -3699,31 +3701,35 @@ true // All sessions are focus sessions now
 
         // Update dots - positioned on the bar showing "at this same time yesterday/day before"
         // If no work was done, show dot at the start (0%) to indicate comparison point
+        // Show dots only when viewing today (same-time comparison makes sense then)
         if (yesterdayDot && yesterdayTooltip) {
-            // Always show dot, even if no work was done (position at 0%)
-            yesterdayDot.style.left = `${yesterdayDotPercent}%`;
-            yesterdayDot.style.display = 'block';
-            yesterdayTooltip.textContent = formatTime(yesterdaySameTimeTotal);
+            if (isViewingToday) {
+                yesterdayDot.style.left = `${yesterdayDotPercent}%`;
+                yesterdayDot.style.display = 'block';
+                yesterdayTooltip.textContent = formatTime(yesterdaySameTimeTotal);
+                yesterdayTooltip.style.display = 'block';
+            } else {
+                yesterdayDot.style.display = 'none';
+                if (yesterdayTooltip) yesterdayTooltip.style.display = 'none';
+            }
         }
 
         if (dayBeforeDot && dayBeforeTooltip) {
-            // Always show dot, even if no work was done (position at 0%)
-            dayBeforeDot.style.left = `${dayBeforeDotPercent}%`;
-            dayBeforeDot.style.display = 'block';
-            dayBeforeTooltip.textContent = formatTime(dayBeforeSameTimeTotal);
+            if (isViewingToday) {
+                dayBeforeDot.style.left = `${dayBeforeDotPercent}%`;
+                dayBeforeDot.style.display = 'block';
+                dayBeforeTooltip.textContent = formatTime(dayBeforeSameTimeTotal);
+                dayBeforeTooltip.style.display = 'block';
+            } else {
+                dayBeforeDot.style.display = 'none';
+                if (dayBeforeTooltip) dayBeforeTooltip.style.display = 'none';
+            }
         }
 
-        // Show the card only if:
-        // 1. We're in daily view AND
-        // 2. The selected date is TODAY (not a past date)
+        // Show the card for the daily period regardless of whether the selected date is today
+        // (we have hidden the same-time comparison dots when viewing past dates)
         const isDaily = this.currentPeriod === 'daily';
-        const selectedDate = new Date(date);
-        const todayDate = new Date();
-        
-        // Compare dates (ignore time)
-        const isToday = selectedDate.toDateString() === todayDate.toDateString();
-        
-        if (isDaily && isToday) {
+        if (isDaily) {
             trendCard.classList.remove('hidden');
         } else {
             trendCard.classList.add('hidden');
