@@ -914,6 +914,35 @@
   display: block;
 }
 
+/* Yearly Peak Focus Card - ensure same visual treatment as weekly/monthly */
+.yearly-peak-focus-card {
+  background: var(--card-bg);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  display: none; /* hidden by default, shown only when .active is present */
+  box-shadow: none;
+}
+.yearly-peak-focus-card.active {
+  display: block;
+}
+
+.yearly-peak-focus-card h3 {
+  margin: 0 0 0.75rem 0;
+  color: var(--accent-color);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+.yearly-peak-focus-card .peak-subheader {
+  color: var(--text-light);
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+}
+.yearly-peak-focus-card .peak-subheader .peak-time {
+  color: var(--accent-color);
+  font-weight: 700;
+}
+
 /* Monthly Peak Focus Card */
 .monthly-peak-focus-card {
   background: var(--card-bg);
@@ -1522,6 +1551,8 @@
   position: relative;
   background: #F5F5F5;
   border-radius: 8px;
+  /* subtle border to separate the chart from background when theme contrast is low */
+  border: 1px solid rgba(0,0,0,0.06);
   padding: 1rem 0.75rem 0 0.75rem;
   display: flex;
   flex-direction: column;
@@ -1543,7 +1574,8 @@
 
 .yearly-grid-line {
   height: 1px;
-  background: #E8E8E8;
+  /* slightly stronger line for better visibility across themes */
+  background: #E0E0E0;
   width: 100%;
 }
 
@@ -2347,7 +2379,7 @@
 }
 
 [data-theme="dark"] .yearly-grid-line {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.14);
 }
 
 [data-theme="dark"] .yearly-y-axis span,
@@ -2454,7 +2486,7 @@
   }
 
   [data-theme="auto"] .yearly-grid-line {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.14);
   }
 
   [data-theme="auto"] .yearly-y-axis span,

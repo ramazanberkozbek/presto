@@ -5,6 +5,7 @@
 export class PeakFocusTime {
     constructor(config) {
         this.containerId = config.containerId;
+        this.type = config.type || null;
         this.width = config.width || 680;
         this.height = config.height || 200;
         this.padding = { top: 36, right: 24, bottom: 36, left: 40 };
@@ -51,14 +52,18 @@ export class PeakFocusTime {
         const innerW = this.width - this.padding.left - this.padding.right;
         const innerH = this.height - this.padding.top - this.padding.bottom;
 
-        // compute max for y-axis and build dynamic ticks (no hard cap at 60)
+    // compute max for y-axis and build dynamic ticks (no hard cap at 60)
         const maxVal = Math.max(...averages, 1);
 
         let ticks = [];
         let yMax = 1;
 
-        // Small values: keep fine-grained ticks up to 25
-        if (maxVal === 0) {
+        // Small values: prefer finer-grained ticks for yearly view when values are tiny
+        if (this.type === 'yearly' && maxVal <= 4) {
+            // Yearly view but very small averages: show 0..4 minute ticks
+            ticks = [0,1,2,3,4];
+            yMax = 4;
+        } else if (maxVal === 0) {
             // No data: show tight scale
             ticks = [0, 5, 10, 15];
             yMax = 15;

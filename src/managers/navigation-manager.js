@@ -77,6 +77,7 @@ export class NavigationManager {
         // Placeholder for Peak Focus Time component (initialized lazily)
         this.weeklyPeakFocus = null;
         this.monthlyPeakDay = null;
+    this.yearlyPeakFocus = null;
 
         // Initialize Focus Trend component for monthly view
         this.monthlyFocusTrend = new FocusTrend({
@@ -2425,6 +2426,16 @@ true // All sessions are focus sessions now
             }
         }
 
+        // Show/hide yearly peak focus card (only visible in yearly period)
+        const yearlyPeakCard = document.getElementById('yearly-peak-focus');
+        if (yearlyPeakCard) {
+            if (period === 'yearly') {
+                yearlyPeakCard.classList.add('active');
+            } else {
+                yearlyPeakCard.classList.remove('active');
+            }
+        }
+
         // Show/hide focus trend card
         const focusTrendCard = document.getElementById('focus-trend-card');
         if (focusTrendCard) {
@@ -2830,6 +2841,92 @@ true // All sessions are focus sessions now
         }
     }
 
+    // Lazy initialize Yearly PeakFocusTime component via dynamic import
+    async ensureYearlyPeakFocusInitialized() {
+        if (this.yearlyPeakFocus) return;
+        try {
+            const module = await import('../components/peak-focus-time.js');
+            const PeakFocusTime = module.PeakFocusTime;
+            this.yearlyPeakFocus = new PeakFocusTime({ containerId: 'yearly-peak-focus', type: 'yearly' });
+        } catch (e) {
+            console.warn('Failed to initialize Yearly PeakFocusTime component:', e);
+            this.yearlyPeakFocus = null;
+        }
+    }
+
+    // Compute yearly peak focus: average minutes per hour across all days in the selected year
+    computeYearlyPeakFocus() {
+        const averages = new Array(24).fill(0);
+        if (!window.sessionManager) {
+            return { averages, peakHour: 0, peakValue: 0 };
+        }
+
+        const current = new Date(this.currentDate);
+        const year = current.getFullYear();
+
+        // Count total days in the year
+        const startOfYear = new Date(year, 0, 1);
+        const endOfYear = new Date(year, 11, 31);
+        const totalDays = Math.floor((endOfYear - startOfYear) / (24 * 60 * 60 * 1000)) + 1;
+
+        // Sum minutes per hour across every day of the year
+        for (let m = 0; m < 12; m++) {
+            const daysInMonth = new Date(year, m + 1, 0).getDate();
+            for (let d = 1; d <= daysInMonth; d++) {
+                const date = new Date(year, m, d);
+                const sessions = window.sessionManager.getSessionsForDate(date) || [];
+
+                sessions.forEach(session => {
+                    const type = session.session_type || session.type;
+                    if (type !== 'focus' && type !== 'custom') return;
+                    if (!session.start_time || !session.end_time) return;
+
+                    const [sh, sm] = session.start_time.split(':').map(Number);
+                    const [eh, em] = session.end_time.split(':').map(Number);
+                    let startMin = sh * 60 + sm;
+                    let endMin = eh * 60 + em;
+
+                    // normalize if session ends before or equal to start - treat as zero-length
+                    if (endMin <= startMin) endMin = startMin;
+
+                    // Cap session to the current day
+                    const dayEnd = 24 * 60;
+                    endMin = Math.min(endMin, dayEnd);
+
+                    // iterate over hours covered
+                    let cur = startMin;
+                    while (cur < endMin) {
+                        const hour = Math.floor(cur / 60);
+                        const hourStart = hour * 60;
+                        const hourEnd = hourStart + 60;
+                        const segEnd = Math.min(endMin, hourEnd);
+                        const segStart = Math.max(cur, hourStart);
+                        const minutes = Math.max(0, segEnd - segStart);
+                        if (hour >= 0 && hour < 24) averages[hour] += minutes;
+                        cur = segEnd;
+                    }
+                });
+            }
+        }
+
+        // Convert totals to averages per day (divide by number of days in year)
+        for (let h = 0; h < 24; h++) {
+            averages[h] = averages[h] / totalDays;
+        }
+
+        // Find peak hour (highest average). If multiple, pick first
+        let peakHour = 0;
+        let peakValue = averages[0];
+        for (let h = 1; h < 24; h++) {
+            if (averages[h] > peakValue) {
+                peakValue = averages[h];
+                peakHour = h;
+            }
+        }
+
+        return { averages, peakHour, peakValue };
+    }
+
     async refreshMonthlyData() {
         // Update for monthly view
         this.displayMonth = new Date(this.currentDate);
@@ -3063,6 +3160,17 @@ true // All sessions are focus sessions now
         
         // Update navigator buttons
         this.updateNavigatorButtons();
+
+        // Ensure PeakFocusTime component exists for yearly and render
+        try {
+            await this.ensureYearlyPeakFocusInitialized();
+            if (this.yearlyPeakFocus) {
+                const peakResult = this.computeYearlyPeakFocus();
+                this.yearlyPeakFocus.render(peakResult);
+            }
+        } catch (e) {
+            console.warn('Failed to render Yearly PeakFocusTime component:', e);
+        }
     }
 
     async updateFocusSummaryForPeriod() {
