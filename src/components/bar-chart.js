@@ -207,6 +207,7 @@ export class BarChart {
 
         container.innerHTML = '';
 
+        const bars = [];
         data.forEach((item, index) => {
             const bar = document.createElement('div');
             bar.className = barClass;
@@ -236,7 +237,98 @@ export class BarChart {
             tooltip.textContent = this.config.tooltipFormat(item.value);
             bar.appendChild(tooltip);
 
+            // Accessibility: provide a title fallback for screen readers / default tooltip
+            try { bar.setAttribute('title', this.config.tooltipFormat(item.value)); } catch (e) {}
+
+            bars.push({ bar, item });
             container.appendChild(bar);
         });
+
+        // If this is the weekly/monthly/yearly bars container, create column-overlay hit areas so hovering
+        // anywhere in the column (not just the visible bar) shows the tooltip/indicator.
+        const isOverlayType = container.id && (
+            container.id.includes('weekly') || container.id.includes('monthly') || container.id.includes('yearly')
+        );
+        if (isOverlayType) {
+            // ensure container is positioned so absolute overlays align
+            const parentRect = container.getBoundingClientRect();
+
+            // remove any previous overlay holder
+            const existingHolder = container.querySelector('.weekly-overlay-holder');
+            if (existingHolder) existingHolder.remove();
+
+            const holder = document.createElement('div');
+            holder.className = 'weekly-overlay-holder';
+            holder.style.position = 'absolute';
+            holder.style.top = '0';
+            holder.style.left = '0';
+            holder.style.right = '0';
+            holder.style.bottom = '0';
+            holder.style.pointerEvents = 'none';
+            holder.style.zIndex = '15';
+            container.style.position = container.style.position || 'relative';
+
+            // For each bar, compute its bounding rect and place an absolute transparent hit
+            bars.forEach(({ bar, item }, idx) => {
+                const rect = bar.getBoundingClientRect();
+                const left = rect.left - parentRect.left;
+                const width = rect.width;
+
+                const hit = document.createElement('div');
+                hit.className = 'bar-column-hit';
+                hit.style.position = 'absolute';
+                hit.style.top = '0';
+                // leave space at bottom for x-axis labels if present (approx 24px)
+                hit.style.bottom = '24px';
+                hit.style.left = `${left}px`;
+                hit.style.width = `${width}px`;
+                hit.style.background = 'transparent';
+                hit.style.pointerEvents = 'auto';
+                // show/hide functions reference the bar's indicator/tooltip inside the bar
+                const indicator = bar.querySelector('.' + indicatorClass);
+                const tooltip = bar.querySelector('.' + tooltipClass);
+                const show = () => {
+                    // hide all others
+                    const allIndicators = container.querySelectorAll('.' + indicatorClass);
+                    allIndicators.forEach(i => i.classList.remove('active'));
+                    const allTooltips = container.querySelectorAll('.' + tooltipClass);
+                    allTooltips.forEach(t => t.classList.remove('active'));
+
+                    indicator && indicator.classList.add('active');
+                    if (tooltip) {
+                        tooltip.textContent = this.config.tooltipFormat(item.value);
+                        tooltip.classList.add('active');
+                    }
+                };
+                const hide = () => {
+                    indicator && indicator.classList.remove('active');
+                    tooltip && tooltip.classList.remove('active');
+                };
+
+                hit.addEventListener('mouseenter', show);
+                hit.addEventListener('mouseleave', hide);
+                hit.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (indicator && indicator.classList.contains('active')) hide(); else show();
+                });
+
+                holder.appendChild(hit);
+            });
+
+            // outside click closer (only once per container)
+            if (!container.dataset.overlayCloseHandler) {
+                window.addEventListener('click', () => {
+                    const allIndicators = container.querySelectorAll('.' + indicatorClass + '.active');
+                    allIndicators.forEach(i => i.classList.remove('active'));
+                    const allTooltips = container.querySelectorAll('.' + tooltipClass + '.active');
+                    allTooltips.forEach(t => t.classList.remove('active'));
+                });
+                container.dataset.overlayCloseHandler = '1';
+            }
+
+            // apply generic holder class and append
+            holder.classList.add('bar-overlay-holder');
+            container.appendChild(holder);
+        }
     }
 }

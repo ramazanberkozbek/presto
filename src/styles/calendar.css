@@ -1119,6 +1119,64 @@
   visibility: visible;
 }
 
+/* Active state controlled by JS to mimic peak-chart single indicator + label */
+.weekly-bar-indicator.active {
+  transform: translateX(-50%) scale(1);
+}
+
+.weekly-bar-tooltip.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Overlay holder for column hit areas (created dynamically) */
+.weekly-overlay-holder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none; /* individual hits override to auto */
+  z-index: 15;
+}
+
+.weekly-bar-column-hit {
+  background: transparent;
+  pointer-events: auto;
+}
+
+/* Generic overlay holder and column hit for monthly/yearly/weekly */
+.bar-overlay-holder,
+.weekly-overlay-holder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 15;
+}
+
+.bar-column-hit,
+.weekly-bar-column-hit {
+  background: transparent;
+  pointer-events: auto;
+}
+
+/* Ensure active class works for different bar types: */
+.monthly-bar-indicator.active,
+.yearly-bar-indicator.active,
+.timeline-bar-indicator.active {
+  transform: translateX(-50%) scale(1);
+}
+
+.monthly-bar-tooltip.active,
+.yearly-bar-tooltip.active,
+.timeline-bar-tooltip.active {
+  opacity: 1;
+  visibility: visible;
+}
+
 /* X-axis Labels (Day names) */
 .weekly-x-axis {
   display: flex;
