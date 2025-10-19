@@ -1684,14 +1684,15 @@ true // All sessions are focus sessions now
         });
 
         element.addEventListener('mouseleave', (e) => {
-            // Add slight delay to prevent flicker when moving between adjacent elements
+            // Add a very small debounce to prevent flicker when moving between adjacent elements
+            // Reduced from 50ms to 10ms to make tooltip switches feel instant while still avoiding flicker.
             const el = e.currentTarget;
             this.tooltipTimeout = setTimeout(() => {
                 // Only remove tooltip if we're no longer inside the element
                 if (!el.matches(':hover')) {
                     this.removeTooltip();
                 }
-            }, 50);
+            }, 10);
         });
     }
 
@@ -1704,17 +1705,23 @@ true // All sessions are focus sessions now
 
         // Use stored reference first, then fallback to querySelector
         if (this.currentTooltip && this.currentTooltip.parentNode) {
-            this.currentTooltip.style.opacity = '0';
+            const tooltipToRemove = this.currentTooltip;
+            tooltipToRemove.style.opacity = '0';
             setTimeout(() => {
-                if (this.currentTooltip && this.currentTooltip.parentNode) {
-                    this.currentTooltip.parentNode.removeChild(this.currentTooltip);
+                try {
+                    if (tooltipToRemove && tooltipToRemove.parentNode) {
+                        tooltipToRemove.parentNode.removeChild(tooltipToRemove);
+                    }
+                } catch (e) {
+                    // Ignore dom removal errors
                 }
-                this.currentTooltip = null;
-            }, 200);
+                if (this.currentTooltip === tooltipToRemove) {
+                    this.currentTooltip = null;
+                }
+            }, 100);
             return;
         }
 
-        // Fallback: remove any remaining tooltips
         const existingTooltips = document.querySelectorAll('.custom-tooltip');
         existingTooltips.forEach(tooltip => {
             tooltip.style.opacity = '0';

@@ -148,7 +148,7 @@
 
       <!-- Control Buttons -->
       <div class="controls">
-        <button id="stop-btn" class="control-btn">
+        <button id="stop-btn" class="control-btn" data-tooltip="Reset / Undo: Stop or undo last session" aria-label="Reset or Undo">
           <svg id="stop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -156,7 +156,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l-2-2m0 0l2-2m-2 2h10.5a4.5 4.5 0 110 9h-4" />
           </svg>
         </button>
-        <button id="play-pause-btn" class="control-btn primary">
+        <button id="play-pause-btn" class="control-btn primary" data-tooltip="Start / Pause: Start or pause the timer" aria-label="Start or Pause">
           <svg id="play-icon" viewBox="0 0 24 24" fill="currentColor">
             <path fill-rule="evenodd"
               d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z"
@@ -168,7 +168,7 @@
               clip-rule="evenodd" />
           </svg>
         </button>
-        <button id="skip-btn" class="control-btn">
+        <button id="skip-btn" class="control-btn" data-tooltip="Skip: Jump to next phase / break" aria-label="Skip">
           <!-- Coffee icon for break -->
           <i id="skip-coffee-icon" class="ri-cup-line" style="display: none; font-size: 24px;"></i>
           <!-- Sleep icon for long break -->

@@ -1649,6 +1649,20 @@ async function initializeApplication() {
     window.navigationManager = navigation;
     await navigation.init();
 
+    // Attach tooltips to main control buttons (uses NavigationManager's tooltip helper)
+    try {
+      const stopBtn = document.getElementById('stop-btn');
+      const playPauseBtn = document.getElementById('play-pause-btn');
+      const skipBtn = document.getElementById('skip-btn');
+      if (navigation && typeof navigation.addTooltipEvents === 'function') {
+        if (stopBtn) navigation.addTooltipEvents(stopBtn);
+        if (playPauseBtn) navigation.addTooltipEvents(playPauseBtn);
+        if (skipBtn) navigation.addTooltipEvents(skipBtn);
+      }
+    } catch (err) {
+      console.warn('Failed to attach control button tooltips:', err);
+    }
+
     // Initialize Session Manager
     console.log('📊 Initializing Session Manager...');
     sessionManager = new SessionManager(navigation);
