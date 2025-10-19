@@ -53,7 +53,8 @@ export class PeakFocusTime {
         const innerH = this.height - this.padding.top - this.padding.bottom;
 
     // compute max for y-axis and build dynamic ticks (no hard cap at 60)
-        const maxVal = Math.max(...averages, 1);
+    // Use 0 as the fallback so we can detect "no data" (all zeros) correctly.
+    const maxVal = Math.max(...averages, 0);
 
         let ticks = [];
         let yMax = 1;

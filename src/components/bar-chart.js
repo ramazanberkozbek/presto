@@ -110,8 +110,10 @@ export class BarChart {
             totalDisplay.textContent = this.config.totalFormat(total);
         }
 
-        // Render components
-        if (yAxisContainer) this.renderYAxis(yAxisContainer, scaleMax);
+    // Render components
+    // Pass the raw max data value to renderYAxis so it can choose a
+    // "nice" axis scale (and grow it when data approaches the top).
+    if (yAxisContainer) this.renderYAxis(yAxisContainer, maxDataValue);
         if (gridContainer) this.renderGrid(gridContainer);
         this.renderBars(barsContainer, data, scaleMax);
     }
@@ -129,40 +131,38 @@ export class BarChart {
      */
     renderYAxis(container, maxValue) {
         if (!container) return;
-
-        let stepValue;
-        let niceMax = maxValue;
-
-        // Determine step size
-        if (this.config.useFixedMax) {
-            // Fixed scale (for daily: 0-60)
-            if (maxValue >= 25) {
-                stepValue = 10;
-                niceMax = 60;
-            } else {
-                stepValue = 5;
-                niceMax = 25;
-            }
-        } else {
-            // Dynamic scale (for weekly/monthly)
-            stepValue = niceMax / 5;
+        if (!Number.isFinite(maxValue) || maxValue === 0) {
+            // No-data fallback: 4 ticks (15,10,5,0)
+            const noDataTicks = [15, 10, 5, 0];
+            container.innerHTML = noDataTicks.map(v => `<span>${v}</span>`).join('');
+            try {
+                const gridId = container.id.replace('y-axis', 'grid');
+                const gridEl = document.getElementById(gridId);
+                if (gridEl) gridEl.dataset.gridLines = String(noDataTicks.length);
+            } catch (e) {}
+            container.dataset.maxValue = 15;
+            return;
         }
 
-        // Create labels from max to 0 (top to bottom)
-        const labels = [];
-        for (let i = 5; i >= 0; i--) {
-            labels.push(Math.round(i * stepValue));
-        }
+        // Candidate scales chosen to produce 'round' nice numbers. We pick the
+        // smallest candidate strictly greater than the maxValue so the top tick
+        // is always above the highest bar and nicely rounded (e.g. 45, 90, 120).
+        const candidates = [15, 30, 45, 60, 75, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360, 390, 420, 460, 480, 520, 550, 580, 610, 640, 670, 700, 750, 800, 850, 900, 950, 1000];
+        let chosen = candidates.find(c => c > maxValue) || candidates[candidates.length - 1];
 
-        container.innerHTML = labels.map(value => {
-            if (value === 0) {
-                return `<span>0 ${this.config.yAxisLabel}</span>`;
-            }
-            return `<span>${value}</span>`;
-        }).join('');
+        // Build ticks: top, 2/3*top, 1/3*top, 0 (rounded)
+        const step = chosen / 3;
+        const ticks = [Math.round(chosen), Math.round(step * 2), Math.round(step), 0];
 
-        // Store max value for bar scaling
-        container.dataset.maxValue = niceMax;
+        // Render labels from top to bottom
+        container.innerHTML = ticks.map(v => `<span>${v}</span>`).join('');
+        // mark grid length
+        try {
+            const gridId = container.id.replace('y-axis', 'grid');
+            const gridEl = document.getElementById(gridId);
+            if (gridEl) gridEl.dataset.gridLines = String(ticks.length);
+        } catch (e) {}
+        container.dataset.maxValue = String(chosen);
     }
 
     /**
@@ -170,15 +170,17 @@ export class BarChart {
      */
     renderGrid(container) {
         if (!container) return;
+        // Allow caller to override number of grid lines via data attribute
+        const requested = parseInt(container.dataset.gridLines, 10);
+        const count = Number.isFinite(requested) && requested > 0 ? requested : 6;
 
-        // Create 6 horizontal grid lines
         // Determine grid line class based on container ID
         const gridLineClass = container.id.includes('timeline') ? 'timeline-grid-line' :
                              container.id.includes('monthly') ? 'monthly-grid-line' :
                              container.id.includes('yearly') ? 'yearly-grid-line' :
                              'weekly-grid-line';
-        
-        const lines = Array.from({ length: 6 }, () => 
+
+        const lines = Array.from({ length: count }, () =>
             `<div class="${gridLineClass}"></div>`
         ).join('');
 
