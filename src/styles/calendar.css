@@ -966,6 +966,19 @@
 .monthly-peak-day-card.active {
   display: block;
 }
+
+/* Yearly Peak Day Card (Haftanın En Odaklanılan Günü - Yearly)
+   Hidden by default, shown only when .active is added (yearly period) */
+.yearly-peak-day-card {
+  background: var(--card-bg);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  display: none;
+}
+.yearly-peak-day-card.active {
+  display: block;
+}
 .monthly-peak-day-card h3 {
   margin: 0 0 0.75rem 0;
   color: var(--accent-color);

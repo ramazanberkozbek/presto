@@ -468,6 +468,10 @@
             <!-- Will be filled by MonthlyPeakDay component: shows which weekday is the most focused during the month -->
           </div>
 
+          <!-- Peak Focus Day of Week (Yearly) -->
+          <!-- NOTE: This card is rendered only for yearly period via NavigationManager (.active toggled) -->
+          <!-- (placeholder moved to appear after yearly peak-focus card) -->
+
           <!-- Yearly Focus Time Distribution (Only shown in yearly view) -->
           <div class="yearly-focus-distribution-card" id="yearly-focus-distribution">
             <div class="distribution-header">
@@ -601,6 +605,11 @@
           <!-- Peak Focus Time of Day (Yearly) -->
           <div class="yearly-peak-focus-card" id="yearly-peak-focus">
             <!-- Will be filled by PeakFocusTime component for yearly data -->
+          </div>
+
+          <!-- Peak Focus Day of Week (Yearly) - hidden by default; shown only in yearly period -->
+          <div class="yearly-peak-day-card" id="yearly-peak-day">
+            <!-- Will be filled by MonthlyPeakDay component for yearly data -->
           </div>
 
           <!-- Tag Usage Pie Chart (Weekly) -->

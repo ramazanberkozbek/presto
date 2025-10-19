@@ -77,6 +77,7 @@ export class NavigationManager {
         // Placeholder for Peak Focus Time component (initialized lazily)
         this.weeklyPeakFocus = null;
         this.monthlyPeakDay = null;
+    this.yearlyPeakDay = null;
     this.yearlyPeakFocus = null;
 
         // Initialize Focus Trend component for monthly view
@@ -2406,6 +2407,13 @@ true // All sessions are focus sessions now
             }
         }
 
+        // Show/hide yearly peak day card (only visible in yearly period)
+        const yearlyPeakDayCard = document.getElementById('yearly-peak-day');
+        if (yearlyPeakDayCard) {
+            if (period === 'yearly') yearlyPeakDayCard.classList.add('active');
+            else yearlyPeakDayCard.classList.remove('active');
+        }
+
         // Show/hide yearly focus trend card
         const yearlyTrendCard = document.getElementById('yearly-focus-trend');
         if (yearlyTrendCard) {
@@ -3037,6 +3045,69 @@ true // All sessions are focus sessions now
         }
     }
 
+    // Lazy initialize YearlyPeakDay component via dynamic import (reuses MonthlyPeakDay component)
+    async ensureYearlyPeakDayInitialized() {
+        if (this.yearlyPeakDay) return;
+        try {
+            const module = await import('../components/monthly-peak-day.js');
+            const MonthlyPeakDay = module.MonthlyPeakDay;
+            this.yearlyPeakDay = new MonthlyPeakDay({ containerId: 'yearly-peak-day' });
+        } catch (e) {
+            console.warn('Failed to initialize YearlyPeakDay component:', e);
+            this.yearlyPeakDay = null;
+        }
+    }
+
+    // Compute yearly peak day: average minutes per weekday across the selected year
+    computeYearlyPeakDay() {
+        const totals = new Array(7).fill(0);
+        const counts = new Array(7).fill(0);
+
+        if (!window.sessionManager) {
+            return { totalsByWeekday: totals.map(() => 0), peakDayIndex: 0, peakValue: 0 };
+        }
+
+        const current = new Date(this.currentDate);
+        const year = current.getFullYear();
+
+        // Iterate through every day of the year
+        for (let m = 0; m < 12; m++) {
+            const daysInMonth = new Date(year, m + 1, 0).getDate();
+            for (let d = 1; d <= daysInMonth; d++) {
+                const date = new Date(year, m, d);
+                const jsDay = date.getDay(); // 0=Sun..6=Sat
+                const idx = (jsDay + 6) % 7; // convert to Mon=0..Sun=6
+                counts[idx] += 1;
+
+                const sessions = window.sessionManager.getSessionsForDate(date) || [];
+                sessions.forEach(session => {
+                    const type = session.session_type || session.type;
+                    if (type !== 'focus' && type !== 'custom') return;
+                    const duration = Number(session.duration) || 0;
+                    totals[idx] += duration;
+                });
+            }
+        }
+
+        // Compute averages per weekday
+        const averages = totals.map((sum, idx) => {
+            const cnt = counts[idx] || 0;
+            return cnt > 0 ? sum / cnt : 0;
+        });
+
+        // Find peak weekday
+        let peakDayIndex = 0;
+        let peakValue = averages[0] || 0;
+        for (let i = 1; i < 7; i++) {
+            if (averages[i] > peakValue) {
+                peakValue = averages[i];
+                peakDayIndex = i;
+            }
+        }
+
+        return { totalsByWeekday: averages, peakDayIndex, peakValue };
+    }
+
     // MONTHLY FOCUS TREND
     // ========================================
     updateMonthlyFocusTrend() {
@@ -3170,6 +3241,17 @@ true // All sessions are focus sessions now
             }
         } catch (e) {
             console.warn('Failed to render Yearly PeakFocusTime component:', e);
+        }
+
+        // Ensure PeakDay (weekday) component exists for yearly and render
+        try {
+            await this.ensureYearlyPeakDayInitialized();
+            if (this.yearlyPeakDay) {
+                const peakDayResult = this.computeYearlyPeakDay();
+                this.yearlyPeakDay.render(peakDayResult);
+            }
+        } catch (e) {
+            console.warn('Failed to render Yearly PeakDay component:', e);
         }
     }
 
