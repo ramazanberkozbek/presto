@@ -159,21 +159,37 @@ export class FocusTrend {
         const current = data[0];
         const previous = data[1];
 
-        if (!current.value || !previous.value) {
+        // If value is explicitly null/undefined treat as missing data. Allow zero values.
+        if (current.value == null || previous.value == null) {
             return 'Karşılaştırma için yeterli veri yok';
         }
 
+        // Values are in minutes
         const diff = current.value - previous.value;
-        const percentChange = previous.value > 0 
-            ? Math.abs((diff / previous.value) * 100).toFixed(0)
-            : 0;
+
+        // Helper to format minutes to human string with words
+        const formatMinutes = (minutes) => {
+            minutes = Math.round(Math.abs(minutes));
+            if (minutes === 0) return '0 dakika';
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            if (hours > 0 && mins > 0) return `${hours} saat ${mins} dakika`;
+            if (hours > 0) return `${hours} saat`;
+            return `${mins} dakika`;
+        };
+
+        // Choose compare label similar to daily phrasing
+        const comparePrefix = this.config.type === 'daily' ? 'Dünden' :
+            this.config.type === 'weekly' ? 'Geçen haftaya göre' :
+            this.config.type === 'monthly' ? 'Geçen aya göre' :
+            this.config.type === 'yearly' ? 'Geçen yıla göre' : 'Önceki döneme göre';
 
         if (diff > 0) {
-            return `${this.config.type === 'daily' ? 'Dün' : 'Geçen hafta'}e göre %${percentChange} daha fazla odaklandın 🎉`;
+            return `${comparePrefix} ${formatMinutes(diff)} daha fazla çalıştın`;
         } else if (diff < 0) {
-            return `${this.config.type === 'daily' ? 'Dün' : 'Geçen hafta'}e göre %${percentChange} daha az odaklandın`;
+            return `${comparePrefix} ${formatMinutes(diff)} daha az çalıştın`;
         } else {
-            return `${this.config.type === 'daily' ? 'Dün' : 'Geçen hafta'} ile aynı süre odaklandın`;
+            return `${comparePrefix} aynı süre çalıştın`;
         }
     }
 

@@ -778,15 +778,17 @@ export class NavigationManager {
             return { averages, peakHour: 0, peakValue: 0 };
         }
 
-        // Sum minutes per hour across last 7 days (including today backward)
+        // Use the selected week start if available, otherwise currentDate's week
+        const weekStart = this.selectedWeek ? new Date(this.selectedWeek) : this.getWeekStart(this.currentDate);
+
+        // Sum minutes per hour across the 7 days of the selected week
         for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
-            const date = new Date(this.currentDate);
-            date.setDate(this.currentDate.getDate() - dayOffset);
+            const date = new Date(weekStart);
+            date.setDate(weekStart.getDate() + dayOffset);
 
             const sessions = window.sessionManager.getSessionsForDate(date) || [];
 
             sessions.forEach(session => {
-                // consider focus/custom sessions only
                 const type = session.session_type || session.type;
                 if (type !== 'focus' && type !== 'custom') return;
                 if (!session.start_time || !session.end_time) return;
@@ -796,10 +798,14 @@ export class NavigationManager {
                 let startMin = sh * 60 + sm;
                 let endMin = eh * 60 + em;
 
-                // normalize if session ends past midnight (endMin < startMin)
-                if (endMin <= startMin) endMin = startMin; // guard - assume no cross-midnight
+                // normalize if session ends before or equal to start - treat as zero-length
+                if (endMin <= startMin) endMin = startMin;
 
-                // iterate over hours covered
+                // Cap session to the current day (don't count minutes past midnight for this date)
+                const dayEnd = 24 * 60; // 1440 minutes
+                endMin = Math.min(endMin, dayEnd);
+
+                // iterate over hours covered on this date
                 let cur = startMin;
                 while (cur < endMin) {
                     const hour = Math.floor(cur / 60);
@@ -861,8 +867,12 @@ export class NavigationManager {
                 let startMin = sh * 60 + sm;
                 let endMin = eh * 60 + em;
 
-                // normalize if session ends past midnight (endMin <= startMin)
-                if (endMin <= startMin) endMin = startMin; // same handling as weekly
+                // normalize if session ends before or equal to start - treat as zero-length
+                if (endMin <= startMin) endMin = startMin;
+
+                // Cap session to this specific day (don't include minutes past midnight)
+                const dayEnd = 24 * 60; // 1440 minutes
+                endMin = Math.min(endMin, dayEnd);
 
                 // iterate over hours covered
                 let cur = startMin;
@@ -2900,21 +2910,28 @@ true // All sessions are focus sessions now
         // Prepare data for component (percentages will be handled by component using max value)
         const maxTotal = Math.max(thisMonthTotal, lastMonthTotal, twoMonthsTotal, 1);
 
+        const safePercent = (v) => Math.max(0, Math.min(100, v));
+
+        const thisMonthFill = (thisMonthTotal / maxTotal) * 100;
+        const lastMonthFill = (lastMonthTotal / maxTotal) * 100;
+        const twoMonthsFill = (twoMonthsTotal / maxTotal) * 100;
+
         const data = [
             {
-                label: 'Bu Ay',
+                label: 'Bu Ay (ŞU ANA KADAR)',
                 time: this.formatTimeForTrend(thisMonthTotal),
                 date: `${thisMonthStart.getMonth() + 1}/${thisMonthStart.getFullYear()}`,
                 value: thisMonthTotal,
-                percentage: (thisMonthTotal / maxTotal) * 100
+                percentage: thisMonthFill
             },
             {
                 label: 'Geçen Ay',
                 time: this.formatTimeForTrend(lastMonthTotal),
                 date: `${lastMonthStart.getMonth() + 1}/${lastMonthStart.getFullYear()}`,
                 value: lastMonthTotal,
-                percentage: (lastMonthTotal / maxTotal) * 100,
-                comparisonPercentage: (lastMonthUpToToday / maxTotal) * 100,
+                percentage: lastMonthFill,
+                // position the comparison dot proportionally inside last month's filled width
+                comparisonPercentage: lastMonthTotal > 0 ? safePercent((lastMonthUpToToday / lastMonthTotal) * lastMonthFill) : 0,
                 comparisonTooltip: this.formatTimeForTrend(lastMonthUpToToday)
             },
             {
@@ -2922,8 +2939,8 @@ true // All sessions are focus sessions now
                 time: this.formatTimeForTrend(twoMonthsTotal),
                 date: `${twoMonthsStart.getMonth() + 1}/${twoMonthsStart.getFullYear()}`,
                 value: twoMonthsTotal,
-                percentage: (twoMonthsTotal / maxTotal) * 100,
-                comparisonPercentage: (twoMonthsUpToToday / maxTotal) * 100,
+                percentage: twoMonthsFill,
+                comparisonPercentage: twoMonthsTotal > 0 ? safePercent((twoMonthsUpToToday / twoMonthsTotal) * twoMonthsFill) : 0,
                 comparisonTooltip: this.formatTimeForTrend(twoMonthsUpToToday)
             }
         ];
@@ -3248,30 +3265,48 @@ true // All sessions are focus sessions now
         };
 
         // Helper function to get focus time up to current hour for a date
+        // Safer parsing: session.start_time / end_time expected as "HH:MM" strings.
         const getFocusTimeUpToCurrentHour = (targetDate) => {
-            const currentHour = new Date().getHours();
-            const currentMinute = new Date().getMinutes();
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const currentTimeInMinutes = currentHour * 60 + currentMinute;
+
             const sessions = window.sessionManager.getSessionsForDate(targetDate);
-            
-            const totalMinutes = sessions.reduce((sum, session) => {
-                if (session.session_type === 'focus' || session.session_type === 'custom') {
-                    const sessionDate = new Date(session.start_time);
-                    const sessionHour = sessionDate.getHours();
-                    const sessionMinute = sessionDate.getMinutes();
-                    
-                    // Only count sessions that started before or at current time
-                    if (sessionHour < currentHour || (sessionHour === currentHour && sessionMinute <= currentMinute)) {
-                        return sum + (session.duration || 0);
-                    }
-                }
-                return sum;
-            }, 0);
+
+            let totalMinutes = 0;
+
+            sessions.forEach(session => {
+                if (!(session.session_type === 'focus' || session.session_type === 'custom')) return;
+                if (!session.start_time || !session.end_time) return;
+
+                // Expecting HH:MM strings. Parse safely.
+                const [sh, sm] = ('' + session.start_time).split(':').map(Number);
+                const [eh, em] = ('' + session.end_time).split(':').map(Number);
+                if (Number.isNaN(sh) || Number.isNaN(sm) || Number.isNaN(eh) || Number.isNaN(em)) return;
+
+                const sessionStart = sh * 60 + sm;
+                const sessionEnd = eh * 60 + em;
+
+                // If sessionEnd <= sessionStart, treat as zero-length (defensive)
+                if (sessionEnd <= sessionStart) return;
+
+                // We want the portion of the session that occurs before or at currentTimeInMinutes
+                // Note: targetDate may be yesterday/evvelki; currentTimeInMinutes is a time-of-day measure -
+                // we interpret "şu ana kadar" relative to the current day's time-of-day.
+                const effectiveEnd = Math.min(sessionEnd, currentTimeInMinutes);
+                if (effectiveEnd <= sessionStart) return;
+
+                const duration = effectiveEnd - sessionStart;
+                totalMinutes += duration;
+            });
+
             return totalMinutes;
         };
 
-        // Helper function to format time
+        // Helper function to format time (0 olarak dakika gösterilir)
         const formatTime = (minutes) => {
-            if (minutes === 0) return '0 S';
+            if (minutes === 0) return '0 D';
             if (minutes < 60) {
                 return `${minutes} D`;
             }
@@ -3344,10 +3379,27 @@ true // All sessions are focus sessions now
         const yesterdayPercent = (yesterdayTotal / maxMinutes) * 100;
         const dayBeforePercent = (dayBeforeTotal / maxMinutes) * 100;
         
-        // Calculate dot positions (percentage of the ENTIRE bar background for that day)
-        // This positions the dot relative to the background container, not just the filled portion
-        const yesterdayDotPercent = yesterdayTotal > 0 ? (yesterdaySameTimeTotal / maxMinutes) * 100 : 0;
-        const dayBeforeDotPercent = dayBeforeTotal > 0 ? (dayBeforeSameTimeTotal / maxMinutes) * 100 : 0;
+        // Calculate dot positions.
+        // Previously dots were positioned relative to the global max which made them not track the day's filled portion.
+        // New approach: compute each day's filled percentage (dayFillPercent = dayTotal / maxMinutes * 100),
+        // then position dot proportionally within that filled area: left = (sameTimeTotal / dayTotal) * dayFillPercent.
+        // If dayTotal is zero we place dot at 0% (start).
+        const safePercent = (v) => Math.max(0, Math.min(100, v));
+
+        const yesterdayFillPercent = yesterdayTotal > 0 ? (yesterdayTotal / maxMinutes) * 100 : 0;
+        const dayBeforeFillPercent = dayBeforeTotal > 0 ? (dayBeforeTotal / maxMinutes) * 100 : 0;
+
+        let yesterdayDotPercent = 0;
+        if (yesterdayTotal > 0) {
+            const relative = yesterdaySameTimeTotal / yesterdayTotal; // 0..1
+            yesterdayDotPercent = safePercent(relative * yesterdayFillPercent);
+        }
+
+        let dayBeforeDotPercent = 0;
+        if (dayBeforeTotal > 0) {
+            const relative = dayBeforeSameTimeTotal / dayBeforeTotal; // 0..1
+            dayBeforeDotPercent = safePercent(relative * dayBeforeFillPercent);
+        }
 
         // Update bars
         if (todayFill) {
@@ -3622,21 +3674,28 @@ true // All sessions are focus sessions now
         };
 
         // Prepare data for component
+        const safePercent = (v) => Math.max(0, Math.min(100, v));
+
+        const thisWeekFill = (thisWeekTotal / maxTotal) * 100;
+        const lastWeekFill = (lastWeekTotal / maxTotal) * 100;
+        const weekBeforeFill = (weekBeforeTotal / maxTotal) * 100;
+
         const data = [
             {
                 label: 'Bu Hafta (şu ana kadar)',
                 time: this.formatTimeForTrend(thisWeekTotal),
                 date: formatWeekDate(thisWeekStart),
                 value: thisWeekTotal,
-                percentage: (thisWeekTotal / maxTotal) * 100,
+                percentage: thisWeekFill,
             },
             {
                 label: 'Geçen Hafta',
                 time: this.formatTimeForTrend(lastWeekTotal),
                 date: formatWeekDate(lastWeekStart),
                 value: lastWeekTotal,
-                percentage: (lastWeekTotal / maxTotal) * 100,
-                comparisonPercentage: (lastWeekUpToNow / maxTotal) * 100,
+                percentage: lastWeekFill,
+                // position the comparison dot proportionally inside last week's filled width
+                comparisonPercentage: lastWeekTotal > 0 ? safePercent((lastWeekUpToNow / lastWeekTotal) * lastWeekFill) : 0,
                 comparisonTooltip: this.formatTimeForTrend(lastWeekUpToNow)
             },
             {
@@ -3644,8 +3703,8 @@ true // All sessions are focus sessions now
                 time: this.formatTimeForTrend(weekBeforeTotal),
                 date: formatWeekDate(weekBeforeStart),
                 value: weekBeforeTotal,
-                percentage: (weekBeforeTotal / maxTotal) * 100,
-                comparisonPercentage: (weekBeforeUpToNow / maxTotal) * 100,
+                percentage: weekBeforeFill,
+                comparisonPercentage: weekBeforeTotal > 0 ? safePercent((weekBeforeUpToNow / weekBeforeTotal) * weekBeforeFill) : 0,
                 comparisonTooltip: this.formatTimeForTrend(weekBeforeUpToNow)
             }
         ];
@@ -3738,21 +3797,27 @@ true // All sessions are focus sessions now
 
         const maxTotal = Math.max(thisYearTotal, lastYearTotal, yearBeforeTotal, 1);
 
+        const safePercent = (v) => Math.max(0, Math.min(100, v));
+
+        const thisYearFill = (thisYearTotal / maxTotal) * 100;
+        const lastYearFill = (lastYearTotal / maxTotal) * 100;
+        const yearBeforeFill = (yearBeforeTotal / maxTotal) * 100;
+
         const data = [
             {
                 label: `${currentYear} (şu ana kadar)`,
                 time: this.formatTimeForTrend(thisYearTotal),
                 date: currentYear.toString(),
                 value: thisYearTotal,
-                percentage: (thisYearTotal / maxTotal) * 100
+                percentage: thisYearFill
             },
             {
                 label: `${lastYear}`,
                 time: this.formatTimeForTrend(lastYearTotal),
                 date: lastYear.toString(),
                 value: lastYearTotal,
-                percentage: (lastYearTotal / maxTotal) * 100,
-                comparisonPercentage: (lastYearUpToNow / maxTotal) * 100,
+                percentage: lastYearFill,
+                comparisonPercentage: lastYearTotal > 0 ? safePercent((lastYearUpToNow / lastYearTotal) * lastYearFill) : 0,
                 comparisonTooltip: this.formatTimeForTrend(lastYearUpToNow)
             },
             {
@@ -3760,8 +3825,8 @@ true // All sessions are focus sessions now
                 time: this.formatTimeForTrend(yearBeforeTotal),
                 date: yearBefore.toString(),
                 value: yearBeforeTotal,
-                percentage: (yearBeforeTotal / maxTotal) * 100,
-                comparisonPercentage: (yearBeforeUpToNow / maxTotal) * 100,
+                percentage: yearBeforeFill,
+                comparisonPercentage: yearBeforeTotal > 0 ? safePercent((yearBeforeUpToNow / yearBeforeTotal) * yearBeforeFill) : 0,
                 comparisonTooltip: this.formatTimeForTrend(yearBeforeUpToNow)
             }
         ];
@@ -3831,7 +3896,7 @@ true // All sessions are focus sessions now
     }
 
     formatTimeForTrend(minutes) {
-        if (minutes === 0) return '0 S';
+        if (minutes === 0) return '0 D';
         const hours = Math.floor(minutes / 60);
         const mins = Math.round(minutes % 60);
         if (hours > 0 && mins > 0) {
