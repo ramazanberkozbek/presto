@@ -76,6 +76,7 @@ export class NavigationManager {
 
         // Placeholder for Peak Focus Time component (initialized lazily)
         this.weeklyPeakFocus = null;
+        this.monthlyPeakDay = null;
 
         // Initialize Focus Trend component for monthly view
         this.monthlyFocusTrend = new FocusTrend({
@@ -2394,6 +2395,16 @@ true // All sessions are focus sessions now
             }
         }
 
+        // Show/hide monthly peak day card (Haftanın En Odaklanılan Günü)
+        const monthlyPeakDayCard = document.getElementById('monthly-peak-day');
+        if (monthlyPeakDayCard) {
+            if (period === 'monthly') {
+                monthlyPeakDayCard.classList.add('active');
+            } else {
+                monthlyPeakDayCard.classList.remove('active');
+            }
+        }
+
         // Show/hide yearly focus trend card
         const yearlyTrendCard = document.getElementById('yearly-focus-trend');
         if (yearlyTrendCard) {
@@ -2840,9 +2851,93 @@ true // All sessions are focus sessions now
         
         // Update monthly focus trend
         this.updateMonthlyFocusTrend();
+        // Ensure MonthlyPeakDay component exists and render
+        try {
+            await this.ensureMonthlyPeakDayInitialized();
+            if (this.monthlyPeakDay) {
+                const peakDayResult = this.computeMonthlyPeakDay();
+                this.monthlyPeakDay.render(peakDayResult);
+            }
+        } catch (e) {
+            console.warn('Failed to render MonthlyPeakDay component:', e);
+        }
         
         // Update navigator buttons
         this.updateNavigatorButtons();
+    }
+
+    // Compute which weekday had the most focus during the selected month
+    computeMonthlyPeakDay() {
+        // We need to calculate average minutes per weekday for the selected month.
+        // For each weekday (Mon=0..Sun=6):
+        //  - sum total minutes across all occurrences of that weekday in the month
+        //  - count how many times that weekday occurs in the month
+        //  - average = sum / count (or 0 if count === 0)
+        const totals = new Array(7).fill(0); // sum of minutes per weekday
+        const counts = new Array(7).fill(0); // occurrences of each weekday in the month
+
+        if (!window.sessionManager) {
+            return { totalsByWeekday: totals.map(() => 0), peakDayIndex: 0, peakValue: 0 };
+        }
+
+        const current = this.displayMonth ? new Date(this.displayMonth) : new Date(this.currentDate);
+        const year = current.getFullYear();
+        const month = current.getMonth();
+        const lastDay = new Date(year, month + 1, 0).getDate();
+
+        // First, compute counts of each weekday in the month
+        for (let d = 1; d <= lastDay; d++) {
+            const date = new Date(year, month, d);
+            const jsDay = date.getDay(); // 0=Sun..6=Sat
+            const idx = (jsDay + 6) % 7; // convert to Mon=0..Sun=6
+            counts[idx] += 1;
+        }
+
+        // Then sum durations for sessions falling in that month grouped by weekday
+        for (let d = 1; d <= lastDay; d++) {
+            const date = new Date(year, month, d);
+            const sessions = window.sessionManager.getSessionsForDate(date) || [];
+
+            sessions.forEach(session => {
+                const type = session.session_type || session.type;
+                if (type !== 'focus' && type !== 'custom') return;
+                const duration = Number(session.duration) || 0; // minutes
+                const jsDay = date.getDay();
+                const idx = (jsDay + 6) % 7;
+                totals[idx] += duration;
+            });
+        }
+
+        // Compute averages per weekday (minutes)
+        const averages = totals.map((sum, idx) => {
+            const cnt = counts[idx] || 0;
+            return cnt > 0 ? sum / cnt : 0;
+        });
+
+        // Find peak weekday (highest average). If tie or all zeros, pick first highest index
+        let peakDayIndex = 0;
+        let peakValue = averages[0] || 0;
+        for (let i = 1; i < 7; i++) {
+            if (averages[i] > peakValue) {
+                peakValue = averages[i];
+                peakDayIndex = i;
+            }
+        }
+
+        return { totalsByWeekday: averages, peakDayIndex, peakValue };
+    }
+
+    // Lazy initialize MonthlyPeakDay component via dynamic import
+    async ensureMonthlyPeakDayInitialized() {
+        if (this.monthlyPeakDay) return;
+        try {
+            const module = await import('../components/monthly-peak-day.js');
+            const MonthlyPeakDay = module.MonthlyPeakDay;
+            this.monthlyPeakDay = new MonthlyPeakDay({ containerId: 'monthly-peak-day' });
+        } catch (e) {
+            console.warn('Failed to initialize MonthlyPeakDay component:', e);
+            this.monthlyPeakDay = null;
+        }
     }
 
     // MONTHLY FOCUS TREND

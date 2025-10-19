@@ -51,26 +51,39 @@ export class PeakFocusTime {
         const innerW = this.width - this.padding.left - this.padding.right;
         const innerH = this.height - this.padding.top - this.padding.bottom;
 
-        // compute max for y-axis
+        // compute max for y-axis and build dynamic ticks (no hard cap at 60)
         const maxVal = Math.max(...averages, 1);
 
-        // Determine tick set and yMax depending on peakValue
         let ticks = [];
-        if (peakValue < 25) {
+        let yMax = 1;
+
+        // Small values: keep fine-grained ticks up to 25
+        if (maxVal === 0) {
+            // No data: show tight scale
+            ticks = [0, 5, 10, 15];
+            yMax = 15;
+        } else if (maxVal <= 15) {
+            // Small values (<=15): keep top close so 10 -> 15
+            ticks = [0, 5, 10, 15];
+            yMax = 15;
+        } else if (maxVal <= 25) {
             ticks = [0, 5, 10, 15, 20, 25];
+            yMax = 25;
         } else {
-            // When peak >= 25, show wider ticks up to 60 (user requested 0,30,40,50,60)
-            ticks = [0, 30, 40, 50, 60];
+            // For larger maxima, build ~5 ticks (including zero) with a 'nice' step (multiple of 5)
+            const tickCount = 5; // including zero
+            let step = Math.ceil(maxVal / (tickCount - 1));
+            // round step up to nearest multiple of 5 for nicer labels
+            step = Math.max(5, Math.ceil(step / 5) * 5);
+            yMax = step * (tickCount - 1);
+            ticks = Array.from({ length: tickCount }, (_, i) => i * step);
         }
 
-        const yMaxTick = ticks[ticks.length - 1];
-
-        // compute y scale based on chosen top tick (cap at 60)
-        const yMax = Math.min(60, Math.max(yMaxTick, 1));
-
         // scales
-        const x = (i) => this.padding.left + (i / 23) * innerW;
-        const y = (v) => this.padding.top + innerH - (v / yMax) * innerH;
+    // add a small horizontal inset so first/last points don't sit flush to edges
+    const horizontalInset = Math.max(12, innerW * 0.03);
+    const x = (i) => this.padding.left + horizontalInset + (i / 23) * (innerW - horizontalInset * 2);
+    const y = (v) => this.padding.top + innerH - (v / yMax) * innerH;
 
         // gridlines and left-side labels according to ticks (render from top -> bottom)
         for (let i = ticks.length - 1; i >= 0; i--) {
@@ -97,13 +110,7 @@ export class PeakFocusTime {
             svg.appendChild(ty);
         }
 
-        // unit label on the left
-        const unitLabel = document.createElementNS(svg.namespaceURI, 'text');
-        unitLabel.setAttribute('x', Math.max(8, this.padding.left - 30));
-        unitLabel.setAttribute('y', this.padding.top - 12);
-        unitLabel.setAttribute('fill', '#FFFFFF');
-        unitLabel.setAttribute('font-size', '11');
-        svg.appendChild(unitLabel);
+    // unit label removed per design; keep method if needed later
 
         // path (smooth cubic bezier)
         const d = this.buildPathData(averages, x, y);

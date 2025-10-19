@@ -920,10 +920,32 @@
   border-radius: 15px;
   padding: 1.5rem;
   margin-bottom: 1rem;
-  display: none; /* hidden by default, show only when .active */
+  display: none; 
 }
 .monthly-peak-focus-card.active {
   display: block;
+}
+
+/* Monthly Peak Day Card (Haftanın En Odaklanılan Günü) */
+.monthly-peak-day-card {
+  background: var(--card-bg);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  display: none; 
+}
+.monthly-peak-day-card.active {
+  display: block;
+}
+.monthly-peak-day-card h3 {
+  margin: 0 0 0.75rem 0;
+  color: var(--accent-color);
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+.monthly-peak-day-card .trend-comparison-text {
+  color: #999999;
+  margin-bottom: 0.75rem;
 }
 .weekly-peak-focus-card h3 {
   margin: 0 0 0.75rem 0;
