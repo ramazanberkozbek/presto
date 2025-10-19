@@ -902,6 +902,15 @@ export class NavigationManager {
 
     async updateTagUsageChart() {
         try {
+            // Only render tag usage chart in weekly period to avoid confusion and extra work
+            if (this.currentPeriod && this.currentPeriod !== 'weekly') {
+                // If card exists, clear its contents to avoid stale visuals
+                const chartContainer = document.getElementById('tag-pie-chart');
+                const legendContainer = document.getElementById('tag-legend');
+                if (chartContainer) chartContainer.innerHTML = '';
+                if (legendContainer) legendContainer.innerHTML = '';
+                return;
+            }
             // Get all available tags
             const tags = window.tagManager ? window.tagManager.tags : [];
             
@@ -932,8 +941,7 @@ export class NavigationManager {
 
             // Get tag statistics for current week
             const tagStatsData = this.tagStatistics.getCurrentWeekTagStats(sessions, tags);
-            
-            // Render the pie chart
+            // Render the pie chart (only when weekly)
             this.tagStatistics.renderTagPieChart('tag-pie-chart', 'tag-legend', tagStatsData);
             
         } catch (error) {
@@ -2387,6 +2395,16 @@ true // All sessions are focus sessions now
                 focusTrendCard.classList.remove('hidden');
             } else {
                 focusTrendCard.classList.add('hidden');
+            }
+        }
+
+        // Show/hide Tag Usage card (only visible in weekly period)
+        const tagUsageCard = document.querySelector('.tag-usage-card');
+        if (tagUsageCard) {
+            if (period === 'weekly') {
+                tagUsageCard.classList.remove('hidden');
+            } else {
+                tagUsageCard.classList.add('hidden');
             }
         }
 

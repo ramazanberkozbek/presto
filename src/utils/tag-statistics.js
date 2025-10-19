@@ -206,7 +206,7 @@ export class TagStatistics {
                             <path d="M12 12h8" stroke-opacity="0.6" />
                         </svg>
                     </div>
-                    <span style="margin-top:8px;color:#111827;font-weight:600;font-size:14px;">No data available</span>
+                    <span style="margin-top:8px;color:white;font-weight:600;font-size:14px;">No data available</span>
                 </div>
             `;
             return;
