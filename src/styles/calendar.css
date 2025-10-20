@@ -164,6 +164,83 @@
   margin-bottom: 2rem;
 }
 
+/* Centered box wrapper for the standalone calendar (Daily Overview) */
+.calendar-box {
+  background: transparent; /* rely on page background for minimalism */
+  border-radius: 8px;
+  padding: 12px 0 8px 0;
+  margin: 0 auto 1.5rem auto;
+  max-width: 1100px;
+  width: calc(100% - 32px);
+  box-shadow: none; /* remove heavy shadow for minimal look */
+  border: 1px solid rgba(255,255,255,0.04);
+  display: block;
+}
+
+/* Make the calendar grid sit nicely inside the box and be centered */
+.calendar-box .calendar-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+/* Tighten up day appearance for boxed calendar */
+.calendar-box .calendar-day {
+  min-height: 44px;
+  padding: 6px 4px;
+  background: transparent;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.03);
+}
+
+.calendar-box .calendar-day:hover {
+  background: rgba(255,255,255,0.02);
+  transform: none;
+}
+
+.calendar-box .day-name {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.65);
+}
+
+.calendar-box .calendar-day-number {
+  font-size: 0.95rem;
+  color: var(--shared-text);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Minimal sessions table styling */
+.sessions-table-container {
+  margin-top: 10px;
+  width: 100%;
+}
+.sessions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+.sessions-table thead th {
+  text-align: left;
+  padding: 6px 8px;
+  color: rgba(255,255,255,0.65);
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.sessions-table tbody td {
+  padding: 8px 8px;
+  color: var(--shared-text);
+  border-bottom: 1px solid rgba(255,255,255,0.02);
+}
+.sessions-table tbody tr:last-child td { border-bottom: none; }
+
+.timeline-wrapper { width: 100%; margin-top: 8px; }
+.timeline-hours { margin-bottom: 6px; }
+.timeline-track { height: 46px; }
+
 .calendar-header {
   display: flex;
   align-items: center;

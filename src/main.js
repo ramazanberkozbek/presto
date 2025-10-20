@@ -1675,6 +1675,32 @@ async function initializeApplication() {
         await timer.updateProgressDots();
     }
 
+    // Refresh NavigationManager UI that depends on session data.
+    // NavigationManager was initialized earlier (before SessionManager), so
+    // re-run session-dependent population methods now that session data is available.
+    try {
+      if (navigation) {
+        if (typeof navigation.initSessionsTable === 'function') {
+          await navigation.initSessionsTable();
+        }
+
+        if (typeof navigation.refreshDataForPeriod === 'function') {
+          await navigation.refreshDataForPeriod();
+        }
+
+        // Make sure calendar and selected-day details are up-to-date
+        if (typeof navigation.updateCalendar === 'function') {
+          await navigation.updateCalendar();
+        }
+
+        if (typeof navigation.updateSelectedDayDetails === 'function') {
+          await navigation.updateSelectedDayDetails();
+        }
+      }
+    } catch (refreshErr) {
+      console.warn('Failed to refresh NavigationManager after SessionManager init:', refreshErr);
+    }
+
     // Update Manager already initialized earlier
 
     // Setup global event listeners

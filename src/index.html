@@ -27,10 +27,10 @@
         </svg>
       </button>
       <button class="sidebar-icon" id="calendar-nav" data-view="calendar" title="Calendar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
-        </svg>
+        <i class="ph ph-chart-line"></i>
+      </button>
+      <button class="sidebar-icon" id="daily-nav" data-view="daily" title="Daily">
+        <i class="ph ph-calendar-check"></i>
       </button>
     </div>
 
@@ -661,6 +661,60 @@
       </div>
     </div>
 
+    <!-- Daily View -->
+    <div class="view-container view-section hidden" id="daily-view">
+      <h1>Daily Overview</h1>
+
+      <div class="calendar-box">
+        <!-- Calendar Header (month navigator) -->
+        <div class="calendar-header">
+          <button id="prev-month" class="nav-btn" aria-label="Previous month">&lt;</button>
+          <div id="current-month" class="current-month-display">October 2025</div>
+          <button id="next-month" class="nav-btn" aria-label="Next month">&gt;</button>
+        </div>
+
+        <!-- Calendar Grid -->
+        <div id="calendar-grid" class="calendar-grid">
+          <!-- Calendar days will be rendered here by NavigationManager -->
+        </div>
+        
+        <!-- Daily details: timeline and session list for selected day -->
+        <div class="daily-details" id="daily-details">
+          <div class="daily-header">
+            <h3 id="selected-day-title">Selected Day Sessions</h3>
+          </div>
+
+          <div class="timeline-wrapper">
+            <div class="timeline-hours" id="timeline-hours">
+              <!-- Hour markers will be rendered here -->
+            </div>
+            <div class="timeline-track" id="timeline-track">
+              <!-- Session blocks will be rendered here by NavigationManager -->
+            </div>
+          </div>
+
+          <div class="sessions-table-container">
+            <h4>Sessions</h4>
+            <div class="table-responsive">
+              <table class="sessions-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Duration</th>
+                    <th>Tags</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="sessions-table-body">
+                  <!-- Rows will be populated by NavigationManager -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Settings View -->
     <div class="view-container hidden view-section" id="settings-view">

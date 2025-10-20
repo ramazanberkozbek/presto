@@ -206,6 +206,18 @@ export class NavigationManager {
             await this.refreshDataForPeriod();
             await this.updateSelectedDayDetails();
             await this.initSessionsTable(); // Initialize sessions table when viewing calendar
+        } else if (view === 'daily') {
+            // Daily Overview is a separate view that shows the month calendar grid.
+            // Ensure the calendar is rendered and daily-specific widgets are updated
+            await this.updateCalendar();
+            // Make sure period is set to daily for the smaller daily cards
+            this.currentPeriod = 'daily';
+            this.updatePeriodDisplay();
+            await this.refreshDataForPeriod();
+            // Also update selected day details and daily visuals
+            await this.updateSelectedDayDetails();
+            await this.updateDailyTagUsageChart();
+            this.updateDailyChart();
         } else if (view === 'settings') {
             // Settings view will be handled by SettingsManager
             if (window.settingsManager) {
@@ -288,12 +300,20 @@ export class NavigationManager {
         const weekEnd = new Date(this.selectedWeek);
         weekEnd.setDate(weekEnd.getDate() + 6);
 
-        const formatOptions = { day: 'numeric', month: 'short' };
-        const startStr = weekStart.toLocaleDateString('en-US', formatOptions);
-        const endStr = weekEnd.toLocaleDateString('en-US', formatOptions);
+        // If week is inside the same month and year, show compact range like "10-16 Jun 2025"
         const year = weekEnd.getFullYear();
-
-        weekRangeEl.textContent = `${startStr} - ${endStr} ${year}`;
+        if (weekStart.getMonth() === weekEnd.getMonth() && weekStart.getFullYear() === weekEnd.getFullYear()) {
+            const startDay = weekStart.getDate();
+            const endDay = weekEnd.getDate();
+            const monthShort = weekEnd.toLocaleDateString('en-US', { month: 'short' });
+            weekRangeEl.textContent = `${startDay}-${endDay} ${monthShort} ${year}`;
+        } else {
+            // Fallback: show full short-month start and end (e.g. "28 Feb - 5 Mar 2025")
+            const formatOptions = { day: 'numeric', month: 'short' };
+            const startStr = weekStart.toLocaleDateString('en-US', formatOptions);
+            const endStr = weekEnd.toLocaleDateString('en-US', formatOptions);
+            weekRangeEl.textContent = `${startStr} - ${endStr} ${year}`;
+        }
     }
 
     async updateFocusSummary() {
@@ -2549,7 +2569,8 @@ true // All sessions are focus sessions now
     updateDailyDisplay(date) {
         const dayDisplay = document.getElementById('day-display');
         if (dayDisplay) {
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            // Desired format: "Monday, 13 Oct 2025"
+            const options = { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' };
             dayDisplay.textContent = date.toLocaleDateString('en-US', options);
         }
     }
