@@ -295,8 +295,8 @@
 }
 
 .calendar-day:hover {
-  background: var(--setting-item-hover-bg);
-  transform: scale(1.05);
+  /* Keep hover subtle to avoid large shifts when cell is colored */
+  background: rgba(255,255,255,0.03);
 }
 
 .calendar-day.today {
@@ -307,17 +307,28 @@
 }
 
 .calendar-day.has-sessions {
-  border-color: var(--focus-color);
-  background: var(--focus-bg-alpha);
+  /* Indicate sessions using the inner background only. Keep border transparent so
+     no layout shift or visible outline appears when a day has sessions. */
+  border-color: transparent;
+  /* Allow JavaScript to set the exact bucket color via inline style (mapMinutesToBucketColor).
+    Use a transparent fallback if JS doesn't set a color. */
+  background: transparent;
   color: var(--shared-text);
   font-weight: 600;
 }
 
 .calendar-day.selected {
+  /* Keep background/typography changes but remove border to prevent layout shift
+     The calendar-day elements already have `border: 2px solid transparent` which
+     preserves layout; do not change border-width/color when selected. */
   background: var(--setting-item-hover-bg);
   color: var(--accent-color);
   font-weight: 600;
-  border: 2px solid var(--focus-timer-color);
+  /* Ensure border remains transparent so the element size doesn't change */
+  border-color: transparent;
+  /* If a subtle focus ring is desired without affecting layout, use outline (doesn't change box size)
+     or box-shadow; currently we remove visible green border as requested. */
+  box-shadow: none;
 }
 
 .calendar-day.selected .calendar-dot {
@@ -327,6 +338,18 @@
 .calendar-day-number {
   font-size: 0.9rem;
   font-weight: 500;
+}
+
+.calendar-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  border-radius: 6px;
+  color: var(--shared-text);
+  font-weight: 600;
 }
 
 .calendar-day-dots {
@@ -340,6 +363,21 @@
   height: 4px;
   border-radius: 50%;
   background: var(--focus-color);
+}
+
+/* Contribution-style indicator (GitHub-like) */
+.calendar-contrib {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-top: 6px;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+}
+
+.calendar-day.today .calendar-contrib {
+  outline: 1px solid rgba(0,0,0,0.08);
 }
 
 .day-name {

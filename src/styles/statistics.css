@@ -96,20 +96,22 @@
 
 /* Calendar day with sessions uses focus color */
 .calendar-day.has-sessions {
-  border-color: var(--focus-color) !important;
+  /* Do not force a colored border for days with sessions; use background color only */
+  border-color: transparent !important;
 }
 
 [data-theme="light"] .calendar-day.has-sessions {
-  background: color-mix(in srgb, var(--focus-color) 15%, white) !important;
+  /* Do not override JS bucket colors; allow inline styles to dictate shade */
+  background: transparent;
 }
 
 [data-theme="dark"] .calendar-day.has-sessions {
-  background: color-mix(in srgb, var(--focus-color) 20%, #334155) !important;
+  background: transparent;
 }
 
 @media (prefers-color-scheme: dark) {
   [data-theme="auto"] .calendar-day.has-sessions {
-    background: color-mix(in srgb, var(--focus-color) 20%, #334155) !important;
+    background: transparent;
   }
 }
 

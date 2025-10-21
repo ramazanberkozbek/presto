@@ -1140,28 +1140,44 @@ export class NavigationManager {
                 dayEl.classList.add('today');
             }
 
-            // Add session dots based on SessionManager data
-            const dots = document.createElement('div');
-            dots.className = 'calendar-day-dots';
-
-            // Get sessions from SessionManager for this date
+            // Instead of a separate box, color the day number as a badge (user requested)
+            let totalMinutes = 0;
             if (window.sessionManager) {
-                const sessions = window.sessionManager.getSessionsForDate(dayDate);
+                const sessions = window.sessionManager.getSessionsForDate(dayDate) || [];
                 const focusSessions = sessions.filter(s => s.session_type === 'focus' || s.session_type === 'custom');
-                
-                if (focusSessions.length > 0) {
-                    dayEl.classList.add('has-sessions');
-                    // Create dots for completed focus sessions
-                    const numDots = Math.min(focusSessions.length, 5); // Max 5 dots
-                    for (let i = 0; i < numDots; i++) {
-                        const dot = document.createElement('div');
-                        dot.className = 'calendar-dot';
-                        dots.appendChild(dot);
-                    }
-                }
+                totalMinutes = focusSessions.reduce((sum, s) => sum + (s.duration || 0), 0);
             }
 
-            dayEl.appendChild(dots);
+            // Map minutes to a bucket color
+            const badgeColor = this.mapMinutesToBucketColor(totalMinutes);
+
+            // Apply coloring to the entire day cell background (fill the cell)
+            if (totalMinutes > 0) {
+                dayEl.classList.add('has-sessions');
+                // Set full cell background
+                dayEl.style.backgroundColor = badgeColor;
+                // Ensure readable text color for day number
+                if (badgeColor && badgeColor !== '#ebedf0') {
+                    dayEl.style.color = '#ffffff';
+                    dayNumber.style.color = '#ffffff';
+                } else {
+                    dayEl.style.color = '';
+                    dayNumber.style.color = 'var(--shared-text)';
+                }
+                // Remove badge-specific class if present
+                dayNumber.classList.remove('calendar-badge');
+                dayNumber.title = `${totalMinutes} minutes`;
+                dayEl.dataset.minutes = totalMinutes;
+            } else {
+                // Reset any previous styling
+                dayEl.classList.remove('has-sessions');
+                dayEl.style.backgroundColor = '';
+                dayEl.style.color = '';
+                dayNumber.classList.remove('calendar-badge');
+                dayNumber.style.color = '';
+                dayNumber.title = '';
+                delete dayEl.dataset.minutes;
+            }
 
             // Add click event
             dayEl.addEventListener('click', async () => {
@@ -1174,6 +1190,37 @@ export class NavigationManager {
 
     isSameDay(date1, date2) {
         return TimeUtils.isSameDay(date1, date2);
+    }
+
+    // Map total minutes to a GitHub-like contribution color bucket (green shades)
+    mapMinutesToBucketColor(minutes) {
+        // Bucket thresholds (in minutes)
+        const thresholds = [0, 30, 90, 180, 240]; // 0, small, medium, high, very high
+        // Palette matching green intensities (level 0 = empty/white)
+        const palette = [
+            '#ebedf0', // 0
+            '#9be9a8', // 1
+            '#40c463', // 2
+            '#30a14e', // 3
+            '#216e39'  // 4
+        ];
+
+        if (!minutes || minutes <= 0) return palette[0];
+
+        const m = Math.min(minutes, thresholds[thresholds.length - 1]);
+        // Find highest bucket index where minutes > threshold
+        let idx = 0;
+        for (let i = 1; i < thresholds.length; i++) {
+            if (m > thresholds[i - 1] && m <= thresholds[i]) {
+                idx = i;
+                break;
+            }
+            if (m > thresholds[thresholds.length - 1]) {
+                idx = thresholds.length - 1;
+            }
+        }
+
+        return palette[idx] || palette[palette.length - 1];
     }
 
     async selectDay(date) {
