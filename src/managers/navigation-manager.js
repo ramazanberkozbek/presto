@@ -1049,9 +1049,13 @@ export class NavigationManager {
             }
 
             // Filter out break sessions from timeline display
-            const visibleSessions = allSessions.filter(session => 
-true // All sessions are focus sessions now
+            let visibleSessions = allSessions.filter(session => 
+                true // All sessions are focus sessions now
             );
+
+            if (this.currentView === 'daily') {
+                visibleSessions = [];
+            }
 
             // Create timeline session blocks (excluding break sessions)
             visibleSessions.forEach(session => {
@@ -3408,7 +3412,7 @@ true // All sessions are focus sessions now
     renderDailyYAxis(container, maxValue) {
         const labels = [60, 50, 40, 30, 20, 10, 0];
         container.innerHTML = labels.map(value => 
-            `<span class="timeline-y-label">${value === 0 ? '0 dk' : value}</span>`
+            `<span class="timeline-y-label">${value === 0 ? '0' : value}</span>`
         ).join('');
     }
 

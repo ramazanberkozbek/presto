@@ -17,6 +17,11 @@
   padding: 0 4px;
 }
 
+/* Hide hour markers in the Daily Overview as requested */
+#daily-view .timeline-hours {
+  display: none;
+}
+
 .timeline-hour {
   font-size: 9px;
   color: var(--text-light);
