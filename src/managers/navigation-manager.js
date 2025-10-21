@@ -3408,7 +3408,7 @@ true // All sessions are focus sessions now
     renderDailyYAxis(container, maxValue) {
         const labels = [60, 50, 40, 30, 20, 10, 0];
         container.innerHTML = labels.map(value => 
-            `<span class="timeline-y-label">${value === 0 ? '0 dk' : value}</span>`
+            `<span class="timeline-y-label">${value === 0 ? '0' : value}</span>`
         ).join('');
     }
 
@@ -3430,33 +3430,40 @@ true // All sessions are focus sessions now
                 bar.classList.add('empty');
             }
 
-            // Calculate heights
-            const focusPercent = (hour.focus / scaleMax) * 100;
-            const breakPercent = (hour.break / scaleMax) * 100;
-            const emptyPercent = 100 - focusPercent - breakPercent;
+            // Use absolute-positioned segments to reflect exact minutes inside the hour.
+            // Ensure the bar is a positioning context
+            bar.style.position = 'relative';
+            bar.style.overflow = 'visible';
 
-            // Focus segment
-            if (hour.focus > 0) {
-                const focusSegment = document.createElement('div');
-                focusSegment.className = 'timeline-bar-segment focus';
-                focusSegment.style.height = `${focusPercent}%`;
-                bar.appendChild(focusSegment);
-            }
+            // For visual baseline, add an empty-remaining background element filling the full hour
+            const base = document.createElement('div');
+            base.className = 'timeline-bar-segment empty-remaining';
+            base.style.position = 'absolute';
+            base.style.left = '0';
+            base.style.right = '0';
+            base.style.bottom = '0';
+            base.style.height = '100%';
+            bar.appendChild(base);
 
-            // Break segment
-            if (hour.break > 0) {
-                const breakSegment = document.createElement('div');
-                breakSegment.className = 'timeline-bar-segment break';
-                breakSegment.style.height = `${breakPercent}%`;
-                bar.appendChild(breakSegment);
-            }
+            // Render each recorded segment
+            if (Array.isArray(hour.segments) && hour.segments.length > 0) {
+                hour.segments.forEach(seg => {
+                    const segEl = document.createElement('div');
+                    segEl.className = `timeline-bar-segment ${seg.type}`;
 
-            // Empty segment (remaining space up to 60 minutes)
-            if (emptyPercent > 0) {
-                const emptySegment = document.createElement('div');
-                emptySegment.className = 'timeline-bar-segment empty-remaining';
-                emptySegment.style.height = `${emptyPercent}%`;
-                bar.appendChild(emptySegment);
+                    // Compute pixel percentages within the hour box: bottom = (seg.start / 60) * 100
+                    const segHeightPercent = ((seg.end - seg.start) / scaleMax) * 100; // relative to full scale (typically 60)
+                    const bottomPercent = (seg.start / 60) * 100; // position from bottom within 60-minute hour
+
+                    segEl.style.position = 'absolute';
+                    segEl.style.left = '0';
+                    segEl.style.right = '0';
+                    segEl.style.bottom = `${bottomPercent}%`;
+                    segEl.style.height = `${segHeightPercent}%`;
+                    segEl.style.zIndex = seg.type === 'focus' ? '6' : '5';
+
+                    bar.appendChild(segEl);
+                });
             }
 
             // Add hover indicator
@@ -3494,7 +3501,9 @@ true // All sessions are focus sessions now
             hour: i,
             focus: 0,
             break: 0,
-            total: 0
+            total: 0,
+            // segments: array of { type: 'focus'|'break', start: minutesFromHourStart, end: minutesFromHourStart }
+            segments: []
         }));
 
         // Aggregate session data by distributing across hours
@@ -3511,19 +3520,25 @@ true // All sessions are focus sessions now
             for (let hour = startHour; hour <= endHour; hour++) {
                 const hourStartMinutes = hour * 60;
                 const hourEndMinutes = (hour + 1) * 60;
-                
+
                 const sessionStartInHour = Math.max(startTotalMinutes, hourStartMinutes);
                 const sessionEndInHour = Math.min(endTotalMinutes, hourEndMinutes);
-                
+
                 if (sessionEndInHour > sessionStartInHour) {
                     const minutesInThisHour = sessionEndInHour - sessionStartInHour;
-                    
+
+                    // compute minutes relative to this hour (0..60)
+                    const segStart = sessionStartInHour - hourStartMinutes; // 0..59
+                    const segEnd = sessionEndInHour - hourStartMinutes; // 1..60
+
                     if (session.session_type === 'focus' || session.session_type === 'custom') {
                         hourlyData[hour].focus += minutesInThisHour;
+                        hourlyData[hour].segments.push({ type: 'focus', start: segStart, end: segEnd });
                     } else if (session.session_type === 'break') {
                         hourlyData[hour].break += minutesInThisHour;
+                        hourlyData[hour].segments.push({ type: 'break', start: segStart, end: segEnd });
                     }
-                    
+
                     hourlyData[hour].total += minutesInThisHour;
                 }
             }

@@ -602,6 +602,7 @@
   cursor: pointer;
   transition: transform 0.3s ease, z-index 0.3s ease;
   display: flex;
+  /* keep a positioning context for absolute segments */
   flex-direction: column-reverse;
   justify-content: flex-start;
   align-items: stretch;
@@ -692,6 +693,9 @@
 .timeline-bar-segment {
   width: 100%;
   transition: opacity 0.3s ease;
+  /* When used as absolute segments inside a .timeline-bar, ensure they overlay correctly */
+  box-sizing: border-box;
+  border-radius: 3px 3px 0 0;
 }
 
 .timeline-bar-segment.focus {
