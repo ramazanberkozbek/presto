@@ -1,0 +1,167 @@
+/* Minimalist dark timeline styles for daily sessions panel */
+:root {
+  --mt-card-bg: #0f1720; /* dark card */
+  --mt-card-border: rgba(255,255,255,0.04);
+  --mt-text-primary: #e6eef7; /* light */
+  --mt-text-secondary: #9aa7b3; /* medium gray */
+  --mt-accent: #06b6d4; /* cyan/blue accent */
+  --mt-pill-bg: rgba(6,182,212,0.12);
+}
+
+/* Container card */
+.daily-sessions-panel {
+  background: var(--mt-card-bg);
+  border: 1px solid var(--mt-card-border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 280px;
+  max-width: 420px;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+  color: var(--mt-text-primary);
+}
+
+.sessions-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sessions-header h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--mt-text-primary);
+}
+
+.sessions-actions .btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.04);
+  color: var(--mt-text-secondary);
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+/* Timeline list */
+.sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 6px 4px;
+}
+
+.day-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.day-header {
+  font-size: 12px;
+  color: var(--mt-text-secondary);
+  font-weight: 600;
+  padding: 6px 4px;
+}
+
+.session-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  transition: background 0.12s ease, transform 0.08s ease;
+}
+
+.session-row:hover {
+  background: rgba(255,255,255,0.02);
+  transform: translateY(-2px);
+}
+
+/* Timeline column */
+.session-dot-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  height: 100%;
+}
+
+.session-dot {
+  width: 10px;
+  height: 10px;
+  background: var(--mt-accent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(6,182,212,0.08);
+  z-index: 2;
+}
+
+.session-connector {
+  position: absolute;
+  top: -14px;
+  bottom: -14px;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(to bottom, rgba(6,182,212,0.18), rgba(6,182,212,0.06));
+  opacity: 0.8;
+  border-radius: 1px;
+}
+
+/* Time column */
+.session-time {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', monospace;
+  font-size: 13px;
+  color: var(--mt-text-secondary);
+  white-space: nowrap;
+}
+
+/* Category column */
+.session-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 16px;
+  background: var(--mt-pill-bg);
+  color: var(--mt-accent);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.category-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+/* Total duration summary */
+.sessions-summary {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,0.02);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--mt-text-secondary);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* Small screens: allow panel to collapse */
+@media (max-width: 900px) {
+  .daily-sessions-panel { min-width: 220px; max-width: 320px; }
+}

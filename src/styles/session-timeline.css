@@ -1,0 +1,159 @@
+/* Session Timeline Styles - Dark minimalist
+
+Design: vertical timeline with left continuous line, nodes, time prominent, duration secondary, tags tertiary.
+*/
+
+:root {
+  --st-bg: #0f1720; /* slightly darker card */
+  --st-card-border: rgba(255,255,255,0.04);
+  --st-text-primary: #e6eef7;
+  --st-text-secondary: #9aa7b3;
+  --st-accent: #06b6d4; /* cyan */
+  --st-accent-2: #34d399; /* green for completed */
+  --st-pill-bg: rgba(6,182,212,0.12);
+}
+
+.session-timeline-card {
+  background: var(--st-bg);
+  border: 1px solid var(--st-card-border);
+  border-radius: 12px;
+  padding: 18px;
+  color: var(--st-text-primary);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+}
+
+.session-timeline-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom: 12px;
+}
+.session-timeline-header h3{
+  margin:0;
+  font-size:16px;
+  font-weight:700;
+}
+
+.timeline-list{
+  display:flex;
+  flex-direction:column;
+  gap:20px; /* generous spacing */
+  position:relative;
+  padding-left:28px; /* space for the vertical line */
+}
+
+/* vertical line */
+.timeline-list::before{
+  content:'';
+  position:absolute;
+  left:12px;
+  top:8px;
+  bottom:8px;
+  width:2px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  border-radius:2px;
+}
+
+.timeline-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  position:relative;
+  /* leave more room on the left for the node + line to avoid overlap */
+  padding:10px 12px 10px 72px;
+  border-radius:10px;
+  transition: background 0.16s ease, transform 0.12s ease;
+}
+.timeline-item:hover{ background: rgba(255,255,255,0.02); transform: translateY(-3px);} 
+
+/* node */
+.timeline-node{
+  position:absolute;
+  left:20px; /* align center on the line */
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background: var(--st-accent);
+  box-shadow: 0 0 0 6px rgba(6,182,212,0.06);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  z-index: 2; /* make sure node appears above text */
+}
+
+.timeline-list::before{
+  left:26px; /* align line with node center */
+}
+.timeline-item:hover .timeline-node{ transform: scale(1.18); box-shadow: 0 0 0 8px rgba(6,182,212,0.08);} 
+
+/* content layout: time | main | actions */
+.session-time{
+  min-width:140px;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Roboto', 'Helvetica Neue', Arial;
+  font-weight:700;
+  font-size:18px; /* prominent */
+  color:var(--st-text-primary);
+}
+.session-meta{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex:1;
+}
+.duration-badge{
+  font-size:14px;
+  color:var(--st-text-secondary);
+  background: rgba(255,255,255,0.02);
+  padding:6px 8px;
+  border-radius:10px;
+  font-weight:600;
+}
+.tag-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 10px;
+  border-radius:14px;
+  background: var(--st-pill-bg);
+  color:var(--st-accent);
+  font-weight:700;
+  font-size:13px;
+}
+
+/* actions - hidden by default, show on hover */
+.session-actions{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  opacity:0;
+  transform: translateX(6px);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.timeline-item:hover .session-actions{ opacity:1; transform:none; }
+
+.action-btn{
+  width:34px;
+  height:34px;
+  border-radius:8px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  border: none;
+}
+.action-edit{ background: rgba(59,130,246,0.12); color:#60a5fa; }
+.action-delete{ background: rgba(239,68,68,0.10); color:#f87171; }
+.action-edit:hover{ box-shadow: 0 4px 10px rgba(59,130,246,0.06); }
+.action-delete:hover{ box-shadow: 0 4px 10px rgba(239,68,68,0.06); }
+
+/* show subtle time gap indicator if needed */
+.gap-indicator{
+  font-size:12px;
+  color:var(--st-text-secondary);
+  padding-left:140px; /* align under time column */
+}
+
+/* responsive */
+@media (max-width: 980px){
+  .session-time{ min-width:110px; font-size:16px; }
+  .timeline-list{ gap:14px; }
+}

@@ -9,6 +9,7 @@
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet" />
   <link href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css" rel="stylesheet" />
   <link rel="stylesheet" href="styles/main.css" />
+  <link rel="stylesheet" href="styles/session-timeline.css" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Presto</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.0/dist/umd/supabase.js"></script>
@@ -665,56 +666,41 @@
     <div class="view-container view-section hidden" id="daily-view">
       <h1>Daily Overview</h1>
 
-      <div class="calendar-box">
-        <!-- Calendar Header (month navigator) -->
-        <div class="calendar-header">
-          <button id="prev-month" class="nav-btn" aria-label="Previous month">&lt;</button>
-          <div id="current-month" class="current-month-display">October 2025</div>
-          <button id="next-month" class="nav-btn" aria-label="Next month">&gt;</button>
-        </div>
-
-        <!-- Calendar Grid -->
-        <div id="calendar-grid" class="calendar-grid">
-          <!-- Calendar days will be rendered here by NavigationManager -->
-        </div>
-        
-        <!-- Daily details: timeline and session list for selected day -->
-        <div class="daily-details" id="daily-details">
-          <div class="daily-header">
-            <h3 id="selected-day-title">Selected Day Sessions</h3>
+      <div class="calendar-and-sessions">
+        <div class="calendar-box">
+          <!-- Calendar Header (month navigator) -->
+          <div class="calendar-header">
+            <button id="prev-month" class="nav-btn" aria-label="Previous month">&lt;</button>
+            <div id="current-month" class="current-month-display">October 2025</div>
+            <button id="next-month" class="nav-btn" aria-label="Next month">&gt;</button>
           </div>
 
-          <div class="timeline-wrapper">
-            <div class="timeline-hours" id="timeline-hours">
-              <!-- Hour markers will be rendered here -->
-            </div>
-            <div class="timeline-track" id="timeline-track">
-              <!-- Session blocks will be rendered here by NavigationManager -->
-            </div>
-          </div>
-
-          <div class="sessions-table-container">
-            <h4>Sessions</h4>
-            <div class="table-responsive">
-              <table class="sessions-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Duration</th>
-                    <th>Tags</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="sessions-table-body">
-                  <!-- Rows will be populated by NavigationManager -->
-                </tbody>
-              </table>
-            </div>
+          <!-- Calendar Grid -->
+          <div id="calendar-grid" class="calendar-grid">
+            <!-- Calendar days will be rendered here by NavigationManager -->
           </div>
         </div>
+
+        <!-- Sessions panel for the selected day -->
+        <aside class="daily-sessions-panel">
+          <div class="sessions-header">
+            <h2 id="selected-day-title">Selected Day Sessions</h2>
+          </div>
+
+          <!-- Modern Session Timeline Card -->
+          <div class="session-timeline-card">
+            <div class="session-timeline-header">
+              <h3 id="session-timeline-title">Sessions</h3>
+              <div id="session-summary" class="session-summary"></div>
+            </div>
+            <div class="timeline-list" id="session-timeline-list">
+              <!-- Items injected by navigation-manager.js -->
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
+  </div>
 
     <!-- Settings View -->
     <div class="view-container hidden view-section" id="settings-view">

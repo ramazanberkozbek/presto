@@ -1003,12 +1003,12 @@ export class NavigationManager {
     }
 
     async updateSelectedDayDetails(date = this.currentDate) {
-        const selectedDayTitle = document.getElementById('selected-day-title');
-        const timelineTrack = document.getElementById('timeline-track');
-        const timelineHours = document.getElementById('timeline-hours');
-        
-        // Calendar details have been removed from the UI, skip update
-        if (!selectedDayTitle || !timelineTrack || !timelineHours) return;
+    const selectedDayTitle = document.getElementById('selected-day-title');
+    const timelineTrack = document.getElementById('timeline-track');
+    const timelineHours = document.getElementById('timeline-hours');
+
+    // If title not present, nothing to update here
+    if (!selectedDayTitle) return;
 
         // Format date for display
         const dateStr = date.toLocaleDateString('en-US', {
@@ -1021,14 +1021,16 @@ export class NavigationManager {
         const isToday = this.isSameDay(date, new Date());
         selectedDayTitle.textContent = isToday ? "Today's Sessions" : `${dateStr} Sessions`;
 
-        // Setup timeline hours (6 AM to 10 PM)
-        this.setupTimelineHours(timelineHours);
+        // Setup timeline hours if timeline DOM exists
+        if (timelineHours) {
+            this.setupTimelineHours(timelineHours);
+        }
 
-        // Clear previous sessions
-        timelineTrack.innerHTML = '';
-
-        // Reset timeline track height
-        timelineTrack.style.height = '50px';
+        // If timeline container exists, clear previous sessions and set height
+        if (timelineTrack) {
+            timelineTrack.innerHTML = '';
+            timelineTrack.style.height = '50px';
+        }
 
         try {
             // Get all sessions from SessionManager (now includes timer sessions automatically)
@@ -1041,38 +1043,50 @@ export class NavigationManager {
             allSessions.sort((a, b) => a.start_time.localeCompare(b.start_time));
 
             if (allSessions.length === 0) {
-                const noSessions = document.createElement('div');
-                noSessions.className = 'timeline-empty';
-                noSessions.textContent = 'No sessions completed';
-                timelineTrack.appendChild(noSessions);
-                return;
+                // If there's no session data, and a timeline exists, show a placeholder there
+                if (timelineTrack) {
+                    const noSessions = document.createElement('div');
+                    noSessions.className = 'timeline-empty';
+                    noSessions.textContent = 'No sessions completed';
+                    timelineTrack.appendChild(noSessions);
+                }
+            } else {
+                // If timeline exists, render timeline session blocks
+                if (timelineTrack) {
+                    // Filter out break sessions from timeline display
+                    let visibleSessions = allSessions.filter(session => true);
+
+                    if (this.currentView === 'daily') {
+                        visibleSessions = [];
+                    }
+
+                    // Create timeline session blocks (excluding break sessions)
+                    visibleSessions.forEach(session => {
+                        this.createTimelineSession(session, date, timelineTrack, visibleSessions);
+                    });
+
+                    // Calculate and set timeline height after all sessions are added
+                    this.updateTimelineHeight(timelineTrack, visibleSessions.length);
+
+                    // Initialize timeline interactions
+                    this.initializeTimelineInteractions();
+                }
             }
-
-            // Filter out break sessions from timeline display
-            let visibleSessions = allSessions.filter(session => 
-                true // All sessions are focus sessions now
-            );
-
-            if (this.currentView === 'daily') {
-                visibleSessions = [];
-            }
-
-            // Create timeline session blocks (excluding break sessions)
-            visibleSessions.forEach(session => {
-                this.createTimelineSession(session, date, timelineTrack, visibleSessions);
-            });
-
-            // Calculate and set timeline height after all sessions are added
-            this.updateTimelineHeight(timelineTrack, visibleSessions.length);
-
-            // Initialize timeline interactions
-            this.initializeTimelineInteractions();
 
             // Also update the daily tag usage chart for this selected date
             try {
                 await this.updateDailyTagUsageChart(date);
             } catch (e) {
                 console.warn('Failed to update daily tag usage chart for selected day:', e);
+            }
+
+            // Render modern session timeline card if present in DOM
+            try {
+                if (document.getElementById('session-timeline-list')) {
+                    await this.renderSessionTimeline(date);
+                }
+            } catch (e) {
+                console.warn('Failed to render session timeline:', e);
             }
 
         } catch (error) {
@@ -1083,6 +1097,198 @@ export class NavigationManager {
             timelineTrack.appendChild(errorItem);
         }
     }
+
+    // Render sessions as a vertical card-based timeline into #session-timeline-list
+    async renderSessionTimeline(date = this.currentDate) {
+        const listEl = document.getElementById('session-timeline-list');
+        const summaryEl = document.getElementById('session-summary');
+        if (!listEl) return;
+
+        // Clear existing
+        listEl.innerHTML = '';
+        if (summaryEl) summaryEl.textContent = '';
+
+        let sessions = [];
+        if (window.sessionManager) {
+            sessions = window.sessionManager.getSessionsForDate(date) || [];
+        }
+
+        // Sort by start_time
+        sessions.sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+        // If no sessions, either show placeholder or demo data when ?demo=1
+        if (sessions.length === 0) {
+            const params = new URLSearchParams(window.location.search);
+            const demo = params.get('demo');
+            if (demo === '1') {
+                // Generate 8 sample sessions across the day (in-memory only)
+                const sampleBase = new Date(date);
+                sampleBase.setHours(8, 0, 0, 0);
+                const sampleSessions = [];
+                const tags = ['Coding','Emails','Design','Meeting','Review','Planning','Research','Break'];
+                for (let i=0;i<8;i++){
+                    const start = new Date(sampleBase.getTime() + i * (60+ Math.floor(Math.random()*90)) * 60000);
+                    const dur = [25,30,45,60,15,20,35,50][i%8];
+                    const sh = start.getHours().toString().padStart(2,'0');
+                    const sm = start.getMinutes().toString().padStart(2,'0');
+                    const end = new Date(start.getTime() + dur*60000);
+                    const eh = end.getHours().toString().padStart(2,'0');
+                    const em = end.getMinutes().toString().padStart(2,'0');
+                    sampleSessions.push({
+                        id: `demo-${i}`,
+                        session_type: 'focus',
+                        start_time: `${sh}:${sm}`,
+                        end_time: `${eh}:${em}`,
+                        duration: dur,
+                        created_at: new Date(start).toISOString(),
+                        tags: [tags[i%tags.length]]
+                    });
+                }
+                sessions = sampleSessions;
+            } else {
+                const empty = document.createElement('div');
+                empty.className = 'timeline-empty';
+                empty.textContent = 'No sessions for this day';
+                listEl.appendChild(empty);
+                return;
+            }
+        }
+
+        // Summary
+        if (summaryEl) {
+            const totalMinutes = sessions.reduce((s, item) => s + (item.duration || 0), 0);
+            summaryEl.textContent = `${sessions.length} sessions • ${Math.floor(totalMinutes/60)}h ${totalMinutes%60}m`;
+        }
+
+        // Build items
+        sessions.forEach(session => {
+            const item = document.createElement('div');
+            item.className = 'timeline-item';
+
+            const node = document.createElement('div');
+            node.className = 'timeline-node';
+            item.appendChild(node);
+
+            const timeCol = document.createElement('div');
+            timeCol.className = 'session-time';
+            // Show start - end
+            const start = session.start_time || '';
+            const end = session.end_time || '';
+            timeCol.textContent = `${start}${end ? ' - ' + end : ''}`;
+            item.appendChild(timeCol);
+
+            // Duration badge next to time
+            const durationBadge = document.createElement('div');
+            durationBadge.className = 'duration-badge';
+            durationBadge.textContent = `${session.duration || 0} min`;
+            item.appendChild(durationBadge);
+
+            const meta = document.createElement('div');
+            meta.className = 'session-meta';
+
+            const titleWrap = document.createElement('div');
+            titleWrap.style.display = 'flex';
+            titleWrap.style.flexDirection = 'column';
+
+            const mainTitle = document.createElement('div');
+            mainTitle.className = 'session-main-title';
+
+            // Determine a proper title and tag separately to avoid duplication.
+            // Prefer an explicit session.title. Don't show session_type when a tag exists.
+            let titleCandidate = '';
+            if (session.title && String(session.title).trim()) {
+                titleCandidate = String(session.title).trim();
+            }
+
+            // Parse first tag (if any) once and reuse
+            let tagName = '';
+            let tagIcon = null;
+            if (session.tags && session.tags.length) {
+                const raw = session.tags[0];
+                if (typeof raw === 'string') {
+                    tagName = raw;
+                } else if (raw && typeof raw === 'object') {
+                    tagName = raw.name || raw.label || '';
+                    tagIcon = raw.icon || raw.iconName || null;
+                }
+            }
+
+            // If there is no explicit title and there is no tag, fallback to session_type.
+            if (!titleCandidate && !tagName && session.session_type) {
+                titleCandidate = session.session_type.charAt(0).toUpperCase() + session.session_type.slice(1);
+            }
+
+            // If titleCandidate equals the tag name, or titleCandidate is empty (and tag exists), hide it.
+            if (!titleCandidate || (titleCandidate && tagName && titleCandidate.toLowerCase() === tagName.toLowerCase())) {
+                mainTitle.style.display = 'none';
+            } else {
+                mainTitle.textContent = titleCandidate;
+                mainTitle.style.fontWeight = '700';
+                mainTitle.style.color = 'var(--st-text-primary)';
+            }
+
+            titleWrap.appendChild(mainTitle);
+            meta.appendChild(titleWrap);
+
+            // Tags / icon - support string or object tag entries
+            if (tagName) {
+                const tag = document.createElement('div');
+                tag.className = 'tag-pill';
+                // If we have an icon string like 'ri-' or 'ph-', render an <i>
+                if (tagIcon && (tagIcon.startsWith('ri-') || tagIcon.startsWith('ph-'))) {
+                    const iconEl = document.createElement('i');
+                    if (tagIcon.startsWith('ph-')) iconEl.className = 'ph ' + tagIcon;
+                    else iconEl.className = tagIcon;
+                    iconEl.style.marginRight = '8px';
+                    tag.appendChild(iconEl);
+                }
+                const nameNode = document.createElement('span');
+                nameNode.textContent = tagName || '-';
+                tag.appendChild(nameNode);
+                // append tag pill to the right side: we'll attach to item, not meta
+                // to ensure it appears after the meta block
+                item.appendChild(tag);
+            }
+
+            item.appendChild(meta);
+
+            // Actions
+            const actions = document.createElement('div');
+            actions.className = 'session-actions';
+
+            const editBtn = document.createElement('button');
+            editBtn.className = 'action-btn action-edit';
+            editBtn.title = 'Edit session';
+            editBtn.innerHTML = '<i class="ri-edit-line"></i>';
+            editBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (window.sessionManager) window.sessionManager.openEditSessionModal(session, date);
+            });
+
+            const delBtn = document.createElement('button');
+            delBtn.className = 'action-btn action-delete';
+            delBtn.title = 'Delete session';
+            delBtn.innerHTML = '<i class="ri-delete-bin-line"></i>';
+            delBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                if (!confirm('Delete this session?')) return;
+                if (window.sessionManager) {
+                    // perform deletion and refresh
+                    window.sessionManager.selectedDate = date;
+                    window.sessionManager.currentEditingSession = session;
+                    await window.sessionManager.deleteCurrentSession();
+                }
+            });
+
+            actions.appendChild(editBtn);
+            actions.appendChild(delBtn);
+            item.appendChild(actions);
+
+            listEl.appendChild(item);
+        });
+    }
+
+    
 
 
     async updateCalendar() {
@@ -1179,9 +1385,9 @@ export class NavigationManager {
                 delete dayEl.dataset.minutes;
             }
 
-            // Add click event
-            dayEl.addEventListener('click', async () => {
-                await this.selectDay(dayDate);
+            // Add click event and pass the event so selectDay can highlight the clicked element
+            dayEl.addEventListener('click', async (evt) => {
+                await this.selectDay(dayDate, evt);
             });
 
             calendarGrid.appendChild(dayEl);
@@ -1223,7 +1429,7 @@ export class NavigationManager {
         return palette[idx] || palette[palette.length - 1];
     }
 
-    async selectDay(date) {
+    async selectDay(date, evt) {
         // Remove previous selection
         const calendarDays = document.querySelectorAll('.calendar-day');
         if (calendarDays.length > 0) {
@@ -1231,9 +1437,9 @@ export class NavigationManager {
                 day.classList.remove('selected');
             });
 
-            // Add selection to clicked day
-            if (event && event.currentTarget) {
-                event.currentTarget.classList.add('selected');
+            // Add selection to clicked day if event present
+            if (evt && evt.currentTarget) {
+                evt.currentTarget.classList.add('selected');
             }
         }
 
